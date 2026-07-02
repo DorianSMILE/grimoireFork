@@ -335,6 +335,11 @@ public class Personnage {
         // Récupérer le multiplicateur de vulnérabilité
         double damageTakenMultiplier = Math.max(1.0, getStatBuffMultiplier(statType));
 
+        int cursedVul = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_VULNERABILITY);
+        if (cursedVul != 0) {
+            damageTakenMultiplier += (Math.abs(cursedVul) / 100.0);
+        }
+
         int flat = getStatFlatBonus(statType);
 
         double damageAfterBuff = damage * damageTakenMultiplier + flat;
@@ -538,6 +543,12 @@ public class Personnage {
      */
     public void heal(int healAmount) {
         double multiplier = getStatBuffMultiplier(StatType.HEAL_RECEIVED);
+        
+        int cursedHeal = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_HEALING_REDUCTION);
+        if (cursedHeal != 0) {
+            multiplier -= (Math.abs(cursedHeal) / 100.0);
+        }
+        
         int finalHeal = (int) (healAmount * Math.max(0, multiplier));
         this.healthCurrent += finalHeal;
         if (this.healthCurrent > this.getTotalHealthMax()) {

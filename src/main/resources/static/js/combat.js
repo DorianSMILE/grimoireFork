@@ -1246,9 +1246,11 @@ function generateEquipmentTooltipHTML(eq) {
             'CHEAT_DEATH': 'Ange Gardien',
             'CRIT_DAMAGE': 'Dégâts Critiques',
             'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-            'CURSED_HP_LOSS_ON_MANA': 'Hémorragie magique',
-            'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie',
-            'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse'
+            'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (Perte hp % cout de mana)',
+            'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+            'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+            'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">

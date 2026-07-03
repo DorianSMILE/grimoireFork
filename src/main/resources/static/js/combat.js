@@ -1221,6 +1221,10 @@ function generateEquipmentTooltipHTML(eq) {
         { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
         { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
         { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
+        { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
+        { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
+        { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
+        { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
     ];
     let statsHtml = statsDef
         .filter(s => eq[s.key] && eq[s.key] !== 0)
@@ -1228,12 +1232,13 @@ function generateEquipmentTooltipHTML(eq) {
             const val = eq[s.key];
             const isMalus = val < 0;
             const sign = val > 0 ? '+' : '';
+            const suffix = s.isPercent ? '%' : '';
             return `<div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.3rem;">
                 <div style="display: flex; align-items: center; gap: 0.3rem; color: #94a3b8;">
                     <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 1rem;">${s.icon}</span>
                     ${s.label}
                 </div>
-                <span style="font-weight: 600; color: ${isMalus ? '#ef4444' : '#fff'};">${sign}${val}</span>
+                <span style="font-weight: 600; color: ${isMalus ? '#ef4444' : '#fff'};">${sign}${val}${suffix}</span>
             </div>`;
         }).join('');
 

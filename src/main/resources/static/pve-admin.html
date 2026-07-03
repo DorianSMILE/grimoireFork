@@ -743,7 +743,7 @@
                                 </div>
                             </div>
                             <div class="pve-grid" id="monstersList"
-                                style="flex: 1; overflow-y: auto; padding-bottom: 1.5rem; padding-left: 1rem; padding-top: 1.2rem; overflow-x: hidden;">
+                                style="flex: 1; overflow-y: auto; max-height: 800px; padding-bottom: 1.5rem; padding-left: 1rem; padding-top: 1.2rem; overflow-x: hidden;">
                                 <!-- Rempli par JS -->
                             </div>
                         </div>
@@ -999,7 +999,7 @@
                         <div class="admin-section-content"
                             style="flex: 1; display: flex; flex-direction: column; overflow: visible; padding-bottom: 0; padding-left: 0.5rem; padding-top: 0.5rem;">
                             <div class="pve-grid" id="dungeonsList"
-                                style="flex: 1; overflow-y: auto; padding-bottom: 1.5rem; padding-left: 1rem; padding-top: 1.2rem;">
+                                style="flex: 1; overflow-y: auto; max-height: 800px; padding-bottom: 1.5rem; padding-left: 1rem; padding-top: 1.2rem; overflow-x: hidden;">
                                 <!-- Rempli par JS -->
                             </div>
                         </div>
@@ -1014,7 +1014,7 @@
     <div class="pve-notif" id="pveNotif"></div>
 
     <script src="/js/auth.js"></script>
-    <script src="/js/pve-admin.js"></script>
+    <script src="/js/pve-admin.js?v=2"></script>
     <script>
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-select-wrapper')) {

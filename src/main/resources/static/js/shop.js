@@ -155,9 +155,14 @@ function generateStandHtml(eq) {
             'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
-        effectHtml = `<div class="shop-stand-stat" style="background: rgba(168, 85, 247, 0.1); color: #c084fc;">
+        const isCursed = eq.specialEffect.startsWith('CURSED_');
+        const icon = isCursed ? 'skull' : 'auto_awesome';
+        const color = isCursed ? '#9ca3af' : '#c084fc';
+        const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+        effectHtml = `<div class="shop-stand-stat" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
             <div style="display: flex; align-items: center; gap: 0.3rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">auto_awesome</span>
+                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
                 ${label}
             </div>
             <span style="font-weight: 600;">${eq.specialEffectValue}</span>

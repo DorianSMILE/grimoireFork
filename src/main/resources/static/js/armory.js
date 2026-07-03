@@ -844,8 +844,13 @@ function renderEquipModal() {
                     'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
                 };
                 const label = effectLabels[equipped.specialEffect] || equipped.specialEffect;
-                specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: #c084fc; background: rgba(168, 85, 247, 0.1); padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">auto_awesome</span>
+                const isCursed = equipped.specialEffect.startsWith('CURSED_');
+                const icon = isCursed ? 'skull' : 'auto_awesome';
+                const color = isCursed ? '#9ca3af' : '#c084fc';
+                const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+                
+                specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">
+                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
                     ${label} : ${equipped.specialEffectValue}
                 </div>`;
             }

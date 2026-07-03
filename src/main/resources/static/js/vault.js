@@ -522,8 +522,13 @@ function renderGrid(equipments) {
                 'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
             };
             const label = effectLabels[eq.specialEffect] || eq.specialEffect;
-            effectHtml = `<div class="vault-card-effect">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">auto_awesome</span>
+            const isCursed = eq.specialEffect.startsWith('CURSED_');
+            const icon = isCursed ? 'skull' : 'auto_awesome';
+            const color = isCursed ? '#9ca3af' : '#c084fc';
+            const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+            effectHtml = `<div class="vault-card-effect" style="color: ${color}; background: ${bg}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
+                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
                 ${label} : ${eq.specialEffectValue}
             </div>`;
         }

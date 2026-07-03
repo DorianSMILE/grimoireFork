@@ -1260,10 +1260,14 @@ function generateEquipmentTooltipHTML(eq) {
             'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
+        const isCursed = eq.specialEffect.startsWith('CURSED_');
+        const icon = isCursed ? 'skull' : 'auto_awesome';
+        const color = isCursed ? '#9ca3af' : '#c084fc';
+        
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: #c084fc; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;">
+            <div style="color: ${color}; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;">
                 <div style="display: flex; align-items: center; gap: 0.3rem;">
-                    <span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span>
+                    <span class="material-symbols-outlined" style="font-size: 1rem;">${icon}</span>
                     ${label}
                 </div>
                 <span style="font-weight: 600; color: #fff;">${eq.specialEffectValue || ''}</span>

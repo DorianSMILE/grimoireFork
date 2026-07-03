@@ -1156,12 +1156,96 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const cvInput = document.getElementById('charVoie');
     if (cvInput) {
+        function applyVoieBaseStats(voieNom) {
+            function buildStatHtml(label, valStr, icon, baseColor) {
+                const val = parseInt(valStr.replace('+',''));
+                const isPos = val > 0;
+                const valColor = isPos ? '#10b981' : '#ef4444';
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; background: #0f172a; border-radius: 0.3rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${baseColor};">${icon}</span>
+                            ${label}
+                        </div>
+                        <div style="font-weight: 600; color: ${valColor};">${valStr}</div>
+                    </div>
+                `;
+            }
+
+            let diffHtml = '<span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Sélectionnez une voie pour voir les effets.</span>';
+            // Statistiques par défaut
+            let stats = {
+                charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
+                charArmor: 5, charResistance: 5, charSpeed: 1, charCrit: 5,
+                charRegenHp: 2, charRegenMana: 4
+            };
+
+            if (voieNom) {
+                diffHtml = "";
+                if (voieNom.includes('Raison')) {
+                    stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
+                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
+                } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
+                    stats.charMana = 130; stats.charResistance = 8;
+                    diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+                } else if (voieNom.includes('Trahison')) {
+                    stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
+                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+                } else if (voieNom.includes('Consolidation')) {
+                    stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
+                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+                    diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
+                } else if (voieNom.includes('Conviction')) {
+                    stats.charRegenMana = 0; stats.charHp = 90; stats.charPower = 11;
+                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Régen Mana', '-4', 'cyclone', '#38bdf8');
+                } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
+                    stats.charHp = 120; stats.charArmor = 8;
+                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+                } else if (voieNom.includes('Destruction')) {
+                    stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
+                    diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
+                    diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
+                } else if (voieNom.includes('Violence')) {
+                    stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
+                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+                    diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
+                    diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
+                }
+            }
+
+            const diffEl = document.getElementById('voieStatsDiff');
+            if (diffEl) diffEl.innerHTML = diffHtml;
+
+            if (editingId) return; // Ne pas écraser les stats en mode édition
+
+            // Mise à jour des champs
+            for (const [key, value] of Object.entries(stats)) {
+                const el = document.getElementById(key);
+                if (el) el.value = value;
+            }
+        }
+
         cvInput.addEventListener('change', (e) => {
             const vId = e.target.value;
             const iconEl = document.getElementById('charVoieInfoIcon');
 
             if (!vId) {
                 if (iconEl) iconEl.style.display = 'none';
+                applyVoieBaseStats(null);
                 return;
             }
             const v = voies.find(x => x.id == vId);
@@ -1182,8 +1266,12 @@ window.addEventListener('DOMContentLoaded', async () => {
                     `;
                 }
                 iconEl.style.display = 'inline-block';
+                applyVoieBaseStats(v.nom);
             } else if (iconEl) {
                 iconEl.style.display = 'none';
+                applyVoieBaseStats(null);
+            } else {
+                applyVoieBaseStats(null);
             }
         });
     }

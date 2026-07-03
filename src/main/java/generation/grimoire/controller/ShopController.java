@@ -318,8 +318,22 @@ public class ShopController {
         return equipmentRepository.findById(id).map(eq -> {
             if (!eq.isShopTemplate())
                 return ResponseEntity.badRequest().body(Map.of("message", "Not a template"));
+
+            String oldName = eq.getName();
             updateFromDto(eq, dto);
             equipmentRepository.save(eq);
+
+            // Update all instances with the same old name
+            if (oldName != null && !oldName.isEmpty()) {
+                List<Equipment> instances = equipmentRepository.findByName(oldName);
+                for (Equipment instance : instances) {
+                    if (instance.getId().equals(eq.getId())) continue;
+                    updateFromDto(instance, dto);
+                    instance.setShopTemplate(false); // ensure it remains an instance
+                    equipmentRepository.save(instance);
+                }
+            }
+
             return ResponseEntity.ok(toShopDto(eq));
         }).orElse(ResponseEntity.notFound().build());
     }

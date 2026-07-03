@@ -88,31 +88,7 @@ public class EquipmentController {
                         .map(this::toDto).toList());
     }
 
-    /** Créer ou mettre à jour un équipement */
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> createOrUpdate(@RequestBody EquipmentDto dto, java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
-        generation.grimoire.entity.auth.AppUser currentUser = userRepository.findByUsername(principal.getName()).orElse(null);
-        boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
-
-        Equipment equipment;
-        boolean isUpdate = false;
-
-        if (dto.getId() != null && equipmentRepository.existsById(java.util.Objects.requireNonNull(dto.getId()))) {
-            equipment = equipmentRepository.findById(java.util.Objects.requireNonNull(dto.getId())).orElseThrow();
-            if (!isAdmin && equipment.getUser() != null && !equipment.getUser().getUsername().equals(principal.getName())) {
-                return ResponseEntity.status(403).build();
-            }
-            isUpdate = true;
-        } else {
-            equipment = new Equipment();
-            equipment.setUser(currentUser);
-            if (currentUser != null) {
-                equipment.setOwnerUsername(currentUser.getUsername());
-            }
-        }
-
+    private void updateEquipmentFromDto(Equipment equipment, EquipmentDto dto) {
         equipment.setName(dto.getName());
         equipment.setSlot(dto.getSlot());
         equipment.setBonusHealthMax(dto.getBonusHealthMax());
@@ -140,6 +116,35 @@ public class EquipmentController {
             equipment.setSpecialEffect(dto.getSpecialEffect());
         }
         equipment.setSpecialEffectValue(dto.getSpecialEffectValue());
+    }
+
+    /** Créer ou mettre à jour un équipement */
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createOrUpdate(@RequestBody EquipmentDto dto, java.security.Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).build();
+        generation.grimoire.entity.auth.AppUser currentUser = userRepository.findByUsername(principal.getName()).orElse(null);
+        boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+
+        Equipment equipment;
+        boolean isUpdate = false;
+
+        if (dto.getId() != null && equipmentRepository.existsById(java.util.Objects.requireNonNull(dto.getId()))) {
+            equipment = equipmentRepository.findById(java.util.Objects.requireNonNull(dto.getId())).orElseThrow();
+            if (!isAdmin && equipment.getUser() != null && !equipment.getUser().getUsername().equals(principal.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+            isUpdate = true;
+        } else {
+            equipment = new Equipment();
+            equipment.setUser(currentUser);
+            if (currentUser != null) {
+                equipment.setOwnerUsername(currentUser.getUsername());
+            }
+        }
+
+        String oldName = isUpdate ? equipment.getName() : null;
+        updateEquipmentFromDto(equipment, dto);
 
         // Assigner à un personnage si fourni
         if (dto.getPersonnageId() != null) {
@@ -172,6 +177,15 @@ public class EquipmentController {
         }
 
         Equipment saved = equipmentRepository.save(equipment);
+
+        if (isUpdate && oldName != null && !oldName.isEmpty()) {
+            List<Equipment> instances = equipmentRepository.findByName(oldName);
+            for (Equipment instance : instances) {
+                if (instance.getId().equals(saved.getId())) continue;
+                updateEquipmentFromDto(instance, dto);
+                equipmentRepository.save(instance);
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", isUpdate

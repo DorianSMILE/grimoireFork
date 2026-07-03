@@ -476,9 +476,9 @@ export function getSpellCardHtml(sp) {
 
     if (sp.voie && sp.voie.nom && sp.voie.nom.toLowerCase().includes('violence')) {
         if (sp.inspiration) {
-            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Inspiration</span>`;
+            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">storm</span>Inspiration</span>`;
         } else {
-            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(219, 39, 119, 0.2); color: #f472b6; border: 1px solid rgba(219, 39, 119, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">local_fire_department</span>Expiration</span>`;
+            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(217, 70, 239, 0.2); color: #d946ef; border: 1px solid rgba(217, 70, 239, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Expiration</span>`;
         }
     }
     if (sp.spiritualite && sp.spiritualite.nom && sp.spiritualite.nom.toLowerCase().includes('karma')) {

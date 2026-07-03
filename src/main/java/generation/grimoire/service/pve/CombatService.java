@@ -1158,7 +1158,22 @@ public class CombatService {
                 p.setBanalSpellCastThisTurn(true);
                 captureLogs(session, () -> {
                     int playerDmg = p.getEffectiveStat(generation.grimoire.enumeration.StatType.STRENGTH);
-                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " (Force : " + playerDmg + ") !");
+                    
+                    int totalCrit = p.getCrit() + p.getStatFlatBonus(generation.grimoire.enumeration.StatType.CRIT);
+                    totalCrit = Math.max(0, Math.min(100, totalCrit));
+                    boolean isCrit = ((int)(Math.random() * 100) + 1) <= totalCrit;
+                    
+                    if (isCrit) {
+                        System.out.println("💥 Coup Critique déclenché par " + p.getName() + " !");
+                        double critMult = 1.5;
+                        int bonus = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CRIT_DAMAGE);
+                        if (bonus > 0) {
+                            critMult += (bonus / 100.0);
+                        }
+                        playerDmg = (int)(playerDmg * critMult);
+                    }
+
+                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " (" + (isCrit ? "Critique : " : "Force : ") + playerDmg + ") !");
                     targetMonster.takeDamage(playerDmg, generation.grimoire.enumeration.DamageType.PHYSIC, p);
                 });
             }

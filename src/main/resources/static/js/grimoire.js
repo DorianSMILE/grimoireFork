@@ -197,7 +197,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                 if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT'].includes(t)) iconName = 'water_drop';
                 if (['Shield', 'SHIELD'].includes(t)) iconName = 'security';
                 if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT', 'BURN'].includes(t)) iconName = 'local_fire_department';
-                if (t === 'POISON') iconName = 'coronavirus';
+                if (t === 'POISON') iconName = 'science';
                 if (t === 'AME_DETACHEE') iconName = 'person_cancel';
                 if (t === 'Purge' || t === 'PURGE') iconName = 'cleaning_services';
                 if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t)) iconName = isBad ? 'trending_down' : 'trending_up';

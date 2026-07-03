@@ -257,6 +257,8 @@ export function makeCustomSelect(selectIdOrElement) {
             if (t.includes('mot') || (t.includes('mana') && t.includes('tick'))) return { icon: 'cyclone', color: '#8b5cf6' };
             if (t.includes('dissipation') || t.includes('purge')) return { icon: 'air', color: '#a78bfa' };
             if (t.includes('bouclier') || t.includes('shield')) return { icon: 'security', color: '#06b6d4' };
+            if (t.includes('brûlure') || t.includes('brulure')) return { icon: 'local_fire_department', color: '#ef4444' };
+            if (t.includes('poison')) return { icon: 'science', color: '#10b981' };
             return { icon: 'auto_awesome', color: '#94a3b8' };
         }
         if (id === 'sortBy') {

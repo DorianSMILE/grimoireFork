@@ -73,21 +73,21 @@ const STAT_DEFS = [
 ];
 
 const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 40 },
-    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 46 },
-    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 17 },
-    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 17 },
-    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 34 },
-    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 40 },
-    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 46 },
-    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
-    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
-    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 24 }
+    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
+    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
 };
 
 function calculateEquipmentWeight() {
     let w = 0;
-    
+
     let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
     let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
 
@@ -900,7 +900,7 @@ function renderEquipModal() {
                 const icon = isCursed ? 'skull' : 'auto_awesome';
                 const color = isCursed ? '#9ca3af' : '#c084fc';
                 const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
-                
+
                 specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">
                     <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
                     ${label} : ${equipped.specialEffectValue}
@@ -1218,7 +1218,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (cvInput) {
         function applyVoieBaseStats(voieNom) {
             function buildStatHtml(label, valStr, icon, baseColor) {
-                const val = parseInt(valStr.replace('+',''));
+                const val = parseInt(valStr.replace('+', ''));
                 const isPos = val > 0;
                 const valColor = isPos ? '#10b981' : '#ef4444';
                 return `

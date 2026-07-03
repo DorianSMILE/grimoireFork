@@ -332,8 +332,8 @@ public class Personnage {
             default -> throw new IllegalArgumentException("Unknown damage type: " + damageType);
         };
 
-        // Récupérer le multiplicateur de vulnérabilité
-        double damageTakenMultiplier = Math.max(1.0, getStatBuffMultiplier(statType));
+        // Récupérer le multiplicateur de vulnérabilité / réduction
+        double damageTakenMultiplier = Math.max(0.0, getStatBuffMultiplier(statType));
 
         int cursedVul = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_VULNERABILITY);
         if (cursedVul != 0) {

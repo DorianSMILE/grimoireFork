@@ -281,13 +281,13 @@
 }
 
 .vault-card.rarity-INHABITUEL {
-    border-top: 2px solid #ffffff;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(30, 41, 59, 0.4) 30%);
+    border-top: 2px solid #22c55e;
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.05) 0%, rgba(30, 41, 59, 0.4) 30%);
 }
 
 .vault-card.rarity-RARE {
-    border-top: 2px solid #22c55e;
-    background: linear-gradient(180deg, rgba(34, 197, 94, 0.05) 0%, rgba(30, 41, 59, 0.4) 30%);
+    border-top: 2px solid #3b82f6;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 41, 59, 0.4) 30%);
 }
 
 .vault-card.rarity-MYTHIQUE {

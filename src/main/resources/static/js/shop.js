@@ -43,8 +43,8 @@ const STAT_DEFS = [
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
-    INHABITUEL: '#ffffff',
-    RARE: '#22c55e',
+    INHABITUEL: '#22c55e',
+    RARE: '#3b82f6',
     MYTHIQUE: '#f97316',
     LEGENDAIRE: '#f59e0b',
     EPIQUE: '#ef4444',
@@ -184,8 +184,8 @@ function generateStandHtml(eq) {
     // Calculate RGB values for gradient
     let r = 239, g = 68, b = 68;
     if (rarityColor === '#94a3b8') { r = 148; g = 163; b = 184; }
-    else if (rarityColor === '#ffffff') { r = 255; g = 255; b = 255; }
     else if (rarityColor === '#22c55e') { r = 34; g = 197; b = 94; }
+    else if (rarityColor === '#3b82f6') { r = 59; g = 130; b = 246; }
     else if (rarityColor === '#f97316') { r = 249; g = 115; b = 22; }
     else if (rarityColor === '#f59e0b') { r = 245; g = 158; b = 11; }
     else if (rarityColor === '#ef4444') { r = 239; g = 68; b = 68; }
@@ -338,8 +338,8 @@ function renderSpecials() {
 
         let r = 239, g = 68, b = 68;
         if (color === '#94a3b8') { r = 148; g = 163; b = 184; }
-        else if (color === '#ffffff') { r = 255; g = 255; b = 255; }
         else if (color === '#22c55e') { r = 34; g = 197; b = 94; }
+        else if (color === '#3b82f6') { r = 59; g = 130; b = 246; }
         else if (color === '#f97316') { r = 249; g = 115; b = 22; }
         else if (color === '#f59e0b') { r = 245; g = 158; b = 11; }
         else if (color === '#ef4444') { r = 239; g = 68; b = 68; }

@@ -1799,7 +1799,7 @@ function updateUI(data) {
                             } else if (data.currentRoom.altarRewardType === 'ITEM') {
                                 const eq = data.currentRoom.altarRewardEquipment;
                                 if (eq) {
-                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#ffffff', 'RARE': '#22c55e', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#f59e0b', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#555555' };
+                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#f59e0b', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#555555' };
                                     const rarityColor = rarityColors[eq.rarity] || '#94a3b8';
                                     const tooltipDataHtml = typeof generateEquipmentTooltipHTML === 'function' ? generateEquipmentTooltipHTML(eq) : '';
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';

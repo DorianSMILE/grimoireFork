@@ -404,6 +404,18 @@
             MAUDIT: '#555555'
         };
 
+        function getSlotInfo(eq) {
+            if (!eq) return { icon: 'help', color: '#94a3b8' };
+            const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+            if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+                const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+                const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+                info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+                info.color = catColors[eq.consumableCategory] || '#854c4c';
+            }
+            return info;
+        }
+
         const DEFAULT_SECRETS_META = [
             { name: "Secret du Chaos", icon: "local_fire_department", color: "#ff0000" },
             { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
@@ -554,6 +566,18 @@
                 }
             }
 
+            const levelInput = document.getElementById('rewardLevel');
+            if (levelInput) {
+                if (type === 'UNLOCK_FEATURE') {
+                    levelInput.disabled = false;
+                    levelInput.style.opacity = '1';
+                } else {
+                    levelInput.disabled = true;
+                    levelInput.style.opacity = '0.5';
+                    levelInput.value = 1;
+                }
+            }
+
             let optionsHtml = '';
             let displayLabel = 'Choisir un objet...';
 
@@ -604,8 +628,9 @@
                 `;
             } else if (type === 'GIVE_CONSUMABLE') {
                 allConsumables.forEach(c => {
+                    const slotInfo = getSlotInfo(c);
                     optionsHtml += `<div class="custom-option" data-value="${c.name}">
-                                        <span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span>
+                                        <span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                                         ${c.name}
                                     </div>`;
                 });
@@ -923,7 +948,9 @@
                 }
                 if (r.requiredConsumables) {
                     for (const [k, v] of Object.entries(r.requiredConsumables)) {
-                        reqs.push(`<span class="anomaly-badge" style="border: 1px solid #10b981; background: linear-gradient(#10b98125, #10b98125), #1e293b; color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #10b981;">inventory_2</span> ${v}x ${k}</span>`);
+                        const consTemp = allConsumables.find(c => c.name === k);
+                        const slotInfo = getSlotInfo(consTemp);
+                        reqs.push(`<span class="anomaly-badge" style="border: 1px solid ${slotInfo.color}; background: linear-gradient(${slotInfo.color}25, ${slotInfo.color}25), #1e293b; color: ${slotInfo.color}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${v}x ${k}</span>`);
                     }
                 }
 
@@ -954,9 +981,14 @@
                         rewardHtml = `<span style="color: #10b981;">${r.rewardType} - ${r.rewardQuantity}x ${r.rewardName} (Niv. ${r.rewardLevel})</span>`;
                     }
                 } else if (r.rewardType === 'GIVE_CONSUMABLE') {
-                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #10b981; background: linear-gradient(#10b98125, #10b98125), #1e293b; color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #10b981;">inventory_2</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
+                    const consTemp = allConsumables.find(c => c.name === r.rewardName);
+                    const slotInfo = getSlotInfo(consTemp);
+                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid ${slotInfo.color}; background: linear-gradient(${slotInfo.color}25, ${slotInfo.color}25), #1e293b; color: ${slotInfo.color}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
                 } else if (r.rewardType === 'GIVE_EQUIPMENT') {
-                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #fbbf24; background: linear-gradient(#fbbf2425, #fbbf2425), #1e293b; color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #fbbf24;">shield</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
+                    const eqTemp = allEquipments.find(e => e.name === r.rewardName);
+                    const slotInfo = getSlotInfo(eqTemp);
+                    const rColor = eqTemp ? (RARITY_COLORS[eqTemp.rarity] || '#fbbf24') : '#fbbf24';
+                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid ${rColor}; background: linear-gradient(${rColor}25, ${rColor}25), #1e293b; color: ${rColor}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
                 } else if (r.rewardType === 'GIVE_SPIRIT_XP') {
                     rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #38bdf8; background: linear-gradient(#38bdf825, #38bdf825), #1e293b; color: #38bdf8; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #38bdf8;">self_improvement</span> ${r.rewardQuantity} XP Spiritualité</span>`;
                 } else if (r.rewardType === 'UNLOCK_FEATURE') {

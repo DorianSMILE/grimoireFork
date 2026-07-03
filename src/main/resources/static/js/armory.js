@@ -369,21 +369,29 @@ async function submitEquipment() {
     let specialEffect = document.getElementById('eqSpecialEffect').value;
     let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-    // Security: Only Epic and Relic can have special effects
-    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE') {
+    // Security: Only Epic, Relic and Maudit can have special effects
+    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
         specialEffect = 'NONE';
         specialEffectValue = 0;
     } else {
-        // If they chose no effect on an Epic/Relic, we just ignore the value
+        // If they chose no effect on an Epic/Relic/Maudit, we just ignore the value
         if (specialEffect === 'NONE') {
             specialEffectValue = 0;
         }
     }
 
-    // Security: Special effect value must be strictly positive
-    if (specialEffect !== 'NONE' && specialEffectValue <= 0) {
-        showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
-        return;
+    // Security: Special effect value must not be 0
+    if (specialEffect !== 'NONE') {
+        if (rarity === 'MAUDIT') {
+            if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
+            if (specialEffectValue === 0) {
+                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
+                return;
+            }
+        } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
+            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
+            return;
+        }
     }
 
     const dto = {
@@ -827,7 +835,7 @@ function renderEquipModal() {
                     'CHEAT_DEATH': 'Ange Gardien',
                     'CRIT_DAMAGE': 'Dégâts Critiques',
                     'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-                    'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (Perte hp % cout de mana)',
+                    'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
                     'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
                     'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
                     'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',

@@ -146,7 +146,7 @@ function generateStandHtml(eq) {
             'CHEAT_DEATH': 'Ange Gardien',
             'CRIT_DAMAGE': 'Dégâts Critiques',
             'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-            'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (Perte hp % cout de mana)',
+            'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
             'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
             'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
             'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',

@@ -557,7 +557,7 @@ window.selectCharacter = async function (id) {
     } else {
         const iconMap = {
             'CASQUE': 'masks', 'PLASTRON': 'shield', 'BOTTES': 'footprint',
-            'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter'
+            'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter', 'ARME_GAUCHE': 'swords', 'ARME_DROITE': 'swords', 'ARME_DEUX_MAINS': 'swords'
         };
         const colorMap = {
             'COMMUN': '#94a3b8', 'INHABITUEL': '#ffffff', 'RARE': '#22c55e', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#f59e0b',

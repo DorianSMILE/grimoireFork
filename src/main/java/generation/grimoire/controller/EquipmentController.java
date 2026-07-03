@@ -227,6 +227,17 @@ public class EquipmentController {
         // Si on précise un slot cible (ex: changer un anneau de main), on met à jour l'équipement
         generation.grimoire.enumeration.EquipmentSlot finalSlot = targetSlot != null ? targetSlot : equipment.getSlot();
 
+        // Ne jamais changer la catégorie d'une arme à 2 mains
+        if (equipment.getSlot() == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
+            finalSlot = generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS;
+        }
+
+        try {
+            checkSlotConflicts(personnageId, finalSlot);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+
         // Si l'admin équipe un de ses propres objets sur le personnage d'un autre joueur, on duplique l'objet
         if (isAdmin && equipment.getUser() != null && personnage.getUser() != null
                 && !equipment.getUser().getId().equals(personnage.getUser().getId())) {
@@ -263,11 +274,10 @@ public class EquipmentController {
             return ResponseEntity.ok(response);
         }
 
-        if (targetSlot != null) {
+        if (targetSlot != null && equipment.getSlot() != generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
             equipment.setSlot(targetSlot);
         }
 
-        // Retirer l'ancien équipement du même slot
         equipmentRepository.findByPersonnageIdAndSlot(personnageId, equipment.getSlot())
                 .ifPresent(old -> {
                     old.setPersonnage(null);
@@ -280,6 +290,19 @@ public class EquipmentController {
         Map<String, Object> response = new HashMap<>();
         response.put("message", personnage.getName() + " équipe \"" + equipment.getName() + "\".");
         return ResponseEntity.ok(response);
+    }
+
+    private void checkSlotConflicts(Long personnageId, generation.grimoire.enumeration.EquipmentSlot slotToEquip) {
+        if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
+            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE).isPresent() ||
+                equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE).isPresent()) {
+                throw new IllegalArgumentException("Impossible d'équiper une arme à 2 mains : l'emplacement est déjà occupé.");
+            }
+        } else if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE || slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE) {
+            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS).isPresent()) {
+                throw new IllegalArgumentException("Impossible d'équiper cette arme : une arme à 2 mains est déjà équipée.");
+            }
+        }
     }
 
     /** Déséquiper un objet */

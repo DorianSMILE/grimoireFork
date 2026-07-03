@@ -32,6 +32,9 @@ let allEquipments = [];
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'swords', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'swords', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
@@ -76,6 +79,9 @@ const WEIGHT_LIMITS = {
     ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 17 },
     BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 34 },
     CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 40 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 46 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
     CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 24 }
 };
 
@@ -705,7 +711,7 @@ function renderPersonnages() {
         const persoEquips = allEquipments.filter(e => e.personnage && e.personnage.id === p.id);
         let equipHtml = '';
         if (persoEquips.length > 0) {
-            const slotOrder = ['CASQUE', 'PLASTRON', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+            const slotOrder = ['CASQUE', 'PLASTRON', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE'];
             equipHtml = `<div class="char-equip-row">` +
                 persoEquips.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot)).map(eq => {
                     const slotInfo = getSlotInfo(eq);
@@ -806,12 +812,21 @@ function renderEquipModal() {
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
-    const slots = Object.keys(SLOT_LABELS);
+    const slots = Object.keys(SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS');
     const equippedItems = allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
 
     slotsContainer.innerHTML = slots.map(slotKey => {
         const slotInfo = SLOT_LABELS[slotKey];
-        const equipped = equippedItems.find(e => e.slot === slotKey);
+        let equipped = equippedItems.find(e => e.slot === slotKey);
+        const twoHanded = equippedItems.find(e => e.slot === 'ARME_DEUX_MAINS');
+
+        if (slotKey === 'ARME_GAUCHE' && twoHanded) {
+            equipped = twoHanded;
+        }
+
+        if (slotKey === 'ARME_DROITE' && twoHanded) {
+            equipped = twoHanded;
+        }
 
         if (equipped) {
             const statsChips = STAT_DEFS
@@ -856,7 +871,7 @@ function renderEquipModal() {
             }
 
             return `
-                <div class="equip-slot-card equipped">
+                <div class="equip-slot-card equipped" data-slot="${slotKey}">
                     <div class="equip-slot-header">
                         <span class="equip-slot-label">
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.1rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
@@ -875,6 +890,13 @@ function renderEquipModal() {
         } else {
             // Available items for this slot
             let available = allEquipments.filter(e => e.slot === slotKey && !e.personnage);
+
+            // Special case for weapons: allow ARME_DEUX_MAINS in both weapon slots
+            if (slotKey === 'ARME_GAUCHE' || slotKey === 'ARME_DROITE') {
+                available = allEquipments.filter(e =>
+                    (e.slot === slotKey || e.slot === 'ARME_DEUX_MAINS') && !e.personnage
+                );
+            }
 
             // Special case for rings: allow any ring in any ring slot
             if (slotKey === 'ANNEAU_GAUCHE' || slotKey === 'ANNEAU_DROIT') {
@@ -953,6 +975,7 @@ function renderEquipModal() {
                                 <div class="custom-option" data-value="${a.id}" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
                                     <span class="${a.rarity ? 'rarity-' + a.rarity : ''}">${a.name}</span>
                                     ${a.rarity ? '<span style="font-size: 0.7rem; opacity: 0.5; margin-left: 0.3rem;">(' + a.rarity + ')</span>' : ''}
+                                    ${a.slot === 'ARME_DEUX_MAINS' ? '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.3rem; font-weight: bold;">[2 Mains]</span>' : ''}
                                     ${tooltipHtml}
                                 </div>
                             `;
@@ -965,7 +988,7 @@ function renderEquipModal() {
             }
 
             return `
-                <div class="equip-slot-card empty">
+                <div class="equip-slot-card empty" data-slot="${slotKey}">
                     <div class="equip-slot-header">
                         <span class="equip-slot-label">
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.1rem; color: ${slotInfo.color}; opacity: 0.5;">${slotInfo.icon}</span>

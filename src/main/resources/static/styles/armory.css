@@ -560,8 +560,8 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 1.5rem;
-    width: 90%;
-    max-width: 680px;
+    width: 95%;
+    max-width: 1100px;
     max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
@@ -648,13 +648,29 @@
 /* ===== Equipment Slot Cards ===== */
 .equip-slots-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem;
 }
+
+/* Force explicit placement */
+.equip-slot-card[data-slot="CASQUE"] { grid-column: 2; grid-row: 1; }
+.equip-slot-card[data-slot="PLASTRON"] { grid-column: 3; grid-row: 1; }
+
+.equip-slot-card[data-slot="ARME_GAUCHE"] { grid-column: 1; grid-row: 2; }
+.equip-slot-card[data-slot="ANNEAU_GAUCHE"] { grid-column: 2; grid-row: 2; }
+.equip-slot-card[data-slot="ANNEAU_DROIT"] { grid-column: 3; grid-row: 2; }
+.equip-slot-card[data-slot="ARME_DROITE"] { grid-column: 4; grid-row: 2; }
+
+.equip-slot-card[data-slot="BOTTES"] { grid-column: 2; grid-row: 3; }
+.equip-slot-card[data-slot="CAPE"] { grid-column: 3; grid-row: 3; }
 
 @media (max-width: 500px) {
     .equip-slots-grid {
         grid-template-columns: 1fr;
+    }
+    .equip-slot-card[data-slot] {
+        grid-column: 1 / -1;
+        grid-row: auto;
     }
 }
 

@@ -81,6 +81,9 @@ export function createAnomalyBadgeHtml(anomalyName, showName = false) {
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'swords', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'swords', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },

@@ -3,8 +3,11 @@ let allEquipments = [];
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
-    ANNEAU_GAUCHE: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
-    ANNEAU_DROIT: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'swords', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'swords', color: '#ef4444' },
+    ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
+    ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
     CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
     CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
@@ -55,6 +58,9 @@ const WEIGHT_LIMITS = {
     ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 17 },
     BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 34 },
     CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 40 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 46 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 23 },
     CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 24 }
 };
 
@@ -362,7 +368,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
 function renderVault() {
     // Sort allEquipments: rarity order, then slot, then name
     const rarityOrder = { 'MAUDIT': -1, 'RELIQUE': 0, 'EPIQUE': 1, 'LEGENDAIRE': 2, 'MYTHIQUE': 3, 'RARE': 4, 'INHABITUEL': 5, 'COMMUN': 6 };
-    const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ANNEAU_GAUCHE': 3, 'ANNEAU_DROIT': 3, 'BOTTES': 4, 'CAPE': 5 };
+    const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ARME_DEUX_MAINS': 3, 'ARME_GAUCHE': 4, 'ARME_DROITE': 5, 'ANNEAU_GAUCHE': 6, 'ANNEAU_DROIT': 7, 'BOTTES': 8, 'CAPE': 9, 'CONSOMMABLE': 10 };
 
     let sorted = [...allEquipments].sort((a, b) => {
         const rA = rarityOrder[a.rarity || 'COMMUN'];
@@ -591,7 +597,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Render create form slot select
     const slotOptionsContainer = document.getElementById('eqSlotOptions');
     if (slotOptionsContainer) {
-        const slots = ['CASQUE', 'PLASTRON', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+        const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
         slotOptionsContainer.innerHTML = slots.map(s => {
             const info = SLOT_LABELS[s];
             return `<div class="custom-option" data-value="${s}">

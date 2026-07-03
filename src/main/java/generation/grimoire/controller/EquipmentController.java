@@ -176,7 +176,7 @@ public class EquipmentController {
             equipment.setPersonnage(null);
         }
 
-        Equipment saved = equipmentRepository.save(equipment);
+        Equipment saved = equipmentRepository.save(java.util.Objects.requireNonNull(equipment));
 
         if (isUpdate && oldName != null && !oldName.isEmpty()) {
             List<Equipment> instances = equipmentRepository.findByName(oldName);

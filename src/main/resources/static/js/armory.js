@@ -86,20 +86,57 @@ const WEIGHT_LIMITS = {
 };
 
 function calculateEquipmentWeight() {
-    const hp = parseFloat(document.getElementById('eqHp').value) || 0;
-    const mana = parseFloat(document.getElementById('eqMana').value) || 0;
-    const power = parseFloat(document.getElementById('eqPower').value) || 0;
-    const str = parseFloat(document.getElementById('eqStr').value) || 0;
-    const armor = parseFloat(document.getElementById('eqArmor').value) || 0;
-    const res = parseFloat(document.getElementById('eqRes').value) || 0;
-    const speed = parseFloat(document.getElementById('eqSpeed').value) || 0;
-    const crit = parseFloat(document.getElementById('eqCrit').value) || 0;
-    const regenHp = parseFloat(document.getElementById('eqRegenHp').value) || 0;
-    const regenMana = parseFloat(document.getElementById('eqRegenMana').value) || 0;
-    const effectValue = parseFloat(document.getElementById('eqSpecialEffectValue').value) || 0;
-    const baseWeightVal = parseFloat(document.getElementById('eqBaseWeight')?.value) || 0;
+    let w = 0;
+    
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
 
-    return (hp / 5) + (mana / 5) + (power / 2) + (str / 2) + (armor / 2) + (res / 2) + (speed * 2) + crit + regenHp + regenMana + effectValue + baseWeightVal;
+    const slot = document.getElementById('eqSlot').value;
+    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (slot === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (slot === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (parseFloat(document.getElementById('eqHp').value) || 0) * mHp;
+    w += (parseFloat(document.getElementById('eqMana').value) || 0) * mMana;
+    w += (parseFloat(document.getElementById('eqPower').value) || 0) * mPow;
+    w += (parseFloat(document.getElementById('eqStr').value) || 0) * mStr;
+    w += (parseFloat(document.getElementById('eqArmor').value) || 0) * mArm;
+    w += (parseFloat(document.getElementById('eqRes').value) || 0) * mRes;
+    w += (parseFloat(document.getElementById('eqSpeed').value) || 0) * mSpd;
+    w += (parseFloat(document.getElementById('eqCrit').value) || 0) * mCrit;
+    w += (parseFloat(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
+    w += (parseFloat(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
+
+    const baseWeightVal = parseFloat(document.getElementById('eqBaseWeight')?.value) || 0;
+    w += baseWeightVal;
+
+    // Add special effect weight if Epic/Relic/Maudit
+    const rarity = document.getElementById('eqRarity').value;
+    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
+        const specialEffect = document.getElementById('eqSpecialEffect')?.value;
+        const effectVal = parseFloat(document.getElementById('eqSpecialEffectValue').value) || 0;
+
+        if (specialEffect && specialEffect !== 'NONE' && effectVal !== 0) {
+            w += effectVal * 1.5;
+        }
+    }
+    return w;
 }
 
 function updateWeightUI() {

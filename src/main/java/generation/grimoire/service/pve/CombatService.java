@@ -1411,7 +1411,7 @@ public class CombatService {
 
                             int monsterDmg = physDmg + magicDmg;
 
-                            if (behavior == MonsterBehavior.INSENSIBLE) {
+                            if (behavior == MonsterBehavior.BRUTAL) {
                                 System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
                                         + " et inflige " + monsterDmg + " dégâts bruts.");
                                 if (monsterDmg > 0) {
@@ -1709,11 +1709,12 @@ if (targetPlayer.getHealthCurrent() <= 0) {
                         + " (la plus faible Résistance - Assassin).");
                 return target;
             }
-            case INSENSIBLE -> {
-                // Random target, but damage type is handled in caller
-                Personnage target = alivePlayers.get(rnd.nextInt(alivePlayers.size()));
+            case BRUTAL -> {
+                Personnage target = alivePlayers.stream()
+                        .min(java.util.Comparator.comparingInt(Personnage::getHealthMax))
+                        .orElse(alivePlayers.get(0));
                 session.addLog("\uD83E\uDDA0 " + m.getBase().getName() + " frappe " + target.getName()
-                        + " avec des dégâts bruts (Insensible).");
+                        + " (le moins de PV max - Brutal).");
                 return target;
             }
             default -> {

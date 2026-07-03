@@ -2665,12 +2665,12 @@ function generateFighterHtml(c, isHero) {
                 'CORRUPTEUR': "Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.",
                 'LEADER': "Leader : Ordonne à tous les autres monstres d'attaquer sa cible.",
                 'ASSASSIN': "Assassin : Vise systématiquement le joueur avec le moins de Résistance.",
-                'INSENSIBLE': "Insensible : Ses attaques infligent des dégâts bruts (ignore l'armure).",
+                'BRUTAL': "Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l'armure).",
                 'TRANSCENDANT': "Transcendant : Il attaque toutes les cibles adverse à la fois."
             };
             const bTitle = behaviorTitles[c.behavior] || '';
-            const bIcon = { 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'INSENSIBLE': 'shield', 'TRANSCENDANT': 'grid_view' }[c.behavior] || 'check_box_outline_blank';
-            const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'INSENSIBLE': 'Insensible', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
+            const bIcon = { 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[c.behavior] || 'check_box_outline_blank';
+            const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
             monsterBadgesHtml += `<span title="${bTitle}" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${bIcon}</span>${bLabel}</span>`;
         }
         monsterBadgesHtml += `</div>`;

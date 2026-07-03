@@ -7,6 +7,6 @@ public enum MonsterBehavior {
                 // actuel
     LEADER, // Force tous les alliés monstres à attaquer la même cible
     ASSASSIN, // Cible le joueur avec le moins de Résistance
-    INSENSIBLE, // Dégâts bruts (ignore armure/résistance)
+    BRUTAL, // Dégâts bruts (ignore armure/résistance)
     TRANSCENDANT // Attaque toutes les cibles adverse à la fois
 }

@@ -617,9 +617,9 @@
                                                     style="color: #ef4444;">gps_fixed</span>Assassin
                                             </div>
                                             <div class="custom-option"
-                                                onclick="selectMonsterBehavior('INSENSIBLE', 'Insensible', 'shield', '#9ca3af')">
+                                                onclick="selectMonsterBehavior('BRUTAL', 'Brutal', 'shield', '#9ca3af')">
                                                 <span class="material-symbols-outlined cs-icon"
-                                                    style="color: #9ca3af;">shield</span>Insensible
+                                                    style="color: #9ca3af;">shield</span>Brutal
                                             </div>
                                             <div class="custom-option"
                                                 onclick="selectMonsterBehavior('TRANSCENDANT', 'Transcendant', 'grid_view', '#fbbf24')">
@@ -1014,6 +1014,11 @@
     <div class="pve-notif" id="pveNotif"></div>
 
     <script src="/js/auth.js"></script>
+    <script type="module">
+        import { showGlobalTooltip, hideGlobalTooltip } from '/js/ui.js';
+        window.showGlobalTooltip = showGlobalTooltip;
+        window.hideGlobalTooltip = hideGlobalTooltip;
+    </script>
     <script src="/js/pve-admin.js?v=2"></script>
     <script>
         document.addEventListener('click', (e) => {

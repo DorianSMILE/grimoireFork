@@ -187,9 +187,11 @@ function generateStandHtml(eq) {
     else if (rarityColor === '#22c55e') { r = 34; g = 197; b = 94; }
     else if (rarityColor === '#3b82f6') { r = 59; g = 130; b = 246; }
     else if (rarityColor === '#f97316') { r = 249; g = 115; b = 22; }
+    else if (rarityColor === '#eab308') { r = 234; g = 179; b = 8; }
     else if (rarityColor === '#f59e0b') { r = 245; g = 158; b = 11; }
     else if (rarityColor === '#ef4444') { r = 239; g = 68; b = 68; }
     else if (rarityColor === '#a855f7') { r = 168; g = 85; b = 247; }
+    else if (rarityColor === '#9ca3af') { r = 156; g = 163; b = 175; }
     else if (rarityColor === '#555555') { r = 85; g = 85; b = 85; }
 
     let standStyle = '';
@@ -341,9 +343,11 @@ function renderSpecials() {
         else if (color === '#22c55e') { r = 34; g = 197; b = 94; }
         else if (color === '#3b82f6') { r = 59; g = 130; b = 246; }
         else if (color === '#f97316') { r = 249; g = 115; b = 22; }
+        else if (color === '#eab308') { r = 234; g = 179; b = 8; }
         else if (color === '#f59e0b') { r = 245; g = 158; b = 11; }
         else if (color === '#ef4444') { r = 239; g = 68; b = 68; }
         else if (color === '#a855f7') { r = 168; g = 85; b = 247; }
+        else if (color === '#9ca3af') { r = 156; g = 163; b = 175; }
         else if (color === '#555555') { r = 85; g = 85; b = 85; }
 
         html += `

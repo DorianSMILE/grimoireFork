@@ -66,16 +66,41 @@ const WEIGHT_LIMITS = {
 
 function calculateWeight(eq) {
     let w = eq.baseWeight || 0;
-    w += (eq.bonusHealthMax || 0) * 0.2;
-    w += (eq.bonusManaMax || 0) * 0.2;
-    w += (eq.bonusPower || 0) * 2.0;
-    w += (eq.bonusStrength || 0) * 2.0;
-    w += (eq.bonusArmor || 0) * 1.0;
-    w += (eq.bonusResistance || 0) * 1.0;
-    w += (eq.bonusSpeed || 0) * 2.0;
-    w += (eq.bonusCrit || 0) * 1.0;
-    w += (eq.regenHealthPerTurn || 0) * 1.0;
-    w += (eq.regenManaPerTurn || 0) * 1.0;
+
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const s = eq.slot;
+    if (s === 'ARME_GAUCHE' || s === 'ARME_DROITE' || s === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (s === 'CASQUE' || s === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (s === 'ANNEAU_GAUCHE' || s === 'ANNEAU_DROIT') {
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (s === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (s === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (eq.bonusHealthMax || 0) * mHp;
+    w += (eq.bonusManaMax || 0) * mMana;
+    w += (eq.bonusPower || 0) * mPow;
+    w += (eq.bonusStrength || 0) * mStr;
+    w += (eq.bonusArmor || 0) * mArm;
+    w += (eq.bonusResistance || 0) * mRes;
+    w += (eq.bonusSpeed || 0) * mSpd;
+    w += (eq.bonusCrit || 0) * mCrit;
+    w += (eq.regenHealthPerTurn || 0) * mRegHp;
+    w += (eq.regenManaPerTurn || 0) * mRegMana;
 
     const rarity = eq.rarity;
     if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {

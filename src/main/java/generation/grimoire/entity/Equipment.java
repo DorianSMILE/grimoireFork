@@ -105,16 +105,54 @@ public class Equipment {
 
     public double calculateWeight() {
         double w = this.baseWeight;
-        w += this.bonusHealthMax * 0.2;
-        w += this.bonusManaMax * 0.2;
-        w += this.bonusPower * 2.0;
-        w += this.bonusStrength * 2.0;
-        w += this.bonusArmor * 1.0;
-        w += this.bonusResistance * 1.0;
-        w += this.bonusSpeed * 3.0;
-        w += this.bonusCrit * 1.5;
-        w += this.regenHealthPerTurn * 1.5;
-        w += this.regenManaPerTurn * 1.5;
+        
+        double mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+        double mSpd = 3.0, mCrit = 1.5, mRegHp = 1.5, mRegMana = 1.5;
+
+        if (this.slot != null) {
+            switch (this.slot) {
+                case ARME_GAUCHE:
+                case ARME_DROITE:
+                case ARME_DEUX_MAINS:
+                    mArm = 1.5; mRes = 1.5;
+                    mHp = 0.4; mMana = 0.4;
+                    mStr = 1.8; mPow = 1.8;
+                    mRegHp = 1.2; mRegMana = 1.2;
+                    break;
+                case CASQUE:
+                case PLASTRON:
+                    mArm = 0.8; mRes = 0.8;
+                    mStr = 2.5; mPow = 2.5;
+                    mSpd = 3.5;
+                    mCrit = 2.0;
+                    break;
+                case ANNEAU_GAUCHE:
+                case ANNEAU_DROIT:
+                    mMana = 0.1;
+                    mArm = 2.0; mRes = 2.0;
+                    mRegMana = 0.8;
+                    break;
+                case BOTTES:
+                    mSpd = 1.5;
+                    break;
+                case CAPE:
+                    mCrit = 1.5;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        w += this.bonusHealthMax * mHp;
+        w += this.bonusManaMax * mMana;
+        w += this.bonusPower * mPow;
+        w += this.bonusStrength * mStr;
+        w += this.bonusArmor * mArm;
+        w += this.bonusResistance * mRes;
+        w += this.bonusSpeed * mSpd;
+        w += this.bonusCrit * mCrit;
+        w += this.regenHealthPerTurn * mRegHp;
+        w += this.regenManaPerTurn * mRegMana;
 
         if ((this.rarity == generation.grimoire.enumeration.EquipmentRarity.EPIQUE ||
                 this.rarity == generation.grimoire.enumeration.EquipmentRarity.RELIQUE ||

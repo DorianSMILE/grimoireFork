@@ -1158,10 +1158,8 @@ public class CombatService {
                 p.setBanalSpellCastThisTurn(true);
                 captureLogs(session, () -> {
                     int playerDmg = p.getEffectiveStat(generation.grimoire.enumeration.StatType.STRENGTH);
-                    int damageDone = Math.max(1, playerDmg - targetMonster.getBase().getArmor());
-                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " et inflige "
-                            + damageDone + " dégâts !");
-                    targetMonster.takeDamage(damageDone);
+                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " (Force : " + playerDmg + ") !");
+                    targetMonster.takeDamage(playerDmg, generation.grimoire.enumeration.DamageType.PHYSIC, p);
                 });
             }
         }
@@ -1711,7 +1709,7 @@ if (targetPlayer.getHealthCurrent() <= 0) {
             }
             case BRUTAL -> {
                 Personnage target = alivePlayers.stream()
-                        .min(java.util.Comparator.comparingInt(Personnage::getHealthMax))
+                        .min(java.util.Comparator.comparingInt(p -> p.getHealthMax()))
                         .orElse(alivePlayers.get(0));
                 session.addLog("\uD83E\uDDA0 " + m.getBase().getName() + " frappe " + target.getName()
                         + " (le moins de PV max - Brutal).");

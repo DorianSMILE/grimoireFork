@@ -43,7 +43,7 @@ public class DamagePercentageEffect extends DamageEffect {
         }
 
         // Appliquer la réduction des malédictions
-        damage = applyCursedReduction(damage, caster, this.getDamageType());
+        damage = applyEquipmentModifiers(damage, caster, target, this.getDamageType());
 
         // Appliquer les dégâts à la cible
         target.takeDamage((int) damage, this.getDamageType(), caster);

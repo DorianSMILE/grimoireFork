@@ -140,14 +140,14 @@ document.addEventListener('click', (e) => {
                     border = '1px dashed rgba(85, 85, 85, 0.3)';
                     inputBorder = 'rgba(85, 85, 85, 0.3)';
                 }
-                
+
                 row.style.background = bg;
                 row.style.border = border;
                 document.getElementById('eqSpecialEffectLabelTitle').style.color = color;
                 document.getElementById('eqSpecialEffectValueTitle').style.color = color;
                 document.getElementById('eqSpecialEffectTrigger').style.borderColor = inputBorder;
                 document.getElementById('eqSpecialEffectValue').style.borderColor = inputBorder;
-                
+
                 const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
                 effectOptions.forEach(opt => {
                     const effectVal = opt.getAttribute('data-value');
@@ -161,7 +161,7 @@ document.addEventListener('click', (e) => {
                 });
 
                 const currentEffect = document.getElementById('eqSpecialEffect').value;
-                if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') || 
+                if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
                     (!isMaudit && currentEffect.startsWith('CURSED_'))) {
                     document.getElementById('eqSpecialEffect').value = 'NONE';
                     document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
@@ -194,7 +194,7 @@ async function loadEquipments() {
             const aUrl = window.isAdmin ? '/api/anomalies/all' : '/api/anomalies';
             const aRes = await fetch(aUrl);
             if (aRes.ok) anomaliesData = await aRes.json();
-        } catch(e) { console.error('Erreur chargement anomalies:', e); }
+        } catch (e) { console.error('Erreur chargement anomalies:', e); }
 
         anomaliesData.forEach(a => {
             a.isAnomalie = true;
@@ -221,7 +221,7 @@ async function loadEquipments() {
 let equipmentToDelete = null;
 let anomalieToDelete = null;
 
-window.deleteAnomalie = function(idsStr) {
+window.deleteAnomalie = function (idsStr) {
     anomalieToDelete = String(idsStr).split(',');
     equipmentToDelete = null;
     const firstId = Number(anomalieToDelete[0]);
@@ -233,7 +233,7 @@ window.deleteAnomalie = function(idsStr) {
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
 
-window.deleteEquipment = function(idsStr) {
+window.deleteEquipment = function (idsStr) {
     equipmentToDelete = String(idsStr).split(',');
     anomalieToDelete = null;
     const firstId = Number(equipmentToDelete[0]);
@@ -313,7 +313,7 @@ function groupEquipments(list) {
             groups[key].stackCount++;
         }
     });
-    
+
     return stacked.concat(Object.values(groups));
 }
 
@@ -330,7 +330,7 @@ function filterVault() {
 
     let filtered = allEquipments.filter(eq => {
         let matchMainType = false;
-        
+
         if (filterConsommable && filterAnomalie) {
             matchMainType = eq.isAnomalie || (!eq.isAnomalie && eq.slot === 'CONSOMMABLE');
         } else if (filterConsommable) {
@@ -340,7 +340,7 @@ function filterVault() {
         } else {
             matchMainType = (!eq.isAnomalie && eq.slot !== 'CONSOMMABLE');
         }
-        
+
         if (!matchMainType) return false;
 
         const matchName = !searchName || eq.name.toLowerCase().includes(searchName);
@@ -445,10 +445,10 @@ function renderGrid(equipments) {
                 typeStr = 'Matériau';
             }
 
-            const badgeHtml = (eq.stackCount && eq.stackCount > 1) 
-                ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>` 
+            const badgeHtml = (eq.stackCount && eq.stackCount > 1)
+                ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
                 : '';
-                
+
             const displayOwner = window.isAdmin ? (eq._groupOwner || eq.ownerUsername) : null;
             const adminOwnerHtml = displayOwner ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>` : '';
 
@@ -517,7 +517,9 @@ function renderGrid(equipments) {
                 'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
                 'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
                 'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
-                'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)'
+                'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+                'EXECUTION': 'Exécution (% Phy)',
+                'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
             };
             const label = effectLabels[eq.specialEffect] || eq.specialEffect;
             effectHtml = `<div class="vault-card-effect">
@@ -556,10 +558,10 @@ function renderGrid(equipments) {
             weightColor = `hsl(${hue}, 80%, 55%)`;
         }
 
-        const badgeHtml = (eq.stackCount && eq.stackCount > 1) 
-            ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>` 
+        const badgeHtml = (eq.stackCount && eq.stackCount > 1)
+            ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
             : '';
-            
+
         const displayOwner = window.isAdmin ? (eq._groupOwner || eq.ownerUsername) : null;
         const adminOwnerHtml = displayOwner ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>` : '';
 
@@ -638,7 +640,7 @@ window.addEventListener('authLoaded', async () => {
     if (btnCreateAnomalie) {
         btnCreateAnomalie.style.display = window.isAdmin ? 'flex' : 'none';
     }
-    
+
     const searchOwnerContainer = document.getElementById('searchOwnerContainer');
     if (searchOwnerContainer) {
         searchOwnerContainer.style.display = window.isAdmin ? 'flex' : 'none';
@@ -677,11 +679,11 @@ function resetEqForm() {
     document.getElementById('eqCrit').value = 0;
     document.getElementById('eqRegenHp').value = 0;
     document.getElementById('eqRegenMana').value = 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
 
     const catInput = document.getElementById('eqConsumableCategory');
     if (catInput) {
@@ -733,11 +735,11 @@ window.editEquipment = function (id) {
     document.getElementById('eqCrit').value = eq.bonusCrit || 0;
     document.getElementById('eqRegenHp').value = eq.regenHealthPerTurn || 0;
     document.getElementById('eqRegenMana').value = eq.regenManaPerTurn || 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
 
     const catInput = document.getElementById('eqConsumableCategory');
     if (catInput && eq.consumableCategory) {
@@ -789,7 +791,7 @@ window.editEquipment = function (id) {
                 row.style.background = bg;
                 row.style.border = border;
             }
-            
+
             const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
             effectOptions.forEach(opt => {
                 const effectVal = opt.getAttribute('data-value');
@@ -850,7 +852,7 @@ window.openCreateAnomalieModal = function () {
     document.getElementById('anomalieDescription').value = '';
     document.getElementById('anomalieSpiritualite').value = 'TENEBRES';
     document.getElementById('anomalieLevel').value = 1;
-    
+
     const toggleMagic = document.getElementById('anomalieMagicToggle');
     if (toggleMagic) {
         toggleMagic.checked = true;
@@ -861,7 +863,7 @@ window.openCreateAnomalieModal = function () {
     document.getElementById('anomalieCreateModal').classList.add('show');
 };
 
-window.editAnomalie = function(id) {
+window.editAnomalie = function (id) {
     editingAnomalieId = id;
     const eq = allEquipments.find(e => e.id === id && e.isAnomalie);
     if (!eq) return;
@@ -1047,7 +1049,7 @@ function calculateEquipmentWeight() {
     w += (parseInt(document.getElementById('eqCrit').value) || 0) * 1.0;
     w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * 1.0;
     w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * 1.0;
-    
+
     const baseWeightEl = document.getElementById('eqBaseWeight');
     if (baseWeightEl) w += parseFloat(baseWeightEl.value) || 0;
 
@@ -1064,7 +1066,7 @@ function calculateEquipmentWeight() {
     return w;
 }
 
-window.updateWeightUI = function() {
+window.updateWeightUI = function () {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;

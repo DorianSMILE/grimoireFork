@@ -1255,7 +1255,9 @@ function generateEquipmentTooltipHTML(eq) {
             'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
             'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
             'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
-            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)'
+            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+            'EXECUTION': 'Exécution (% Phy)',
+            'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">

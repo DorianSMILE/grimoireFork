@@ -76,7 +76,7 @@ public class DamageOverTimeEffect extends DamageEffect {
                 totalDamage = (int) (totalDamage * 1.5);
             }
             
-            double reducedDamage = applyCursedReduction(totalDamage, caster, this.damageType);
+            double reducedDamage = applyEquipmentModifiers(totalDamage, caster, target, this.damageType);
 
             target.takeDamage((int) reducedDamage, damageType, caster, burn != null && burn);
             duration--;

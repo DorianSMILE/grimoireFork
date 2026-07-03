@@ -150,7 +150,9 @@ function generateStandHtml(eq) {
             'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
             'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
             'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
-            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)'
+            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+            'EXECUTION': 'Exécution (% Phy)',
+            'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         effectHtml = `<div class="shop-stand-stat" style="background: rgba(168, 85, 247, 0.1); color: #c084fc;">
@@ -170,7 +172,7 @@ function generateStandHtml(eq) {
     const oldPriceHtml = isPromo ? `<span style="text-decoration: line-through; color: #ef4444; font-size: 0.8rem; opacity: 0.7;">${oldPriceStr}</span>` : '';
 
     let isHighRarity = (eq.rarity !== 'COMMUN' && eq.rarity !== 'INHABITUEL');
-    
+
     // Calculate RGB values for gradient
     let r = 239, g = 68, b = 68;
     if (rarityColor === '#94a3b8') { r = 148; g = 163; b = 184; }

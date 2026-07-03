@@ -22,7 +22,7 @@ public class DamageFixedEffect extends DamageEffect {
             finalDamage *= getCriticalMultiplier(caster);
         }
         
-        finalDamage = applyCursedReduction(finalDamage, caster, this.getDamageType());
+        finalDamage = applyEquipmentModifiers(finalDamage, caster, target, this.getDamageType());
 
         target.takeDamage((int) finalDamage, this.getDamageType(), caster);
     }

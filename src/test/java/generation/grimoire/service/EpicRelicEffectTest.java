@@ -51,7 +51,7 @@ class EpicRelicEffectTest {
 
         // Enemy should take 50 damage
         assertThat(enemy.getHealthCurrent()).isEqualTo(50);
-        
+
         // Hero should heal 20% of 50 = 10
         assertThat(hero.getHealthCurrent()).isEqualTo(60);
     }
@@ -85,7 +85,7 @@ class EpicRelicEffectTest {
 
         // 50% of 40 is 20 damage absorbed by mana
         assertThat(hero.getManaCurrent()).isEqualTo(80);
-        
+
         // Hero takes remaining 20 damage
         assertThat(hero.getHealthCurrent()).isEqualTo(80);
     }
@@ -101,10 +101,11 @@ class EpicRelicEffectTest {
         hero.takeDamage(200, DamageType.PHYSIC, enemy);
 
         // Hero should survive with max(1, 10% of max health) -> 10% of 100 = 10 HP
-        // Wait, let's verify what the code does exactly. Assuming it heals to some amount, or sets to 1.
+        // Wait, let's verify what the code does exactly. Assuming it heals to some
+        // amount, or sets to 1.
         // Let's assert > 0 for now.
         assertThat(hero.getHealthCurrent()).isGreaterThan(0);
-        
+
         // Equipment effect should be set to NONE
         assertThat(cheatDeathEq.getSpecialEffect()).isEqualTo(EquipmentEffectType.NONE);
     }
@@ -126,14 +127,73 @@ class EpicRelicEffectTest {
         };
         damageEffect.setDamageType(DamageType.PHYSIC);
         damageEffect.setDamage(100);
-        
+
         // Base crit multiplier is 1.5. Plus 50% = 2.0.
         // So 100 damage should become 200 damage.
         enemy.setHealthCurrent(300);
         enemy.setHealthMax(300);
         damageEffect.apply(hero, enemy);
-        
+
         // Enemy starts at 300 HP, should take 200 damage -> 100 HP
         assertThat(enemy.getHealthCurrent()).isEqualTo(100);
+    }
+
+    @Test
+    void testExecution() {
+        Equipment executionEq = new Equipment();
+        executionEq.setSpecialEffect(EquipmentEffectType.EXECUTION);
+        executionEq.setSpecialEffectValue(50); // +50% damage
+        hero.getEquipments().add(executionEq);
+
+        // Case 1: Enemy > 50% HP
+        enemy.setHealthCurrent(100);
+        enemy.setHealthMax(100);
+
+        DamageFixedEffect damageEffect = new DamageFixedEffect();
+        damageEffect.setDamageType(DamageType.PHYSIC);
+        damageEffect.setDamage(20);
+
+        damageEffect.apply(hero, enemy);
+        assertThat(enemy.getHealthCurrent()).isEqualTo(80); // 100 - 20 = 80
+
+        // Case 2: Enemy <= 50% HP
+        enemy.setHealthCurrent(50);
+
+        damageEffect.apply(hero, enemy);
+        // Base damage 20, +50% = 30 damage
+        assertThat(enemy.getHealthCurrent()).isEqualTo(20); // 50 - 30 = 20
+
+        // Case 3: Execution doesn't apply to MAGIC damage
+        enemy.setHealthCurrent(50);
+        damageEffect.setDamageType(DamageType.MAGIC);
+        damageEffect.apply(hero, enemy);
+        // Base damage 20, no execution bonus
+        assertThat(enemy.getHealthCurrent()).isEqualTo(30); // 50 - 20 = 30
+    }
+
+    @Test
+    void testMagicOverload() {
+        Equipment overloadEq = new Equipment();
+        overloadEq.setSpecialEffect(EquipmentEffectType.MAGIC_OVERLOAD);
+        overloadEq.setSpecialEffectValue(10); // 10% of current mana
+        hero.getEquipments().add(overloadEq);
+
+        hero.setManaCurrent(100);
+        enemy.setHealthCurrent(100);
+        enemy.setHealthMax(100);
+
+        DamageFixedEffect damageEffect = new DamageFixedEffect();
+        damageEffect.setDamageType(DamageType.MAGIC);
+        damageEffect.setDamage(20);
+
+        // Bonus: 10% of 100 = 10 damage
+        damageEffect.apply(hero, enemy);
+        assertThat(enemy.getHealthCurrent()).isEqualTo(70); // 100 - (20 + 10) = 70
+
+        // Test with different mana
+        hero.setManaCurrent(50);
+        damageEffect.apply(hero, enemy);
+        // Bonus: 10% of 50 = 5 damage
+        assertThat(enemy.getHealthCurrent()).isEqualTo(45); // 70 - (20 + 5) = 45
     }
 }

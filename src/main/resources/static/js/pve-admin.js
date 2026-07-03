@@ -27,13 +27,13 @@ function getSlotInfo(eq) {
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
-    INHABITUEL: '#ffffff',
+    INHABITUEL: '#22c55e',
     RARE: '#3b82f6',
-    MYTHIQUE: '#f97316',
-    LEGENDAIRE: '#f59e0b',
-    EPIQUE: '#c084fc',
-    RELIQUE: '#ef4444',
-    MAUDIT: '#555555'
+    MYTHIQUE: '#eab308',
+    LEGENDAIRE: '#f97316',
+    EPIQUE: '#ef4444',
+    RELIQUE: '#a855f7',
+    MAUDIT: '#9ca3af'
 };
 
 let editingDungeonId = null;
@@ -1620,13 +1620,18 @@ window.renderMonstersList = function () {
     filtered.forEach(m => {
         list.innerHTML += `
             <div class="monster-card">
-                <button class="delete-btn" onclick="deleteMonster(${m.id})">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-                <button class="delete-btn" style="right: 3rem; color: #3b82f6;" onclick="editMonster(${m.id})">
-                    <span class="material-symbols-outlined">edit</span>
-                </button>
-                <div class="monster-card-title">${m.name} <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Lvl ${m.level || 1}</span></div>
+                <div class="monster-level-badge">Lvl ${m.level || 1}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="monster-card-title" style="margin-bottom: 0;">${m.name}</div>
+                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editMonster(${m.id})" title="Modifier">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteMonster(${m.id})" title="Supprimer">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                     ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span title="${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Utilise la plus haute valeur entre Force et Puissance pour attaquer.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
@@ -1783,7 +1788,7 @@ window.renderDungeonsList = function () {
         filtered = filtered.filter(d => (d.recommendedLevel || 1) === lvl);
     }
 
-    filtered.forEach(d => {
+    filtered.forEach((d, index) => {
         let totalSalles = d.salles ? d.salles.length : 0;
         let combats = 0, bosses = 0, treasures = 0, alterations = 0, rencontres = 0, pieges = 0, portes = 0, totalMobs = 0, totalBossMobs = 0;
         if (d.salles) {
@@ -1831,13 +1836,24 @@ window.renderDungeonsList = function () {
 
         list.innerHTML += `
             <div class="monster-card">
-                <button class="delete-btn" onclick="deleteDungeon(${d.id})">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-                <button class="delete-btn" style="right: 3rem; color: #3b82f6;" onclick="editDungeon(${d.id})">
-                    <span class="material-symbols-outlined">edit</span>
-                </button>
-                <div class="monster-card-title">${d.name} <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Lvl ${d.recommendedLevel}</span></div>
+                <div class="monster-level-badge">Lvl ${d.recommendedLevel || 1}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="monster-card-title" style="margin-bottom: 0;">${d.name}</div>
+                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                        ${index > 0 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #10b981;" onclick="moveDungeonOrder(${d.id}, -1)" title="Monter">
+                            <span class="material-symbols-outlined">arrow_upward</span>
+                        </button>` : ''}
+                        ${index < filtered.length - 1 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #f59e0b;" onclick="moveDungeonOrder(${d.id}, 1)" title="Descendre">
+                            <span class="material-symbols-outlined">arrow_downward</span>
+                        </button>` : ''}
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editDungeon(${d.id})" title="Modifier">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteDungeon(${d.id})" title="Supprimer">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${d.description || ''}</div>
                 <div style="font-size: 0.85rem; color: #f8fafc; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; gap: 0.4rem;">
                     ${d.requiredSecret ? `<div style="color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${secretMeta.color};">${secretMeta.icon}</span> <span><strong style="color:${secretMeta.color};">${d.requiredSecret}</strong> (Lvl ${d.requiredSecretLevel || 1})</span></div>` : ''}
@@ -1856,6 +1872,36 @@ window.renderDungeonsList = function () {
             </div>
         `;
     });
+}
+
+async function moveDungeonOrder(id, direction) {
+    const index = allDungeons.findIndex(d => d.id === id);
+    if (index === -1) return;
+    if (index + direction < 0 || index + direction >= allDungeons.length) return;
+    
+    // Swap in array
+    const temp = allDungeons[index];
+    allDungeons[index] = allDungeons[index + direction];
+    allDungeons[index + direction] = temp;
+    
+    const orderedIds = allDungeons.map(d => d.id);
+    
+    try {
+        const res = await fetch('/api/admin/pve/dungeons/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderedIds)
+        });
+        
+        if (res.ok) {
+            renderDungeonsList();
+        } else {
+            alert("Erreur lors du changement d'ordre.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erreur réseau.");
+    }
 }
 
 async function editDungeon(id) {

@@ -35,6 +35,8 @@ public class Donjon {
     private int requiredSecretLevel = 1;
     
     private double entryCostGold = 0;
+    
+    private int displayOrder = 0;
 
     // For a simple novice dungeon, it's one combat. 
     // We can map multiple monsters to a dungeon if needed later, or just one boss.

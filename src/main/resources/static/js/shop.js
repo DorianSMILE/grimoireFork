@@ -45,11 +45,11 @@ const RARITY_COLORS = {
     COMMUN: '#94a3b8',
     INHABITUEL: '#22c55e',
     RARE: '#3b82f6',
-    MYTHIQUE: '#f97316',
-    LEGENDAIRE: '#f59e0b',
+    MYTHIQUE: '#eab308',
+    LEGENDAIRE: '#f97316',
     EPIQUE: '#ef4444',
     RELIQUE: '#a855f7',
-    MAUDIT: '#555555'
+    MAUDIT: '#9ca3af'
 };
 
 let shopItems = [];

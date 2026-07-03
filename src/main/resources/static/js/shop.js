@@ -175,11 +175,11 @@ function generateStandHtml(eq) {
     const priceStr = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : '?';
     const oldPriceStr = eq.originalPrice !== undefined ? (eq.originalPrice % 1 === 0 ? eq.originalPrice : eq.originalPrice.toFixed(1)) : '';
 
-    const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
+    const rarityColor = RARITY_COLORS[eq.rarity] || (isConsumable ? '#c084fc' : '#ef4444');
     const promoBadge = isPromo ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: bold; transform: rotate(15deg); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">-20%</div>` : '';
     const oldPriceHtml = isPromo ? `<span style="text-decoration: line-through; color: #ef4444; font-size: 0.8rem; opacity: 0.7;">${oldPriceStr}</span>` : '';
 
-    let isHighRarity = (eq.rarity !== 'COMMUN' && eq.rarity !== 'INHABITUEL');
+    let isHighRarity = !isConsumable && (eq.rarity !== 'COMMUN' && eq.rarity !== 'INHABITUEL');
 
     // Calculate RGB values for gradient
     let r = 239, g = 68, b = 68;

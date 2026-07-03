@@ -1056,14 +1056,14 @@ function resetForm() {
     document.getElementById('charName').value = '';
     document.getElementById('charHp').value = 100;
     document.getElementById('charMana').value = 100;
-    document.getElementById('charPower').value = 25;
+    document.getElementById('charPower').value = 10;
     document.getElementById('charStrength').value = 10;
-    document.getElementById('charArmor').value = 10;
-    document.getElementById('charResistance').value = 10;
-    document.getElementById('charSpeed').value = 0;
-    document.getElementById('charCrit').value = 0;
-    document.getElementById('charRegenHp').value = 0;
-    document.getElementById('charRegenMana').value = 0;
+    document.getElementById('charArmor').value = 5;
+    document.getElementById('charResistance').value = 5;
+    document.getElementById('charSpeed').value = 1;
+    document.getElementById('charCrit').value = 5;
+    document.getElementById('charRegenHp').value = 2;
+    document.getElementById('charRegenMana').value = 4;
     document.getElementById('charVoie').value = '';
     document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
 

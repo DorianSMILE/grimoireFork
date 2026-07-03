@@ -215,8 +215,13 @@ public class PersonnageController {
         map.put("resistance", p.getResistance());
         map.put("speed", p.getSpeed());
         map.put("crit", p.getCrit());
+        int voieManaRegen = 0;
+        if (p.getVoie() != null && "Voie de la Conviction".equals(p.getVoie().getNom())) {
+            voieManaRegen = 25 + (Math.max(0, p.getVoieLevel() - 1) * 4);
+        }
+
         map.put("regenHp", p.getRegenHp());
-        map.put("regenMana", p.getRegenMana());
+        map.put("regenMana", p.getRegenMana() + voieManaRegen);
 
         // Total stats pour l'affichage (inclus équipements, buffs, passifs)
         map.put("totalHealthMax", p.getTotalHealthMax());

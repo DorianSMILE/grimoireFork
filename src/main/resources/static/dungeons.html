@@ -749,9 +749,24 @@
                 <!-- Colonne Droite : Consommable & Bouton d'entrée -->
                 <div>
                     <h3
-                        style="font-family: 'Outfit'; font-size: 1.2rem; color: #f8fafc; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="material-symbols-outlined" style="color: #10b981;">inventory_2</span> Inventaire
+                        style="font-family: 'Outfit'; font-size: 1.2rem; color: #f8fafc; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-symbols-outlined" style="color: #10b981;">inventory_2</span> Inventaire
+                        </div>
                     </h3>
+                    
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <button class="consumable-filter" onclick="toggleConsumableFilter(this, 'hp')" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); color: #fca5a5; display: flex; align-items: center; gap: 0.3rem; opacity: 0.4; transition: all 0.2s;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">favorite</span> HP
+                        </button>
+                        <button class="consumable-filter" onclick="toggleConsumableFilter(this, 'mana')" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1); color: #93c5fd; display: flex; align-items: center; gap: 0.3rem; opacity: 0.4; transition: all 0.2s;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">water_drop</span> Mana
+                        </button>
+                        <button class="consumable-filter" onclick="toggleConsumableFilter(this, 'util')" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.1); color: #d8b4fe; display: flex; align-items: center; gap: 0.3rem; opacity: 0.4; transition: all 0.2s;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">construction</span> Util
+                        </button>
+                    </div>
+
                     <div id="prepConsumableList"
                         style="margin-bottom: 2rem; max-height: 250px; overflow-y: auto; overflow-x: hidden; padding-right: 0.5rem;">
                         <!-- Rempli par JS -->

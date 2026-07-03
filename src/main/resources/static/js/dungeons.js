@@ -339,12 +339,30 @@ async function loadConsumables() {
         const res = await fetch('/api/equipment/unassigned');
         if (res.ok) {
             const allUnassigned = await res.json();
-            availableConsumables = allUnassigned.filter(eq => eq.slot === 'CONSOMMABLE');
+            availableConsumables = allUnassigned
+                .filter(eq => eq.slot === 'CONSOMMABLE')
+                .sort((a, b) => a.name.localeCompare(b.name));
         }
     } catch (e) {
         console.error(e);
     }
 }
+
+let activeConsumableFilters = { hp: false, mana: false, util: false };
+
+window.toggleConsumableFilter = function(btn, type) {
+    activeConsumableFilters[type] = !activeConsumableFilters[type];
+    
+    if (activeConsumableFilters[type]) {
+        btn.style.opacity = '1';
+        btn.style.boxShadow = '0 0 8px currentColor';
+    } else {
+        btn.style.opacity = '0.4';
+        btn.style.boxShadow = 'none';
+    }
+    
+    renderConsumablesList();
+};
 
 function renderConsumablesList() {
     const list = document.getElementById('prepConsumableList');
@@ -364,8 +382,39 @@ function renderConsumablesList() {
         return;
     }
 
+    let filteredConsumables = availableConsumables;
+    const hasFilter = activeConsumableFilters.hp || activeConsumableFilters.mana || activeConsumableFilters.util;
+    
+    if (hasFilter) {
+        filteredConsumables = availableConsumables.filter(c => {
+            const isHp = (c.consumableHpPercent && c.consumableHpPercent > 0) || 
+                         (c.consumableMissingHpPercent && c.consumableMissingHpPercent > 0) || 
+                         (c.bonusHealthMax && c.bonusHealthMax > 0) ||
+                         c.consumableCategory === 'POTION_ROUGE' || 
+                         c.consumableCategory === 'POTION_ROSE' || 
+                         c.consumableCategory === 'NOURRITURE';
+            
+            const isMana = (c.consumableManaPercent && c.consumableManaPercent > 0) || 
+                           (c.consumableMissingManaPercent && c.consumableMissingManaPercent > 0) || 
+                           (c.bonusManaMax && c.bonusManaMax > 0) ||
+                           c.consumableCategory === 'POTION_BLEUE' || 
+                           c.consumableCategory === 'POTION_VIOLETTE';
+            
+            const isUtil = !isHp && !isMana;
+
+            return (activeConsumableFilters.hp && isHp) || 
+                   (activeConsumableFilters.mana && isMana) || 
+                   (activeConsumableFilters.util && isUtil);
+        });
+    }
+
+    if (filteredConsumables.length === 0) {
+        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
+        return;
+    }
+
     let cardsHtml = '';
-    availableConsumables.forEach(c => {
+    filteredConsumables.forEach(c => {
         const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
         const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
         const iconName = c.consumableCategory ? (catIcons[c.consumableCategory] || 'inventory_2') : 'inventory_2';
@@ -468,8 +517,8 @@ window.selectCharacter = async function (id) {
         resistance: char.resistance || 0,
         speed: char.speed || 0,
         crit: char.crit || 0,
-        regenHealthPerTurn: char.regenHealthPerTurn || 0,
-        regenManaPerTurn: char.regenManaPerTurn || 0
+        regenHealthPerTurn: char.regenHp || 0,
+        regenManaPerTurn: char.regenMana || 0
     };
 
     equipments.forEach(eq => {
@@ -491,6 +540,8 @@ window.selectCharacter = async function (id) {
     grid.innerHTML = `
         <div class="stat-item" style="color: #ec4899;"><span class="material-symbols-outlined">favorite</span> ${totalStats.healthMax} PV</div>
         <div class="stat-item" style="color: #38bdf8;"><span class="material-symbols-outlined">water_drop</span> ${totalStats.manaMax} Mana</div>
+        <div class="stat-item" style="color: #ec4899;"><span class="material-symbols-outlined">healing</span> ${totalStats.regenHealthPerTurn > 0 ? '+' : ''}${totalStats.regenHealthPerTurn} Régen PV</div>
+        <div class="stat-item" style="color: #38bdf8;"><span class="material-symbols-outlined">cyclone</span> ${totalStats.regenManaPerTurn > 0 ? '+' : ''}${totalStats.regenManaPerTurn} Régen Mana</div>
         <div class="stat-item" style="color: #a855f7;"><span class="material-symbols-outlined">auto_awesome</span> ${totalStats.power} Puissance</div>
         <div class="stat-item" style="color: #f43f5e;"><span class="material-symbols-outlined">fitness_center</span> ${totalStats.strength} Force</div>
         <div class="stat-item" style="color: #3b82f6;"><span class="material-symbols-outlined">shield</span> ${totalStats.armor} Armure</div>

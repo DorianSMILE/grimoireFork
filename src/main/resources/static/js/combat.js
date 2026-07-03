@@ -2649,7 +2649,7 @@ function generateFighterHtml(c, isHero) {
                 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.',
                 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.',
                 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.',
-                'HYBRIDE': 'Hybride : Utilise la plus haute valeur entre Force et Puissance pour attaquer.',
+                'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.',
                 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.',
                 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).'
             };

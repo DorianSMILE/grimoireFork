@@ -1414,7 +1414,7 @@ public class CombatService {
                             int magicDmg;
                             
                             if (mType == MonsterType.HYBRIDE) {
-                                int total = str + pwr;
+                                int total = (int) ((str + pwr) * 1.2);
                                 physDmg = total / 2;
                                 magicDmg = total - physDmg;
                             } else {

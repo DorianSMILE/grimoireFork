@@ -299,7 +299,7 @@
                         </div>
                         <div class="form-group">
                             <label id="rewardLevelLabel" style="margin-bottom: 0.2rem; font-size: 0.85rem;">Niveau
-                                (Anomalies/Secrets)</label>
+                                du Secret</label>
                             <input type="number" id="rewardLevel" value="1" min="1"
                                 style="padding: 0.4rem; font-size: 0.9rem;">
                         </div>
@@ -395,10 +395,13 @@
 
         const RARITY_COLORS = {
             COMMUN: '#94a3b8',
+            INHABITUEL: '#ffffff',
             RARE: '#3b82f6',
+            MYTHIQUE: '#f97316',
             LEGENDAIRE: '#f59e0b',
             EPIQUE: '#c084fc',
-            RELIQUE: '#ef4444'
+            RELIQUE: '#ef4444',
+            MAUDIT: '#555555'
         };
 
         const DEFAULT_SECRETS_META = [
@@ -467,11 +470,11 @@
                         const spiA = a.spiritualite || 'ZZZ';
                         const spiB = b.spiritualite || 'ZZZ';
                         if (spiA !== spiB) return spiA.localeCompare(spiB);
-                        
+
                         const lvlA = a.level || 1;
                         const lvlB = b.level || 1;
                         if (lvlA !== lvlB) return lvlA - lvlB;
-                        
+
                         return a.name.localeCompare(b.name);
                     });
                 }
@@ -501,8 +504,12 @@
                 merged.forEach(e => {
                     if (e && e.name) map.set(e.name, e);
                 });
+                const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
                 allEquipments = Array.from(map.values()).sort((a, b) => {
-                    if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+                    const rA = rarityOrder[a.rarity] || 99;
+                    const rB = rarityOrder[b.rarity] || 99;
+                    if (rA !== rB) return rA - rB;
+                    if (a.slot !== b.slot) return (a.slot || '').localeCompare(b.slot || '');
                     return a.name.localeCompare(b.name);
                 });
                 allConsumables = allEquipments.filter(e => e.slot === 'CONSOMMABLE');

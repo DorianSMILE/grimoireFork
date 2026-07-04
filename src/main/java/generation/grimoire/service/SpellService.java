@@ -147,6 +147,18 @@ public class SpellService {
         // Déduire les coûts
         caster.setManaCurrent(caster.getManaCurrent() - actualManaCost);
         caster.setHealthCurrent(caster.getHealthCurrent() - actualHealCost);
+        
+        // Malédiction: Hémorragie magique (Perte d'HP en % du mana consommé)
+        if (actualManaCost > 0) {
+            int hpLossPct = caster.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_HP_LOSS_ON_MANA);
+            if (hpLossPct != 0) {
+                int hpLoss = (int) (actualManaCost * Math.abs(hpLossPct) / 100.0);
+                if (hpLoss > 0) {
+                    caster.takeDamage(hpLoss, generation.grimoire.enumeration.DamageType.BRUT, caster);
+                    System.out.println(caster.getName() + " subit " + hpLoss + " dégâts de malédiction (Hémorragie magique) !");
+                }
+            }
+        }
         caster.setPassiveState("destruction_heat", currentHeat - actualHeatCost);
         
         String costMsg = "";
@@ -298,6 +310,20 @@ public class SpellService {
         actualHealCost = costs[1];
         actualHeatCost = costs.length > 2 ? costs[2] : actualHeatCost;
 
+        int requiredHeatFromEffects = 0;
+        if (toCast.getEffects() != null) {
+            for (generation.grimoire.entity.SpellEffect effect : toCast.getEffects()) {
+                if (effect.getRequiredChoiceKey() != null && choiceKey != null && !effect.getRequiredChoiceKey().equals(choiceKey)) {
+                    continue;
+                }
+                if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatFixedEffect hfe) {
+                    if (hfe.getAmount() < 0) {
+                        requiredHeatFromEffects += -hfe.getAmount();
+                    }
+                }
+            }
+        }
+
         if (caster.getManaCurrent() < actualManaCost) {
             System.out.println("Mana insuffisant pour lancer le sort " + toCast.getNom());
             return;
@@ -307,13 +333,25 @@ public class SpellService {
             return;
         }
         int currentHeat = caster.getPassiveState("destruction_heat", 0);
-        if (currentHeat < actualHeatCost) {
+        if (currentHeat < actualHeatCost + requiredHeatFromEffects) {
             System.out.println("Chaleur insuffisante pour lancer le sort " + toCast.getNom());
             return;
         }
 
         caster.setManaCurrent(caster.getManaCurrent() - actualManaCost);
         caster.setHealthCurrent(caster.getHealthCurrent() - actualHealCost);
+        
+        // Malédiction: Hémorragie magique (Perte d'HP en % du mana consommé)
+        if (actualManaCost > 0) {
+            int hpLossPct = caster.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_HP_LOSS_ON_MANA);
+            if (hpLossPct != 0) {
+                int hpLoss = (int) (actualManaCost * Math.abs(hpLossPct) / 100.0);
+                if (hpLoss > 0) {
+                    caster.takeDamage(hpLoss, generation.grimoire.enumeration.DamageType.BRUT, caster);
+                    System.out.println(caster.getName() + " subit " + hpLoss + " dégâts de malédiction (Hémorragie magique) !");
+                }
+            }
+        }
         caster.setPassiveState("destruction_heat", currentHeat - actualHeatCost);
         
         String costMsg2 = "";
@@ -562,7 +600,7 @@ public class SpellService {
             caster.setChannelingChoiceKey(null);
         }
 
-        // Le T1 est déjà résolu au moment du cast (dans castSpellGroup).
+        // Le T1 est déjà résolu au moment du cast (dans castSpell).
         // À la fin du tour de lancement, currentTurn vaut 1, on ne doit donc rien faire de plus.
         if (currentTurn == 1) {
             return;
@@ -594,6 +632,62 @@ public class SpellService {
             }
 
             java.util.List<Personnage> recipients = resolveRecipients(effect.getEffectTarget(), caster, target);
+
+            for (Personnage recipient : recipients) {
+                effect.apply(caster, recipient);
+            }
+        }
+    }
+
+    public void tickChanneling(Personnage caster, Personnage target, Integer choiceKey, Personnage ally, java.util.List<Personnage> allAllies, java.util.List<Personnage> allEnemies) {
+        Spell channeledSpell = caster.getChanneledSpell();
+        if (channeledSpell == null) return;
+
+        int duration = channeledSpell.getChannelingDuration();
+        int remaining = caster.getRemainingChannelingTurns();
+        int currentTurn = duration - remaining + 1;
+
+        // Decrement remaining turns
+        int newRemaining = remaining - 1;
+        caster.setRemainingChannelingTurns(Math.max(0, newRemaining));
+        if (newRemaining <= 0) {
+            caster.setChanneledSpell(null);
+            caster.setChannelingTarget(null);
+            caster.setChannelingChoiceKey(null);
+        }
+
+        // Le T1 est déjà résolu au moment du cast (dans castSpellGroup).
+        // À la fin du tour de lancement, currentTurn vaut 1, on ne doit donc rien faire de plus.
+        if (currentTurn == 1) {
+            return;
+        }
+
+        System.out.println("🌀 [Canalisation] Résolution des effets pour le Tour " + currentTurn + " de " + channeledSpell.getNom());
+
+        for (SpellEffect effect : channeledSpell.getEffects()) {
+            if (effect.getRequiredChoiceKey() != null && !effect.getRequiredChoiceKey().equals(choiceKey)) {
+                continue;
+            }
+            if (effect.getChannelingTurns() != null && !effect.getChannelingTurns().isEmpty()) {
+                if (!effect.getChannelingTurns().contains(currentTurn)) {
+                    continue;
+                }
+            }
+
+            // Vérification de la condition d'Âme Détachée
+            if (effect.getDetachedSoulRequirement() != null && effect.getDetachedSoulRequirement() != generation.grimoire.enumeration.DetachedSoulRequirement.NOT_AFFECTED) {
+                boolean hasAmeDetachee = caster.getActiveBuffs().stream()
+                        .anyMatch(b -> b.getStatAffected() == generation.grimoire.enumeration.StatType.AME_DETACHEE);
+                
+                if (effect.getDetachedSoulRequirement() == generation.grimoire.enumeration.DetachedSoulRequirement.REQUIRED && !hasAmeDetachee) {
+                    continue;
+                }
+                if (effect.getDetachedSoulRequirement() == generation.grimoire.enumeration.DetachedSoulRequirement.FORBIDDEN && hasAmeDetachee) {
+                    continue;
+                }
+            }
+
+            java.util.List<Personnage> recipients = resolveRecipientsGroup(effect.getEffectTarget(), caster, target, ally, allAllies, allEnemies);
 
             for (Personnage recipient : recipients) {
                 effect.apply(caster, recipient);

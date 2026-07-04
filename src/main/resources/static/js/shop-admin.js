@@ -3,12 +3,28 @@ let allEquipments = [];
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
-    ANNEAU_GAUCHE: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
-    ANNEAU_DROIT: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
+    ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
+    ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
     CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' }
+    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
 };
+
+function getSlotInfo(eq) {
+    if (!eq) return { icon: 'help', color: '#94a3b8' };
+    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+        info.color = catColors[eq.consumableCategory] || '#854c4c';
+    }
+    return info;
+}
 
 const RARITY_ORDER = {
     'COMMUN': 1,
@@ -36,27 +52,55 @@ const STAT_DEFS = [
 ];
 
 const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    PLASTRON: { COMMUN: 9, RARE: 19, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46 },
-    ANNEAU_GAUCHE: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    ANNEAU_DROIT: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    BOTTES: { COMMUN: 4, RARE: 12, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34 },
-    CAPE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    CONSOMMABLE: { COMMUN: 5, RARE: 9, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24 }
+    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
+    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
 };
 
 function calculateWeight(eq) {
     let w = eq.baseWeight || 0;
-    w += (eq.bonusHealthMax || 0) * 0.2;
-    w += (eq.bonusManaMax || 0) * 0.2;
-    w += (eq.bonusPower || 0) * 2.0;
-    w += (eq.bonusStrength || 0) * 2.0;
-    w += (eq.bonusArmor || 0) * 1.0;
-    w += (eq.bonusResistance || 0) * 1.0;
-    w += (eq.bonusSpeed || 0) * 2.0;
-    w += (eq.bonusCrit || 0) * 1.0;
-    w += (eq.regenHealthPerTurn || 0) * 1.0;
-    w += (eq.regenManaPerTurn || 0) * 1.0;
+
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const s = eq.slot;
+    if (s === 'ARME_GAUCHE' || s === 'ARME_DROITE' || s === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (s === 'CASQUE' || s === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (s === 'ANNEAU_GAUCHE' || s === 'ANNEAU_DROIT') {
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (s === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (s === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (eq.bonusHealthMax || 0) * mHp;
+    w += (eq.bonusManaMax || 0) * mMana;
+    w += (eq.bonusPower || 0) * mPow;
+    w += (eq.bonusStrength || 0) * mStr;
+    w += (eq.bonusArmor || 0) * mArm;
+    w += (eq.bonusResistance || 0) * mRes;
+    w += (eq.bonusSpeed || 0) * mSpd;
+    w += (eq.bonusCrit || 0) * mCrit;
+    w += (eq.regenHealthPerTurn || 0) * mRegHp;
+    w += (eq.regenManaPerTurn || 0) * mRegMana;
 
     const rarity = eq.rarity;
     if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {
@@ -112,19 +156,47 @@ document.addEventListener('click', (e) => {
         if (hiddenInput.id === 'eqRarity') {
             const val = hiddenInput.value;
             const row = document.getElementById('eqSpecialEffectRow');
-            if (val === 'EPIQUE' || val === 'RELIQUE') {
+            if (val === 'EPIQUE' || val === 'RELIQUE' || val === 'MAUDIT') {
                 row.style.display = 'grid';
                 const isEpic = val === 'EPIQUE';
-                const color = isEpic ? '#ef4444' : '#c084fc';
-                const bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
-                const border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
-                const inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(192, 132, 252, 0.3)';
+                const isMaudit = val === 'MAUDIT';
+                let color = isEpic ? '#ef4444' : '#a855f7';
+                let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
+                let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
+                let inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(168, 85, 247, 0.3)';
+                if (isMaudit) {
+                    color = '#555555';
+                    bg = 'rgba(85, 85, 85, 0.05)';
+                    border = '1px dashed rgba(85, 85, 85, 0.3)';
+                    inputBorder = 'rgba(85, 85, 85, 0.3)';
+                }
+
                 row.style.background = bg;
                 row.style.border = border;
                 document.getElementById('eqSpecialEffectLabelTitle').style.color = color;
                 document.getElementById('eqSpecialEffectValueTitle').style.color = color;
                 document.getElementById('eqSpecialEffectTrigger').style.borderColor = inputBorder;
                 document.getElementById('eqSpecialEffectValue').style.borderColor = inputBorder;
+
+                const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
+                effectOptions.forEach(opt => {
+                    const effectVal = opt.getAttribute('data-value');
+                    if (effectVal === 'NONE') {
+                        opt.style.display = 'block';
+                    } else if (isMaudit) {
+                        opt.style.display = effectVal.startsWith('CURSED_') ? 'block' : 'none';
+                    } else {
+                        opt.style.display = effectVal.startsWith('CURSED_') ? 'none' : 'block';
+                    }
+                });
+
+                const currentEffect = document.getElementById('eqSpecialEffect').value;
+                if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
+                    (!isMaudit && currentEffect.startsWith('CURSED_'))) {
+                    document.getElementById('eqSpecialEffect').value = 'NONE';
+                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                    document.getElementById('eqSpecialEffectValue').value = 0;
+                }
             } else {
                 row.style.display = 'none';
                 document.getElementById('eqSpecialEffect').value = 'NONE';
@@ -189,7 +261,18 @@ async function loadAnomalies() {
     try {
         const res = await fetch('/api/anomalies/all-templates');
         if (res.ok) {
-            window.allAnomalies = await res.json();
+            let data = await res.json();
+            window.allAnomalies = data.sort((a, b) => {
+                const spiriA = a.spiritualite || 'ZZZ';
+                const spiriB = b.spiritualite || 'ZZZ';
+                if (spiriA !== spiriB) return spiriA.localeCompare(spiriB);
+
+                const lvlA = a.level || 1;
+                const lvlB = b.level || 1;
+                if (lvlA !== lvlB) return lvlA - lvlB;
+
+                return a.name.localeCompare(b.name);
+            });
         }
     } catch (e) {
         console.error('Erreur chargement anomalies:', e);
@@ -309,14 +392,14 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
 // ===== Rendu =====
 function renderVault() {
     // Sort allEquipments: rarity order, then slot, then name
-    const rarityOrder = { 'RELIQUE': 0, 'EPIQUE': 1, 'LEGENDAIRE': 2, 'RARE': 3, 'COMMUN': 4 };
-    const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ANNEAU_GAUCHE': 3, 'ANNEAU_DROIT': 3, 'BOTTES': 4, 'CAPE': 5 };
+    const rarityOrder = { 'MAUDIT': -1, 'RELIQUE': 0, 'EPIQUE': 1, 'LEGENDAIRE': 2, 'MYTHIQUE': 3, 'RARE': 4, 'INHABITUEL': 5, 'COMMUN': 6 };
+    const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ARME_DEUX_MAINS': 3, 'ARME_GAUCHE': 4, 'ARME_DROITE': 5, 'ANNEAU_GAUCHE': 6, 'ANNEAU_DROIT': 7, 'BOTTES': 8, 'CAPE': 9, 'CONSOMMABLE': 10 };
 
     let sorted = [...allEquipments].sort((a, b) => {
         const rA = rarityOrder[a.rarity || 'COMMUN'];
         const rB = rarityOrder[b.rarity || 'COMMUN'];
         if (rA !== rB) return rA - rB;
-        
+
         const sA = slotOrder[a.slot] || 99;
         const sB = slotOrder[b.slot] || 99;
         if (sA !== sB) return sA - sB;
@@ -341,10 +424,13 @@ function renderGrid(equipments) {
 
     const groups = {
         COMMUN: [],
+        INHABITUEL: [],
         RARE: [],
+        MYTHIQUE: [],
         LEGENDAIRE: [],
         EPIQUE: [],
-        RELIQUE: []
+        RELIQUE: [],
+        MAUDIT: []
     };
 
     equipments.forEach(eq => {
@@ -358,17 +444,18 @@ function renderGrid(equipments) {
 
     const RARITY_LABELS = {
         COMMUN: { label: 'Commun', icon: 'lens' },
+        INHABITUEL: { label: 'Inhabituel', icon: 'radio_button_unchecked' },
         RARE: { label: 'Rare', icon: 'adjust' },
+        MYTHIQUE: { label: 'Mythique', icon: 'star_half' },
         LEGENDAIRE: { label: 'Légendaire', icon: 'workspace_premium' },
         EPIQUE: { label: 'Épique', icon: 'whatshot' },
-        RELIQUE: { label: 'Relique', icon: 'webhook' }
+        RELIQUE: { label: 'Relique', icon: 'webhook' },
+        MAUDIT: { label: 'Maudit', icon: 'skull' }
     };
 
     let html = '';
 
     for (const [rarity, items] of Object.entries(groups)) {
-        if (items.length === 0) continue;
-
         const rarityInfo = RARITY_LABELS[rarity];
 
         html += `
@@ -380,41 +467,57 @@ function renderGrid(equipments) {
                 <div class="shop-admin-list">
         `;
 
-        items.forEach(eq => {
-            const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+        if (items.length === 0) {
+            html += `<div style="padding: 1rem; color: #64748b; font-style: italic; text-align: center;">Aucun article dans cette rareté</div>`;
+        } else {
+            items.forEach(eq => {
+                const slotInfo = getSlotInfo(eq);
 
-            const statsHtml = STAT_DEFS
-                .filter(s => eq[s.key] && eq[s.key] !== 0)
-                .map(s => {
-                    const val = eq[s.key];
-                    const isMalus = val < 0;
-                    const sign = val > 0 ? '+' : '';
-                    const suffix = s.isPercent ? '%' : '';
-                    return `<span class="stat-badge ${isMalus ? 'malus' : ''}" title="${s.label}">
+                const statsHtml = STAT_DEFS
+                    .filter(s => eq[s.key] && eq[s.key] !== 0)
+                    .map(s => {
+                        const val = eq[s.key];
+                        const isMalus = val < 0;
+                        const sign = val > 0 ? '+' : '';
+                        const suffix = s.isPercent ? '%' : '';
+                        return `<span class="stat-badge ${isMalus ? 'malus' : ''}" title="${s.label}">
                         <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.8rem;">${s.icon}</span>
                         ${sign}${val}${suffix}
                     </span>`;
-                }).join('');
+                    }).join('');
 
-            let effectHtml = '';
-            if (eq.specialEffect && eq.specialEffect !== 'NONE') {
-                const effectLabels = {
-                    'LIFESTEAL': 'Vol de Vie',
-                    'THORNS': 'Épines',
-                    'MANA_SHIELD': 'Bouclier de Mana',
-                    'CHEAT_DEATH': 'Ange Gardien',
-                    'CRIT_DAMAGE': 'Dégâts Critiques'
-                };
-                const label = effectLabels[eq.specialEffect] || eq.specialEffect;
-                effectHtml = `<span class="stat-badge" style="background: rgba(168, 85, 247, 0.1); color: #c084fc;">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">auto_awesome</span>
+                let effectHtml = '';
+                if (eq.specialEffect && eq.specialEffect !== 'NONE') {
+                    const effectLabels = {
+                        'LIFESTEAL': 'Vol de Vie',
+                        'THORNS': 'Épines',
+                        'MANA_SHIELD': 'Bouclier de Mana',
+                        'CHEAT_DEATH': 'Ange Gardien',
+                        'CRIT_DAMAGE': 'Dégâts Critiques',
+                        'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
+                        'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+                        'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+                        'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+                        'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+                        'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+                        'EXECUTION': 'Exécution (% Phy)',
+                        'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
+                    };
+                    const label = effectLabels[eq.specialEffect] || eq.specialEffect;
+                    const isCursed = eq.specialEffect.startsWith('CURSED_');
+                    const icon = isCursed ? 'skull' : 'auto_awesome';
+                    const color = isCursed ? '#9ca3af' : '#c084fc';
+                    const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+                    effectHtml = `<span class="stat-badge" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
+                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
                     ${label} : ${eq.specialEffectValue}
                 </span>`;
-            }
+                }
 
-            const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, eq.rarity || 'COMMUN', eq.slot);
+                const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, eq.rarity || 'COMMUN', eq.slot);
 
-            html += `
+                html += `
                 <div class="shop-admin-row">
                     <div class="shop-admin-row-name">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.4rem; color: ${slotInfo.color};" title="${slotInfo.label}">${slotInfo.icon}</span>
@@ -429,24 +532,24 @@ function renderGrid(equipments) {
 
                     <div class="shop-admin-row-price">
                         ${(() => {
-                            let priceHtml = `${displayPrice} <span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>`;
-                            if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
-                                let anos = [];
-                                for(const [n, q] of Object.entries(eq.priceAnomalies)) {
-                                    let aTemp = window.allAnomalies ? window.allAnomalies.find(a => a.name === n) : null;
-                                    const CATEGORY_ICONS = {
-                                        'PIERRE': 'landslide',
-                                        'METAL': 'hardware',
-                                        'COEUR': 'favorite',
-                                        'ORBE': 'lens',
-                                        'CRISTAL': 'diamond',
-                                        'PLUME': 'history_edu',
-                                        'ECAILLE': 'waves',
-                                        'AUTRE': 'category'
-                                    };
-                                    const catIcon = aTemp && aTemp.category ? (CATEGORY_ICONS[aTemp.category] || 'category') : 'star';
-                                    const spiriColor = aTemp && aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';
-                                    const tooltipData = `
+                        let priceHtml = `${displayPrice} <span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>`;
+                        if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
+                            let anos = [];
+                            for (const [n, q] of Object.entries(eq.priceAnomalies)) {
+                                let aTemp = window.allAnomalies ? window.allAnomalies.find(a => a.name === n) : null;
+                                const CATEGORY_ICONS = {
+                                    'PIERRE': 'landslide',
+                                    'METAL': 'hardware',
+                                    'COEUR': 'favorite',
+                                    'ORBE': 'lens',
+                                    'CRISTAL': 'diamond',
+                                    'PLUME': 'history_edu',
+                                    'ECAILLE': 'waves',
+                                    'AUTRE': 'category'
+                                };
+                                const catIcon = aTemp && aTemp.category ? (CATEGORY_ICONS[aTemp.category] || 'category') : 'star';
+                                const spiriColor = aTemp && aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';
+                                const tooltipData = `
                                             <div class="anomaly-tooltip-title">${aTemp ? aTemp.name : n}</div>
                                             <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
                                                 <span style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
@@ -456,21 +559,21 @@ function renderGrid(equipments) {
                                                     <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
                                                     ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                                 </span>
-                                                ${aTemp && aTemp.spiritualite ? 
-                                                `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                                                ${aTemp && aTemp.spiritualite ?
+                                        `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
                                                     ${aTemp.spiritualite}
                                                 </span>` : ''}
                                             </div>
                                             <div class="anomaly-tooltip-desc">${aTemp && aTemp.description ? aTemp.description : 'Aucune description'}</div>
                                     `;
-                                    anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: ${spiriColor}25; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
+                                anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: ${spiriColor}25; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
                                         <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${spiriColor};">${catIcon}</span> ${q}
                                     </span>`);
-                                }
-                                priceHtml += ` <br><div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 4px;">${anos.join('')}</div>`;
                             }
-                            return priceHtml;
-                        })()}
+                            priceHtml += ` <br><div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 4px;">${anos.join('')}</div>`;
+                        }
+                        return priceHtml;
+                    })()}
                     </div>
 
                     <div class="shop-admin-row-actions">
@@ -483,7 +586,8 @@ function renderGrid(equipments) {
                     </div>
                 </div>
             `;
-        });
+            });
+        }
 
         html += `
                 </div>
@@ -498,7 +602,7 @@ function renderGrid(equipments) {
 window.addEventListener('DOMContentLoaded', () => {
     loadEquipments();
     loadAnomalies();
-    
+
     if (document.getElementById('addAnomalyPriceBtn')) {
         document.getElementById('addAnomalyPriceBtn').addEventListener('click', () => {
             addAnomalyRow();
@@ -518,7 +622,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Render create form slot select
     const slotOptionsContainer = document.getElementById('eqSlotOptions');
     if (slotOptionsContainer) {
-        const slots = ['CASQUE', 'PLASTRON', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+        const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
         slotOptionsContainer.innerHTML = slots.map(s => {
             const info = SLOT_LABELS[s];
             return `<div class="custom-option" data-value="${s}">
@@ -576,12 +680,17 @@ function resetEqForm() {
     document.getElementById('eqCrit').value = 0;
     document.getElementById('eqRegenHp').value = 0;
     document.getElementById('eqRegenMana').value = 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
-    
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
+    if (document.getElementById('eqConsumableCategory')) {
+        document.getElementById('eqConsumableCategory').value = 'AUTRE';
+        const label = document.getElementById('eqConsumableCategoryLabel');
+        if (label) label.innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">inventory_2</span> Autre';
+    }
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
+
     const anomaliesContainer = document.getElementById('priceAnomaliesContainer');
     if (anomaliesContainer) {
         anomaliesContainer.innerHTML = '';
@@ -631,12 +740,20 @@ window.editEquipment = function (id) {
     document.getElementById('eqCrit').value = eq.bonusCrit || 0;
     document.getElementById('eqRegenHp').value = eq.regenHealthPerTurn || 0;
     document.getElementById('eqRegenMana').value = eq.regenManaPerTurn || 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
-    
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
+    if (document.getElementById('eqConsumableCategory')) {
+        const cat = eq.consumableCategory || 'AUTRE';
+        document.getElementById('eqConsumableCategory').value = cat;
+        const option = document.querySelector(`#eqConsumableCategoryOptions .custom-option[data-value="${cat}"]`);
+        if (option) {
+            document.getElementById('eqConsumableCategoryLabel').innerHTML = option.innerHTML;
+        }
+    }
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
+
     const anomaliesContainer = document.getElementById('priceAnomaliesContainer');
     if (anomaliesContainer) {
         anomaliesContainer.innerHTML = '';
@@ -651,7 +768,7 @@ window.editEquipment = function (id) {
     const slotInput = document.getElementById('eqSlot');
     if (slotInput && eq.slot) {
         slotInput.value = eq.slot;
-        const info = SLOT_LABELS[eq.slot];
+        const info = getSlotInfo(eq);
         if (info) {
             document.getElementById('eqSlotLabel').innerHTML = `<span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span> ${info.label}`;
         }
@@ -667,19 +784,39 @@ window.editEquipment = function (id) {
         }
 
         const row = document.getElementById('eqSpecialEffectRow');
-        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE') {
+        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE' || eq.rarity === 'MAUDIT') {
             if (row) row.style.display = 'grid';
 
             const isEpic = eq.rarity === 'EPIQUE';
-            const color = isEpic ? '#ef4444' : '#c084fc';
-            const bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
-            const border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
-            const inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(192, 132, 252, 0.3)';
+            const isMaudit = eq.rarity === 'MAUDIT';
+            let color = isEpic ? '#ef4444' : '#a855f7';
+            let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
+            let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
+            let inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(168, 85, 247, 0.3)';
+
+            if (isMaudit) {
+                color = '#555555';
+                bg = 'rgba(85, 85, 85, 0.05)';
+                border = '1px dashed rgba(85, 85, 85, 0.3)';
+                inputBorder = 'rgba(85, 85, 85, 0.3)';
+            }
 
             if (row) {
                 row.style.background = bg;
                 row.style.border = border;
             }
+
+            const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
+            effectOptions.forEach(opt => {
+                const effectVal = opt.getAttribute('data-value');
+                if (effectVal === 'NONE') {
+                    opt.style.display = 'block';
+                } else if (isMaudit) {
+                    opt.style.display = effectVal.startsWith('CURSED_') ? 'block' : 'none';
+                } else {
+                    opt.style.display = effectVal.startsWith('CURSED_') ? 'none' : 'block';
+                }
+            });
 
             const labelTitle = document.getElementById('eqSpecialEffectLabelTitle');
             if (labelTitle) labelTitle.style.color = color;
@@ -731,7 +868,7 @@ window.submitEquipment = async function () {
     let specialEffect = document.getElementById('eqSpecialEffect').value;
     let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE') {
+    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
         specialEffect = 'NONE';
         specialEffectValue = 0;
     } else {
@@ -740,9 +877,17 @@ window.submitEquipment = async function () {
         }
     }
 
-    if (specialEffect !== 'NONE' && specialEffectValue <= 0) {
-        showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
-        return;
+    if (specialEffect !== 'NONE') {
+        if (rarity === 'MAUDIT') {
+            if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
+            if (specialEffectValue === 0) {
+                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
+                return;
+            }
+        } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
+            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
+            return;
+        }
     }
 
     const dto = {
@@ -763,6 +908,7 @@ window.submitEquipment = async function () {
         consumableManaPercent: document.getElementById('eqConsumableManaPercent') ? (parseInt(document.getElementById('eqConsumableManaPercent').value) || 0) : 0,
         consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
         consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
+        consumableCategory: document.getElementById('eqConsumableCategory') ? document.getElementById('eqConsumableCategory').value : 'AUTRE',
         baseWeight: parseFloat(document.getElementById('eqBaseWeight')?.value) || 0,
         rarity,
         specialEffect,
@@ -815,28 +961,53 @@ window.submitEquipment = async function () {
 
 function calculateEquipmentWeight() {
     let w = 0;
-    w += (parseInt(document.getElementById('eqHp').value) || 0) * 0.2;
-    w += (parseInt(document.getElementById('eqMana').value) || 0) * 0.2;
-    w += (parseInt(document.getElementById('eqPower').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqStr').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqArmor').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRes').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqCrit').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * 1.0;
-    
+
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const slot = document.getElementById('eqSlot').value;
+    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (slot === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (slot === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (parseInt(document.getElementById('eqHp').value) || 0) * mHp;
+    w += (parseInt(document.getElementById('eqMana').value) || 0) * mMana;
+    w += (parseInt(document.getElementById('eqPower').value) || 0) * mPow;
+    w += (parseInt(document.getElementById('eqStr').value) || 0) * mStr;
+    w += (parseInt(document.getElementById('eqArmor').value) || 0) * mArm;
+    w += (parseInt(document.getElementById('eqRes').value) || 0) * mRes;
+    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * mSpd;
+    w += (parseInt(document.getElementById('eqCrit').value) || 0) * mCrit;
+    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
+    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
+
     const baseWeightEl = document.getElementById('eqBaseWeight');
     if (baseWeightEl) w += parseFloat(baseWeightEl.value) || 0;
 
-    // Add special effect weight if Epic/Relic
+    // Add special effect weight if Epic/Relic/Maudit
     const rarity = document.getElementById('eqRarity').value;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {
+    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
         const specialEffect = document.getElementById('eqSpecialEffect').value;
         const effectVal = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-        if (specialEffect !== 'NONE' && effectVal > 0) {
-            w += effectVal * 1.0;
+        if (specialEffect !== 'NONE' && effectVal !== 0) {
+            w += effectVal * 1.5;
         }
     }
     return w;
@@ -844,10 +1015,13 @@ function calculateEquipmentWeight() {
 function calculateShopPrice(weight, rarity, slot) {
     let multiplier = 1;
     if (rarity === 'COMMUN') multiplier = 1;
+    else if (rarity === 'INHABITUEL') multiplier = 1.5;
     else if (rarity === 'RARE') multiplier = 2;
+    else if (rarity === 'MYTHIQUE') multiplier = 2.5;
     else if (rarity === 'LEGENDAIRE') multiplier = 3;
     else if (rarity === 'EPIQUE') multiplier = 5;
     else if (rarity === 'RELIQUE') multiplier = 6;
+    else if (rarity === 'MAUDIT') multiplier = 0.5;
 
     let slotMultiplier = 1.0;
     if (slot === 'PLASTRON') slotMultiplier = 1.1;
@@ -867,6 +1041,9 @@ window.updateWeightUI = function () {
         el.style.display = slot === 'CONSOMMABLE' ? 'none' : '';
     });
     document.querySelectorAll('.consumable-stat').forEach(el => {
+        el.style.display = slot === 'CONSOMMABLE' ? 'flex' : 'none';
+    });
+    document.querySelectorAll('.consumable-category-field').forEach(el => {
         el.style.display = slot === 'CONSOMMABLE' ? 'flex' : 'none';
     });
 
@@ -922,7 +1099,7 @@ window.updateWeightUI = function () {
     }
 }
 
-window.showTooltipFixed = function(el) {
+window.showTooltipFixed = function (el) {
     let tooltip = document.getElementById('globalFixedTooltip');
     if (!tooltip) {
         tooltip = document.createElement('div');
@@ -948,6 +1125,13 @@ window.showTooltipFixed = function(el) {
         document.body.appendChild(tooltip);
     }
     tooltip.innerHTML = el.getAttribute('data-tooltip-html');
+    const elColor = el.style.color || '#a855f7';
+    tooltip.style.border = '1px solid ' + elColor;
+    const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+    if (titleEl) {
+        titleEl.style.color = elColor;
+        titleEl.style.borderBottom = '1px solid ' + elColor;
+    }
     tooltip.style.display = 'block';
 
     const rect = el.getBoundingClientRect();
@@ -966,7 +1150,7 @@ window.showTooltipFixed = function(el) {
     tooltip.style.left = left + 'px';
 };
 
-window.hideTooltipFixed = function() {
+window.hideTooltipFixed = function () {
     const tooltip = document.getElementById('globalFixedTooltip');
     if (tooltip) tooltip.style.display = 'none';
 };

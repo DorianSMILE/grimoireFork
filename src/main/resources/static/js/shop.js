@@ -1,11 +1,28 @@
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
-    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' }
+    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
+    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
 };
+
+function getSlotInfo(eq) {
+    if (!eq) return { icon: 'help', color: '#94a3b8' };
+    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: eq.iconId || 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+        info.color = catColors[eq.consumableCategory] || '#854c4c';
+    }
+    return info;
+}
 
 const STAT_DEFS = [
     { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
@@ -26,10 +43,13 @@ const STAT_DEFS = [
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
+    INHABITUEL: '#22c55e',
     RARE: '#3b82f6',
-    LEGENDAIRE: '#f59e0b',
-    EPIQUE: '#c084fc',
-    RELIQUE: '#ef4444'
+    MYTHIQUE: '#f97316',
+    LEGENDAIRE: '#eab308',
+    EPIQUE: '#ef4444',
+    RELIQUE: '#a855f7',
+    MAUDIT: '#9ca3af'
 };
 
 let shopItems = [];
@@ -97,7 +117,7 @@ function showNotif(message, isError = false) {
 function generateStandHtml(eq) {
     const isPromo = eq.isDiscount;
     const isConsumable = eq.isConsumable;
-    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: eq.iconId || 'help', color: '#94a3b8' };
+    const slotInfo = getSlotInfo(eq);
 
     if (isConsumable && eq.iconId) {
         slotInfo.icon = eq.iconId;
@@ -127,12 +147,25 @@ function generateStandHtml(eq) {
             'THORNS': 'Épines',
             'MANA_SHIELD': 'Bouclier de Mana',
             'CHEAT_DEATH': 'Ange Gardien',
-            'CRIT_DAMAGE': 'Dégâts Critiques'
+            'CRIT_DAMAGE': 'Dégâts Critiques',
+            'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
+            'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+            'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+            'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+            'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+            'EXECUTION': 'Exécution (% Phy)',
+            'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
-        effectHtml = `<div class="shop-stand-stat" style="background: rgba(168, 85, 247, 0.1); color: #c084fc;">
+        const isCursed = eq.specialEffect.startsWith('CURSED_');
+        const icon = isCursed ? 'skull' : 'auto_awesome';
+        const color = isCursed ? '#9ca3af' : '#c084fc';
+        const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+        effectHtml = `<div class="shop-stand-stat" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
             <div style="display: flex; align-items: center; gap: 0.3rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">auto_awesome</span>
+                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
                 ${label}
             </div>
             <span style="font-weight: 600;">${eq.specialEffectValue}</span>
@@ -142,12 +175,34 @@ function generateStandHtml(eq) {
     const priceStr = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : '?';
     const oldPriceStr = eq.originalPrice !== undefined ? (eq.originalPrice % 1 === 0 ? eq.originalPrice : eq.originalPrice.toFixed(1)) : '';
 
-    const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
+    const rarityColor = RARITY_COLORS[eq.rarity] || (isConsumable ? '#c084fc' : '#ef4444');
     const promoBadge = isPromo ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: bold; transform: rotate(15deg); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">-20%</div>` : '';
     const oldPriceHtml = isPromo ? `<span style="text-decoration: line-through; color: #ef4444; font-size: 0.8rem; opacity: 0.7;">${oldPriceStr}</span>` : '';
 
+    let isHighRarity = !isConsumable && (eq.rarity !== 'COMMUN' && eq.rarity !== 'INHABITUEL');
+
+    // Calculate RGB values for gradient
+    let r = 239, g = 68, b = 68;
+    if (rarityColor === '#94a3b8') { r = 148; g = 163; b = 184; }
+    else if (rarityColor === '#22c55e') { r = 34; g = 197; b = 94; }
+    else if (rarityColor === '#3b82f6') { r = 59; g = 130; b = 246; }
+    else if (rarityColor === '#f97316') { r = 249; g = 115; b = 22; }
+    else if (rarityColor === '#eab308') { r = 234; g = 179; b = 8; }
+    else if (rarityColor === '#f59e0b') { r = 245; g = 158; b = 11; }
+    else if (rarityColor === '#ef4444') { r = 239; g = 68; b = 68; }
+    else if (rarityColor === '#a855f7') { r = 168; g = 85; b = 247; }
+    else if (rarityColor === '#9ca3af') { r = 156; g = 163; b = 175; }
+    else if (rarityColor === '#555555') { r = 85; g = 85; b = 85; }
+
+    let standStyle = '';
+    if (isPromo) {
+        standStyle = `border: 2px solid ${rarityColor}; box-shadow: 0 0 10px ${rarityColor}40; background: linear-gradient(135deg, rgba(${r},${g},${b},0.15) 0%, rgba(${r},${g},${b},0.05) 100%);`;
+    } else if (isHighRarity) {
+        standStyle = `border: 1px solid ${rarityColor}; box-shadow: 0 0 5px ${rarityColor}20; background: linear-gradient(135deg, rgba(${r},${g},${b},0.15) 0%, rgba(${r},${g},${b},0.05) 100%);`;
+    }
+
     return `
-        <div class="shop-stand" style="${isPromo ? `border: 1px solid ${rarityColor}; box-shadow: 0 0 10px ${rarityColor}40;` : ''}">
+        <div class="shop-stand" style="${standStyle}">
             ${promoBadge}
             <span class="material-symbols-outlined shop-stand-icon ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
             <div class="shop-stand-name">${eq.name}</div>
@@ -224,10 +279,13 @@ function renderShop() {
 
     const groups = {
         COMMUN: [],
+        INHABITUEL: [],
         RARE: [],
+        MYTHIQUE: [],
         LEGENDAIRE: [],
         EPIQUE: [],
-        RELIQUE: []
+        RELIQUE: [],
+        MAUDIT: []
     };
 
     dailyItems.forEach(eq => {
@@ -238,10 +296,13 @@ function renderShop() {
 
     const RARITY_LABELS = {
         COMMUN: 'Communs',
+        INHABITUEL: 'Inhabituel',
         RARE: 'Rare',
+        MYTHIQUE: 'Mythique',
         LEGENDAIRE: 'Légendaire',
         EPIQUE: 'Épique',
-        RELIQUE: 'Relique'
+        RELIQUE: 'Relique',
+        MAUDIT: 'Maudit'
     };
 
     let html = '';
@@ -279,9 +340,15 @@ function renderSpecials() {
 
         let r = 239, g = 68, b = 68;
         if (color === '#94a3b8') { r = 148; g = 163; b = 184; }
+        else if (color === '#22c55e') { r = 34; g = 197; b = 94; }
         else if (color === '#3b82f6') { r = 59; g = 130; b = 246; }
+        else if (color === '#f97316') { r = 249; g = 115; b = 22; }
+        else if (color === '#eab308') { r = 234; g = 179; b = 8; }
         else if (color === '#f59e0b') { r = 245; g = 158; b = 11; }
-        else if (color === '#c084fc') { r = 192; g = 132; b = 252; }
+        else if (color === '#ef4444') { r = 239; g = 68; b = 68; }
+        else if (color === '#a855f7') { r = 168; g = 85; b = 247; }
+        else if (color === '#9ca3af') { r = 156; g = 163; b = 175; }
+        else if (color === '#555555') { r = 85; g = 85; b = 85; }
 
         html += `
             <div class="shop-rarity-group" style="border-top: 3px solid ${color}; background: rgba(${r}, ${g}, ${b}, 0.05);">
@@ -445,6 +512,13 @@ window.showTooltipFixed = function (el) {
         document.body.appendChild(tooltip);
     }
     tooltip.innerHTML = el.getAttribute('data-tooltip-html');
+    const elColor = el.style.color || '#a855f7';
+    tooltip.style.border = '1px solid ' + elColor;
+    const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+    if (titleEl) {
+        titleEl.style.color = elColor;
+        titleEl.style.borderBottom = '1px solid ' + elColor;
+    }
     tooltip.style.display = 'block';
 
     const rect = el.getBoundingClientRect();

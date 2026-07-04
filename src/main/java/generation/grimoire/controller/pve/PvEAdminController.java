@@ -81,6 +81,12 @@ public class PvEAdminController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/dungeons/reorder")
+    public ResponseEntity<Void> reorderDungeons(@RequestBody List<Long> orderedIds) {
+        pvEAdminService.updateDungeonsOrder(orderedIds);
+        return ResponseEntity.ok().build();
+    }
+
     private void mapDonjonDtoToEntity(DonjonDTO dto, Donjon entity) {
         entity.setName(dto.getName());
         entity.setDescription(dto.getDescription());

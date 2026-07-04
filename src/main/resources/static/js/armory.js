@@ -32,12 +32,28 @@ let allEquipments = [];
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
     CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' }
+    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
 };
+
+function getSlotInfo(eq) {
+    if (!eq) return { icon: 'help', color: '#94a3b8' };
+    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+        info.color = catColors[eq.consumableCategory] || '#854c4c';
+    }
+    return info;
+}
 
 const STAT_DEFS = [
     { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
@@ -57,30 +73,70 @@ const STAT_DEFS = [
 ];
 
 const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    PLASTRON: { COMMUN: 9, RARE: 19, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46 },
-    ANNEAU_GAUCHE: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    ANNEAU_DROIT: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    BOTTES: { COMMUN: 4, RARE: 12, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34 },
-    CAPE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    CONSOMMABLE: { COMMUN: 5, RARE: 9, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24 }
+    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
+    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
 };
 
 function calculateEquipmentWeight() {
-    const hp = parseFloat(document.getElementById('eqHp').value) || 0;
-    const mana = parseFloat(document.getElementById('eqMana').value) || 0;
-    const power = parseFloat(document.getElementById('eqPower').value) || 0;
-    const str = parseFloat(document.getElementById('eqStr').value) || 0;
-    const armor = parseFloat(document.getElementById('eqArmor').value) || 0;
-    const res = parseFloat(document.getElementById('eqRes').value) || 0;
-    const speed = parseFloat(document.getElementById('eqSpeed').value) || 0;
-    const crit = parseFloat(document.getElementById('eqCrit').value) || 0;
-    const regenHp = parseFloat(document.getElementById('eqRegenHp').value) || 0;
-    const regenMana = parseFloat(document.getElementById('eqRegenMana').value) || 0;
-    const effectValue = parseFloat(document.getElementById('eqSpecialEffectValue').value) || 0;
-    const baseWeightVal = parseFloat(document.getElementById('eqBaseWeight')?.value) || 0;
+    let w = 0;
 
-    return (hp / 5) + (mana / 5) + (power / 2) + (str / 2) + (armor / 2) + (res / 2) + (speed * 2) + crit + regenHp + regenMana + effectValue + baseWeightVal;
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const slot = document.getElementById('eqSlot').value;
+    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (slot === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (slot === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (parseFloat(document.getElementById('eqHp').value) || 0) * mHp;
+    w += (parseFloat(document.getElementById('eqMana').value) || 0) * mMana;
+    w += (parseFloat(document.getElementById('eqPower').value) || 0) * mPow;
+    w += (parseFloat(document.getElementById('eqStr').value) || 0) * mStr;
+    w += (parseFloat(document.getElementById('eqArmor').value) || 0) * mArm;
+    w += (parseFloat(document.getElementById('eqRes').value) || 0) * mRes;
+    w += (parseFloat(document.getElementById('eqSpeed').value) || 0) * mSpd;
+    w += (parseFloat(document.getElementById('eqCrit').value) || 0) * mCrit;
+    w += (parseFloat(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
+    w += (parseFloat(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
+
+    const baseWeightVal = parseFloat(document.getElementById('eqBaseWeight')?.value) || 0;
+    w += baseWeightVal;
+
+    // Add special effect weight if Epic/Relic/Maudit
+    const rarity = document.getElementById('eqRarity').value;
+    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
+        const specialEffect = document.getElementById('eqSpecialEffect')?.value;
+        const effectVal = parseFloat(document.getElementById('eqSpecialEffectValue').value) || 0;
+
+        if (specialEffect && specialEffect !== 'NONE' && effectVal !== 0) {
+            w += effectVal * 1.5;
+        }
+    }
+    return w;
 }
 
 function updateWeightUI() {
@@ -276,6 +332,8 @@ async function submitPersonnage() {
         resistance: parseInt(document.getElementById('charResistance').value) || 0,
         speed: parseInt(document.getElementById('charSpeed').value) || 0,
         crit: parseInt(document.getElementById('charCrit').value) || 0,
+        regenHp: parseInt(document.getElementById('charRegenHp').value) || 0,
+        regenMana: parseInt(document.getElementById('charRegenMana').value) || 0,
         voieId: document.getElementById('charVoie').value || null,
         experience: parseInt(document.getElementById('charExperience').value) || 0,
         spiritualiteId: document.getElementById('charSpirit').value || null,
@@ -354,21 +412,29 @@ async function submitEquipment() {
     let specialEffect = document.getElementById('eqSpecialEffect').value;
     let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-    // Security: Only Epic and Relic can have special effects
-    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE') {
+    // Security: Only Epic, Relic and Maudit can have special effects
+    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
         specialEffect = 'NONE';
         specialEffectValue = 0;
     } else {
-        // If they chose no effect on an Epic/Relic, we just ignore the value
+        // If they chose no effect on an Epic/Relic/Maudit, we just ignore the value
         if (specialEffect === 'NONE') {
             specialEffectValue = 0;
         }
     }
 
-    // Security: Special effect value must be strictly positive
-    if (specialEffect !== 'NONE' && specialEffectValue <= 0) {
-        showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
-        return;
+    // Security: Special effect value must not be 0
+    if (specialEffect !== 'NONE') {
+        if (rarity === 'MAUDIT') {
+            if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
+            if (specialEffectValue === 0) {
+                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
+                return;
+            }
+        } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
+            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
+            return;
+        }
     }
 
     const dto = {
@@ -682,10 +748,10 @@ function renderPersonnages() {
         const persoEquips = allEquipments.filter(e => e.personnage && e.personnage.id === p.id);
         let equipHtml = '';
         if (persoEquips.length > 0) {
-            const slotOrder = ['CASQUE', 'PLASTRON', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+            const slotOrder = ['CASQUE', 'PLASTRON', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE'];
             equipHtml = `<div class="char-equip-row">` +
                 persoEquips.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot)).map(eq => {
-                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                    const slotInfo = getSlotInfo(eq);
                     const statsStr = STAT_DEFS
                         .filter(s => eq[s.key] && eq[s.key] !== 0)
                         .map(s => `${eq[s.key] > 0 ? '+' : ''}${eq[s.key]}${s.isPercent ? '%' : ''} ${s.label}`)
@@ -736,6 +802,8 @@ function renderPersonnages() {
                     <span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #10b981;">shield</span>${p.totalResistance !== undefined ? p.totalResistance : p.resistance} Rés</span>
                     ${(p.totalSpeed !== undefined ? p.totalSpeed : p.speed) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f59e0b;">bolt</span>${p.totalSpeed !== undefined ? p.totalSpeed : p.speed} Vit</span>` : ''}
                     ${(p.totalCrit !== undefined ? p.totalCrit : p.crit) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #ef4444;">gps_fixed</span>${p.totalCrit !== undefined ? p.totalCrit : p.crit}% Crit</span>` : ''}
+                    ${(p.regenHp || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f472b6;">healing</span>${p.regenHp} Régen PV</span>` : ''}
+                    ${(p.regenMana || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #67e8f9;">dew_point</span>${p.regenMana} Régen Mana</span>` : ''}
                 </div>
                 <div class="char-xp-container" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #cbd5e1; font-family: 'Inter', sans-serif; font-weight: 500;">
@@ -781,12 +849,21 @@ function renderEquipModal() {
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
-    const slots = Object.keys(SLOT_LABELS);
+    const slots = Object.keys(SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS');
     const equippedItems = allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
 
     slotsContainer.innerHTML = slots.map(slotKey => {
         const slotInfo = SLOT_LABELS[slotKey];
-        const equipped = equippedItems.find(e => e.slot === slotKey);
+        let equipped = equippedItems.find(e => e.slot === slotKey);
+        const twoHanded = equippedItems.find(e => e.slot === 'ARME_DEUX_MAINS');
+
+        if (slotKey === 'ARME_GAUCHE' && twoHanded) {
+            equipped = twoHanded;
+        }
+
+        if (slotKey === 'ARME_DROITE' && twoHanded) {
+            equipped = twoHanded;
+        }
 
         if (equipped) {
             const statsChips = STAT_DEFS
@@ -808,17 +885,30 @@ function renderEquipModal() {
                     'THORNS': 'Épines',
                     'MANA_SHIELD': 'Bouclier de Mana',
                     'CHEAT_DEATH': 'Ange Gardien',
-                    'CRIT_DAMAGE': 'Dégâts Critiques'
+                    'CRIT_DAMAGE': 'Dégâts Critiques',
+                    'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
+                    'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+                    'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+                    'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+                    'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+                    'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+                    'EXECUTION': 'Exécution (% Phy)',
+                    'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
                 };
                 const label = effectLabels[equipped.specialEffect] || equipped.specialEffect;
-                specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: #c084fc; background: rgba(168, 85, 247, 0.1); padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">auto_awesome</span>
+                const isCursed = equipped.specialEffect.startsWith('CURSED_');
+                const icon = isCursed ? 'skull' : 'auto_awesome';
+                const color = isCursed ? '#9ca3af' : '#c084fc';
+                const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+                specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">
+                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
                     ${label} : ${equipped.specialEffectValue}
                 </div>`;
             }
 
             return `
-                <div class="equip-slot-card equipped">
+                <div class="equip-slot-card equipped" data-slot="${slotKey}">
                     <div class="equip-slot-header">
                         <span class="equip-slot-label">
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.1rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
@@ -838,6 +928,13 @@ function renderEquipModal() {
             // Available items for this slot
             let available = allEquipments.filter(e => e.slot === slotKey && !e.personnage);
 
+            // Special case for weapons: allow ARME_DEUX_MAINS in both weapon slots
+            if (slotKey === 'ARME_GAUCHE' || slotKey === 'ARME_DROITE') {
+                available = allEquipments.filter(e =>
+                    (e.slot === slotKey || e.slot === 'ARME_DEUX_MAINS') && !e.personnage
+                );
+            }
+
             // Special case for rings: allow any ring in any ring slot
             if (slotKey === 'ANNEAU_GAUCHE' || slotKey === 'ANNEAU_DROIT') {
                 available = allEquipments.filter(e =>
@@ -848,10 +945,13 @@ function renderEquipModal() {
             // Sort by rarity (descending) then by name
             const rarityOrder = {
                 'COMMUN': 0,
-                'RARE': 1,
-                'LEGENDAIRE': 2,
-                'EPIQUE': 3,
-                'RELIQUE': 4
+                'INHABITUEL': 1,
+                'RARE': 2,
+                'MYTHIQUE': 3,
+                'LEGENDAIRE': 4,
+                'EPIQUE': 5,
+                'RELIQUE': 6,
+                'MAUDIT': -1
             };
             available.sort((a, b) => {
                 const rA = a.rarity ? rarityOrder[a.rarity] || 0 : 0;
@@ -912,6 +1012,7 @@ function renderEquipModal() {
                                 <div class="custom-option" data-value="${a.id}" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
                                     <span class="${a.rarity ? 'rarity-' + a.rarity : ''}">${a.name}</span>
                                     ${a.rarity ? '<span style="font-size: 0.7rem; opacity: 0.5; margin-left: 0.3rem;">(' + a.rarity + ')</span>' : ''}
+                                    ${a.slot === 'ARME_DEUX_MAINS' ? '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.3rem; font-weight: bold;">[2 Mains]</span>' : ''}
                                     ${tooltipHtml}
                                 </div>
                             `;
@@ -924,7 +1025,7 @@ function renderEquipModal() {
             }
 
             return `
-                <div class="equip-slot-card empty">
+                <div class="equip-slot-card empty" data-slot="${slotKey}">
                     <div class="equip-slot-header">
                         <span class="equip-slot-label">
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.1rem; color: ${slotInfo.color}; opacity: 0.5;">${slotInfo.icon}</span>
@@ -976,6 +1077,8 @@ function editPersonnage(id) {
     document.getElementById('charResistance').value = p.resistance || 0;
     document.getElementById('charSpeed').value = p.speed || 0;
     document.getElementById('charCrit').value = p.crit || 0;
+    document.getElementById('charRegenHp').value = p.regenHp || 0;
+    document.getElementById('charRegenMana').value = p.regenMana || 0;
     document.getElementById('charVoie').value = p.voie ? p.voie.id : '';
     if (p.voie) {
         const info = getVoieInfo(p.voie.nom);
@@ -1013,12 +1116,14 @@ function resetForm() {
     document.getElementById('charName').value = '';
     document.getElementById('charHp').value = 100;
     document.getElementById('charMana').value = 100;
-    document.getElementById('charPower').value = 25;
+    document.getElementById('charPower').value = 10;
     document.getElementById('charStrength').value = 10;
-    document.getElementById('charArmor').value = 10;
-    document.getElementById('charResistance').value = 10;
-    document.getElementById('charSpeed').value = 0;
-    document.getElementById('charCrit').value = 0;
+    document.getElementById('charArmor').value = 5;
+    document.getElementById('charResistance').value = 5;
+    document.getElementById('charSpeed').value = 1;
+    document.getElementById('charCrit').value = 5;
+    document.getElementById('charRegenHp').value = 2;
+    document.getElementById('charRegenMana').value = 4;
     document.getElementById('charVoie').value = '';
     document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
 
@@ -1111,12 +1216,96 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const cvInput = document.getElementById('charVoie');
     if (cvInput) {
+        function applyVoieBaseStats(voieNom) {
+            function buildStatHtml(label, valStr, icon, baseColor) {
+                const val = parseInt(valStr.replace('+', ''));
+                const isPos = val > 0;
+                const valColor = isPos ? '#10b981' : '#ef4444';
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; background: #0f172a; border-radius: 0.3rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${baseColor};">${icon}</span>
+                            ${label}
+                        </div>
+                        <div style="font-weight: 600; color: ${valColor};">${valStr}</div>
+                    </div>
+                `;
+            }
+
+            let diffHtml = '<span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Sélectionnez une voie pour voir les effets.</span>';
+            // Statistiques par défaut
+            let stats = {
+                charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
+                charArmor: 5, charResistance: 5, charSpeed: 1, charCrit: 5,
+                charRegenHp: 2, charRegenMana: 4
+            };
+
+            if (voieNom) {
+                diffHtml = "";
+                if (voieNom.includes('Raison')) {
+                    stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
+                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
+                } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
+                    stats.charMana = 130; stats.charResistance = 8;
+                    diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+                } else if (voieNom.includes('Trahison')) {
+                    stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
+                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+                } else if (voieNom.includes('Consolidation')) {
+                    stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
+                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+                    diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
+                } else if (voieNom.includes('Conviction')) {
+                    stats.charRegenMana = 0; stats.charHp = 90; stats.charPower = 11;
+                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Régen Mana', '-4', 'cyclone', '#38bdf8');
+                } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
+                    stats.charHp = 120; stats.charArmor = 8;
+                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+                } else if (voieNom.includes('Destruction')) {
+                    stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
+                    diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
+                    diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
+                    diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
+                } else if (voieNom.includes('Violence')) {
+                    stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
+                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+                    diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
+                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+                    diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
+                    diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
+                }
+            }
+
+            const diffEl = document.getElementById('voieStatsDiff');
+            if (diffEl) diffEl.innerHTML = diffHtml;
+
+            if (editingId) return; // Ne pas écraser les stats en mode édition
+
+            // Mise à jour des champs
+            for (const [key, value] of Object.entries(stats)) {
+                const el = document.getElementById(key);
+                if (el) el.value = value;
+            }
+        }
+
         cvInput.addEventListener('change', (e) => {
             const vId = e.target.value;
             const iconEl = document.getElementById('charVoieInfoIcon');
 
             if (!vId) {
                 if (iconEl) iconEl.style.display = 'none';
+                applyVoieBaseStats(null);
                 return;
             }
             const v = voies.find(x => x.id == vId);
@@ -1137,8 +1326,12 @@ window.addEventListener('DOMContentLoaded', async () => {
                     `;
                 }
                 iconEl.style.display = 'inline-block';
+                applyVoieBaseStats(v.nom);
             } else if (iconEl) {
                 iconEl.style.display = 'none';
+                applyVoieBaseStats(null);
+            } else {
+                applyVoieBaseStats(null);
             }
         });
     }

@@ -54,6 +54,8 @@ public class Personnage {
     private int resistance;
     private int crit;
     private int speed;
+    private int regenHp;
+    private int regenMana;
 
     @ManyToOne
     @JoinColumn(name = "voie_id", nullable = true)
@@ -207,6 +209,7 @@ public class Personnage {
     private Spell channeledSpell;
 
     @Transient
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Personnage channelingTarget;
 
     @Transient
@@ -215,33 +218,36 @@ public class Personnage {
     public void startTurn() {
         this.instantSpellCastThisTurn = false;
         this.banalSpellCastThisTurn = false;
+        
         if (this.remainingChannelingTurns > 0) {
-            this.remainingChannelingTurns--;
-            if (this.remainingChannelingTurns == 0) {
-                this.allowInstantDuringCurrentChanneling = true;
-                this.channeledSpell = null;
-                this.channelingTarget = null;
-                this.channelingChoiceKey = null;
-                System.out.println(name + " a terminé sa canalisation.");
-            } else {
-                System.out
-                        .println(name + " continue de canaliser (tours restants : " + remainingChannelingTurns + ").");
-            }
+            // On ne décrémente PAS ici car c'est tickChanneling() qui gère l'avancement.
+            // On empêche simplement le personnage de lancer un autre sort banal pendant qu'il canalise.
+            this.banalSpellCastThisTurn = true;
+            System.out.println(name + " continue de canaliser (tours restants : " + remainingChannelingTurns + ").");
         }
 
-        // Effets des équipements (Régen / Drain)
-        if (this.healthCurrent > 0 && this.equipments != null) {
-            int totalHpRegen = 0;
-            int totalManaRegen = 0;
-            for (generation.grimoire.entity.Equipment eq : this.equipments) {
-                totalHpRegen += eq.getRegenHealthPerTurn();
-                totalManaRegen += eq.getRegenManaPerTurn();
+        // Effets de régen de base + équipements (Régen / Drain)
+        if (this.healthCurrent > 0) {
+            int totalHpRegen = this.regenHp;
+            int totalManaRegen = this.regenMana;
+            if (this.equipments != null) {
+                for (generation.grimoire.entity.Equipment eq : this.equipments) {
+                    totalHpRegen += eq.getRegenHealthPerTurn();
+                    totalManaRegen += eq.getRegenManaPerTurn();
+                }
             }
             if (totalHpRegen > 0) {
                 this.heal(totalHpRegen);
             } else if (totalHpRegen < 0) {
                 this.takeDamage(-totalHpRegen, generation.grimoire.enumeration.DamageType.BRUT);
             }
+            
+            // Malédiction: Famine (Drain de mana par tour)
+            int cursedManaDrain = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_MANA_DRAIN);
+            if (cursedManaDrain != 0) {
+                totalManaRegen -= Math.abs(cursedManaDrain);
+            }
+            
             if (totalManaRegen != 0) {
                 this.setManaCurrent(this.manaCurrent + totalManaRegen);
             }
@@ -326,8 +332,13 @@ public class Personnage {
             default -> throw new IllegalArgumentException("Unknown damage type: " + damageType);
         };
 
-        // Récupérer le multiplicateur de vulnérabilité
-        double damageTakenMultiplier = Math.max(1.0, getStatBuffMultiplier(statType));
+        // Récupérer le multiplicateur de vulnérabilité / réduction
+        double damageTakenMultiplier = Math.max(0.0, getStatBuffMultiplier(statType));
+
+        int cursedVul = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_VULNERABILITY);
+        if (cursedVul != 0) {
+            damageTakenMultiplier += (Math.abs(cursedVul) / 100.0);
+        }
 
         int flat = getStatFlatBonus(statType);
 
@@ -349,7 +360,7 @@ public class Personnage {
             boolean hasPenBuff = caster.getActiveBuffs().stream()
                     .anyMatch(b -> b.affectsStatType(StatType.SHIELD_PENETRATION) && b.getFlatValue() == 0);
             if (hasPenBuff) {
-                casterPenetrationPct = caster.getStatBuffMultiplier(StatType.SHIELD_PENETRATION);
+                casterPenetrationPct = caster.getStatBuffMultiplier(StatType.SHIELD_PENETRATION) - 1.0;
             }
         }
 
@@ -357,7 +368,7 @@ public class Personnage {
         boolean hasPiercedBuff = this.getActiveBuffs().stream()
                 .anyMatch(b -> b.affectsStatType(StatType.SHIELD_PIERCED) && b.getFlatValue() == 0);
         if (hasPiercedBuff) {
-            targetPiercedPct = this.getStatBuffMultiplier(StatType.SHIELD_PIERCED);
+            targetPiercedPct = this.getStatBuffMultiplier(StatType.SHIELD_PIERCED) - 1.0;
         }
 
         // Rétrocompatibilité avec les debuffs négatifs de SHIELD_PENETRATION sur la
@@ -386,7 +397,7 @@ public class Personnage {
         int bypassDamage = 0;
         if (totalBypassPct > 0 || totalBypassFlat > 0) {
             double rawBypass = effectiveDamage * Math.min(1.0, totalBypassPct) + totalBypassFlat;
-            bypassDamage = (int) Math.min(effectiveDamage, Math.max(0, rawBypass));
+            bypassDamage = (int) Math.round(Math.min(effectiveDamage, Math.max(0, rawBypass)));
         }
 
         int remainingDamage = effectiveDamage - bypassDamage;
@@ -436,9 +447,12 @@ public class Personnage {
 
                             shieldDamageFlat = Math.max(0, shieldDamageFlat - absorbed);
 
-                            System.out.println("🛡️ Le bouclier (" + shield.getSourceName() + ") absorbe " + absorbed
-                                    + " dégâts (dégâts bruts consommés : " + rawConsumedInt + "). Reste : "
-                                    + shield.getAmount() + " absorption.");
+                            if (absorbed > 0) {
+                                System.out
+                                        .println("🛡️ Le bouclier (" + shield.getSourceName() + ") absorbe " + absorbed
+                                                + " dégâts (dégâts bruts consommés : " + rawConsumedInt + "). Reste : "
+                                                + shield.getAmount() + " absorption.");
+                            }
                             if (remainingDamage <= 0) {
                                 remainingDamage = 0;
                                 break;
@@ -482,8 +496,9 @@ public class Personnage {
 
         // Affichage des informations
         double finalReductionFactor = Math.min(reductionFactor, 0.90); // Limite la réduction à 90%
+        String shieldText = absorbedByShields > 0 ? "absorbés par les boucliers : " + absorbedByShields + ", " : "";
         System.out.println(this.name + " subit " + effectiveDamage + " dégâts (" +
-                "absorbés par les boucliers : " + absorbedByShields + ", " +
+                shieldText +
                 "réduction de " + (int) (finalReductionFactor * 100) + "%), " +
                 "PV restants : " + this.healthCurrent);
 
@@ -528,6 +543,12 @@ public class Personnage {
      */
     public void heal(int healAmount) {
         double multiplier = getStatBuffMultiplier(StatType.HEAL_RECEIVED);
+        
+        int cursedHeal = getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_HEALING_REDUCTION);
+        if (cursedHeal != 0) {
+            multiplier -= (Math.abs(cursedHeal) / 100.0);
+        }
+        
         int finalHeal = (int) (healAmount * Math.max(0, multiplier));
         this.healthCurrent += finalHeal;
         if (this.healthCurrent > this.getTotalHealthMax()) {
@@ -539,7 +560,7 @@ public class Personnage {
                 + "). Vie actuelle : " + healthCurrent);
 
         boolean removedPoison = activeBuffs
-                .removeIf(b -> b.getStatAffected() == StatType.POISON && b.getFlatValue() > 0);
+                .removeIf(b -> b.getStatAffected() == StatType.POISON && (b.getFlatValue() > 0 || b.getModifier() > 0));
         boolean removedPoisonDot = activeDamageOverTimeEffects.removeIf(dot -> Boolean.TRUE.equals(dot.getPoison()));
         if (removedPoison || removedPoisonDot) {
             System.out.println("💧 Le soin a purifié le Poison sur " + name + " !");
@@ -933,19 +954,24 @@ public class Personnage {
      * (flat ou modificateur négatif/réduit, vulnérabilités, ou DoTs actifs).
      */
     public boolean hasDebuff() {
-        if (activeDamageOverTimeEffects != null && !activeDamageOverTimeEffects.isEmpty()) {
-            return true;
+        if (activeDamageOverTimeEffects != null) {
+            for (DamageOverTimeEffect effect : activeDamageOverTimeEffects) {
+                if (!Boolean.TRUE.equals(effect.getPoison()) && !Boolean.TRUE.equals(effect.getBurn())) {
+                    return true;
+                }
+            }
         }
         if (activeBuffs != null) {
             for (BuffDebuffEffect b : activeBuffs) {
                 StatType stat = b.getStatAffected();
                 if (stat != null) {
+                    if (stat == StatType.POISON || stat == StatType.BURN) {
+                        continue;
+                    }
                     if (stat == StatType.DAMAGE_TAKEN_MAGIC ||
                             stat == StatType.DAMAGE_TAKEN_PHYSIC ||
                             stat == StatType.DAMAGE_TAKEN_BRUT ||
-                            stat == StatType.SHIELD_PIERCED ||
-                            stat == StatType.BURN ||
-                            stat == StatType.POISON) {
+                            stat == StatType.SHIELD_PIERCED) {
                         if (b.getFlatValue() > 0 || (b.getFlatValue() == 0 && b.getModifier() > 1.0)) {
                             return true;
                         }

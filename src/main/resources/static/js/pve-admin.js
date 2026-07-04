@@ -2,18 +2,38 @@ let editingMonsterId = null;
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
-    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' }
+    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
+    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
 };
+
+function getSlotInfo(eq) {
+    if (!eq) return { icon: 'help', color: '#94a3b8' };
+    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+        info.color = catColors[eq.consumableCategory] || '#854c4c';
+    }
+    return info;
+}
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
+    INHABITUEL: '#22c55e',
     RARE: '#3b82f6',
-    LEGENDAIRE: '#f59e0b',
-    EPIQUE: '#c084fc',
-    RELIQUE: '#ef4444'
+    MYTHIQUE: '#f97316',
+    LEGENDAIRE: '#eab308',
+    EPIQUE: '#ef4444',
+    RELIQUE: '#a855f7',
+    MAUDIT: '#9ca3af'
 };
 
 let editingDungeonId = null;
@@ -569,7 +589,7 @@ function renderRooms() {
                 room.lootTable.forEach((loot, lIndex) => {
                     const eq = allEquipments.find(x => x.id === loot.equipmentId);
                     if (eq) {
-                        const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                        const slotInfo = getSlotInfo(eq);
                         const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                         const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                         lootHtml += `
@@ -591,7 +611,7 @@ function renderRooms() {
                         <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
             `;
             allEquipments.forEach(eq => {
-                const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                const slotInfo = getSlotInfo(eq);
                 const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                 const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                 lootHtml += `<div class="custom-option" onclick="selectLootOption(${rIndex}, ${eq.id}, '${eq.name.replace(/'/g, "\\'")}', '${slotInfo.icon}', '${slotInfo.color}', '${rarityColor}', '${slotInfo.extraClass || ''}')"><span class="material-symbols-outlined cs-icon${extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span> <span style="color: ${rarityColor};">${eq.name}</span></div>`;
@@ -818,7 +838,7 @@ function renderRooms() {
                         } else {
                             const eq = allEquipments.find(x => x.id === loot.equipmentId);
                             if (eq) {
-                                const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                                const slotInfo = getSlotInfo(eq);
                                 const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                                 const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                                 nameHtml = `<span class="material-symbols-outlined${extraClass}" style="font-size:1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span>`;
@@ -904,7 +924,7 @@ function renderRooms() {
                                 <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                 `;
                 allEquipments.forEach(eq => {
-                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                    const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                     shopHtml += `<div class="custom-option" onclick="selectLootOption(${rIndex}, ${eq.id}, '${eq.name.replace(/'/g, "\\'")}', '${slotInfo.icon}', '${slotInfo.color}', '${rarityColor}', '${slotInfo.extraClass || ''}')"><span class="material-symbols-outlined cs-icon${extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span> <span style="color: ${rarityColor};">${eq.name}</span></div>`;
@@ -932,7 +952,7 @@ function renderRooms() {
                     if (a.spiritualite === 'ESPRIT') color = '#38bdf8';
                     else if (a.spiritualite === 'KARMA') color = '#e7d198';
                     const icon = CATEGORY_ICONS[a.category] || 'category';
-                    return `<div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '${a.name.replace(/'/g, "\\'")}', '${a.name.replace(/'/g, "\\'")}', '${color}')"><span class="material-symbols-outlined cs-icon" style="color: ${color};">${icon}</span> ${a.name}</div>`;
+                    return `<div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '${a.name.replace(/'/g, "\\'")}', '${a.name.replace(/'/g, "\\'")}', '${color}')"><span class="material-symbols-outlined cs-icon" style="color: ${color};">${icon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1})</span></div>`;
                 }).join('')}
                                 </div>
                                 <input type="hidden" id="room_merchant_special_${rIndex}" value="">
@@ -962,7 +982,7 @@ function renderRooms() {
                     if (a.spiritualite === 'ESPRIT') color = '#38bdf8';
                     else if (a.spiritualite === 'KARMA') color = '#e7d198';
                     const icon = CATEGORY_ICONS[a.category] || 'category';
-                    return `<div class="custom-option" onclick="selectMerchantCost(${rIndex}, '${a.name.replace(/'/g, "\\'")}', '${a.name.replace(/'/g, "\\'")}', '${color}')"><span class="material-symbols-outlined cs-icon" style="color: ${color};">${icon}</span> ${a.name}</div>`;
+                    return `<div class="custom-option" onclick="selectMerchantCost(${rIndex}, '${a.name.replace(/'/g, "\\'")}', '${a.name.replace(/'/g, "\\'")}', '${color}')"><span class="material-symbols-outlined cs-icon" style="color: ${color};">${icon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1})</span></div>`;
                 }).join('')}
                                     </div>
                                     <input type="hidden" id="room_merchant_cost_item_${rIndex}" value="">
@@ -1037,7 +1057,7 @@ function renderRooms() {
                     room.lootTable.forEach((loot, lIndex) => {
                         const eq = allEquipments.find(x => x.id === loot.equipmentId);
                         if (eq) {
-                            const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                            const slotInfo = getSlotInfo(eq);
                             const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                             const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                             doorLootHtml += `
@@ -1059,7 +1079,7 @@ function renderRooms() {
                             <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                 `;
                 allEquipments.forEach(eq => {
-                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                    const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                     doorLootHtml += `<div class="custom-option" onclick="selectLootOption(${rIndex}, ${eq.id}, '${eq.name.replace(/'/g, "\\'")}', '${slotInfo.icon}', '${slotInfo.color}', '${rarityColor}', '${slotInfo.extraClass || ''}')"><span class="material-symbols-outlined cs-icon${extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span> <span style="color: ${rarityColor};">${eq.name}</span></div>`;
@@ -1217,7 +1237,7 @@ function renderRooms() {
                                 
                                 const getEqHtml = (eq) => {
                                     if (!eq) return 'Choisir un objet';
-                                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                                    const slotInfo = getSlotInfo(eq);
                                     const rarityColor = RARITY_COLORS[eq.rarity] || '#94a3b8';
                                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                                     return `<span style="display:flex; align-items:center; gap:0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1.1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span></span>`;
@@ -1496,6 +1516,14 @@ async function loadAnomalies() {
                 if (uniqueNames.has(a.name)) return false;
                 uniqueNames.add(a.name);
                 return true;
+            }).sort((a, b) => {
+                const spiriA = a.spiritualite || 'ZZZ';
+                const spiriB = b.spiritualite || 'ZZZ';
+                if (spiriA !== spiriB) return spiriA.localeCompare(spiriB);
+                const lvlA = a.level || 1;
+                const lvlB = b.level || 1;
+                if (lvlA !== lvlB) return lvlA - lvlB;
+                return a.name.localeCompare(b.name);
             });
             renderRooms();
         }
@@ -1525,7 +1553,7 @@ async function loadEquipments() {
         });
 
         // Sort by rarity, then name
-        const rarityOrder = { 'COMMUN': 1, 'RARE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'RELIQUE': 5 };
+        const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
         allEquipments = Array.from(map.values()).sort((a, b) => {
             const rA = rarityOrder[a.rarity] || 0;
             const rB = rarityOrder[b.rarity] || 0;
@@ -1592,17 +1620,22 @@ window.renderMonstersList = function () {
     filtered.forEach(m => {
         list.innerHTML += `
             <div class="monster-card">
-                <button class="delete-btn" onclick="deleteMonster(${m.id})">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-                <button class="delete-btn" style="right: 3rem; color: #3b82f6;" onclick="editMonster(${m.id})">
-                    <span class="material-symbols-outlined">edit</span>
-                </button>
-                <div class="monster-card-title">${m.name} <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Lvl ${m.level || 1}</span></div>
+                <div class="monster-level-badge">Lvl ${m.level || 1}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="monster-card-title" style="margin-bottom: 0;">${m.name}</div>
+                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editMonster(${m.id})" title="Modifier">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteMonster(${m.id})" title="Supprimer">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                    ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span title="${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Utilise la plus haute valeur entre Force et Puissance pour attaquer.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                    ${m.behavior && m.behavior !== 'NORMAL' ? `<span title="${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'INSENSIBLE': 'Insensible : Ses attaques infligent des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'INSENSIBLE': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'INSENSIBLE': 'Insensible', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                    ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
+                    ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
                 </div>
                 <div class="monster-card-stats">
                     <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
@@ -1670,7 +1703,7 @@ async function editMonster(id) {
                 'CORRUPTEUR': { l: 'Corrupteur', i: 'allergy', c: '#8b5cf6' },
                 'LEADER': { l: 'Leader', i: 'crown', c: '#fcd34d' },
                 'ASSASSIN': { l: 'Assassin', i: 'gps_fixed', c: '#ef4444' },
-                'INSENSIBLE': { l: 'Insensible', i: 'shield', c: '#9ca3af' },
+                'BRUTAL': { l: 'Brutal', i: 'shield', c: '#9ca3af' },
                 'TRANSCENDANT': { l: 'Transcendant', i: 'grid_view', c: '#fbbf24' }
             };
 
@@ -1755,7 +1788,7 @@ window.renderDungeonsList = function () {
         filtered = filtered.filter(d => (d.recommendedLevel || 1) === lvl);
     }
 
-    filtered.forEach(d => {
+    filtered.forEach((d, index) => {
         let totalSalles = d.salles ? d.salles.length : 0;
         let combats = 0, bosses = 0, treasures = 0, alterations = 0, rencontres = 0, pieges = 0, portes = 0, totalMobs = 0, totalBossMobs = 0;
         if (d.salles) {
@@ -1803,13 +1836,24 @@ window.renderDungeonsList = function () {
 
         list.innerHTML += `
             <div class="monster-card">
-                <button class="delete-btn" onclick="deleteDungeon(${d.id})">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-                <button class="delete-btn" style="right: 3rem; color: #3b82f6;" onclick="editDungeon(${d.id})">
-                    <span class="material-symbols-outlined">edit</span>
-                </button>
-                <div class="monster-card-title">${d.name} <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Lvl ${d.recommendedLevel}</span></div>
+                <div class="monster-level-badge">Lvl ${d.recommendedLevel || 1}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="monster-card-title" style="margin-bottom: 0;">${d.name}</div>
+                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                        ${index > 0 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #10b981;" onclick="moveDungeonOrder(${d.id}, -1)" title="Monter">
+                            <span class="material-symbols-outlined">arrow_upward</span>
+                        </button>` : ''}
+                        ${index < filtered.length - 1 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #f59e0b;" onclick="moveDungeonOrder(${d.id}, 1)" title="Descendre">
+                            <span class="material-symbols-outlined">arrow_downward</span>
+                        </button>` : ''}
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editDungeon(${d.id})" title="Modifier">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteDungeon(${d.id})" title="Supprimer">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${d.description || ''}</div>
                 <div style="font-size: 0.85rem; color: #f8fafc; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; gap: 0.4rem;">
                     ${d.requiredSecret ? `<div style="color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${secretMeta.color};">${secretMeta.icon}</span> <span><strong style="color:${secretMeta.color};">${d.requiredSecret}</strong> (Lvl ${d.requiredSecretLevel || 1})</span></div>` : ''}
@@ -1828,6 +1872,36 @@ window.renderDungeonsList = function () {
             </div>
         `;
     });
+}
+
+async function moveDungeonOrder(id, direction) {
+    const index = allDungeons.findIndex(d => d.id === id);
+    if (index === -1) return;
+    if (index + direction < 0 || index + direction >= allDungeons.length) return;
+    
+    // Swap in array
+    const temp = allDungeons[index];
+    allDungeons[index] = allDungeons[index + direction];
+    allDungeons[index + direction] = temp;
+    
+    const orderedIds = allDungeons.map(d => d.id);
+    
+    try {
+        const res = await fetch('/api/admin/pve/dungeons/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderedIds)
+        });
+        
+        if (res.ok) {
+            renderDungeonsList();
+        } else {
+            alert("Erreur lors du changement d'ordre.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erreur réseau.");
+    }
 }
 
 async function editDungeon(id) {
@@ -2390,6 +2464,13 @@ window.showTooltipFixed = function (el) {
         document.body.appendChild(tooltip);
     }
     tooltip.innerHTML = el.getAttribute('data-tooltip-html');
+    const elColor = el.style.color || '#a855f7';
+    tooltip.style.border = '1px solid ' + elColor;
+    const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+    if (titleEl) {
+        titleEl.style.color = elColor;
+        titleEl.style.borderBottom = '1px solid ' + elColor;
+    }
     tooltip.style.display = 'block';
 
     const rect = el.getBoundingClientRect();

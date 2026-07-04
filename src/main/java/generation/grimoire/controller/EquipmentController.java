@@ -88,6 +88,36 @@ public class EquipmentController {
                         .map(this::toDto).toList());
     }
 
+    private void updateEquipmentFromDto(Equipment equipment, EquipmentDto dto) {
+        equipment.setName(dto.getName());
+        equipment.setSlot(dto.getSlot());
+        equipment.setBonusHealthMax(dto.getBonusHealthMax());
+        equipment.setBonusManaMax(dto.getBonusManaMax());
+        equipment.setBonusPower(dto.getBonusPower());
+        equipment.setBonusStrength(dto.getBonusStrength());
+        equipment.setBonusArmor(dto.getBonusArmor());
+        equipment.setBonusResistance(dto.getBonusResistance());
+        equipment.setBonusSpeed(dto.getBonusSpeed());
+        equipment.setBonusCrit(dto.getBonusCrit());
+        equipment.setRegenHealthPerTurn(dto.getRegenHealthPerTurn());
+        equipment.setRegenManaPerTurn(dto.getRegenManaPerTurn());
+        equipment.setBaseWeight(dto.getBaseWeight());
+        equipment.setConsumableHpPercent(dto.getConsumableHpPercent());
+        equipment.setConsumableManaPercent(dto.getConsumableManaPercent());
+        equipment.setConsumableMissingHpPercent(dto.getConsumableMissingHpPercent());
+        equipment.setConsumableMissingManaPercent(dto.getConsumableMissingManaPercent());
+        if (dto.getConsumableCategory() != null) {
+            equipment.setConsumableCategory(dto.getConsumableCategory());
+        }
+        if (dto.getRarity() != null) {
+            equipment.setRarity(dto.getRarity());
+        }
+        if (dto.getSpecialEffect() != null) {
+            equipment.setSpecialEffect(dto.getSpecialEffect());
+        }
+        equipment.setSpecialEffectValue(dto.getSpecialEffectValue());
+    }
+
     /** Créer ou mettre à jour un équipement */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createOrUpdate(@RequestBody EquipmentDto dto, java.security.Principal principal) {
@@ -113,30 +143,8 @@ public class EquipmentController {
             }
         }
 
-        equipment.setName(dto.getName());
-        equipment.setSlot(dto.getSlot());
-        equipment.setBonusHealthMax(dto.getBonusHealthMax());
-        equipment.setBonusManaMax(dto.getBonusManaMax());
-        equipment.setBonusPower(dto.getBonusPower());
-        equipment.setBonusStrength(dto.getBonusStrength());
-        equipment.setBonusArmor(dto.getBonusArmor());
-        equipment.setBonusResistance(dto.getBonusResistance());
-        equipment.setBonusSpeed(dto.getBonusSpeed());
-        equipment.setBonusCrit(dto.getBonusCrit());
-        equipment.setRegenHealthPerTurn(dto.getRegenHealthPerTurn());
-        equipment.setRegenManaPerTurn(dto.getRegenManaPerTurn());
-        equipment.setBaseWeight(dto.getBaseWeight());
-        equipment.setConsumableHpPercent(dto.getConsumableHpPercent());
-        equipment.setConsumableManaPercent(dto.getConsumableManaPercent());
-        equipment.setConsumableMissingHpPercent(dto.getConsumableMissingHpPercent());
-        equipment.setConsumableMissingManaPercent(dto.getConsumableMissingManaPercent());
-        if (dto.getRarity() != null) {
-            equipment.setRarity(dto.getRarity());
-        }
-        if (dto.getSpecialEffect() != null) {
-            equipment.setSpecialEffect(dto.getSpecialEffect());
-        }
-        equipment.setSpecialEffectValue(dto.getSpecialEffectValue());
+        String oldName = isUpdate ? equipment.getName() : null;
+        updateEquipmentFromDto(equipment, dto);
 
         // Assigner à un personnage si fourni
         if (dto.getPersonnageId() != null) {
@@ -168,7 +176,16 @@ public class EquipmentController {
             equipment.setPersonnage(null);
         }
 
-        Equipment saved = equipmentRepository.save(equipment);
+        Equipment saved = equipmentRepository.save(java.util.Objects.requireNonNull(equipment));
+
+        if (isUpdate && oldName != null && !oldName.isEmpty()) {
+            List<Equipment> instances = equipmentRepository.findByName(oldName);
+            for (Equipment instance : instances) {
+                if (instance.getId().equals(saved.getId())) continue;
+                updateEquipmentFromDto(instance, dto);
+                equipmentRepository.save(instance);
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", isUpdate
@@ -210,6 +227,17 @@ public class EquipmentController {
         // Si on précise un slot cible (ex: changer un anneau de main), on met à jour l'équipement
         generation.grimoire.enumeration.EquipmentSlot finalSlot = targetSlot != null ? targetSlot : equipment.getSlot();
 
+        // Ne jamais changer la catégorie d'une arme à 2 mains
+        if (equipment.getSlot() == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
+            finalSlot = generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS;
+        }
+
+        try {
+            checkSlotConflicts(personnageId, finalSlot);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+
         // Si l'admin équipe un de ses propres objets sur le personnage d'un autre joueur, on duplique l'objet
         if (isAdmin && equipment.getUser() != null && personnage.getUser() != null
                 && !equipment.getUser().getId().equals(personnage.getUser().getId())) {
@@ -246,11 +274,10 @@ public class EquipmentController {
             return ResponseEntity.ok(response);
         }
 
-        if (targetSlot != null) {
+        if (targetSlot != null && equipment.getSlot() != generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
             equipment.setSlot(targetSlot);
         }
 
-        // Retirer l'ancien équipement du même slot
         equipmentRepository.findByPersonnageIdAndSlot(personnageId, equipment.getSlot())
                 .ifPresent(old -> {
                     old.setPersonnage(null);
@@ -263,6 +290,19 @@ public class EquipmentController {
         Map<String, Object> response = new HashMap<>();
         response.put("message", personnage.getName() + " équipe \"" + equipment.getName() + "\".");
         return ResponseEntity.ok(response);
+    }
+
+    private void checkSlotConflicts(Long personnageId, generation.grimoire.enumeration.EquipmentSlot slotToEquip) {
+        if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
+            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE).isPresent() ||
+                equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE).isPresent()) {
+                throw new IllegalArgumentException("Impossible d'équiper une arme à 2 mains : l'emplacement est déjà occupé.");
+            }
+        } else if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE || slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE) {
+            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS).isPresent()) {
+                throw new IllegalArgumentException("Impossible d'équiper cette arme : une arme à 2 mains est déjà équipée.");
+            }
+        }
     }
 
     /** Déséquiper un objet */
@@ -355,6 +395,7 @@ public class EquipmentController {
         map.put("consumableManaPercent", e.getConsumableManaPercent());
         map.put("consumableMissingHpPercent", e.getConsumableMissingHpPercent());
         map.put("consumableMissingManaPercent", e.getConsumableMissingManaPercent());
+        map.put("consumableCategory", e.getConsumableCategory() != null ? e.getConsumableCategory().name() : "AUTRE");
         map.put("weight", e.calculateWeight());
 
         if (e.getPersonnage() != null) {
@@ -391,6 +432,7 @@ public class EquipmentController {
         private int consumableManaPercent = 0;
         private int consumableMissingHpPercent = 0;
         private int consumableMissingManaPercent = 0;
+        private generation.grimoire.enumeration.ConsumableCategory consumableCategory;
         private generation.grimoire.enumeration.EquipmentRarity rarity;
         private generation.grimoire.enumeration.EquipmentEffectType specialEffect;
         private int specialEffectValue = 0;

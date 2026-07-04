@@ -39,7 +39,7 @@ public class PvEAdminService {
     }
 
     public List<Donjon> getAllDungeons() {
-        return donjonRepository.findAll();
+        return donjonRepository.findAllByOrderByDisplayOrderAsc();
     }
 
     public Donjon getDungeonById(@NonNull Long id) {
@@ -55,5 +55,19 @@ public class PvEAdminService {
     @Transactional
     public void deleteDungeon(@NonNull Long id) {
         donjonRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void updateDungeonsOrder(List<Long> orderedIds) {
+        for (int i = 0; i < orderedIds.size(); i++) {
+            Long id = orderedIds.get(i);
+            if (id != null) {
+                Donjon d = donjonRepository.findById(id).orElse(null);
+                if (d != null) {
+                    d.setDisplayOrder(i);
+                    donjonRepository.save(d);
+                }
+            }
+        }
     }
 }

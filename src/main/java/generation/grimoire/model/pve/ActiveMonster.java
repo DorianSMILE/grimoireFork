@@ -50,10 +50,18 @@ public class ActiveMonster {
     }
 
     public void takeDamage(int damage) {
-        // PASSIF TYPE : REPTILE — 15% de réduction des dégâts physiques
+        // Legacy, used if type is unknown
         if (this.base.getMonsterType() == generation.grimoire.enumeration.MonsterType.REPTILE) {
             damage = (int) Math.ceil(damage * 0.85);
         }
         this.asPersonnage.setHealthCurrent(Math.max(0, this.asPersonnage.getHealthCurrent() - damage));
+    }
+
+    public void takeDamage(int damage, generation.grimoire.enumeration.DamageType type, generation.grimoire.entity.personnage.Personnage caster) {
+        // PASSIF TYPE : REPTILE — 15% de réduction des dégâts physiques
+        if (type == generation.grimoire.enumeration.DamageType.PHYSIC && this.base.getMonsterType() == generation.grimoire.enumeration.MonsterType.REPTILE) {
+            damage = (int) Math.ceil(damage * 0.85);
+        }
+        this.asPersonnage.takeDamage(damage, type, caster);
     }
 }

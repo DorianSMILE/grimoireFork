@@ -560,8 +560,8 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 1.5rem;
-    width: 90%;
-    max-width: 680px;
+    width: 95%;
+    max-width: 1100px;
     max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
@@ -609,11 +609,14 @@
 }
 
 /* ===== Rarity Colors ===== */
-.rarity-COMMUN { color: #cbd5e1 !important; text-shadow: 0 0 5px rgba(203, 213, 225, 0.3); }
-.rarity-RARE { color: #10b981 !important; text-shadow: 0 0 5px rgba(16, 185, 129, 0.4); }
-.rarity-LEGENDAIRE { color: #facc15 !important; text-shadow: 0 0 5px rgba(250, 204, 21, 0.4); }
+.rarity-COMMUN { color: #94a3b8 !important; text-shadow: 0 0 5px rgba(148, 163, 184, 0.3); }
+.rarity-INHABITUEL { color: #22c55e !important; text-shadow: 0 0 5px rgba(34, 197, 94, 0.3); }
+.rarity-RARE { color: #3b82f6 !important; text-shadow: 0 0 5px rgba(59, 130, 246, 0.4); }
+.rarity-MYTHIQUE { color: #f97316 !important; text-shadow: 0 0 5px rgba(249, 115, 22, 0.4); }
+.rarity-LEGENDAIRE { color: #f59e0b !important; text-shadow: 0 0 5px rgba(245, 158, 11, 0.4); }
 .rarity-EPIQUE { color: #ef4444 !important; text-shadow: 0 0 8px rgba(239, 68, 68, 0.6); font-weight: 700; }
 .rarity-RELIQUE { color: #a855f7 !important; text-shadow: 0 0 10px rgba(168, 85, 247, 0.7); font-weight: 800; }
+.rarity-MAUDIT { color: #555555 !important; text-shadow: 0 0 10px rgba(85, 85, 85, 0.7); font-weight: 800; }
 
 .equip-slot-item-name {
     font-size: 0.82rem;
@@ -645,13 +648,29 @@
 /* ===== Equipment Slot Cards ===== */
 .equip-slots-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem;
 }
+
+/* Force explicit placement */
+.equip-slot-card[data-slot="CASQUE"] { grid-column: 2; grid-row: 1; }
+.equip-slot-card[data-slot="PLASTRON"] { grid-column: 3; grid-row: 1; }
+
+.equip-slot-card[data-slot="ARME_GAUCHE"] { grid-column: 1; grid-row: 2; }
+.equip-slot-card[data-slot="ANNEAU_GAUCHE"] { grid-column: 2; grid-row: 2; }
+.equip-slot-card[data-slot="ANNEAU_DROIT"] { grid-column: 3; grid-row: 2; }
+.equip-slot-card[data-slot="ARME_DROITE"] { grid-column: 4; grid-row: 2; }
+
+.equip-slot-card[data-slot="BOTTES"] { grid-column: 2; grid-row: 3; }
+.equip-slot-card[data-slot="CAPE"] { grid-column: 3; grid-row: 3; }
 
 @media (max-width: 500px) {
     .equip-slots-grid {
         grid-template-columns: 1fr;
+    }
+    .equip-slot-card[data-slot] {
+        grid-column: 1 / -1;
+        grid-row: auto;
     }
 }
 

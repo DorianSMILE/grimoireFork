@@ -110,7 +110,7 @@ export function renderStatOptions(arr, selectedVal) {
     if (!arr || !Array.isArray(arr)) return '';
     return arr.filter(s => {
         const val = typeof s === 'object' ? s.id || s : s;
-        return val !== 'POISON' && val !== 'BURN';
+        return val !== 'POISON' && val !== 'BURN' && val !== 'AME_DETACHEE';
     }).map(s => {
         const val = typeof s === 'object' ? s.id || s : s;
         return `<option value="${val}" ${val === selectedVal ? 'selected' : ''}>${formatStat(val)}</option>`;
@@ -253,10 +253,12 @@ export function makeCustomSelect(selectIdOrElement) {
             if (t.includes('mana') && t.includes('%')) return { icon: 'water_drop', color: '#7dd3fc' };
             if (t.includes('buff') || t.includes('débuff') || t.includes('debuff')) return { icon: 'trending_up', color: '#3b82f6' };
             if (t.includes('dot') || (t.includes('durée') && (t.includes('dégâ') || t.includes('dega')))) return { icon: 'whatshot', color: '#f97316' };
-            if (t.includes('hot') || (t.includes('durée') && t.includes('soin'))) return { icon: 'spa', color: '#34d399' };
+            if (t.includes('hot') || (t.includes('durée') && t.includes('soin'))) return { icon: 'healing', color: '#34d399' };
             if (t.includes('mot') || (t.includes('mana') && t.includes('tick'))) return { icon: 'cyclone', color: '#8b5cf6' };
             if (t.includes('dissipation') || t.includes('purge')) return { icon: 'air', color: '#a78bfa' };
             if (t.includes('bouclier') || t.includes('shield')) return { icon: 'security', color: '#06b6d4' };
+            if (t.includes('brûlure') || t.includes('brulure')) return { icon: 'local_fire_department', color: '#ef4444' };
+            if (t.includes('poison')) return { icon: 'science', color: '#10b981' };
             return { icon: 'auto_awesome', color: '#94a3b8' };
         }
         if (id === 'sortBy') {
@@ -477,6 +479,25 @@ export function showGlobalTooltip(el) {
     if (!dataEl) return;
 
     tooltip.innerHTML = dataEl.innerHTML;
+    
+    const elColor = el.getAttribute('data-color');
+    if (elColor) {
+        tooltip.style.borderColor = elColor;
+        const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+        if (titleEl) {
+            titleEl.style.color = elColor;
+            titleEl.style.borderBottom = '1px solid ' + elColor;
+        }
+    } else {
+        tooltip.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+        if (titleEl) {
+            // Restore default if any
+            titleEl.style.color = '#c084fc';
+            titleEl.style.borderBottom = 'none';
+        }
+    }
+    
     tooltip.style.display = 'flex';
     tooltip.style.maxHeight = '60vh';
     tooltip.style.overflowY = 'auto';

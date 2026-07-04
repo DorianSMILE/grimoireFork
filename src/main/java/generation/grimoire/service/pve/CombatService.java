@@ -1097,8 +1097,10 @@ public class CombatService {
                 // Find target
                 Personnage target = null;
                 boolean targetsEnemy = spellToCast.getEffects().stream()
+                        .filter(e -> e.getRequiredChoiceKey() == null || e.getRequiredChoiceKey().equals(choiceKey))
                         .anyMatch(e -> e.getEffectTarget() == generation.grimoire.enumeration.EffectTarget.TARGET);
                 boolean targetsAlly = spellToCast.getEffects().stream()
+                        .filter(e -> e.getRequiredChoiceKey() == null || e.getRequiredChoiceKey().equals(choiceKey))
                         .anyMatch(e -> e.getEffectTarget() == generation.grimoire.enumeration.EffectTarget.ALLY);
 
                 if (targetsEnemy && targetIndex != null && targetIndex >= 0
@@ -1123,6 +1125,12 @@ public class CombatService {
                                 break;
                             }
                         }
+                    }
+                    if (allyTarget != null && allyTarget.getId().equals(p.getId())) {
+                        // Le sort a peut-être d'autres effets valides (ex: sur l'ennemi ou le lanceur).
+                        // On annule juste la cible alliée pour que l'effet ALLY soit ignoré,
+                        // mais on permet au sort de se lancer.
+                        allyTarget = null;
                     }
                 }
 
@@ -1150,10 +1158,23 @@ public class CombatService {
                 p.setBanalSpellCastThisTurn(true);
                 captureLogs(session, () -> {
                     int playerDmg = p.getEffectiveStat(generation.grimoire.enumeration.StatType.STRENGTH);
-                    int damageDone = Math.max(1, playerDmg - targetMonster.getBase().getArmor());
-                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " et inflige "
-                            + damageDone + " dégâts !");
-                    targetMonster.takeDamage(damageDone);
+                    
+                    int totalCrit = p.getCrit() + p.getStatFlatBonus(generation.grimoire.enumeration.StatType.CRIT);
+                    totalCrit = Math.max(0, Math.min(100, totalCrit));
+                    boolean isCrit = ((int)(Math.random() * 100) + 1) <= totalCrit;
+                    
+                    if (isCrit) {
+                        System.out.println("💥 Coup Critique déclenché par " + p.getName() + " !");
+                        double critMult = 1.5;
+                        int bonus = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CRIT_DAMAGE);
+                        if (bonus > 0) {
+                            critMult += (bonus / 100.0);
+                        }
+                        playerDmg = (int)(playerDmg * critMult);
+                    }
+
+                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " (" + (isCrit ? "Critique : " : "Force : ") + playerDmg + ") !");
+                    targetMonster.takeDamage(playerDmg, generation.grimoire.enumeration.DamageType.PHYSIC, p);
                 });
             }
         }
@@ -1296,7 +1317,9 @@ public class CombatService {
                     if (channelingTarget == null && !session.getEnemies().isEmpty()) {
                         channelingTarget = session.getEnemies().get(0).getAsPersonnage();
                     }
-                    spellService.tickChanneling(p, channelingTarget, p.getChannelingChoiceKey());
+                    List<Personnage> allAllies = session.getPlayers().stream().filter(pl -> pl.getHealthCurrent() > 0).toList();
+                    List<Personnage> allEnemies = session.getEnemies().stream().map(m -> m.getAsPersonnage()).toList();
+                    spellService.tickChanneling(p, channelingTarget, p.getChannelingChoiceKey(), p, allAllies, allEnemies);
                 }
             });
         }
@@ -1362,7 +1385,9 @@ public class CombatService {
                         if (cTarget == null && !session.getPlayers().isEmpty()) {
                             cTarget = session.getPlayers().get(0);
                         }
-                        spellService.tickChanneling(mp, cTarget, mp.getChannelingChoiceKey());
+                        List<Personnage> allAllies = session.getEnemies().stream().map(am -> am.getAsPersonnage()).toList();
+                        List<Personnage> allEnemies = session.getPlayers().stream().filter(pl -> pl.getHealthCurrent() > 0).toList();
+                        spellService.tickChanneling(mp, cTarget, mp.getChannelingChoiceKey(), mp, allAllies, allEnemies);
                     } else {
                         List<Personnage> alivePlayers = session.getPlayers().stream()
                                 .filter(pl -> pl.getHealthCurrent() > 0).toList();
@@ -1389,7 +1414,7 @@ public class CombatService {
                             int magicDmg;
                             
                             if (mType == MonsterType.HYBRIDE) {
-                                int total = str + pwr;
+                                int total = (int) ((str + pwr) * 1.2);
                                 physDmg = total / 2;
                                 magicDmg = total - physDmg;
                             } else {
@@ -1399,7 +1424,7 @@ public class CombatService {
 
                             int monsterDmg = physDmg + magicDmg;
 
-                            if (behavior == MonsterBehavior.INSENSIBLE) {
+                            if (behavior == MonsterBehavior.BRUTAL) {
                                 System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
                                         + " et inflige " + monsterDmg + " dégâts bruts.");
                                 if (monsterDmg > 0) {
@@ -1697,11 +1722,12 @@ if (targetPlayer.getHealthCurrent() <= 0) {
                         + " (la plus faible Résistance - Assassin).");
                 return target;
             }
-            case INSENSIBLE -> {
-                // Random target, but damage type is handled in caller
-                Personnage target = alivePlayers.get(rnd.nextInt(alivePlayers.size()));
+            case BRUTAL -> {
+                Personnage target = alivePlayers.stream()
+                        .min(java.util.Comparator.comparingInt(p -> p.getHealthMax()))
+                        .orElse(alivePlayers.get(0));
                 session.addLog("\uD83E\uDDA0 " + m.getBase().getName() + " frappe " + target.getName()
-                        + " avec des dégâts bruts (Insensible).");
+                        + " (le moins de PV max - Brutal).");
                 return target;
             }
             default -> {
@@ -1785,7 +1811,7 @@ if (targetPlayer.getHealthCurrent() <= 0) {
             }));
 
             for (Spell spell : session.getAvailableSpells()) {
-                SpellAvailability avail = checkSpellAvailability(spell, p);
+                SpellAvailability avail = checkSpellAvailability(spell, p, session);
                 avails.add(avail);
             }
         } finally {
@@ -1795,7 +1821,7 @@ if (targetPlayer.getHealthCurrent() <= 0) {
         session.setSpellAvailability(avails);
     }
 
-    private SpellAvailability checkSpellAvailability(Spell spell, Personnage p) {
+    private SpellAvailability checkSpellAvailability(Spell spell, Personnage p, CombatSession session) {
         String canCastError = p.canCast(spell);
         if (canCastError != null) {
             return SpellAvailability.blocked(spell.getId(), "CONDITION", canCastError);
@@ -1866,6 +1892,25 @@ if (targetPlayer.getHealthCurrent() <= 0) {
         if (spell.getPercentHeatCost() > 0) {
             actualHeatCost += (int) (100.0 * spell.getPercentHeatCost() / 100.0);
         }
+
+        int minRequiredHeatFromEffects = 0;
+        if (spell.getEffects() != null) {
+            for (generation.grimoire.entity.SpellEffect effect : spell.getEffects()) {
+                if (effect.getRequiredChoiceKey() == null) {
+                    if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatFixedEffect hfe) {
+                        if (hfe.getAmount() < 0) {
+                            minRequiredHeatFromEffects += -hfe.getAmount();
+                        }
+                    } else if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatPercentageEffect hpe) {
+                        if (hpe.getPercentage() < 0) {
+                            double srcVal = generation.grimoire.utils.StatCalculator.getSourceValue(hpe.getSource(), p, p);
+                            minRequiredHeatFromEffects += (int) (-hpe.getPercentage() * srcVal);
+                        }
+                    }
+                }
+            }
+        }
+        actualHeatCost += minRequiredHeatFromEffects;
 
         // Ajustement des coûts via les passifs (Création, Consolidation, Destruction,
         // Karma)

@@ -318,8 +318,22 @@ public class ShopController {
         return equipmentRepository.findById(id).map(eq -> {
             if (!eq.isShopTemplate())
                 return ResponseEntity.badRequest().body(Map.of("message", "Not a template"));
+
+            String oldName = eq.getName();
             updateFromDto(eq, dto);
             equipmentRepository.save(eq);
+
+            // Update all instances with the same old name
+            if (oldName != null && !oldName.isEmpty()) {
+                List<Equipment> instances = equipmentRepository.findByName(oldName);
+                for (Equipment instance : instances) {
+                    if (instance.getId().equals(eq.getId())) continue;
+                    updateFromDto(instance, dto);
+                    instance.setShopTemplate(false); // ensure it remains an instance
+                    equipmentRepository.save(instance);
+                }
+            }
+
             return ResponseEntity.ok(toShopDto(eq));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -348,17 +362,23 @@ public class ShopController {
 
     private double calculateShopPrice(Equipment eq) {
         double weight = eq.calculateWeight();
-        int multiplier = 1;
+        double multiplier = 1.0;
         if (eq.getRarity() == EquipmentRarity.COMMUN)
-            multiplier = 1;
+            multiplier = 1.0;
+        else if (eq.getRarity() == EquipmentRarity.INHABITUEL)
+            multiplier = 1.5;
         else if (eq.getRarity() == EquipmentRarity.RARE)
-            multiplier = 2;
+            multiplier = 2.0;
+        else if (eq.getRarity() == EquipmentRarity.MYTHIQUE)
+            multiplier = 2.5;
         else if (eq.getRarity() == EquipmentRarity.LEGENDAIRE)
-            multiplier = 3;
+            multiplier = 3.0;
         else if (eq.getRarity() == EquipmentRarity.EPIQUE)
-            multiplier = 5;
+            multiplier = 5.0;
         else if (eq.getRarity() == EquipmentRarity.RELIQUE)
-            multiplier = 6;
+            multiplier = 6.0;
+        else if (eq.getRarity() == EquipmentRarity.MAUDIT)
+            multiplier = 4;
 
         double slotMultiplier = 1.0;
         if (eq.getSlot() == EquipmentSlot.PLASTRON)
@@ -395,6 +415,11 @@ public class ShopController {
         map.put("priceAnomalies", e.getPriceAnomalies());
         map.put("weight", e.calculateWeight());
         map.put("baseWeight", e.getBaseWeight());
+        map.put("consumableHpPercent", e.getConsumableHpPercent());
+        map.put("consumableManaPercent", e.getConsumableManaPercent());
+        map.put("consumableMissingHpPercent", e.getConsumableMissingHpPercent());
+        map.put("consumableMissingManaPercent", e.getConsumableMissingManaPercent());
+        map.put("consumableCategory", e.getConsumableCategory() != null ? e.getConsumableCategory().name() : "AUTRE");
         return map;
     }
 
@@ -412,6 +437,13 @@ public class ShopController {
         eq.setRegenHealthPerTurn(dto.getRegenHealthPerTurn());
         eq.setRegenManaPerTurn(dto.getRegenManaPerTurn());
         eq.setBaseWeight(dto.getBaseWeight());
+        eq.setConsumableHpPercent(dto.getConsumableHpPercent());
+        eq.setConsumableManaPercent(dto.getConsumableManaPercent());
+        eq.setConsumableMissingHpPercent(dto.getConsumableMissingHpPercent());
+        eq.setConsumableMissingManaPercent(dto.getConsumableMissingManaPercent());
+        if (dto.getConsumableCategory() != null) {
+            eq.setConsumableCategory(dto.getConsumableCategory());
+        }
         if (dto.getPriceAnomalies() != null) {
             eq.setPriceAnomalies(new HashMap<>(dto.getPriceAnomalies()));
         } else {

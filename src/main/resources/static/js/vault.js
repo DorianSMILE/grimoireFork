@@ -3,13 +3,28 @@ let allEquipments = [];
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
     ANNEAU_GAUCHE: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
     ANNEAU_DROIT: { label: 'Anneau', icon: 'diamond', color: '#f59e0b' },
     BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
     CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
     CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
-    ANOMALIE: { label: 'Anomalie', icon: 'star', color: '#d946ef' }
+    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
 };
+
+function getSlotInfo(eq) {
+    if (!eq) return { icon: 'help', color: '#94a3b8' };
+    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+        info.color = catColors[eq.consumableCategory] || '#854c4c';
+    }
+    return info;
+}
 
 const RARITY_ORDER = {
     'COMMUN': 1,
@@ -37,28 +52,56 @@ const STAT_DEFS = [
 ];
 
 const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    PLASTRON: { COMMUN: 9, RARE: 19, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46 },
-    ANNEAU_GAUCHE: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    ANNEAU_DROIT: { COMMUN: 3, RARE: 6, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17 },
-    BOTTES: { COMMUN: 4, RARE: 12, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34 },
-    CAPE: { COMMUN: 5, RARE: 14, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40 },
-    CONSOMMABLE: { COMMUN: 5, RARE: 9, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24 }
+    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
+    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
+    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
+    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
+    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
+    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
 };
 
 function calculateWeight(eq) {
     if (eq.isAnomalie) return 0;
     let w = eq.baseWeight || 0;
-    w += (eq.bonusHealthMax || 0) * 0.2;
-    w += (eq.bonusManaMax || 0) * 0.2;
-    w += (eq.bonusPower || 0) * 2.0;
-    w += (eq.bonusStrength || 0) * 2.0;
-    w += (eq.bonusArmor || 0) * 1.0;
-    w += (eq.bonusResistance || 0) * 1.0;
-    w += (eq.bonusSpeed || 0) * 2.0;
-    w += (eq.bonusCrit || 0) * 1.0;
-    w += (eq.regenHealthPerTurn || 0) * 1.0;
-    w += (eq.regenManaPerTurn || 0) * 1.0;
+
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const s = eq.slot;
+    if (s === 'ARME_GAUCHE' || s === 'ARME_DROITE' || s === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (s === 'CASQUE' || s === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (s === 'ANNEAU_GAUCHE' || s === 'ANNEAU_DROIT') {
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (s === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (s === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (eq.bonusHealthMax || 0) * mHp;
+    w += (eq.bonusManaMax || 0) * mMana;
+    w += (eq.bonusPower || 0) * mPow;
+    w += (eq.bonusStrength || 0) * mStr;
+    w += (eq.bonusArmor || 0) * mArm;
+    w += (eq.bonusResistance || 0) * mRes;
+    w += (eq.bonusSpeed || 0) * mSpd;
+    w += (eq.bonusCrit || 0) * mCrit;
+    w += (eq.regenHealthPerTurn || 0) * mRegHp;
+    w += (eq.regenManaPerTurn || 0) * mRegMana;
 
     const rarity = eq.rarity;
     if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {
@@ -114,19 +157,47 @@ document.addEventListener('click', (e) => {
         if (hiddenInput.id === 'eqRarity') {
             const val = hiddenInput.value;
             const row = document.getElementById('eqSpecialEffectRow');
-            if (val === 'EPIQUE' || val === 'RELIQUE') {
+            if (val === 'EPIQUE' || val === 'RELIQUE' || val === 'MAUDIT') {
                 row.style.display = 'grid';
                 const isEpic = val === 'EPIQUE';
-                const color = isEpic ? '#ef4444' : '#c084fc';
-                const bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
-                const border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
-                const inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(192, 132, 252, 0.3)';
+                const isMaudit = val === 'MAUDIT';
+                let color = isEpic ? '#ef4444' : '#a855f7';
+                let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
+                let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
+                let inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(168, 85, 247, 0.3)';
+                if (isMaudit) {
+                    color = '#555555';
+                    bg = 'rgba(85, 85, 85, 0.05)';
+                    border = '1px dashed rgba(85, 85, 85, 0.3)';
+                    inputBorder = 'rgba(85, 85, 85, 0.3)';
+                }
+
                 row.style.background = bg;
                 row.style.border = border;
                 document.getElementById('eqSpecialEffectLabelTitle').style.color = color;
                 document.getElementById('eqSpecialEffectValueTitle').style.color = color;
                 document.getElementById('eqSpecialEffectTrigger').style.borderColor = inputBorder;
                 document.getElementById('eqSpecialEffectValue').style.borderColor = inputBorder;
+
+                const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
+                effectOptions.forEach(opt => {
+                    const effectVal = opt.getAttribute('data-value');
+                    if (effectVal === 'NONE') {
+                        opt.style.display = 'block';
+                    } else if (isMaudit) {
+                        opt.style.display = effectVal.startsWith('CURSED_') ? 'block' : 'none';
+                    } else {
+                        opt.style.display = effectVal.startsWith('CURSED_') ? 'none' : 'block';
+                    }
+                });
+
+                const currentEffect = document.getElementById('eqSpecialEffect').value;
+                if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
+                    (!isMaudit && currentEffect.startsWith('CURSED_'))) {
+                    document.getElementById('eqSpecialEffect').value = 'NONE';
+                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                    document.getElementById('eqSpecialEffectValue').value = 0;
+                }
             } else {
                 row.style.display = 'none';
                 document.getElementById('eqSpecialEffect').value = 'NONE';
@@ -154,7 +225,7 @@ async function loadEquipments() {
             const aUrl = window.isAdmin ? '/api/anomalies/all' : '/api/anomalies';
             const aRes = await fetch(aUrl);
             if (aRes.ok) anomaliesData = await aRes.json();
-        } catch(e) { console.error('Erreur chargement anomalies:', e); }
+        } catch (e) { console.error('Erreur chargement anomalies:', e); }
 
         anomaliesData.forEach(a => {
             a.isAnomalie = true;
@@ -181,7 +252,7 @@ async function loadEquipments() {
 let equipmentToDelete = null;
 let anomalieToDelete = null;
 
-window.deleteAnomalie = function(idsStr) {
+window.deleteAnomalie = function (idsStr) {
     anomalieToDelete = String(idsStr).split(',');
     equipmentToDelete = null;
     const firstId = Number(anomalieToDelete[0]);
@@ -193,7 +264,7 @@ window.deleteAnomalie = function(idsStr) {
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
 
-window.deleteEquipment = function(idsStr) {
+window.deleteEquipment = function (idsStr) {
     equipmentToDelete = String(idsStr).split(',');
     anomalieToDelete = null;
     const firstId = Number(equipmentToDelete[0]);
@@ -273,7 +344,7 @@ function groupEquipments(list) {
             groups[key].stackCount++;
         }
     });
-    
+
     return stacked.concat(Object.values(groups));
 }
 
@@ -290,7 +361,7 @@ function filterVault() {
 
     let filtered = allEquipments.filter(eq => {
         let matchMainType = false;
-        
+
         if (filterConsommable && filterAnomalie) {
             matchMainType = eq.isAnomalie || (!eq.isAnomalie && eq.slot === 'CONSOMMABLE');
         } else if (filterConsommable) {
@@ -300,7 +371,7 @@ function filterVault() {
         } else {
             matchMainType = (!eq.isAnomalie && eq.slot !== 'CONSOMMABLE');
         }
-        
+
         if (!matchMainType) return false;
 
         const matchName = !searchName || eq.name.toLowerCase().includes(searchName);
@@ -310,6 +381,8 @@ function filterVault() {
         if (filterSlot) {
             if (filterSlot === 'ANNEAU') {
                 matchSlot = (eq.slot === 'ANNEAU_GAUCHE' || eq.slot === 'ANNEAU_DROIT');
+            } else if (filterSlot === 'ARME') {
+                matchSlot = (eq.slot === 'ARME_GAUCHE' || eq.slot === 'ARME_DROITE' || eq.slot === 'ARME_DEUX_MAINS');
             } else {
                 matchSlot = eq.slot === filterSlot;
             }
@@ -405,10 +478,10 @@ function renderGrid(equipments) {
                 typeStr = 'Matériau';
             }
 
-            const badgeHtml = (eq.stackCount && eq.stackCount > 1) 
-                ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>` 
+            const badgeHtml = (eq.stackCount && eq.stackCount > 1)
+                ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
                 : '';
-                
+
             const displayOwner = window.isAdmin ? (eq._groupOwner || eq.ownerUsername) : null;
             const adminOwnerHtml = displayOwner ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>` : '';
 
@@ -449,7 +522,7 @@ function renderGrid(equipments) {
             </div>`;
         }
 
-        const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+        const slotInfo = getSlotInfo(eq);
 
         const statsHtml = STAT_DEFS
             .filter(s => eq[s.key] && eq[s.key] !== 0)
@@ -471,11 +544,24 @@ function renderGrid(equipments) {
                 'THORNS': 'Épines',
                 'MANA_SHIELD': 'Bouclier de Mana',
                 'CHEAT_DEATH': 'Ange Gardien',
-                'CRIT_DAMAGE': 'Dégâts Critiques'
+                'CRIT_DAMAGE': 'Dégâts Critiques',
+                'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
+                'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+                'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+                'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+                'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+                'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+                'EXECUTION': 'Exécution (% Phy)',
+                'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
             };
             const label = effectLabels[eq.specialEffect] || eq.specialEffect;
-            effectHtml = `<div class="vault-card-effect">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">auto_awesome</span>
+            const isCursed = eq.specialEffect.startsWith('CURSED_');
+            const icon = isCursed ? 'skull' : 'auto_awesome';
+            const color = isCursed ? '#9ca3af' : '#c084fc';
+            const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+
+            effectHtml = `<div class="vault-card-effect" style="color: ${color}; background: ${bg}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
+                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
                 ${label} : ${eq.specialEffectValue}
             </div>`;
         }
@@ -510,10 +596,10 @@ function renderGrid(equipments) {
             weightColor = `hsl(${hue}, 80%, 55%)`;
         }
 
-        const badgeHtml = (eq.stackCount && eq.stackCount > 1) 
-            ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>` 
+        const badgeHtml = (eq.stackCount && eq.stackCount > 1)
+            ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
             : '';
-            
+
         const displayOwner = window.isAdmin ? (eq._groupOwner || eq.ownerUsername) : null;
         const adminOwnerHtml = displayOwner ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>` : '';
 
@@ -572,7 +658,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Render create form slot select
     const slotOptionsContainer = document.getElementById('eqSlotOptions');
     if (slotOptionsContainer) {
-        const slots = ['CASQUE', 'PLASTRON', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+        const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
         slotOptionsContainer.innerHTML = slots.map(s => {
             const info = SLOT_LABELS[s];
             return `<div class="custom-option" data-value="${s}">
@@ -592,7 +678,7 @@ window.addEventListener('authLoaded', async () => {
     if (btnCreateAnomalie) {
         btnCreateAnomalie.style.display = window.isAdmin ? 'flex' : 'none';
     }
-    
+
     const searchOwnerContainer = document.getElementById('searchOwnerContainer');
     if (searchOwnerContainer) {
         searchOwnerContainer.style.display = window.isAdmin ? 'flex' : 'none';
@@ -631,11 +717,17 @@ function resetEqForm() {
     document.getElementById('eqCrit').value = 0;
     document.getElementById('eqRegenHp').value = 0;
     document.getElementById('eqRegenMana').value = 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = 0;
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
+
+    const catInput = document.getElementById('eqConsumableCategory');
+    if (catInput) {
+        catInput.value = 'AUTRE';
+        document.getElementById('eqConsumableCategoryLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">inventory_2</span> Autre';
+    }
 
     // Reset Rarity
     const rarityInput = document.getElementById('eqRarity');
@@ -681,17 +773,26 @@ window.editEquipment = function (id) {
     document.getElementById('eqCrit').value = eq.bonusCrit || 0;
     document.getElementById('eqRegenHp').value = eq.regenHealthPerTurn || 0;
     document.getElementById('eqRegenMana').value = eq.regenManaPerTurn || 0;
-    if(document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
-    if(document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
-    if(document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
-    if(document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
-    if(document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
+    if (document.getElementById('eqConsumableHpPercent')) document.getElementById('eqConsumableHpPercent').value = eq.consumableHpPercent || 0;
+    if (document.getElementById('eqConsumableManaPercent')) document.getElementById('eqConsumableManaPercent').value = eq.consumableManaPercent || 0;
+    if (document.getElementById('eqConsumableMissingHpPercent')) document.getElementById('eqConsumableMissingHpPercent').value = eq.consumableMissingHpPercent || 0;
+    if (document.getElementById('eqConsumableMissingManaPercent')) document.getElementById('eqConsumableMissingManaPercent').value = eq.consumableMissingManaPercent || 0;
+    if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = eq.baseWeight || 0;
+
+    const catInput = document.getElementById('eqConsumableCategory');
+    if (catInput && eq.consumableCategory) {
+        catInput.value = eq.consumableCategory;
+        const option = document.querySelector(`#eqConsumableCategoryOptions .custom-option[data-value="${eq.consumableCategory}"]`);
+        if (option) {
+            document.getElementById('eqConsumableCategoryLabel').innerHTML = option.innerHTML;
+        }
+    }
 
     // Slot Setup
     const slotInput = document.getElementById('eqSlot');
     if (slotInput && eq.slot) {
         slotInput.value = eq.slot;
-        const info = SLOT_LABELS[eq.slot];
+        const info = getSlotInfo(eq);
         if (info) {
             document.getElementById('eqSlotLabel').innerHTML = `<span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span> ${info.label}`;
         }
@@ -707,19 +808,39 @@ window.editEquipment = function (id) {
         }
 
         const row = document.getElementById('eqSpecialEffectRow');
-        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE') {
+        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE' || eq.rarity === 'MAUDIT') {
             if (row) row.style.display = 'grid';
 
             const isEpic = eq.rarity === 'EPIQUE';
-            const color = isEpic ? '#ef4444' : '#c084fc';
-            const bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
-            const border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
-            const inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(192, 132, 252, 0.3)';
+            const isMaudit = eq.rarity === 'MAUDIT';
+            let color = isEpic ? '#ef4444' : '#a855f7';
+            let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
+            let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
+            let inputBorder = isEpic ? 'rgba(239, 68, 68, 0.3)' : 'rgba(168, 85, 247, 0.3)';
+
+            if (isMaudit) {
+                color = '#555555';
+                bg = 'rgba(85, 85, 85, 0.05)';
+                border = '1px dashed rgba(85, 85, 85, 0.3)';
+                inputBorder = 'rgba(85, 85, 85, 0.3)';
+            }
 
             if (row) {
                 row.style.background = bg;
                 row.style.border = border;
             }
+
+            const effectOptions = document.querySelectorAll('#eqSpecialEffectOptions .custom-option');
+            effectOptions.forEach(opt => {
+                const effectVal = opt.getAttribute('data-value');
+                if (effectVal === 'NONE') {
+                    opt.style.display = 'block';
+                } else if (isMaudit) {
+                    opt.style.display = effectVal.startsWith('CURSED_') ? 'block' : 'none';
+                } else {
+                    opt.style.display = effectVal.startsWith('CURSED_') ? 'none' : 'block';
+                }
+            });
 
             const labelTitle = document.getElementById('eqSpecialEffectLabelTitle');
             if (labelTitle) labelTitle.style.color = color;
@@ -769,7 +890,7 @@ window.openCreateAnomalieModal = function () {
     document.getElementById('anomalieDescription').value = '';
     document.getElementById('anomalieSpiritualite').value = 'TENEBRES';
     document.getElementById('anomalieLevel').value = 1;
-    
+
     const toggleMagic = document.getElementById('anomalieMagicToggle');
     if (toggleMagic) {
         toggleMagic.checked = true;
@@ -780,7 +901,7 @@ window.openCreateAnomalieModal = function () {
     document.getElementById('anomalieCreateModal').classList.add('show');
 };
 
-window.editAnomalie = function(id) {
+window.editAnomalie = function (id) {
     editingAnomalieId = id;
     const eq = allEquipments.find(e => e.id === id && e.isAnomalie);
     if (!eq) return;
@@ -893,7 +1014,7 @@ window.submitEquipment = async function () {
     let specialEffect = document.getElementById('eqSpecialEffect').value;
     let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE') {
+    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
         specialEffect = 'NONE';
         specialEffectValue = 0;
     } else {
@@ -902,9 +1023,17 @@ window.submitEquipment = async function () {
         }
     }
 
-    if (specialEffect !== 'NONE' && specialEffectValue <= 0) {
-        showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
-        return;
+    if (specialEffect !== 'NONE') {
+        if (rarity === 'MAUDIT') {
+            if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
+            if (specialEffectValue === 0) {
+                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
+                return;
+            }
+        } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
+            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
+            return;
+        }
     }
 
     const dto = {
@@ -926,6 +1055,7 @@ window.submitEquipment = async function () {
         consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
         consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
         baseWeight: document.getElementById('eqBaseWeight') ? (parseFloat(document.getElementById('eqBaseWeight').value) || 0.0) : 0.0,
+        consumableCategory: document.getElementById('eqConsumableCategory') ? document.getElementById('eqConsumableCategory').value : 'AUTRE',
         rarity,
         specialEffect,
         specialEffectValue,
@@ -955,34 +1085,59 @@ window.submitEquipment = async function () {
 
 function calculateEquipmentWeight() {
     let w = 0;
-    w += (parseInt(document.getElementById('eqHp').value) || 0) * 0.2;
-    w += (parseInt(document.getElementById('eqMana').value) || 0) * 0.2;
-    w += (parseInt(document.getElementById('eqPower').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqStr').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqArmor').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRes').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * 2.0;
-    w += (parseInt(document.getElementById('eqCrit').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * 1.0;
-    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * 1.0;
     
+    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
+    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+
+    const slot = document.getElementById('eqSlot').value;
+    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
+        mArm = 1.5; mRes = 1.5;
+        mHp = 0.4; mMana = 0.4;
+        mStr = 1.8; mPow = 1.8;
+        mRegHp = 1.2; mRegMana = 1.2;
+    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
+        mArm = 0.8; mRes = 0.8;
+        mStr = 2.5; mPow = 2.5;
+        mSpd = 3.5;
+        mCrit = 2.0;
+    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
+        mMana = 0.1;
+        mArm = 2.0; mRes = 2.0;
+        mRegMana = 0.8;
+    } else if (slot === 'BOTTES') {
+        mSpd = 1.5;
+    } else if (slot === 'CAPE') {
+        mCrit = 1.5;
+    }
+
+    w += (parseInt(document.getElementById('eqHp').value) || 0) * mHp;
+    w += (parseInt(document.getElementById('eqMana').value) || 0) * mMana;
+    w += (parseInt(document.getElementById('eqPower').value) || 0) * mPow;
+    w += (parseInt(document.getElementById('eqStr').value) || 0) * mStr;
+    w += (parseInt(document.getElementById('eqArmor').value) || 0) * mArm;
+    w += (parseInt(document.getElementById('eqRes').value) || 0) * mRes;
+    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * mSpd;
+    w += (parseInt(document.getElementById('eqCrit').value) || 0) * mCrit;
+    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
+    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
+
     const baseWeightEl = document.getElementById('eqBaseWeight');
     if (baseWeightEl) w += parseFloat(baseWeightEl.value) || 0;
 
-    // Add special effect weight if Epic/Relic
+    // Add special effect weight if Epic/Relic/Maudit
     const rarity = document.getElementById('eqRarity').value;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {
+    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
         const specialEffect = document.getElementById('eqSpecialEffect').value;
         const effectVal = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
-        if (specialEffect !== 'NONE' && effectVal > 0) {
-            w += effectVal * 1.0;
+        if (specialEffect !== 'NONE' && effectVal !== 0) {
+            w += effectVal * 1.5;
         }
     }
     return w;
 }
 
-window.updateWeightUI = function() {
+window.updateWeightUI = function () {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;
@@ -998,6 +1153,10 @@ window.updateWeightUI = function() {
     if (row) {
         row.style.display = slot === 'CONSOMMABLE' ? 'flex' : 'none';
     }
+
+    document.querySelectorAll('.consumable-category-field').forEach(el => {
+        el.style.display = slot === 'CONSOMMABLE' ? 'block' : 'none';
+    });
 
     const w = calculateEquipmentWeight();
 

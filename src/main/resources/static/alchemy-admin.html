@@ -73,7 +73,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             z-index: 100;
             display: none;
-            max-height: 150px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -299,7 +299,7 @@
                         </div>
                         <div class="form-group">
                             <label id="rewardLevelLabel" style="margin-bottom: 0.2rem; font-size: 0.85rem;">Niveau
-                                (Anomalies/Secrets)</label>
+                                du Secret</label>
                             <input type="number" id="rewardLevel" value="1" min="1"
                                 style="padding: 0.4rem; font-size: 0.9rem;">
                         </div>
@@ -395,11 +395,26 @@
 
         const RARITY_COLORS = {
             COMMUN: '#94a3b8',
+            INHABITUEL: '#22c55e',
             RARE: '#3b82f6',
+            MYTHIQUE: '#f97316',
             LEGENDAIRE: '#f59e0b',
             EPIQUE: '#c084fc',
-            RELIQUE: '#ef4444'
+            RELIQUE: '#ef4444',
+            MAUDIT: '#555555'
         };
+
+        function getSlotInfo(eq) {
+            if (!eq) return { icon: 'help', color: '#94a3b8' };
+            const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+            if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+                const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
+                const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
+                info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
+                info.color = catColors[eq.consumableCategory] || '#854c4c';
+            }
+            return info;
+        }
 
         const DEFAULT_SECRETS_META = [
             { name: "Secret du Chaos", icon: "local_fire_department", color: "#ff0000" },
@@ -461,7 +476,20 @@
         async function loadItems() {
             try {
                 const resA = await fetch('/api/anomalies/all-templates');
-                if (resA.ok) allAnomalies = await resA.json();
+                if (resA.ok) {
+                    allAnomalies = await resA.json();
+                    allAnomalies.sort((a, b) => {
+                        const spiA = a.spiritualite || 'ZZZ';
+                        const spiB = b.spiritualite || 'ZZZ';
+                        if (spiA !== spiB) return spiA.localeCompare(spiB);
+
+                        const lvlA = a.level || 1;
+                        const lvlB = b.level || 1;
+                        if (lvlA !== lvlB) return lvlA - lvlB;
+
+                        return a.name.localeCompare(b.name);
+                    });
+                }
             } catch (e) {
                 console.error("Erreur chargement anomalies", e);
             }
@@ -488,8 +516,12 @@
                 merged.forEach(e => {
                     if (e && e.name) map.set(e.name, e);
                 });
+                const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
                 allEquipments = Array.from(map.values()).sort((a, b) => {
-                    if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+                    const rA = rarityOrder[a.rarity] || 99;
+                    const rB = rarityOrder[b.rarity] || 99;
+                    if (rA !== rB) return rA - rB;
+                    if (a.slot !== b.slot) return (a.slot || '').localeCompare(b.slot || '');
                     return a.name.localeCompare(b.name);
                 });
                 allConsumables = allEquipments.filter(e => e.slot === 'CONSOMMABLE');
@@ -531,6 +563,18 @@
                 } else {
                     qtyInput.disabled = false;
                     qtyInput.style.opacity = '1';
+                }
+            }
+
+            const levelInput = document.getElementById('rewardLevel');
+            if (levelInput) {
+                if (type === 'UNLOCK_FEATURE') {
+                    levelInput.disabled = false;
+                    levelInput.style.opacity = '1';
+                } else {
+                    levelInput.disabled = true;
+                    levelInput.style.opacity = '0.5';
+                    levelInput.value = 1;
                 }
             }
 
@@ -584,8 +628,9 @@
                 `;
             } else if (type === 'GIVE_CONSUMABLE') {
                 allConsumables.forEach(c => {
+                    const slotInfo = getSlotInfo(c);
                     optionsHtml += `<div class="custom-option" data-value="${c.name}">
-                                        <span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span>
+                                        <span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                                         ${c.name}
                                     </div>`;
                 });
@@ -722,6 +767,13 @@
                 document.body.appendChild(tooltip);
             }
             tooltip.innerHTML = el.getAttribute('data-tooltip-html');
+            const elColor = el.style.color || '#a855f7';
+            tooltip.style.border = '1px solid ' + elColor;
+            const titleEl = tooltip.querySelector('.anomaly-tooltip-title');
+            if (titleEl) {
+                titleEl.style.color = elColor;
+                titleEl.style.borderBottom = '1px solid ' + elColor;
+            }
             tooltip.style.display = 'block';
 
             const rect = el.getBoundingClientRect();
@@ -879,8 +931,12 @@
                                         Lvl ${aTemp.level || 1}
                                     </span>
                                     <span style="border: 1px solid ${getTypeColor(aTemp.magicObject)}; color: ${getTypeColor(aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                        ${aTemp.spiritualite}
+                                        <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                                        ${aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                     </span>
+                                    ${aTemp.spiritualite ? `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3); text-transform: uppercase;">
+                                        ${aTemp.spiritualite}
+                                    </span>` : ''}
                                 </div>
                                 <div class="anomaly-tooltip-desc">${aTemp.description ? aTemp.description : 'Aucune description'}</div>
                             `;
@@ -892,7 +948,9 @@
                 }
                 if (r.requiredConsumables) {
                     for (const [k, v] of Object.entries(r.requiredConsumables)) {
-                        reqs.push(`<span class="anomaly-badge" style="border: 1px solid #10b981; background: linear-gradient(#10b98125, #10b98125), #1e293b; color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #10b981;">inventory_2</span> ${v}x ${k}</span>`);
+                        const consTemp = allConsumables.find(c => c.name === k);
+                        const slotInfo = getSlotInfo(consTemp);
+                        reqs.push(`<span class="anomaly-badge" style="border: 1px solid ${slotInfo.color}; background: linear-gradient(${slotInfo.color}25, ${slotInfo.color}25), #1e293b; color: ${slotInfo.color}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${v}x ${k}</span>`);
                     }
                 }
 
@@ -909,8 +967,12 @@
                                     Lvl ${r.rewardLevel || aTemp.level || 1}
                                 </span>
                                 <span style="border: 1px solid ${getTypeColor(aTemp.magicObject)}; color: ${getTypeColor(aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                    ${aTemp.spiritualite}
+                                    <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                                    ${aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                 </span>
+                                ${aTemp.spiritualite ? `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3); text-transform: uppercase;">
+                                    ${aTemp.spiritualite}
+                                </span>` : ''}
                             </div>
                             <div class="anomaly-tooltip-desc">${aTemp.description ? aTemp.description : 'Aucune description'}</div>
                         `;
@@ -919,9 +981,14 @@
                         rewardHtml = `<span style="color: #10b981;">${r.rewardType} - ${r.rewardQuantity}x ${r.rewardName} (Niv. ${r.rewardLevel})</span>`;
                     }
                 } else if (r.rewardType === 'GIVE_CONSUMABLE') {
-                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #10b981; background: linear-gradient(#10b98125, #10b98125), #1e293b; color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #10b981;">inventory_2</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
+                    const consTemp = allConsumables.find(c => c.name === r.rewardName);
+                    const slotInfo = getSlotInfo(consTemp);
+                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid ${slotInfo.color}; background: linear-gradient(${slotInfo.color}25, ${slotInfo.color}25), #1e293b; color: ${slotInfo.color}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
                 } else if (r.rewardType === 'GIVE_EQUIPMENT') {
-                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #fbbf24; background: linear-gradient(#fbbf2425, #fbbf2425), #1e293b; color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #fbbf24;">shield</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
+                    const eqTemp = allEquipments.find(e => e.name === r.rewardName);
+                    const slotInfo = getSlotInfo(eqTemp);
+                    const rColor = eqTemp ? (RARITY_COLORS[eqTemp.rarity] || '#fbbf24') : '#fbbf24';
+                    rewardHtml = `<span class="anomaly-badge" style="border: 1px solid ${rColor}; background: linear-gradient(${rColor}25, ${rColor}25), #1e293b; color: ${rColor}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
                 } else if (r.rewardType === 'GIVE_SPIRIT_XP') {
                     rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #38bdf8; background: linear-gradient(#38bdf825, #38bdf825), #1e293b; color: #38bdf8; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #38bdf8;">self_improvement</span> ${r.rewardQuantity} XP Spiritualité</span>`;
                 } else if (r.rewardType === 'UNLOCK_FEATURE') {

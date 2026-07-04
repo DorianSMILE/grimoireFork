@@ -506,7 +506,7 @@ function renderBuffsHtml(buffList) {
         const indicatorColor = isBad ? '#f43f5e' : '#10b981';
 
         let iconName = isBad ? 'trending_down' : 'trending_up';
-        if (b.statAffected === 'POISON') iconName = 'coronavirus';
+        if (b.statAffected === 'POISON') iconName = 'science';
         if (b.statAffected === 'BURN') iconName = 'local_fire_department';
 
         let statIconHtml = '';

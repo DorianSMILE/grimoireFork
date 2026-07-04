@@ -192,11 +192,12 @@ export function getSpellEffectsSummaryHtml(sp) {
                         iconName = 'swords';
                     }
                 }
-                if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL', 'HealOverTime', 'HOT'].includes(t)) iconName = 'favorite';
+                if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL'].includes(t)) iconName = 'favorite';
+                if (['HealOverTime', 'HOT'].includes(t)) iconName = 'healing';
                 if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT'].includes(t)) iconName = 'water_drop';
                 if (['Shield', 'SHIELD'].includes(t)) iconName = 'security';
                 if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT', 'BURN'].includes(t)) iconName = 'local_fire_department';
-                if (t === 'POISON') iconName = 'coronavirus';
+                if (t === 'POISON') iconName = 'science';
                 if (t === 'AME_DETACHEE') iconName = 'person_cancel';
                 if (t === 'Purge' || t === 'PURGE') iconName = 'cleaning_services';
                 if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t)) iconName = isBad ? 'trending_down' : 'trending_up';
@@ -268,7 +269,12 @@ export function getSpellEffectsSummaryHtml(sp) {
                     }
                     if (e.modifier) {
                         const sign = e.modifier > 0 ? '+' : '';
-                        parts.push(`${sign}${Math.round(e.modifier * 100)}% ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        let sourceStr = '';
+                        const src = e.source || e.modifierSource;
+                        if (src) {
+                            sourceStr = ` de ${ui.formatSrc(src)}`;
+                        }
+                        parts.push(`${sign}${Math.round(e.modifier * 100)}%${sourceStr} en ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                     if (parts.length === 0) parts.push(`modifie ${ui.formatStat(e.statAffected || e.effectType)}`);
                     const durStr = e.duration > 0 ? ` (${e.duration} tours)` : '';
@@ -317,19 +323,30 @@ export function getSpellEffectsSummaryHtml(sp) {
                     const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
                     detailsStr = `➔ Bouclier de ${parts.join(' + ')}${durStr}`;
                 } else if (t === 'Heat' || t === 'HEAT' || t === 'HeatFixed' || t === 'HEAT_FIXED') {
-                    detailsStr = `➔ génère ${e.amount || e.flatValue || 0} Chaleur`;
+                    const amt = e.amount || e.flatValue || 0;
+                    if (amt < 0) {
+                        detailsStr = `➔ consomme ${Math.abs(amt)} Chaleur`;
+                    } else {
+                        detailsStr = `➔ génère ${amt} Chaleur`;
+                    }
                 } else if (t === 'HeatPercentage' || t === 'HEAT_PERCENTAGE') {
                     const pct = Math.round((e.percentage || 0) * 100);
-                    detailsStr = `➔ génère ${pct}% de ${ui.formatSrc(e.source)} en Chaleur`;
+                    if (pct < 0) {
+                        detailsStr = `➔ consomme ${Math.abs(pct)}% de ${ui.formatSrc(e.source)} en Chaleur`;
+                    } else {
+                        detailsStr = `➔ génère ${pct}% de ${ui.formatSrc(e.source)} en Chaleur`;
+                    }
                 } else if (t === 'HeatOverTime' || t === 'HEAT_OVER_TIME') {
                     let parts = [];
                     const fv = e.flatValue || e.fixedValue || 0;
                     const pv = e.percentage || 0;
-                    if (fv) parts.push(`${fv}`);
-                    if (pv) parts.push(`${Math.round(pv * 100)}% ${ui.formatSrc(e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (fv) parts.push(`${Math.abs(fv)}`);
+                    if (pv) parts.push(`${Math.abs(Math.round(pv * 100))}% ${ui.formatSrc(e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                    detailsStr = `➔ Tick Chaleur de ${parts.join(' + ')}/tour${durStr}`;
+                    const isConsuming = (fv < 0) || (pv < 0);
+                    const verb = isConsuming ? 'Consomme' : 'Génère';
+                    detailsStr = `➔ Tick Chaleur : ${verb} ${parts.join(' + ')}/tour${durStr}`;
                 }
 
                 const keyBadge = e.requiredChoiceKey != null ? `<span style="background:rgba(245,158,11,0.2); color:#f59e0b; padding:0.1rem 0.3rem; border-radius:3px; font-size:0.75rem; font-weight:bold;" title="S'active uniquement si l'option choisie au cast est ${e.requiredChoiceKey}">Option ${e.requiredChoiceKey}</span>` : '';
@@ -459,9 +476,9 @@ export function getSpellCardHtml(sp) {
 
     if (sp.voie && sp.voie.nom && sp.voie.nom.toLowerCase().includes('violence')) {
         if (sp.inspiration) {
-            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Inspiration</span>`;
+            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">storm</span>Inspiration</span>`;
         } else {
-            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(219, 39, 119, 0.2); color: #f472b6; border: 1px solid rgba(219, 39, 119, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">local_fire_department</span>Expiration</span>`;
+            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(217, 70, 239, 0.2); color: #d946ef; border: 1px solid rgba(217, 70, 239, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Expiration</span>`;
         }
     }
     if (sp.spiritualite && sp.spiritualite.nom && sp.spiritualite.nom.toLowerCase().includes('karma')) {
@@ -525,9 +542,9 @@ export function getSpellCardHtml(sp) {
                     </div>
                     ${rankTitleBadge}
                     <div class="spell-meta" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                        <span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #38bdf8; vertical-align: middle;">water_drop</span>${sp.manaCost}${sp.percentManaCost > 0 ? ` + ${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>
-                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f43f5e; vertical-align: middle;">bloodtype</span>${sp.healCost}${sp.percentHealCost > 0 ? ` + ${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
-                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f97316; vertical-align: middle;">local_fire_department</span>${sp.heatCost}${sp.percentHeatCost > 0 ? ` + ${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
+                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #38bdf8; vertical-align: middle;">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
+                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f43f5e; vertical-align: middle;">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
+                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f97316; vertical-align: middle;">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
                         ${sp.castingType === 'CANALISE' ? `
                             <span style="color: #a78bfa; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;" title="Paramètres du sort canalisé">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #a78bfa; vertical-align: middle;">cyclone</span>

@@ -460,14 +460,45 @@
                                     <label style="display: flex; align-items: center; gap: 0.4rem;"><span
                                             class="material-symbols-outlined"
                                             style="font-size: 1.1rem; color: #ec4899;">favorite</span> PV Max</label>
-                                    <input type="number" id="mHp" class="form-control" value="100" required>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="number" id="mHp" class="form-control" value="100" required>
+                                        <div
+                                            style="display: flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                            <span style="font-size: 0.8rem; color: #cbd5e1;"></span>
+                                            <input type="number" id="mStartHpPct" class="form-control"
+                                                style="width: 70px; padding: 0.2rem;" value="100" title="% PV au début"
+                                                required><span style="font-size: 0.8rem; color: #cbd5e1;">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #f472b6;">healing</span> Régén. PV</label>
+                                    <input type="number" id="mRegenHp" class="form-control" value="0" required>
                                 </div>
                                 <div class="form-group">
                                     <label style="display: flex; align-items: center; gap: 0.4rem;"><span
                                             class="material-symbols-outlined"
                                             style="font-size: 1.1rem; color: #38bdf8;">water_drop</span> Mana
                                         Max</label>
-                                    <input type="number" id="mMana" class="form-control" value="0" required>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="number" id="mMana" class="form-control" value="0" required>
+                                        <div
+                                            style="display: flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                            <span style="font-size: 0.8rem; color: #cbd5e1;"></span>
+                                            <input type="number" id="mStartManaPct" class="form-control"
+                                                style="width: 70px; padding: 0.2rem;" value="100" title="% Mana au début"
+                                                required><span style="font-size: 0.8rem; color: #cbd5e1;">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #7dd3fc;">opacity</span> Régén.
+                                        Mana</label>
+                                    <input type="number" id="mRegenMana" class="form-control" value="0" required>
                                 </div>
                                 <div class="form-group">
                                     <label style="display: flex; align-items: center; gap: 0.4rem;"><span
@@ -629,6 +660,99 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #10b981;">explore</span>
+                                        Voie Native (Secret)</label>
+                                    <div class="custom-select-wrapper" id="mNativeSecretWrapper"
+                                        style="z-index: 95; width: 100%;">
+                                        <div class="custom-select-trigger" style="padding: 0.8rem;">
+                                            <span class="cs-label"
+                                                style="display: flex; align-items: center; gap: 0.4rem;">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #64748b; font-size: 1.1rem;">close</span>
+                                                Aucun (Optionnel)
+                                            </span>
+                                            <span class="material-symbols-outlined"
+                                                style="color: #64748b; font-size: 1.2rem; pointer-events: none;">expand_more</span>
+                                        </div>
+                                        <div class="custom-select-options custom-options">
+                                            <div class="custom-option" data-value="">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #64748b;">close</span>
+                                                Aucun (Optionnel)
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Chaos">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #ff0000;">local_fire_department</span>
+                                                Secret du Chaos
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de l'Abondance">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #10b981;">eco</span>
+                                                Secret de l'Abondance
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Préservation">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #99674c;">foundation</span>
+                                                Secret de la Préservation
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Sérénité">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #00e5cc;">water_drop</span>
+                                                Secret de la Sérénité
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Chasse">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #ed5677;">visibility_off</span>
+                                                Secret de la Chasse
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Carnage">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #a70740;">explosion</span>
+                                                Secret du Carnage
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Joie">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #b74c0b;">volcano</span>
+                                                Secret de la Joie
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Savoir">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #3b82f6;">psychology</span>
+                                                Secret du Savoir
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Destin">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #e7d198;">all_inclusive</span>
+                                                Secret du Destin
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de l'Éther">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #38bdf8;">blur_on</span>
+                                                Secret de l'Éther
+                                            </div>
+                                            <div class="custom-option" data-value="Secret des Abysses">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #c084fc;">dark_mode</span>
+                                                Secret des Abysses
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="mNativeSecret" value="">
+                                    </div>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #e879f9;">pets</span>
+                                        Mutations (Optionnel)</label>
+                                    <div id="mMutationsContainer"
+                                        style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 48px;">
+                                        <span
+                                            style="color: #64748b; font-size: 0.9rem; font-style: italic;">Chargement...</span>
+                                    </div>
+                                </div>
                             </div>
                             <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                                 <button type="submit" class="btn btn-primary" id="btnSubmitMonster">Créer le
@@ -707,12 +831,18 @@
                                         <div class="custom-select-trigger" onclick="toggleSortSelect()"
                                             id="mSortTrigger" style="padding: 0.8rem; font-size: 0.9rem;">
                                             <span class="material-symbols-outlined cs-icon"
-                                                style="color: #94a3b8; font-size: 1.1rem;">sort</span> <span
-                                                style="flex:1; text-align:left;">Nom (A-Z)</span>
+                                                style="color: #a855f7; font-size: 1.1rem;">explore</span> <span
+                                                style="flex:1; text-align:left;">Secret (Défaut)</span>
                                             <span class="material-symbols-outlined"
                                                 style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" style="min-width: 220px;">
+                                            <div class="custom-option"
+                                                onclick="selectSortOption('secret', 'Secret (Défaut)', 'explore', '#a855f7')">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #a855f7; font-size: 1.1rem;">explore</span> Secret
+                                                (Défaut)
+                                            </div>
                                             <div class="custom-option"
                                                 onclick="selectSortOption('name_asc', 'Nom (A-Z)', 'sort_by_alpha', '#94a3b8')">
                                                 <span class="material-symbols-outlined cs-icon"
@@ -739,7 +869,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <input type="hidden" id="monsterSort" value="name_asc">
+                                    <input type="hidden" id="monsterSort" value="secret">
                                 </div>
                             </div>
                             <div class="pve-grid" id="monstersList"
@@ -751,6 +881,93 @@
                 </div>
             </div>
 
+            <!-- === MUTATIONS === -->
+            <div
+                style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-bottom: 2rem; align-items: stretch;">
+                <section class="admin-section" id="mutationFormPanel" style="margin: 0; transition: all 0.3s;">
+                    <div class="admin-section-header">
+                        <div class="admin-section-title">
+                            <span class="material-symbols-outlined" style="color: #e879f9;">pets</span>
+                            Créer une Mutation
+                        </div>
+                    </div>
+                    <div class="admin-section-content">
+                        <form id="mutationForm">
+                            <div class="form-grid">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #e879f9;">badge</span> Nom de la
+                                        mutation</label>
+                                    <input type="text" id="mutName" class="form-control"
+                                        placeholder="Ex: Griffes d'acier" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #94a3b8;">description</span>
+                                        Description</label>
+                                    <textarea id="mutDesc" class="form-control" rows="2"
+                                        placeholder="Description courte..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #10b981;">star</span> Niveau</label>
+                                    <input type="number" id="mutLevel" class="form-control" value="1" min="1" max="5"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #fbbf24;">palette</span> Couleur
+                                        HEX</label>
+                                    <input type="text" id="mutColor" class="form-control" value="#e879f9"
+                                        placeholder="#RRGGBB">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #38bdf8;">add_reaction</span> Icone
+                                        (Material)</label>
+                                    <input type="text" id="mutIcon" class="form-control" value="pets"
+                                        placeholder="pets">
+                                </div>
+                            </div>
+                            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                                <button type="submit" class="btn btn-primary" id="btnSubmitMutation"
+                                    style="background: linear-gradient(135deg, #d946ef, #c026d3); box-shadow: 0 4px 12px rgba(217, 70, 239, 0.3);">Créer
+                                    la mutation</button>
+                                <button type="button" class="btn" id="btnCancelMutation"
+                                    style="display: none; background: rgba(255,255,255,0.05); color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
+                                    onclick="cancelMutationEdit()">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <div style="position: relative; height: 100%; min-height: 400px;">
+                    <section class="admin-section"
+                        style="position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="admin-section-header" style="flex-shrink: 0;">
+                            <div class="admin-section-title">
+                                <span class="material-symbols-outlined"
+                                    style="color: #e879f9;">format_list_bulleted</span>
+                                Mutations Existantes
+                            </div>
+                        </div>
+                        <div class="admin-section-content"
+                            style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: 0; padding-left: 0.5rem; padding-top: 0.5rem;">
+                            <div id="mutationsList" class="pve-list custom-scrollbar"
+                                style="flex: 1; overflow-y: auto; min-height: 0; padding-right: 1rem; margin-right: -0.5rem; padding-bottom: 1rem;">
+                                <!-- Mutations rendered here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- === DONJONS === -->
             <div
                 style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-bottom: 2rem; align-items: stretch;">
                 <section class="admin-section" id="dungeonFormPanel" style="margin: 0; transition: all 0.3s;">
@@ -945,54 +1162,112 @@
                 <div style="position: relative; height: 100%; min-height: 400px;">
                     <section class="admin-section"
                         style="position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden;">
-                        <div class="admin-section-header" style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div class="admin-section-header"
+                            style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                             <div class="admin-section-title">
                                 <span class="material-symbols-outlined" style="color: #ef4444;">map</span>
                                 Donjons Existants
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
                                 <div class="custom-select-wrapper" style="width: 250px; z-index: 100;">
-                                    <div class="custom-select-trigger" style="min-height: 36px; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                        <span class="cs-label"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">filter_list</span> Tous les secrets</span>
-                                        <span class="material-symbols-outlined" style="font-size: 1rem;">expand_more</span>
+                                    <div class="custom-select-trigger"
+                                        style="min-height: 36px; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                        <span class="cs-label"><span class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">filter_list</span> Tous les
+                                            secrets</span>
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 1rem;">expand_more</span>
                                     </div>
                                     <div class="custom-select-options custom-options">
                                         <div class="custom-option" data-value="">
-                                            <span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">filter_list</span> Tous les secrets
+                                            <span class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">filter_list</span> Tous les
+                                            secrets
                                         </div>
                                         <div class="custom-option" data-value="Aucun">
-                                            <span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">close</span> Sans secret
+                                            <span class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">close</span> Sans secret
                                         </div>
-                                        <div class="custom-option" data-value="Secret du Chaos"><span class="material-symbols-outlined cs-icon" style="color: #ff0000; font-size: 1rem;">local_fire_department</span> Secret du Chaos</div>
-                                        <div class="custom-option" data-value="Secret de l'Abondance"><span class="material-symbols-outlined cs-icon" style="color: #10b981; font-size: 1rem;">eco</span> Secret de l'Abondance</div>
-                                        <div class="custom-option" data-value="Secret de la Préservation"><span class="material-symbols-outlined cs-icon" style="color: #99674c; font-size: 1rem;">foundation</span> Secret de la Préservation</div>
-                                        <div class="custom-option" data-value="Secret de la Sérénité"><span class="material-symbols-outlined cs-icon" style="color: #00e5cc; font-size: 1rem;">water_drop</span> Secret de la Sérénité</div>
-                                        <div class="custom-option" data-value="Secret de la Chasse"><span class="material-symbols-outlined cs-icon" style="color: #ed5677; font-size: 1rem;">visibility_off</span> Secret de la Chasse</div>
-                                        <div class="custom-option" data-value="Secret du Carnage"><span class="material-symbols-outlined cs-icon" style="color: #a70740; font-size: 1rem;">explosion</span> Secret du Carnage</div>
-                                        <div class="custom-option" data-value="Secret de la Joie"><span class="material-symbols-outlined cs-icon" style="color: #b74c0b; font-size: 1rem;">volcano</span> Secret de la Joie</div>
-                                        <div class="custom-option" data-value="Secret du Savoir"><span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1rem;">psychology</span> Secret du Savoir</div>
-                                        <div class="custom-option" data-value="Secret du Destin"><span class="material-symbols-outlined cs-icon" style="color: #e7d198; font-size: 1rem;">all_inclusive</span> Secret du Destin</div>
-                                        <div class="custom-option" data-value="Secret de l'Éther"><span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1rem;">blur_on</span> Secret de l'Éther</div>
-                                        <div class="custom-option" data-value="Secret des Abysses"><span class="material-symbols-outlined cs-icon" style="color: #c084fc; font-size: 1rem;">dark_mode</span> Secret des Abysses</div>
+                                        <div class="custom-option" data-value="Secret du Chaos"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #ff0000; font-size: 1rem;">local_fire_department</span>
+                                            Secret du Chaos</div>
+                                        <div class="custom-option" data-value="Secret de l'Abondance"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #10b981; font-size: 1rem;">eco</span> Secret de
+                                            l'Abondance</div>
+                                        <div class="custom-option" data-value="Secret de la Préservation"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #99674c; font-size: 1rem;">foundation</span> Secret de la
+                                            Préservation</div>
+                                        <div class="custom-option" data-value="Secret de la Sérénité"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #00e5cc; font-size: 1rem;">water_drop</span> Secret de la
+                                            Sérénité</div>
+                                        <div class="custom-option" data-value="Secret de la Chasse"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #ed5677; font-size: 1rem;">visibility_off</span> Secret de
+                                            la Chasse</div>
+                                        <div class="custom-option" data-value="Secret du Carnage"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #a70740; font-size: 1rem;">explosion</span> Secret du
+                                            Carnage</div>
+                                        <div class="custom-option" data-value="Secret de la Joie"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #b74c0b; font-size: 1rem;">volcano</span> Secret de la
+                                            Joie</div>
+                                        <div class="custom-option" data-value="Secret du Savoir"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #3b82f6; font-size: 1rem;">psychology</span> Secret du
+                                            Savoir</div>
+                                        <div class="custom-option" data-value="Secret du Destin"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #e7d198; font-size: 1rem;">all_inclusive</span> Secret du
+                                            Destin</div>
+                                        <div class="custom-option" data-value="Secret de l'Éther"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #38bdf8; font-size: 1rem;">blur_on</span> Secret de
+                                            l'Éther</div>
+                                        <div class="custom-option" data-value="Secret des Abysses"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #c084fc; font-size: 1rem;">dark_mode</span> Secret des
+                                            Abysses</div>
                                     </div>
-                                    <input type="hidden" id="dungeonSecretFilter" value="" onchange="renderDungeonsList()">
+                                    <input type="hidden" id="dungeonSecretFilter" value=""
+                                        onchange="renderDungeonsList()">
                                 </div>
                                 <div class="custom-select-wrapper" style="width: 140px; z-index: 100;">
-                                    <div class="custom-select-trigger" style="min-height: 36px; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                        <span class="cs-label"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">filter_alt</span> Lvl exact</span>
-                                        <span class="material-symbols-outlined" style="font-size: 1rem;">expand_more</span>
+                                    <div class="custom-select-trigger"
+                                        style="min-height: 36px; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                        <span class="cs-label"><span class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">filter_alt</span> Lvl
+                                            exact</span>
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 1rem;">expand_more</span>
                                     </div>
                                     <div class="custom-select-options custom-options" style="min-width: 140px;">
                                         <div class="custom-option" data-value="">
-                                            <span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">filter_alt</span> Tous
+                                            <span class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">filter_alt</span> Tous
                                         </div>
-                                        <div class="custom-option" data-value="1"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1rem;">star</span> 1</div>
-                                        <div class="custom-option" data-value="2"><span class="material-symbols-outlined cs-icon" style="color: #10b981; font-size: 1rem;">star</span> 2</div>
-                                        <div class="custom-option" data-value="3"><span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1rem;">star</span> 3</div>
-                                        <div class="custom-option" data-value="4"><span class="material-symbols-outlined cs-icon" style="color: #a855f7; font-size: 1rem;">star</span> 4</div>
-                                        <div class="custom-option" data-value="5"><span class="material-symbols-outlined cs-icon" style="color: #f59e0b; font-size: 1rem;">star</span> 5</div>
+                                        <div class="custom-option" data-value="1"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #94a3b8; font-size: 1rem;">star</span> 1</div>
+                                        <div class="custom-option" data-value="2"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #10b981; font-size: 1rem;">star</span> 2</div>
+                                        <div class="custom-option" data-value="3"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #3b82f6; font-size: 1rem;">star</span> 3</div>
+                                        <div class="custom-option" data-value="4"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #a855f7; font-size: 1rem;">star</span> 4</div>
+                                        <div class="custom-option" data-value="5"><span
+                                                class="material-symbols-outlined cs-icon"
+                                                style="color: #f59e0b; font-size: 1rem;">star</span> 5</div>
                                     </div>
-                                    <input type="hidden" id="dungeonLevelFilter" value="" onchange="renderDungeonsList()">
+                                    <input type="hidden" id="dungeonLevelFilter" value=""
+                                        onchange="renderDungeonsList()">
                                 </div>
                             </div>
                         </div>
@@ -1073,6 +1348,37 @@
                         });
                         if (!found && val) {
                             labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #f59e0b;">key</span> ${val}`;
+                        } else if (!val && !found) {
+                            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b;">close</span> Aucun (Optionnel)`;
+                        }
+                    }
+                },
+                get: function () {
+                    return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
+                }
+            });
+        }
+
+        // Intercept assignments to mNativeSecret to update the UI
+        const mInputEl = document.getElementById('mNativeSecret');
+        if (mInputEl) {
+            const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            Object.defineProperty(mInputEl, 'value', {
+                set: function (val) {
+                    originalSet.call(this, val);
+                    const wrapper = this.closest('.custom-select-wrapper');
+                    if (wrapper) {
+                        const labelEl = wrapper.querySelector('.cs-label');
+                        const options = wrapper.querySelectorAll('.custom-option');
+                        let found = false;
+                        options.forEach(opt => {
+                            if (opt.getAttribute('data-value') === (val || '')) {
+                                labelEl.innerHTML = opt.innerHTML;
+                                found = true;
+                            }
+                        });
+                        if (!found && val) {
+                            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #f59e0b;">explore</span> ${val}`;
                         } else if (!val && !found) {
                             labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b;">close</span> Aucun (Optionnel)`;
                         }

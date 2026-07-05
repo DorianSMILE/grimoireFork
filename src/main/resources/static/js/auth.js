@@ -143,9 +143,12 @@ window.addEventListener('authLoaded', () => {
     const adminShop = document.getElementById('adminShopLink');
     const adminPvE = document.getElementById('adminPvELink');
     const adminAlchemy = document.getElementById('adminAlchemyLink');
+    const filterMutationAdminContainer = document.getElementById('filterMutationAdminContainer');
+
     if (adminShop) adminShop.style.display = window.isAdmin ? 'inline-flex' : 'none';
     if (adminPvE) adminPvE.style.display = window.isAdmin ? 'inline-flex' : 'none';
     if (adminAlchemy) adminAlchemy.style.display = window.isAdmin ? 'inline-flex' : 'none';
+    if (filterMutationAdminContainer) filterMutationAdminContainer.style.display = window.isAdmin ? 'block' : 'none';
 
     // Feature locks
     const hasVault = window.currentUser && window.currentUser.unlockedVault;

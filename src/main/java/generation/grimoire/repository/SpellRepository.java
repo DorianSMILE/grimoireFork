@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface SpellRepository extends JpaRepository<Spell, Long> {
     List<Spell> findByVariantId(Integer variantId);
+    List<Spell> findByMutationId(Long mutationId);
 }

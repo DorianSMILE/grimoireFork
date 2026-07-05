@@ -785,7 +785,23 @@ public class CombatService {
             clone.setUser(user);
 
             equipmentRepository.save(clone);
-            session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ".");
+
+            if (clone.getSlot() == generation.grimoire.enumeration.EquipmentSlot.CONSOMMABLE) {
+                double currentWeight = session.getActiveConsumables().stream()
+                        .filter(java.util.Objects::nonNull)
+                        .mapToDouble(e -> e.calculateWeight())
+                        .sum();
+                double maxWeight = 10.0 + 5.0 * session.getPlayers().size();
+
+                if (currentWeight + clone.calculateWeight() <= maxWeight) {
+                    session.getActiveConsumables().add(clone);
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + " et l'a ajouté à l'inventaire du groupe.");
+                } else {
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ", envoyé au coffre (poids max atteint).");
+                }
+            } else {
+                session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ".");
+            }
         }
 
         session.getPurchasedMerchantItems().add(lootIndex);
@@ -1365,6 +1381,28 @@ public class CombatService {
                 session.addLog("--- Tour de l'ennemi " + m.getBase().getName() + " ---");
                 spellService.startTurn(m.getAsPersonnage());
 
+                // === REGÉNÉRATION HP & MANA ===
+                if (!m.isDead()) {
+                    int rHp = m.getBase().getRegenHp();
+                    if (rHp > 0) {
+                        int beforeHp = m.getAsPersonnage().getHealthCurrent();
+                        m.getAsPersonnage().heal(rHp);
+                        int healed = m.getAsPersonnage().getHealthCurrent() - beforeHp;
+                        if (healed > 0) {
+                            session.addLog("💖 " + m.getBase().getName() + " régénère " + healed + " PV.");
+                        }
+                    }
+                    int rMana = m.getBase().getRegenMana();
+                    if (rMana > 0) {
+                        int beforeMana = m.getAsPersonnage().getManaCurrent();
+                        m.getAsPersonnage().restoreMana(rMana);
+                        int recovered = m.getAsPersonnage().getManaCurrent() - beforeMana;
+                        if (recovered > 0) {
+                            session.addLog("💧 " + m.getBase().getName() + " régénère " + recovered + " Mana.");
+                        }
+                    }
+                }
+
                 // === PASSIF TYPE : MORT_VIVANT — Régénération début de tour ===
                 MonsterType mType = m.getBase().getMonsterType();
                 if (mType == null)
@@ -1392,6 +1430,61 @@ public class CombatService {
                         List<Personnage> alivePlayers = session.getPlayers().stream()
                                 .filter(pl -> pl.getHealthCurrent() > 0).toList();
                         if (!alivePlayers.isEmpty()) {
+                            // === MUTATIONS : Caster des sorts avant l'attaque physique ===
+                            if (m.getBase().getMutations() != null && !m.getBase().getMutations().isEmpty()) {
+                                List<Personnage> allAlliesMut = session.getEnemies().stream().map(am -> am.getAsPersonnage()).toList();
+                                List<Personnage> allEnemiesMut = alivePlayers;
+                                
+                                // Collecter tous les sorts de toutes les mutations du monstre
+                                List<Spell> mutationSpells = new java.util.ArrayList<>();
+                                for (generation.grimoire.entity.pve.Mutation mut : m.getBase().getMutations()) {
+                                    mutationSpells.addAll(spellRepository.findByMutationId(mut.getId()));
+                                }
+                                
+                                // Essayer de caster jusqu'à 4 sorts par tour
+                                int castCount = 0;
+                                java.util.Collections.shuffle(mutationSpells);
+                                for (Spell mutSpell : mutationSpells) {
+                                    if (castCount >= 4) break;
+                                    if (m.isDead()) break;
+                                    
+                                    int totalManaCost = mutSpell.getManaCost();
+                                    if (mutSpell.getPercentManaCost() > 0) {
+                                        totalManaCost += (int) Math.ceil(m.getAsPersonnage().getManaMax() * mutSpell.getPercentManaCost() / 100.0);
+                                    }
+                                    
+                                    if (m.getAsPersonnage().getManaCurrent() >= totalManaCost && totalManaCost > 0) {
+                                        String castError = m.getAsPersonnage().canCast(mutSpell);
+                                        if (castError != null) continue;
+                                        
+                                        generation.grimoire.enumeration.SpellCastingType cType = mutSpell.getCastingType();
+                                        if (cType == null) cType = generation.grimoire.enumeration.SpellCastingType.BANAL;
+                                        
+                                        if (m.getAsPersonnage().isBanalSpellCastThisTurn() && cType != generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
+                                        if (m.getAsPersonnage().isInstantSpellCastThisTurn() && cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
+
+                                        // Choisir une cible via l'IA existante
+                                        MonsterBehavior behaviorMut = m.getBase().getBehavior();
+                                        if (behaviorMut == null) behaviorMut = MonsterBehavior.NORMAL;
+                                        Personnage mutTarget = resolveMonsterTarget(m, behaviorMut, alivePlayers, session);
+                                        
+                                        session.addLog("🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
+                                        spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget, m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
+                                        
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL) m.getAsPersonnage().setBanalSpellCastThisTurn(true);
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) m.getAsPersonnage().setInstantSpellCastThisTurn(true);
+                                        
+                                        castCount++;
+                                    }
+                                }
+                            }
+                            
+                            // Vérifier si les joueurs sont toujours en vie après les mutations
+                            alivePlayers = session.getPlayers().stream()
+                                    .filter(pl -> pl.getHealthCurrent() > 0).toList();
+                            if (alivePlayers.isEmpty() || m.isDead() || m.getAsPersonnage().isBanalSpellCastThisTurn() || m.getAsPersonnage().getRemainingChannelingTurns() > 0) {
+                                // Combat terminé, monstre mort, ou a déjà casté un sort banal/canalisé, pas d'attaque physique
+                            } else {
                             // === RÉSOLUTION DU CIBLAGE (IA) ===
                             MonsterBehavior behavior = m.getBase().getBehavior();
                             if (behavior == null)
@@ -1520,6 +1613,7 @@ if (targetPlayer.getHealthCurrent() <= 0) {
                             } // End of targetPlayer loop
                         }
                     }
+                    } // End else (alive players check after mutations)
                 } else {
                     session.addLog(m.getBase().getName() + " a succombé à ses blessures avant de pouvoir attaquer !");
                 }

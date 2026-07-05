@@ -557,7 +557,7 @@ function renderGrid(equipments) {
             const label = effectLabels[eq.specialEffect] || eq.specialEffect;
             const isCursed = eq.specialEffect.startsWith('CURSED_');
             const icon = isCursed ? 'skull' : 'auto_awesome';
-            const color = isCursed ? '#9ca3af' : '#c084fc';
+            const color = isCursed ? '#9b2d2d' : '#c084fc';
             const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
             effectHtml = `<div class="vault-card-effect" style="color: ${color}; background: ${bg}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
@@ -1085,7 +1085,7 @@ window.submitEquipment = async function () {
 
 function calculateEquipmentWeight() {
     let w = 0;
-    
+
     let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
     let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
 

@@ -112,7 +112,7 @@ const RARITY_COLORS = {
     LEGENDAIRE: '#eab308',
     EPIQUE: '#ef4444',
     RELIQUE: '#a855f7',
-    MAUDIT: '#9ca3af'
+    MAUDIT: '#7f1d1d'
 };
 
 let lastCombatLogCount = 0;
@@ -1265,8 +1265,8 @@ function generateEquipmentTooltipHTML(eq) {
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         const isCursed = eq.specialEffect.startsWith('CURSED_');
         const icon = isCursed ? 'skull' : 'auto_awesome';
-        const color = isCursed ? '#9ca3af' : '#c084fc';
-        
+        const color = isCursed ? '#9b2d2d' : '#c084fc';
+
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="color: ${color}; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;">
                 <div style="display: flex; align-items: center; gap: 0.3rem;">
@@ -1799,7 +1799,7 @@ function updateUI(data) {
                             } else if (data.currentRoom.altarRewardType === 'ITEM') {
                                 const eq = data.currentRoom.altarRewardEquipment;
                                 if (eq) {
-                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#eab308', 'LEGENDAIRE': '#f97316', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#9ca3af' };
+                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252' };
                                     const rarityColor = rarityColors[eq.rarity] || '#94a3b8';
                                     const tooltipDataHtml = typeof generateEquipmentTooltipHTML === 'function' ? generateEquipmentTooltipHTML(eq) : '';
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';
@@ -2673,13 +2673,36 @@ function generateFighterHtml(c, isHero) {
             const bIcon = { 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[c.behavior] || 'check_box_outline_blank';
             const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
-            
+
             monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${bLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${bTitle}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${bIcon}</span>${bLabel}</span>`;
         }
         monsterBadgesHtml += `</div>`;
     }
+    let mutationsHtml = '';
+    if (!isHero && c.mutations && c.mutations.length > 0) {
+        mutationsHtml = `<div style="position: absolute; right: -1rem; top: 4rem; display: flex; flex-direction: column; gap: 0.6rem; z-index: 10;">`;
+        c.mutations.forEach(mut => {
+            const icon = mut.icon || 'pets';
+            const color = mut.color || '#e879f9';
+            const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
+            mutationsHtml += `
+                <div ${tooltipAttrs} style="border-color: ${color}; color: ${color}; cursor: help; border-radius: 8px; border: 1px solid ${color}; background: #0f172a; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4);">
+                    <template class="tooltip-data">
+                        <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${color}; border-bottom: 1px solid ${color}; padding-bottom: 4px;">${mut.nom} <span style="font-size: 0.8rem; color: #cbd5e1;">(Lvl ${mut.level || 1})</span></div>
+                        <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${mut.description || 'Une mutation monstrueuse.'}</div>
+                    </template>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">${icon}</span>
+                </div>
+            `;
+        });
+        mutationsHtml += `</div>`;
+    }
+
+    let hpRegenBadge = (!isHero && c.regenHp && c.regenHp > 0) ? `<span title="Régénère ${c.regenHp} PV au début du tour" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(244, 114, 182, 0.15); color: #f472b6; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(244, 114, 182, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined" style="font-size: 0.85rem;">healing</span>${c.regenHp} PV/t</span>` : '';
+    let manaRegenBadge = (!isHero && c.regenMana && c.regenMana > 0) ? `<span title="Régénère ${c.regenMana} Mana au début du tour" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(125, 211, 252, 0.15); color: #7dd3fc; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(125, 211, 252, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined" style="font-size: 0.85rem;">opacity</span>${c.regenMana} MP/t</span>` : '';
 
     return `
+        ${mutationsHtml}
         ${channelingBadgeHtml}
         <div class="fighter-name" style="color: ${isHero ? '#f8fafc' : '#ef4444'}; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
             ${isHero ? '🧙‍♂️' : '👹'} ${titleIconsHtml} ${c.name}
@@ -2687,10 +2710,10 @@ function generateFighterHtml(c, isHero) {
         ${monsterBadgesHtml}
         ${statsHtml}
         <div class="gauge-container" style="text-align: left;">
-            <div class="gauge-label"><span>Santé (PV)</span><span>${hpLabel}</span></div>
+            <div class="gauge-label"><span style="display:flex; align-items:center;">Santé (PV)${hpRegenBadge}</span><span>${hpLabel}</span></div>
             <div class="gauge-track"><div class="gauge-fill hp" style="width: ${hpPct}%;"></div></div>
         </div>
-        ${manaHtml}
+        ${manaHtml.replace('<span>Mana</span>', `<span style="display:flex; align-items:center;">Mana${manaRegenBadge}</span>`)}
         ${specialItemsHtml}
         <div class="sandbox-status-list" style="justify-content: center;">${passiveBadges}</div>
         <div class="sandbox-status-list" style="justify-content: center;">
@@ -2722,12 +2745,16 @@ function renderEnemies(enemies) {
         pMonster.name = m.name;
         pMonster.monsterType = m.monsterType;
         pMonster.behavior = m.behavior;
+        pMonster.mutations = m.mutations;
+        pMonster.regenHp = m.regenHp;
+        pMonster.regenMana = m.regenMana;
         if (typeof activeMonster.currentHp !== 'undefined') pMonster.healthCurrent = activeMonster.currentHp;
         if (typeof activeMonster.maxHp !== 'undefined') pMonster.healthMax = activeMonster.maxHp;
 
         const div = document.createElement('div');
         div.className = `fighter fighter-enemy enemy-card ${isActive ? 'active' : ''} ${activeMonster.dead ? 'dead' : ''}`;
         div.dataset.index = index;
+        div.style.position = 'relative';
 
         if (isActive) {
             div.style.borderColor = '#ef4444';
@@ -3407,11 +3434,18 @@ function renderDotsHtml(dotList) {
             if (dTypeStr === "Brut") { icon = "pest_control"; color = "#22c55e"; }
         }
 
+        let dmgStr = d.fixedDamagePerTick ? `${d.fixedDamagePerTick}` : '';
+        if (d.percentageDamagePerTick > 0) {
+            const pctStr = `${Math.round(d.percentageDamagePerTick * 100)}% ${ui.formatSrc(d.damageSource)}`;
+            dmgStr = dmgStr ? `${dmgStr} + ${pctStr}` : pctStr;
+        }
+        if (!dmgStr) dmgStr = "0";
+
         dotEntries.push(`
             <div style="display:flex; align-items:flex-start; gap:0.4rem; font-size:0.85rem;">
                 <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:${color};">${icon}</span>
                 <span style="font-weight:600; color:#fff;">[${nameStr}]</span>
-                <span style="color:${color}; font-weight:500;">${d.fixedDamagePerTick} Dégâts ${dTypeStr}</span>
+                <span style="color:${color}; font-weight:500;">${dmgStr} Dégâts ${dTypeStr}</span>
                 <span style="color:#e2e8f0;">⏳ (${d.duration} tours)</span>
             </div>
         `);
@@ -3520,10 +3554,11 @@ window.renderOverlayInventory = function (containerId) {
         const onClickAttr = canConsume ? `onclick="window.openConsumeModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')"` : '';
         const cursorStyle = canConsume ? 'cursor: pointer;' : '';
         const hoverClass = canConsume ? 'consumable-hover' : '';
+        const slotInfo = getSlotInfo(c);
 
         list.innerHTML += `
             <div class="${hoverClass}" ${onClickAttr} style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 0.8rem; display: flex; align-items: center; gap: 0.8rem; transition: all 0.2s; ${cursorStyle}">
-                <span class="material-symbols-outlined" style="font-size: 1.5rem; color: #10b981;">inventory_2</span>
+                <span class="material-symbols-outlined" style="font-size: 1.5rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
                 <div style="flex: 1;">
                     <div style="color: #f8fafc; font-weight: 600; font-size: 0.9rem;">${c.name}</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 4px;">

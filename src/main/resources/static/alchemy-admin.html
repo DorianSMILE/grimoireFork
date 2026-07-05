@@ -386,11 +386,15 @@
         const SLOT_LABELS = {
             CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
             PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+            ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+            ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+            ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
             ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
             ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
             BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
             CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-            CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#10b981' }
+            CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+            ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
         };
 
         const RARITY_COLORS = {
@@ -401,7 +405,7 @@
             LEGENDAIRE: '#f59e0b',
             EPIQUE: '#c084fc',
             RELIQUE: '#ef4444',
-            MAUDIT: '#555555'
+            MAUDIT: '#7f1d1d'
         };
 
         function getSlotInfo(eq) {
@@ -605,7 +609,7 @@
                 `;
             } else if (type === 'GIVE_EQUIPMENT') {
                 allEquipments.forEach(eq => {
-                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                    const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                     optionsHtml += `<div class="custom-option" data-value="${eq.name}">
@@ -808,13 +812,17 @@
             'AUTRE': 'category'
         };
 
+        let reqZIndexCounter = 1000;
         function addRequirement(type, selectedName = '', qty = 1) {
             const list = document.getElementById(type === 'anomalie' ? 'reqAnomaliesList' : 'reqConsumablesList');
             const div = document.createElement('div');
+            const currentZIndex = reqZIndexCounter--;
             div.className = 'req-item';
             div.style.display = 'flex';
             div.style.gap = '0.5rem';
             div.style.alignItems = 'center';
+            div.style.position = 'relative';
+            div.style.zIndex = currentZIndex;
 
             let optionsHtml = '';
             let displayLabel = 'Choisir un objet...';
@@ -841,21 +849,26 @@
                 }
             } else {
                 allConsumables.forEach(c => {
+                    const slotInfo = getSlotInfo(c);
                     optionsHtml += `<div class="custom-option" data-value="${c.name}">
-                                        <span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span>
+                                        <span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                                         ${c.name}
                                     </div>`;
                 });
 
                 if (selectedName) {
-                    displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span> ${selectedName}`;
+                    const selC = allConsumables.find(c => c.name === selectedName);
+                    if (selC) {
+                        const slotInfo = getSlotInfo(selC);
+                        displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span> ${selectedName}`;
+                    } else {
+                        displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span> ${selectedName}`;
+                    }
                 }
             }
 
-            const zIndex = 100 - list.children.length;
-
             div.innerHTML = `
-                <div class="custom-select-wrapper" style="flex: 2; z-index: ${zIndex};">
+                <div class="custom-select-wrapper" style="flex: 2;">
                     <div class="custom-select-trigger" style="background: rgba(15,23,42,0.6); padding: 0.6rem; border-radius: 8px;">
                         <span class="cs-label" style="font-size: 0.9rem;">${displayLabel}</span>
                         <span class="material-symbols-outlined" style="color: #64748b; font-size: 1.1rem;">expand_more</span>

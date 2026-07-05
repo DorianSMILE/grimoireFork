@@ -19,6 +19,51 @@ export function toggleChannelingFields() {
     renderEffects();
 }
 
+export function toggleSpellTargetType() {
+    const isMonster = document.getElementById('isMonsterSpell').checked;
+    const heroRow = document.getElementById('heroAffinityRow');
+    const monsterRow = document.getElementById('monsterAffinityRow');
+    
+    if (!isMonster) {
+        heroRow.style.display = 'flex';
+        monsterRow.style.display = 'none';
+        const mutationSelect = document.getElementById('mutationSelect');
+        if (mutationSelect && mutationSelect.value !== "") {
+            mutationSelect.value = "";
+            mutationSelect.dispatchEvent(new Event('change'));
+        }
+    } else {
+        heroRow.style.display = 'none';
+        monsterRow.style.display = 'flex';
+        const voieSelect = document.getElementById('voieSelect');
+        const spiritSelect = document.getElementById('spiritSelect');
+        if (voieSelect && voieSelect.value !== "") {
+            voieSelect.value = "";
+            voieSelect.dispatchEvent(new Event('change'));
+        }
+        if (spiritSelect && spiritSelect.value !== "") {
+            spiritSelect.value = "";
+            spiritSelect.dispatchEvent(new Event('change'));
+        }
+    }
+}
+window.toggleSpellTargetType = toggleSpellTargetType;
+
+export function handleAffinityChange(source) {
+    const voieSelect = document.getElementById('voieSelect');
+    const spiritSelect = document.getElementById('spiritSelect');
+
+    if (source === 'voie' && voieSelect.value !== "") {
+        if(spiritSelect) spiritSelect.value = "";
+    } else if (source === 'spirit' && spiritSelect.value !== "") {
+        if(voieSelect) voieSelect.value = "";
+    }
+
+    updateRankTitle();
+    updateSpecialVoieConfig();
+    updateSpecialSpiritConfig();
+}
+
 export function updateRankTitle() {
     const display = document.getElementById('rankTitleDisplay');
     if (!display) return;

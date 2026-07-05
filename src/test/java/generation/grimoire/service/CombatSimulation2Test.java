@@ -395,9 +395,9 @@ class CombatSimulation2Test {
         // 2. Appliquer un buff boost de soin reçu de +20% (multiplier 1.20)
         BuffDebuffEffect boostHeal = new BuffDebuffEffect();
         boostHeal.setStatAffected(StatType.HEAL_RECEIVED);
-        boostHeal.setModifier(1.20);
+        boostHeal.setModifier(0.20);
         boostHeal.setDuration(3);
-        target.applyBuff(boostHeal, 1.20);
+        target.applyBuff(boostHeal, 0.20);
 
         // Soin de base : 50. Attendu : 50 * 1.20 = 60. PV passe de 150 à 160.
         target.setHealthCurrent(100);
@@ -409,9 +409,9 @@ class CombatSimulation2Test {
 
         BuffDebuffEffect malusHeal = new BuffDebuffEffect();
         malusHeal.setStatAffected(StatType.HEAL_RECEIVED);
-        malusHeal.setModifier(0.70);
+        malusHeal.setModifier(-0.30);
         malusHeal.setDuration(3);
-        target.applyBuff(malusHeal, 0.70);
+        target.applyBuff(malusHeal, -0.30);
 
         // Soin de base : 100. Attendu : 100 * 0.70 = 70. PV passe de 100 à 170.
         target.setHealthCurrent(100);
@@ -431,9 +431,9 @@ class CombatSimulation2Test {
         // 2. Appliquer un buff boost de bouclier reçu de +30% (multiplier 1.30)
         BuffDebuffEffect boostShield = new BuffDebuffEffect();
         boostShield.setStatAffected(StatType.SHIELD_RECEIVED);
-        boostShield.setModifier(1.30);
+        boostShield.setModifier(0.30);
         boostShield.setDuration(3);
-        target.applyBuff(boostShield, 1.30);
+        target.applyBuff(boostShield, 0.30);
 
         // Bouclier de base : 100. Attendu : 100 * 1.30 = 130.
         target.addShield(100, 2, "Boosted Shield");
@@ -444,9 +444,9 @@ class CombatSimulation2Test {
         // 3. Appliquer un débuff malus de bouclier reçu de -40% (multiplier 0.60)
         BuffDebuffEffect malusShield = new BuffDebuffEffect();
         malusShield.setStatAffected(StatType.SHIELD_RECEIVED);
-        malusShield.setModifier(0.60);
+        malusShield.setModifier(-0.40);
         malusShield.setDuration(3);
-        target.applyBuff(malusShield, 0.60);
+        target.applyBuff(malusShield, -0.40);
 
         // Bouclier de base : 100. Attendu : 100 * 0.60 = 60.
         target.addShield(100, 2, "Malused Shield");
@@ -477,9 +477,9 @@ class CombatSimulation2Test {
         // 2. Buff de +20% Soin Donné sur le Caster (multiplier 1.20)
         BuffDebuffEffect boostHealGiven = new BuffDebuffEffect();
         boostHealGiven.setStatAffected(StatType.HEAL_GIVEN);
-        boostHealGiven.setModifier(1.20);
+        boostHealGiven.setModifier(0.20);
         boostHealGiven.setDuration(3);
-        caster.applyBuff(boostHealGiven, 1.20);
+        caster.applyBuff(boostHealGiven, 0.20);
 
         // Soin de base : 50. Attendu : 50 * 1.20 = 60. PV passe de 100 à 160.
         target.setHealthCurrent(100);
@@ -490,9 +490,9 @@ class CombatSimulation2Test {
         caster.getActiveBuffs().clear();
         BuffDebuffEffect malusHealGiven = new BuffDebuffEffect();
         malusHealGiven.setStatAffected(StatType.HEAL_GIVEN);
-        malusHealGiven.setModifier(0.70);
+        malusHealGiven.setModifier(-0.30);
         malusHealGiven.setDuration(3);
-        caster.applyBuff(malusHealGiven, 0.70);
+        caster.applyBuff(malusHealGiven, -0.30);
 
         // Soin de base : 100. Attendu : 100 * 0.70 = 70. PV passe de 100 à 170.
         HealFixedEffect bigHeal = new HealFixedEffect();
@@ -517,9 +517,9 @@ class CombatSimulation2Test {
         target.getActiveShields().clear();
         BuffDebuffEffect boostShieldGiven = new BuffDebuffEffect();
         boostShieldGiven.setStatAffected(StatType.SHIELD_GIVEN);
-        boostShieldGiven.setModifier(1.30);
+        boostShieldGiven.setModifier(0.30);
         boostShieldGiven.setDuration(3);
-        caster.applyBuff(boostShieldGiven, 1.30);
+        caster.applyBuff(boostShieldGiven, 0.30);
 
         shieldEffect.apply(caster, target);
         assertThat(target.getTotalShield()).isEqualTo(130);
@@ -529,9 +529,9 @@ class CombatSimulation2Test {
         target.getActiveShields().clear();
         BuffDebuffEffect malusShieldGiven = new BuffDebuffEffect();
         malusShieldGiven.setStatAffected(StatType.SHIELD_GIVEN);
-        malusShieldGiven.setModifier(0.60);
+        malusShieldGiven.setModifier(-0.40);
         malusShieldGiven.setDuration(3);
-        caster.applyBuff(malusShieldGiven, 0.60);
+        caster.applyBuff(malusShieldGiven, -0.40);
 
         shieldEffect.apply(caster, target);
         assertThat(target.getTotalShield()).isEqualTo(60);

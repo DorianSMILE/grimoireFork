@@ -908,6 +908,7 @@ public class Personnage {
         // pour respecter strictement "accès QU'AUX sorts de la voie de la raison" sauf
         // "attaque basic"
         if (!hasVoieReq && !hasSpiritReq) {
+            if (spell.getMutation() != null) return null; // Sort de mutation → toujours autorisé
             if (this.voie != null || this.spiritualite != null) {
                 // Sauf exceptions explicites si besoin, mais le prompt disait "uniquement les
                 // sorts de sa voie"

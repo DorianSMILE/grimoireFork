@@ -83,6 +83,13 @@ async function loadDungeons() {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
             const contentContainer = document.getElementById('dungeonsSectionsContainer');
+
+            // Find current active tab
+            let activeTabId = null;
+            const activeBtn = tabsHeader.querySelector('.tab-btn.active');
+            if (activeBtn) {
+                activeTabId = activeBtn.id.replace('tab-btn-', '');
+            }
             
             tabsHeader.innerHTML = '';
             contentContainer.innerHTML = '';
@@ -119,8 +126,8 @@ async function loadDungeons() {
 
                 // Check hero levels
                 if (userCharacters.length > 0) {
-                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) === (d.recommendedLevel || 1));
-                    if (!hasMatchingHero) return; // Skip if no hero has exactly this level
+                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
+                    if (!hasMatchingHero) return; // Skip if no hero has exactly this level or higher
                 }
                 
                 if (d.requiredSecret && d.requiredSecret.trim() !== '') {
@@ -154,11 +161,17 @@ async function loadDungeons() {
                 categories.delete('free');
             }
 
+            if (activeTabId && !categories.has(activeTabId)) {
+                activeTabId = null; // Fallback if the tab category no longer exists
+            }
+
             let firstTab = true;
             categories.forEach(cat => {
+                const isActive = activeTabId ? cat.id === activeTabId : firstTab;
+
                 // Generate Tab Button
                 const btn = document.createElement('button');
-                btn.className = `tab-btn ${firstTab ? 'active' : ''}`;
+                btn.className = `tab-btn ${isActive ? 'active' : ''}`;
                 btn.id = `tab-btn-${cat.id}`;
                 // Apply a specific class for the colored active state
                 if (cat.id === 'free') btn.classList.add('tab-free');
@@ -172,7 +185,7 @@ async function loadDungeons() {
 
                 // Generate Content Section
                 const section = document.createElement('div');
-                section.className = `tab-content ${firstTab ? 'active' : ''}`;
+                section.className = `tab-content ${isActive ? 'active' : ''}`;
                 section.id = `${cat.id}DungeonsSection`;
                 
                 const grid = document.createElement('div');
@@ -224,7 +237,7 @@ async function loadDungeons() {
                             lockedHtml = `<div class="dungeon-lock-overlay" style="background: rgba(15, 23, 42, 0.75); color: #f59e0b;">
                                 <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon Verrouillé</div>
-                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold})" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
                             </div>`;
                         }
                     }
@@ -509,27 +522,28 @@ window.selectCharacter = async function (id) {
     if (!char) return;
 
     let totalStats = {
-        healthMax: char.healthMax || 0,
-        manaMax: char.manaMax || 0,
-        power: char.power || 0,
-        strength: char.strength || 0,
-        armor: char.armor || 0,
-        resistance: char.resistance || 0,
-        speed: char.speed || 0,
-        crit: char.crit || 0,
+        healthMax: char.totalHealthMax !== undefined ? char.totalHealthMax : char.healthMax || 0,
+        manaMax: char.totalManaMax !== undefined ? char.totalManaMax : char.manaMax || 0,
+        power: char.totalPower !== undefined ? char.totalPower : char.power || 0,
+        strength: char.totalStrength !== undefined ? char.totalStrength : char.strength || 0,
+        armor: char.totalArmor !== undefined ? char.totalArmor : char.armor || 0,
+        resistance: char.totalResistance !== undefined ? char.totalResistance : char.resistance || 0,
+        speed: char.totalSpeed !== undefined ? char.totalSpeed : char.speed || 0,
+        crit: char.totalCrit !== undefined ? char.totalCrit : char.crit || 0,
         regenHealthPerTurn: char.regenHp || 0,
         regenManaPerTurn: char.regenMana || 0
     };
 
     equipments.forEach(eq => {
-        totalStats.healthMax += (eq.bonusHealthMax || 0);
-        totalStats.manaMax += (eq.bonusManaMax || 0);
-        totalStats.power += (eq.bonusPower || 0);
-        totalStats.strength += (eq.bonusStrength || 0);
-        totalStats.armor += (eq.bonusArmor || 0);
-        totalStats.resistance += (eq.bonusResistance || 0);
-        totalStats.speed += (eq.bonusSpeed || 0);
-        totalStats.crit += (eq.bonusCrit || 0);
+        if (char.totalHealthMax === undefined) totalStats.healthMax += (eq.bonusHealthMax || 0);
+        if (char.totalManaMax === undefined) totalStats.manaMax += (eq.bonusManaMax || 0);
+        if (char.totalPower === undefined) totalStats.power += (eq.bonusPower || 0);
+        if (char.totalStrength === undefined) totalStats.strength += (eq.bonusStrength || 0);
+        if (char.totalArmor === undefined) totalStats.armor += (eq.bonusArmor || 0);
+        if (char.totalResistance === undefined) totalStats.resistance += (eq.bonusResistance || 0);
+        if (char.totalSpeed === undefined) totalStats.speed += (eq.bonusSpeed || 0);
+        if (char.totalCrit === undefined) totalStats.crit += (eq.bonusCrit || 0);
+
         totalStats.regenHealthPerTurn += (eq.regenHealthPerTurn || 0);
         totalStats.regenManaPerTurn += (eq.regenManaPerTurn || 0);
     });
@@ -560,8 +574,8 @@ window.selectCharacter = async function (id) {
             'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter', 'ARME_GAUCHE': 'colorize', 'ARME_DROITE': 'security', 'ARME_DEUX_MAINS': 'swords'
         };
         const colorMap = {
-            'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#eab308', 'LEGENDAIRE': '#f97316',
-            'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#9ca3af'
+            'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308',
+            'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252'
         };
         equipments.forEach(eq => {
             const icon = iconMap[eq.slot] || 'help';
@@ -692,13 +706,18 @@ window.startCombat = async function () {
     window.location.href = url;
 };
 
-window.unlockDungeon = async function (id, cost) {
+window.unlockDungeon = async function (id, cost, event) {
+    const overlay = event ? (event.currentTarget || event.target).closest('.dungeon-lock-overlay') : null;
     const confirmed = await showUnlockModal(cost);
     if (!confirmed) return;
 
     try {
         const res = await fetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
         if (res.ok) {
+            if (overlay) {
+                overlay.classList.add('unlocking');
+                await new Promise(r => setTimeout(r, 800));
+            }
             showNotif("Donjon d\u00e9bloqu\u00e9 !");
             const authRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
             if (authRes.ok) window.currentUser = await authRes.json();

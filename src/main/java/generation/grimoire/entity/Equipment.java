@@ -101,6 +101,7 @@ public class Equipment {
         this.setConsumableManaPercent(template.getConsumableManaPercent());
         this.setConsumableMissingHpPercent(template.getConsumableMissingHpPercent());
         this.setConsumableMissingManaPercent(template.getConsumableMissingManaPercent());
+        this.setConsumableCategory(template.getConsumableCategory());
     }
 
     public double calculateWeight() {

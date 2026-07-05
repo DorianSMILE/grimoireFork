@@ -100,10 +100,12 @@ export function renderOptions(arr, selectedVal) {
 
 export function renderSourceOptions(arr, selectedVal) {
     if (!arr || !Array.isArray(arr)) return '';
-    return arr.map(s => {
+    let html = `<option value="" ${!selectedVal ? 'selected' : ''}>Stat. Actuelle (Multiplicateur)</option>`;
+    html += arr.map(s => {
         const val = typeof s === 'object' ? s.id || s : s;
         return `<option value="${val}" ${val === selectedVal ? 'selected' : ''}>${formatSrc(val)}</option>`;
     }).join('');
+    return html;
 }
 
 export function renderStatOptions(arr, selectedVal) {
@@ -201,12 +203,22 @@ export function makeCustomSelect(selectIdOrElement) {
     optionsContainer.style.display = 'none';
     optionsContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
 
-    const getIconInfo = (id, text) => {
-        if (id === 'voieSelect' || id === 'filterVoie' || id === 'heroConfigVoie') {
+    const getIconInfo = (id, optionOrText) => {
+        const text = typeof optionOrText === 'string' ? optionOrText : (optionOrText.text || '');
+        
+        if (id === 'mutationSelect' || id === 'filterMutation') {
+            if (text.includes('Aucune') || text.includes('Neutre') || text.includes('Toutes') || text.includes('Sans')) return { icon: 'trip_origin', color: '#94a3b8' };
+            if (typeof optionOrText === 'object' && optionOrText.dataset && optionOrText.dataset.icon) {
+                return { icon: optionOrText.dataset.icon, color: optionOrText.dataset.color || '#e879f9' };
+            }
+            return { icon: 'pets', color: '#e879f9' };
+        }
+
+        if (id === 'voieSelect' || id === 'filterVoie') {
             if (text.includes('Aucune') || text.includes('Neutre')) return { icon: 'trip_origin', color: '#94a3b8' };
             return { icon: getVoieIcon(text), color: getVoieButtonColor({ nom: text }) };
         }
-        if (id === 'spiritSelect' || id === 'filterSpirit' || id === 'heroConfigSpiritualite') {
+        if (id === 'spiritSelect' || id === 'filterSpirit') {
             if (text.includes('Aucune') || text.includes('Neutre')) return { icon: 'trip_origin', color: '#94a3b8' };
             return { icon: getSpiritIcon(text), color: getSpiritButtonColor({ nom: text }) };
         }
@@ -220,12 +232,7 @@ export function makeCustomSelect(selectIdOrElement) {
             if (t.includes('5')) return { icon: 'looks_5', color: '#f59e0b' };
             return { icon: 'stairs', color: '#10b981' };
         }
-        if (id === 'heroConfigCharacterSelect' || id === 'sandboxAddAllySelect' || id === 'sandboxAddEnemySelect') {
-            const t = text.toLowerCase();
-            if (t.includes('générique') || t.includes('generique')) return { icon: 'person', color: '#94a3b8' };
-            if (t.includes('charger')) return { icon: 'download', color: '#94a3b8' };
-            return { icon: 'account_circle', color: '#10b981' };
-        }
+
         if (id === 'castingTypeSelect') {
             if (text.includes('Instant')) return { icon: 'bolt', color: '#f59e0b' };
             if (text.includes('Banal')) return { icon: 'hourglass_empty', color: '#3b82f6' };
@@ -347,7 +354,7 @@ export function makeCustomSelect(selectIdOrElement) {
         const options = Array.from(select.options);
         let selectedOption = options[select.selectedIndex] || options[0];
 
-        const info = getIconInfo(selectId, selectedOption.text);
+        const info = getIconInfo(selectId, selectedOption);
         trigger.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.2rem; color:${info.color};">${info.icon}</span> <span>${selectedOption.text}</span>`;
 
         options.forEach((opt, index) => {
@@ -360,7 +367,7 @@ export function makeCustomSelect(selectIdOrElement) {
                 return;
             }
 
-            const optInfo = getIconInfo(selectId, opt.text);
+            const optInfo = getIconInfo(selectId, opt);
 
             const optionDiv = document.createElement('div');
             optionDiv.style.padding = '0.6rem 0.8rem';

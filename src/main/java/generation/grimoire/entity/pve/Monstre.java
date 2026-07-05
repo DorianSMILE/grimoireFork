@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @Entity
@@ -34,6 +37,10 @@ public class Monstre {
     private int resistance;
     private int crit;
     private int speed;
+    private int regenHp;
+    private int regenMana;
+    private int startHpPct;
+    private int startManaPct;
 
     // For simple AI logic / rewards
     private int rewardExp;
@@ -44,4 +51,14 @@ public class Monstre {
 
     @Enumerated(EnumType.STRING)
     private MonsterBehavior behavior = MonsterBehavior.NORMAL;
+
+    private String nativeSecret;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "monstre_mutations",
+        joinColumns = @JoinColumn(name = "monstre_id"),
+        inverseJoinColumns = @JoinColumn(name = "mutation_id")
+    )
+    private List<Mutation> mutations = new ArrayList<>();
 }

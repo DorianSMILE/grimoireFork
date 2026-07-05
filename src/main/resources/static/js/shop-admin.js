@@ -506,7 +506,7 @@ function renderGrid(equipments) {
                     const label = effectLabels[eq.specialEffect] || eq.specialEffect;
                     const isCursed = eq.specialEffect.startsWith('CURSED_');
                     const icon = isCursed ? 'skull' : 'auto_awesome';
-                    const color = isCursed ? '#9ca3af' : '#c084fc';
+                    const color = isCursed ? '#9b2d2d' : '#c084fc';
                     const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
                     effectHtml = `<span class="stat-badge" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">

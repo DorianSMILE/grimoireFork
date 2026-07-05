@@ -773,12 +773,18 @@
                                         <div class="custom-select-trigger" onclick="toggleSortSelect()"
                                             id="mSortTrigger" style="padding: 0.8rem; font-size: 0.9rem;">
                                             <span class="material-symbols-outlined cs-icon"
-                                                style="color: #94a3b8; font-size: 1.1rem;">sort</span> <span
-                                                style="flex:1; text-align:left;">Nom (A-Z)</span>
+                                                style="color: #a855f7; font-size: 1.1rem;">explore</span> <span
+                                                style="flex:1; text-align:left;">Secret (Défaut)</span>
                                             <span class="material-symbols-outlined"
                                                 style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" style="min-width: 220px;">
+                                            <div class="custom-option"
+                                                onclick="selectSortOption('secret', 'Secret (Défaut)', 'explore', '#a855f7')">
+                                                <span class="material-symbols-outlined cs-icon"
+                                                    style="color: #a855f7; font-size: 1.1rem;">explore</span> Secret
+                                                (Défaut)
+                                            </div>
                                             <div class="custom-option"
                                                 onclick="selectSortOption('name_asc', 'Nom (A-Z)', 'sort_by_alpha', '#94a3b8')">
                                                 <span class="material-symbols-outlined cs-icon"
@@ -805,7 +811,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <input type="hidden" id="monsterSort" value="name_asc">
+                                    <input type="hidden" id="monsterSort" value="secret">
                                 </div>
                             </div>
                             <div class="pve-grid" id="monstersList"

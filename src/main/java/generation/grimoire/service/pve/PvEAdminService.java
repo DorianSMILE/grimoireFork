@@ -2,8 +2,10 @@ package generation.grimoire.service.pve;
 
 import generation.grimoire.entity.pve.Donjon;
 import generation.grimoire.entity.pve.Monstre;
+import generation.grimoire.entity.pve.Mutation;
 import generation.grimoire.repository.pve.DonjonRepository;
 import generation.grimoire.repository.pve.MonstreRepository;
+import generation.grimoire.repository.pve.MutationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ public class PvEAdminService {
     
     private final MonstreRepository monstreRepository;
     private final DonjonRepository donjonRepository;
+    private final MutationRepository mutationRepository;
 
     public List<Monstre> getAllMonsters() {
         return monstreRepository.findAll();
@@ -37,6 +40,29 @@ public class PvEAdminService {
     public void deleteMonster(@NonNull Long id) {
         monstreRepository.deleteById(id);
     }
+
+    // === Mutations ===
+
+    public List<Mutation> getAllMutations() {
+        return mutationRepository.findAll();
+    }
+
+    public Mutation getMutationById(@NonNull Long id) {
+        return mutationRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Mutation introuvable avec l'id : " + id));
+    }
+
+    @Transactional
+    public Mutation createOrUpdateMutation(@NonNull Mutation mutation) {
+        return mutationRepository.save(mutation);
+    }
+
+    @Transactional
+    public void deleteMutation(@NonNull Long id) {
+        mutationRepository.deleteById(id);
+    }
+
+    // === Donjons ===
 
     public List<Donjon> getAllDungeons() {
         return donjonRepository.findAllByOrderByDisplayOrderAsc();

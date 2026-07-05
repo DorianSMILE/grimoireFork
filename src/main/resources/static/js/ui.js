@@ -201,7 +201,17 @@ export function makeCustomSelect(selectIdOrElement) {
     optionsContainer.style.display = 'none';
     optionsContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
 
-    const getIconInfo = (id, text) => {
+    const getIconInfo = (id, optionOrText) => {
+        const text = typeof optionOrText === 'string' ? optionOrText : (optionOrText.text || '');
+        
+        if (id === 'mutationSelect') {
+            if (text.includes('Aucune') || text.includes('Neutre')) return { icon: 'trip_origin', color: '#94a3b8' };
+            if (typeof optionOrText === 'object' && optionOrText.dataset && optionOrText.dataset.icon) {
+                return { icon: optionOrText.dataset.icon, color: optionOrText.dataset.color || '#e879f9' };
+            }
+            return { icon: 'pets', color: '#e879f9' };
+        }
+
         if (id === 'voieSelect' || id === 'filterVoie' || id === 'heroConfigVoie') {
             if (text.includes('Aucune') || text.includes('Neutre')) return { icon: 'trip_origin', color: '#94a3b8' };
             return { icon: getVoieIcon(text), color: getVoieButtonColor({ nom: text }) };
@@ -347,7 +357,7 @@ export function makeCustomSelect(selectIdOrElement) {
         const options = Array.from(select.options);
         let selectedOption = options[select.selectedIndex] || options[0];
 
-        const info = getIconInfo(selectId, selectedOption.text);
+        const info = getIconInfo(selectId, selectedOption);
         trigger.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.2rem; color:${info.color};">${info.icon}</span> <span>${selectedOption.text}</span>`;
 
         options.forEach((opt, index) => {
@@ -360,7 +370,7 @@ export function makeCustomSelect(selectIdOrElement) {
                 return;
             }
 
-            const optInfo = getIconInfo(selectId, opt.text);
+            const optInfo = getIconInfo(selectId, opt);
 
             const optionDiv = document.createElement('div');
             optionDiv.style.padding = '0.6rem 0.8rem';

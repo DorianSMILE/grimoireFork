@@ -3,6 +3,7 @@ package generation.grimoire.controller.pve;
 import generation.grimoire.DTO.pve.DonjonDTO;
 import generation.grimoire.entity.pve.Donjon;
 import generation.grimoire.entity.pve.Monstre;
+import generation.grimoire.entity.pve.Mutation;
 import generation.grimoire.service.pve.PvEAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class PvEAdminController {
     private final PvEAdminService pvEAdminService;
     private final generation.grimoire.repository.EquipmentRepository equipmentRepository;
+    private final generation.grimoire.repository.pve.MutationRepository mutationRepository;
 
     // --- MONSTERS ---
 
@@ -45,6 +47,35 @@ public class PvEAdminController {
     @DeleteMapping("/monsters/{id}")
     public ResponseEntity<Void> deleteMonster(@PathVariable @NonNull Long id) {
         pvEAdminService.deleteMonster(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // --- MUTATIONS ---
+
+    @GetMapping("/mutations")
+    public ResponseEntity<List<Mutation>> getAllMutations() {
+        return ResponseEntity.ok(pvEAdminService.getAllMutations());
+    }
+
+    @PostMapping("/mutations")
+    public ResponseEntity<Mutation> createMutation(@RequestBody @NonNull Mutation mutation) {
+        return ResponseEntity.ok(pvEAdminService.createOrUpdateMutation(mutation));
+    }
+
+    @PutMapping("/mutations/{id}")
+    public ResponseEntity<Mutation> updateMutation(@PathVariable @NonNull Long id, @RequestBody @NonNull Mutation mutation) {
+        try {
+            pvEAdminService.getMutationById(id);
+        } catch (java.util.NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+        mutation.setId(id);
+        return ResponseEntity.ok(pvEAdminService.createOrUpdateMutation(mutation));
+    }
+
+    @DeleteMapping("/mutations/{id}")
+    public ResponseEntity<Void> deleteMutation(@PathVariable @NonNull Long id) {
+        pvEAdminService.deleteMutation(id);
         return ResponseEntity.ok().build();
     }
 

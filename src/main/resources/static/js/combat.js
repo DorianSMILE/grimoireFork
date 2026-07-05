@@ -2678,8 +2678,28 @@ function generateFighterHtml(c, isHero) {
         }
         monsterBadgesHtml += `</div>`;
     }
+    let mutationsHtml = '';
+    if (!isHero && c.mutations && c.mutations.length > 0) {
+        mutationsHtml = `<div style="position: absolute; right: -1rem; top: 4rem; display: flex; flex-direction: column; gap: 0.6rem; z-index: 10;">`;
+        c.mutations.forEach(mut => {
+            const icon = mut.icon || 'pets';
+            const color = mut.color || '#e879f9';
+            const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
+            mutationsHtml += `
+                <div ${tooltipAttrs} style="border-color: ${color}; color: ${color}; cursor: help; border-radius: 8px; border: 1px solid ${color}; background: #0f172a; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4);">
+                    <template class="tooltip-data">
+                        <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${color}; border-bottom: 1px solid ${color}; padding-bottom: 4px;">${mut.nom} <span style="font-size: 0.8rem; color: #cbd5e1;">(Lvl ${mut.level || 1})</span></div>
+                        <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${mut.description || 'Une mutation monstrueuse.'}</div>
+                    </template>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">${icon}</span>
+                </div>
+            `;
+        });
+        mutationsHtml += `</div>`;
+    }
 
     return `
+        ${mutationsHtml}
         ${channelingBadgeHtml}
         <div class="fighter-name" style="color: ${isHero ? '#f8fafc' : '#ef4444'}; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
             ${isHero ? '🧙‍♂️' : '👹'} ${titleIconsHtml} ${c.name}
@@ -2722,12 +2742,14 @@ function renderEnemies(enemies) {
         pMonster.name = m.name;
         pMonster.monsterType = m.monsterType;
         pMonster.behavior = m.behavior;
+        pMonster.mutations = m.mutations;
         if (typeof activeMonster.currentHp !== 'undefined') pMonster.healthCurrent = activeMonster.currentHp;
         if (typeof activeMonster.maxHp !== 'undefined') pMonster.healthMax = activeMonster.maxHp;
 
         const div = document.createElement('div');
         div.className = `fighter fighter-enemy enemy-card ${isActive ? 'active' : ''} ${activeMonster.dead ? 'dead' : ''}`;
         div.dataset.index = index;
+        div.style.position = 'relative';
 
         if (isActive) {
             div.style.borderColor = '#ef4444';
@@ -3407,11 +3429,18 @@ function renderDotsHtml(dotList) {
             if (dTypeStr === "Brut") { icon = "pest_control"; color = "#22c55e"; }
         }
 
+        let dmgStr = d.fixedDamagePerTick ? `${d.fixedDamagePerTick}` : '';
+        if (d.percentageDamagePerTick > 0) {
+            const pctStr = `${Math.round(d.percentageDamagePerTick * 100)}% ${ui.formatSrc(d.damageSource)}`;
+            dmgStr = dmgStr ? `${dmgStr} + ${pctStr}` : pctStr;
+        }
+        if (!dmgStr) dmgStr = "0";
+
         dotEntries.push(`
             <div style="display:flex; align-items:flex-start; gap:0.4rem; font-size:0.85rem;">
                 <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:${color};">${icon}</span>
                 <span style="font-weight:600; color:#fff;">[${nameStr}]</span>
-                <span style="color:${color}; font-weight:500;">${d.fixedDamagePerTick} Dégâts ${dTypeStr}</span>
+                <span style="color:${color}; font-weight:500;">${dmgStr} Dégâts ${dTypeStr}</span>
                 <span style="color:#e2e8f0;">⏳ (${d.duration} tours)</span>
             </div>
         `);

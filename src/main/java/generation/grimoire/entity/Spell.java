@@ -6,6 +6,7 @@ import generation.grimoire.enumeration.SpellCastingType;
 import generation.grimoire.enumeration.SpellCondition;
 import generation.grimoire.enumeration.KarmaAlignment;
 import generation.grimoire.enumeration.ZoneType;
+import generation.grimoire.entity.pve.Mutation;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -66,6 +67,10 @@ public class Spell {
     @ManyToOne
     @JoinColumn(name = "spiritualite_id", nullable = true)
     private Spiritualite spiritualite;
+
+    @ManyToOne
+    @JoinColumn(name = "mutation_id", nullable = true)
+    private Mutation mutation;
 
     @OneToMany(mappedBy = "spell", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SpellEffect> effects = new ArrayList<>();

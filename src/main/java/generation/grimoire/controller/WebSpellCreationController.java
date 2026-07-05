@@ -12,6 +12,7 @@ import generation.grimoire.enumeration.*;
 import generation.grimoire.repository.SpellRepository;
 import generation.grimoire.repository.SpiritualiteRepository;
 import generation.grimoire.repository.VoieRepository;
+import generation.grimoire.repository.pve.MutationRepository;
 import generation.grimoire.entity.voie.passif.VoiePassiveEffect;
 import generation.grimoire.service.SpellService;
 import jakarta.annotation.PostConstruct;
@@ -35,17 +36,20 @@ public class WebSpellCreationController {
     private final SpellRepository spellRepository;
     private final VoieRepository voieRepository;
     private final SpiritualiteRepository spiritualiteRepository;
+    private final MutationRepository mutationRepository;
     private final generation.grimoire.repository.PersonnageRepository personnageRepository;
 
     public WebSpellCreationController(SpellService spellService,
             SpellRepository spellRepository,
             VoieRepository voieRepository,
             SpiritualiteRepository spiritualiteRepository,
+            MutationRepository mutationRepository,
             generation.grimoire.repository.PersonnageRepository personnageRepository) {
         this.spellService = spellService;
         this.spellRepository = spellRepository;
         this.voieRepository = voieRepository;
         this.spiritualiteRepository = spiritualiteRepository;
+        this.mutationRepository = mutationRepository;
         this.personnageRepository = personnageRepository;
     }
 
@@ -328,6 +332,7 @@ public class WebSpellCreationController {
         Map<String, Object> meta = new HashMap<>();
         meta.put("voies", voieRepository.findAll());
         meta.put("spiritualites", spiritualiteRepository.findAll());
+        meta.put("mutations", mutationRepository.findAll());
         meta.put("statTypes", StatType.values());
         meta.put("damageTypes", DamageType.values());
         meta.put("sources", Source.values());
@@ -865,6 +870,13 @@ public class WebSpellCreationController {
             spell.setSpiritualite(null);
         }
 
+        Long mutationId = dto.getMutationId();
+        if (mutationId != null) {
+            mutationRepository.findById(mutationId).ifPresent(spell::setMutation);
+        } else {
+            spell.setMutation(null);
+        }
+
         if (dto.getEffects() != null) {
             for (EffectCreationDto eDto : dto.getEffects()) {
                 SpellEffect effect = null;
@@ -1013,6 +1025,7 @@ public class WebSpellCreationController {
         private int heatGenerated;
         private Long voieId;
         private Long spiritualiteId;
+        private Long mutationId;
         private int channelingDuration;
         private boolean allowInstantDuringChanneling = true;
         private boolean inspiration;

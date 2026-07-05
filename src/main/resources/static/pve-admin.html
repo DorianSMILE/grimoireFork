@@ -695,7 +695,16 @@
                                         <input type="hidden" id="mNativeSecret" value="">
                                     </div>
                                 </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                        class="material-symbols-outlined"
+                                        style="font-size: 1.1rem; color: #e879f9;">pets</span>
+                                    Mutations (Optionnel)</label>
+                                <div id="mMutationsContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 48px;">
+                                    <span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Chargement...</span>
+                                </div>
                             </div>
+                        </div>
                             <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                                 <button type="submit" class="btn btn-primary" id="btnSubmitMonster">Créer le
                                     monstre</button>
@@ -823,6 +832,81 @@
                 </div>
             </div>
 
+            <!-- === MUTATIONS === -->
+            <div
+                style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-bottom: 2rem; align-items: stretch;">
+                <section class="admin-section" id="mutationFormPanel" style="margin: 0; transition: all 0.3s;">
+                    <div class="admin-section-header">
+                        <div class="admin-section-title">
+                            <span class="material-symbols-outlined" style="color: #e879f9;">pets</span>
+                            Créer une Mutation
+                        </div>
+                    </div>
+                    <div class="admin-section-content">
+                        <form id="mutationForm">
+                            <div class="form-grid">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #e879f9;">badge</span> Nom de la mutation</label>
+                                    <input type="text" id="mutName" class="form-control" placeholder="Ex: Griffes d'acier" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #94a3b8;">description</span> Description</label>
+                                    <textarea id="mutDesc" class="form-control" rows="2" placeholder="Description courte..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #10b981;">star</span> Niveau</label>
+                                    <input type="number" id="mutLevel" class="form-control" value="1" min="1" max="5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #fbbf24;">palette</span> Couleur HEX</label>
+                                    <input type="text" id="mutColor" class="form-control" value="#e879f9" placeholder="#RRGGBB">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #38bdf8;">add_reaction</span> Icone (Material)</label>
+                                    <input type="text" id="mutIcon" class="form-control" value="pets" placeholder="pets">
+                                </div>
+                            </div>
+                            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                                <button type="submit" class="btn btn-primary" id="btnSubmitMutation" style="background: linear-gradient(135deg, #d946ef, #c026d3); box-shadow: 0 4px 12px rgba(217, 70, 239, 0.3);">Créer la mutation</button>
+                                <button type="button" class="btn" id="btnCancelMutation"
+                                    style="display: none; background: rgba(255,255,255,0.05); color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
+                                    onclick="cancelMutationEdit()">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <div style="position: relative; height: 100%; min-height: 400px;">
+                    <section class="admin-section"
+                        style="position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="admin-section-header" style="flex-shrink: 0;">
+                            <div class="admin-section-title">
+                                <span class="material-symbols-outlined"
+                                    style="color: #e879f9;">format_list_bulleted</span>
+                                Mutations Existantes
+                            </div>
+                        </div>
+                        <div class="admin-section-content"
+                            style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: 0; padding-left: 0.5rem; padding-top: 0.5rem;">
+                            <div id="mutationsList" class="pve-list custom-scrollbar" style="flex: 1; overflow-y: auto; min-height: 0; padding-right: 1rem; margin-right: -0.5rem; padding-bottom: 1rem;">
+                                <!-- Mutations rendered here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- === DONJONS === -->
             <div
                 style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-bottom: 2rem; align-items: stretch;">
                 <section class="admin-section" id="dungeonFormPanel" style="margin: 0; transition: all 0.3s;">

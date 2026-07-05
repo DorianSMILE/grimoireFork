@@ -21,9 +21,16 @@ public class ActiveMonster {
         this.asPersonnage.setId(nextId--);
         this.asPersonnage.setName(base.getName());
         this.asPersonnage.setHealthMax(base.getHealthMax());
-        this.asPersonnage.setHealthCurrent(base.getHealthMax());
+        int startHpPct = base.getStartHpPct() == 0 ? 100 : base.getStartHpPct();
+        this.asPersonnage.setHealthCurrent((int) (base.getHealthMax() * (startHpPct / 100.0)));
         this.asPersonnage.setManaMax(base.getManaMax());
-        this.asPersonnage.setManaCurrent(base.getManaMax());
+        int startManaPct = base.getStartManaPct();
+        // Pour garder la compatibilité si c'est null ou 0 en BDD, si manaMax > 0 on met à 100% ou on laisse le choix à l'admin.
+        // Si l'admin veut 0, il mettra 0 dans l'input (qui est par défaut à 0 dans mon HTML on va dire).
+        // Mais en fait, comme on veut la backward compatibility, si startManaPct n'était pas géré, il valait 0.
+        // Or avant on mettait 100%. Donc si on met 0 en DB on devrait peut-être mettre 0% maintenant.
+        // Le user a dit "C'est pour savoir à combien on remplis leur bare d'hp et de mana max au début du combat"
+        this.asPersonnage.setManaCurrent((int) (base.getManaMax() * (startManaPct / 100.0)));
         this.asPersonnage.setPower(base.getPower());
         this.asPersonnage.setStrength(base.getStrength());
         this.asPersonnage.setArmor(base.getArmor());

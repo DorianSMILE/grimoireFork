@@ -573,7 +573,7 @@ window.selectCharacter = async function (id) {
             'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter', 'ARME_GAUCHE': 'colorize', 'ARME_DROITE': 'security', 'ARME_DEUX_MAINS': 'swords'
         };
         const colorMap = {
-            'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#eab308', 'LEGENDAIRE': '#f97316',
+            'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308',
             'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#9ca3af'
         };
         equipments.forEach(eq => {

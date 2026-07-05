@@ -786,10 +786,19 @@
             let resultIcon = resultStyle.icon;
             let resultColor = resultStyle.color;
 
-            if (resultType === 'EQUIPMENT') {
+            if (resultType === 'EQUIPMENT' || resultType === 'CONSUMABLE') {
                 const eqTemp = allEquipmentTemplates.find(e => e.name === r.rewardName);
                 if (eqTemp && eqTemp.rarity) {
-                    const rColors = { 'COMMUN': '#94a3b8', 'RARE': '#10b981', 'LEGENDAIRE': '#f59e0b', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7' };
+                    const rColors = { 
+                        'COMMUN': '#94a3b8', 
+                        'INHABITUEL': '#22c55e', 
+                        'RARE': '#3b82f6', 
+                        'MYTHIQUE': '#f97316', 
+                        'LEGENDAIRE': '#eab308', 
+                        'EPIQUE': '#ef4444', 
+                        'RELIQUE': '#a855f7', 
+                        'MAUDIT': '#9ca3af' 
+                    };
                     if (rColors[eqTemp.rarity]) resultColor = rColors[eqTemp.rarity];
                 }
             } else if (resultType === 'ANOMALY') {

@@ -574,7 +574,7 @@ window.selectCharacter = async function (id) {
         };
         const colorMap = {
             'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308',
-            'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#9ca3af'
+            'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252'
         };
         equipments.forEach(eq => {
             const icon = iconMap[eq.slot] || 'help';

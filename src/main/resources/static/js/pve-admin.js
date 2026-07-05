@@ -33,7 +33,7 @@ const RARITY_COLORS = {
     LEGENDAIRE: '#eab308',
     EPIQUE: '#ef4444',
     RELIQUE: '#a855f7',
-    MAUDIT: '#9ca3af'
+    MAUDIT: '#7f1d1d'
 };
 
 let editingDungeonId = null;

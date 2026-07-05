@@ -49,7 +49,7 @@ const RARITY_COLORS = {
     LEGENDAIRE: '#eab308',
     EPIQUE: '#ef4444',
     RELIQUE: '#a855f7',
-    MAUDIT: '#9ca3af'
+    MAUDIT: '#7f1d1d'
 };
 
 let shopItems = [];
@@ -160,7 +160,7 @@ function generateStandHtml(eq) {
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         const isCursed = eq.specialEffect.startsWith('CURSED_');
         const icon = isCursed ? 'skull' : 'auto_awesome';
-        const color = isCursed ? '#9ca3af' : '#c084fc';
+        const color = isCursed ? '#9b2d2d' : '#c084fc';
         const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
         effectHtml = `<div class="shop-stand-stat" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
@@ -191,7 +191,7 @@ function generateStandHtml(eq) {
     else if (rarityColor === '#f59e0b') { r = 245; g = 158; b = 11; }
     else if (rarityColor === '#ef4444') { r = 239; g = 68; b = 68; }
     else if (rarityColor === '#a855f7') { r = 168; g = 85; b = 247; }
-    else if (rarityColor === '#9ca3af') { r = 156; g = 163; b = 175; }
+    else if (rarityColor === '#7f1d1d') { r = 127; g = 29; b = 29; }
     else if (rarityColor === '#555555') { r = 85; g = 85; b = 85; }
 
     let standStyle = '';
@@ -347,7 +347,7 @@ function renderSpecials() {
         else if (color === '#f59e0b') { r = 245; g = 158; b = 11; }
         else if (color === '#ef4444') { r = 239; g = 68; b = 68; }
         else if (color === '#a855f7') { r = 168; g = 85; b = 247; }
-        else if (color === '#9ca3af') { r = 156; g = 163; b = 175; }
+        else if (color === '#7f1d1d') { r = 127; g = 29; b = 29; }
         else if (color === '#555555') { r = 85; g = 85; b = 85; }
 
         html += `

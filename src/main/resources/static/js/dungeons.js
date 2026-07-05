@@ -119,8 +119,8 @@ async function loadDungeons() {
 
                 // Check hero levels
                 if (userCharacters.length > 0) {
-                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) === (d.recommendedLevel || 1));
-                    if (!hasMatchingHero) return; // Skip if no hero has exactly this level
+                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
+                    if (!hasMatchingHero) return; // Skip if no hero has exactly this level or higher
                 }
                 
                 if (d.requiredSecret && d.requiredSecret.trim() !== '') {

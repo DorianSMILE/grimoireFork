@@ -1653,6 +1653,7 @@ window.renderMonstersList = function () {
             case 'name_desc': filtered.sort((a, b) => b.name.localeCompare(a.name)); break;
             case 'lvl_desc': filtered.sort((a, b) => (b.level || 1) - (a.level || 1)); break;
             case 'lvl_asc': filtered.sort((a, b) => (a.level || 1) - (b.level || 1)); break;
+            case 'secret': sortMonstersBySecret(filtered); break;
         }
     }
 

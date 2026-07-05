@@ -3554,10 +3554,11 @@ window.renderOverlayInventory = function (containerId) {
         const onClickAttr = canConsume ? `onclick="window.openConsumeModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')"` : '';
         const cursorStyle = canConsume ? 'cursor: pointer;' : '';
         const hoverClass = canConsume ? 'consumable-hover' : '';
+        const slotInfo = getSlotInfo(c);
 
         list.innerHTML += `
             <div class="${hoverClass}" ${onClickAttr} style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 0.8rem; display: flex; align-items: center; gap: 0.8rem; transition: all 0.2s; ${cursorStyle}">
-                <span class="material-symbols-outlined" style="font-size: 1.5rem; color: #10b981;">inventory_2</span>
+                <span class="material-symbols-outlined" style="font-size: 1.5rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
                 <div style="flex: 1;">
                     <div style="color: #f8fafc; font-weight: 600; font-size: 0.9rem;">${c.name}</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 4px;">

@@ -83,7 +83,7 @@ public class SpellService {
         }
 
         // Rule B: If already cast a Banal or Channeled spell this turn
-        if (caster.isBanalSpellCastThisTurn()) {
+        if (caster.isBanalSpellCastThisTurn() && caster.getRemainingChannelingTurns() == 0) {
             System.out.println(caster.getName() + " a déjà lancé un sort banal ce tour-ci (sa dernière action magique est consommée).");
             return;
         }
@@ -271,7 +271,7 @@ public class SpellService {
             }
         }
 
-        if (caster.isBanalSpellCastThisTurn()) {
+        if (caster.isBanalSpellCastThisTurn() && caster.getRemainingChannelingTurns() == 0) {
             System.out.println(caster.getName() + " a déjà lancé un sort banal ce tour-ci.");
             return;
         }

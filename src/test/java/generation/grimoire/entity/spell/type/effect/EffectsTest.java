@@ -30,7 +30,7 @@ class EffectsTest {
     void shouldApplyAndDispelBuffs() {
         BuffDebuffEffect buff = new BuffDebuffEffect();
         buff.setStatAffected(StatType.ARMURE);
-        buff.setModifier(2.0); // +100% armure
+        buff.setModifier(1.0); // +100% armure
         buff.setDuration(3);
         
         // This will call target.applyBuff(buff, 2.0)

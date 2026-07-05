@@ -69,9 +69,9 @@ class DamageOverTimeEffectTest {
         // Apply a buff that increases vulnerability to PHYSIC damage
         var buff = new BuffDebuffEffect();
         buff.setStatAffected(StatType.DAMAGE_TAKEN_PHYSIC);
-        buff.setModifier(1.5);
+        buff.setModifier(0.5);
         buff.setDuration(1);
-        target.applyBuff(buff, 1.5);
+        target.getActiveBuffs().add(buff);
 
         dotEffect.apply(null, target);
         dotEffect.tick(target);

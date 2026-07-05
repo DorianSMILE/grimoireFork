@@ -45,7 +45,7 @@ class PassifTest {
 
         assertThat(hero.getActiveBuffs()).hasSize(1);
         assertThat(hero.getActiveBuffs().get(0).getStatAffected()).isEqualTo(StatType.ARMURE);
-        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(1.05);
+        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(0.05);
         assertThat(hero.getActiveBuffs().get(0).getFlatValue()).isEqualTo(0);
 
         // Lancer un sort de niveau 3 → remplace par +10% résistance magique
@@ -56,22 +56,19 @@ class PassifTest {
 
         assertThat(hero.getActiveBuffs()).hasSize(1);
         assertThat(hero.getActiveBuffs().get(0).getStatAffected()).isEqualTo(StatType.RESISTANCE);
-        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(1.10);
+        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(0.10);
 
         // Tour 2 : sort lancé au tour précédent, on ne remet pas le défaut
         consolidation.onTurnStart(hero);
-        // Le flag a été reset, mais le buff de sort a été nettoyé et le défaut est re-appliqué
-        // car onTurnStart remet le flag à 0 APRÈS avoir vérifié
-        // En fait le castLastTurn vaut 1 (car on l'a mis à 1 via onSpellCast) donc pas de défaut
-        // Vérifions : aucun buff ne doit être ajouté (le sort a été lancé au tour précédent)
-        // Les anciens buffs sont supprimés par removeIf, et castLastTurn==1 => pas de buff par défaut
-        assertThat(hero.getActiveBuffs()).isEmpty();
+        assertThat(hero.getActiveBuffs()).hasSize(1);
+        assertThat(hero.getActiveBuffs().get(0).getStatAffected()).isEqualTo(StatType.RESISTANCE);
+        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(0.10);
 
         // Tour 3 : pas de sort lancé → retour au +5% armure par défaut
         consolidation.onTurnStart(hero);
         assertThat(hero.getActiveBuffs()).hasSize(1);
         assertThat(hero.getActiveBuffs().get(0).getStatAffected()).isEqualTo(StatType.ARMURE);
-        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(1.05);
+        assertThat(hero.getActiveBuffs().get(0).getModifier()).isEqualTo(0.05);
     }
 
     @Test
@@ -135,7 +132,7 @@ class PassifTest {
         dummySpell.setManaCost(100);
         // Cast 4 spells (4 * 20 = 80 points) -> Total 90 points
         for (int i = 0; i < 4; i++) {
-            surete.onSpellCast(hero, dummySpell);
+            surete.onSpellCostPaid(hero, dummySpell, 100);
         }
         assertThat(hero.getPassiveState("surete_points", -1)).isEqualTo(90);
         assertThat(hero.getActiveBuffs()).isEmpty(); // Not triggered yet

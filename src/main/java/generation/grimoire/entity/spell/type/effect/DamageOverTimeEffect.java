@@ -114,6 +114,13 @@ public class DamageOverTimeEffect extends DamageEffect {
     public void apply(Personnage caster, Personnage target) {
         DamageOverTimeEffect clone = this.cloneEffect();
         clone.caster = caster;
+
+        if (clone.getPercentageDamagePerTick() > 0) {
+            double sourceValue = generation.grimoire.utils.StatCalculator.getSourceValue(clone.getDamageSource(), caster, target);
+            clone.setFixedDamagePerTick(clone.getFixedDamagePerTick() + (int)(sourceValue * clone.getPercentageDamagePerTick()));
+            clone.setPercentageDamagePerTick(0);
+        }
+
         target.addDamageOverTimeEffect(clone);
         System.out.println("Damage over time appliqué sur " + target.getName()
                 + " pour " + duration + " tours.");

@@ -85,7 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rewardGold: parseInt(document.getElementById('mGold').value),
             rewardExp: parseInt(document.getElementById('mXp').value),
             monsterType: document.getElementById('mType').value,
-            behavior: document.getElementById('mBehavior').value
+            behavior: document.getElementById('mBehavior').value,
+            nativeSecret: document.getElementById('mNativeSecret').value || null
         };
 
         try {
@@ -1618,9 +1619,31 @@ window.renderMonstersList = function () {
 
     list.innerHTML = '';
     filtered.forEach(m => {
+        let secretBadgeHtml = '';
+        if (m.nativeSecret) {
+            const sm = [
+                { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
+                { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
+                { name: "Secret de la Préservation", icon: "foundation", color: "#d97706" },
+                { name: "Secret de la Sérénité", icon: "water_drop", color: "#06b6d4" },
+                { name: "Secret de la Chasse", icon: "visibility_off", color: "#f43f5e" },
+                { name: "Secret du Carnage", icon: "explosion", color: "#be123c" },
+                { name: "Secret de la Joie", icon: "volcano", color: "#ea580c" },
+                { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
+                { name: "Secret du Destin", icon: "all_inclusive", color: "#fcd34d" },
+                { name: "Secret de l'Éther", icon: "blur_on", color: "#0ea5e9" },
+                { name: "Secret des Abysses", icon: "dark_mode", color: "#a855f7" }
+            ].find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
+            
+            secretBadgeHtml = `<div style="background: rgba(15, 23, 42, 0.9); color: ${sm.color}; padding: 0.2rem 0.4rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); border: 1px solid ${sm.color}60; display: flex; align-items: center; justify-content: center;" title="${m.nativeSecret}"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${sm.icon}</span></div>`;
+        }
+
         list.innerHTML += `
             <div class="monster-card">
-                <div class="monster-level-badge">Lvl ${m.level || 1}</div>
+                <div style="position: absolute; top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
+                    ${secretBadgeHtml}
+                    <div class="monster-level-badge" style="position: relative; top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <div class="monster-card-title" style="margin-bottom: 0;">${m.name}</div>
                     <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
@@ -1685,6 +1708,7 @@ async function editMonster(id) {
             document.getElementById('mResist').value = m.resistance;
             document.getElementById('mGold').value = m.rewardGold;
             document.getElementById('mXp').value = m.rewardExp;
+            document.getElementById('mNativeSecret').value = m.nativeSecret || '';
             const mt = m.monsterType || 'NORMAL';
             const mb = m.behavior || 'NORMAL';
 
@@ -1727,6 +1751,7 @@ window.cancelMonsterEdit = function () {
     editingMonsterId = null;
     document.getElementById('monsterForm').reset();
     document.getElementById('mLevel').value = 1;
+    document.getElementById('mNativeSecret').value = '';
     const lvlTrigger = document.getElementById('mLevelTrigger');
     if (lvlTrigger) {
         lvlTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1.1rem;">star</span> <span style="flex:1; text-align:center;">1</span>`;

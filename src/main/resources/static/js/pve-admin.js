@@ -119,8 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
             level: parseInt(document.getElementById('mLevel').value) || 1,
             healthMax: parseInt(document.getElementById('mHp').value),
             regenHp: parseInt(document.getElementById('mRegenHp').value) || 0,
+            startHpPct: parseInt(document.getElementById('mStartHpPct').value),
             manaMax: parseInt(document.getElementById('mMana').value),
             regenMana: parseInt(document.getElementById('mRegenMana').value) || 0,
+            startManaPct: parseInt(document.getElementById('mStartManaPct').value),
             speed: parseInt(document.getElementById('mSpeed').value),
             crit: parseInt(document.getElementById('mCrit').value),
             strength: parseInt(document.getElementById('mStrength').value),
@@ -1752,8 +1754,10 @@ async function editMonster(id) {
 
             document.getElementById('mHp').value = m.healthMax;
             document.getElementById('mRegenHp').value = m.regenHp || 0;
+            document.getElementById('mStartHpPct').value = m.startHpPct !== undefined && m.startHpPct !== 0 ? m.startHpPct : 100;
             document.getElementById('mMana').value = m.manaMax || 0;
             document.getElementById('mRegenMana').value = m.regenMana || 0;
+            document.getElementById('mStartManaPct').value = m.startManaPct !== undefined ? m.startManaPct : 0;
             document.getElementById('mSpeed').value = m.speed;
             document.getElementById('mCrit').value = m.crit || 0;
             document.getElementById('mStrength').value = m.strength;

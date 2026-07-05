@@ -1759,7 +1759,7 @@ async function editMonster(id) {
             document.getElementById('mStartHpPct').value = m.startHpPct !== undefined && m.startHpPct !== 0 ? m.startHpPct : 100;
             document.getElementById('mMana').value = m.manaMax || 0;
             document.getElementById('mRegenMana').value = m.regenMana || 0;
-            document.getElementById('mStartManaPct').value = m.startManaPct !== undefined ? m.startManaPct : 0;
+            document.getElementById('mStartManaPct').value = m.startManaPct !== undefined && m.startManaPct !== 0 ? m.startManaPct : 100;
             document.getElementById('mSpeed').value = m.speed;
             document.getElementById('mCrit').value = m.crit || 0;
             document.getElementById('mStrength').value = m.strength;

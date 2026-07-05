@@ -1415,7 +1415,6 @@ public class CombatService {
                                 .filter(pl -> pl.getHealthCurrent() > 0).toList();
                         if (!alivePlayers.isEmpty()) {
                             // === MUTATIONS : Caster des sorts avant l'attaque physique ===
-                            boolean didCastMutation = false;
                             if (m.getBase().getMutations() != null && !m.getBase().getMutations().isEmpty()) {
                                 List<Personnage> allAlliesMut = session.getEnemies().stream().map(am -> am.getAsPersonnage()).toList();
                                 List<Personnage> allEnemiesMut = alivePlayers;
@@ -1439,6 +1438,15 @@ public class CombatService {
                                     }
                                     
                                     if (m.getAsPersonnage().getManaCurrent() >= totalManaCost && totalManaCost > 0) {
+                                        String castError = m.getAsPersonnage().canCast(mutSpell);
+                                        if (castError != null) continue;
+                                        
+                                        generation.grimoire.enumeration.SpellCastingType cType = mutSpell.getCastingType();
+                                        if (cType == null) cType = generation.grimoire.enumeration.SpellCastingType.BANAL;
+                                        
+                                        if (m.getAsPersonnage().isBanalSpellCastThisTurn() && cType != generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
+                                        if (m.getAsPersonnage().isInstantSpellCastThisTurn() && cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
+
                                         // Choisir une cible via l'IA existante
                                         MonsterBehavior behaviorMut = m.getBase().getBehavior();
                                         if (behaviorMut == null) behaviorMut = MonsterBehavior.NORMAL;
@@ -1446,7 +1454,10 @@ public class CombatService {
                                         
                                         session.addLog("🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
                                         spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget, m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
-                                        didCastMutation = true;
+                                        
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL) m.getAsPersonnage().setBanalSpellCastThisTurn(true);
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) m.getAsPersonnage().setInstantSpellCastThisTurn(true);
+                                        
                                         castCount++;
                                     }
                                 }
@@ -1455,8 +1466,8 @@ public class CombatService {
                             // Vérifier si les joueurs sont toujours en vie après les mutations
                             alivePlayers = session.getPlayers().stream()
                                     .filter(pl -> pl.getHealthCurrent() > 0).toList();
-                            if (alivePlayers.isEmpty() || m.isDead() || didCastMutation) {
-                                // Combat terminé, monstre mort, ou a déjà casté un sort, pas d'attaque physique
+                            if (alivePlayers.isEmpty() || m.isDead() || m.getAsPersonnage().isBanalSpellCastThisTurn() || m.getAsPersonnage().getRemainingChannelingTurns() > 0) {
+                                // Combat terminé, monstre mort, ou a déjà casté un sort banal/canalisé, pas d'attaque physique
                             } else {
                             // === RÉSOLUTION DU CIBLAGE (IA) ===
                             MonsterBehavior behavior = m.getBase().getBehavior();

@@ -386,11 +386,15 @@
         const SLOT_LABELS = {
             CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
             PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
+            ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
+            ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
+            ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
             ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
             ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
             BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
             CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-            CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#10b981' }
+            CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
+            ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
         };
 
         const RARITY_COLORS = {
@@ -605,7 +609,7 @@
                 `;
             } else if (type === 'GIVE_EQUIPMENT') {
                 allEquipments.forEach(eq => {
-                    const slotInfo = SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' };
+                    const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                     optionsHtml += `<div class="custom-option" data-value="${eq.name}">

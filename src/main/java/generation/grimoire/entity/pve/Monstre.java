@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @Entity
@@ -46,4 +49,12 @@ public class Monstre {
     private MonsterBehavior behavior = MonsterBehavior.NORMAL;
 
     private String nativeSecret;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "monstre_mutations",
+        joinColumns = @JoinColumn(name = "monstre_id"),
+        inverseJoinColumns = @JoinColumn(name = "mutation_id")
+    )
+    private List<Mutation> mutations = new ArrayList<>();
 }

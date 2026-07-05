@@ -208,19 +208,45 @@
                 <textarea id="description" rows="2" placeholder="Effets narratifs ou secrets de ce sort..."></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="form-row" style="margin-bottom: 1rem;">
+                <div class="form-group" style="justify-content: center; align-items: flex-start;">
+                    <label class="target-toggle-container monster-mode" style="width: max-content;" title="Si activé, ce sort sera une Mutation pour monstre">
+                        <input type="checkbox" id="isMonsterSpell" class="target-radio" onchange="toggleSpellTargetType()">
+                        <div class="target-icon-wrap monster-icon">
+                            <span class="material-symbols-outlined" style="font-size: 1.3rem;">pets</span>
+                        </div>
+                        <div class="target-text monster-text">
+                            Mutation
+                            <span class="target-text-sub">Sort pour monstre</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-row" id="heroAffinityRow" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
                     <label for="voieSelect" style="display: flex; align-items: center; gap: 0.3rem;"><span
                             class="material-symbols-outlined" style="font-size: 1rem;">route</span>Voie Associée</label>
-                    <select id="voieSelect" onchange="updateRankTitle(); updateSpecialVoieConfig();">
+                    <select id="voieSelect" onchange="handleAffinityChange('voie');">
                         <option value="">-- Aucune (Neutre) --</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex: 1;">
                     <label for="spiritSelect" style="display: flex; align-items: center; gap: 0.3rem;"><span
                             class="material-symbols-outlined"
                             style="font-size: 1rem;">psychology</span>Spiritualité</label>
-                    <select id="spiritSelect" onchange="updateRankTitle(); updateSpecialSpiritConfig();">
+                    <select id="spiritSelect" onchange="handleAffinityChange('spirit');">
+                        <option value="">-- Aucune (Neutre) --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row" id="monsterAffinityRow" style="display: none; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="mutationSelect" style="display: flex; align-items: center; gap: 0.3rem;"><span
+                            class="material-symbols-outlined"
+                            style="font-size: 1rem;">pets</span>Mutation</label>
+                    <select id="mutationSelect" onchange="handleAffinityChange('mutation');">
                         <option value="">-- Aucune (Neutre) --</option>
                     </select>
                 </div>

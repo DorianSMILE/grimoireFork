@@ -3,8 +3,11 @@ import { GLOBAL_STAT_LABELS, GLOBAL_SRC_LABELS, javaClassToCode } from './consta
 import * as ui from './ui.js?v=2';
 import * as api from './api.js';
 
-import { toggleChannelingFields, updateRankTitle, updateSpecialVoieConfig, updateSpecialSpiritConfig, setViolenceType, updateViolenceLabel, setKarmaAlignment, updateKarmaLabel, addEffectPanel, removeEffect, setEffectTarget, updateEffectProp, toggleEffectChannelingTurn, renderEffects } from './forge.js';
+import { toggleChannelingFields, updateRankTitle, updateSpecialVoieConfig, updateSpecialSpiritConfig, setViolenceType, updateViolenceLabel, setKarmaAlignment, updateKarmaLabel, addEffectPanel, removeEffect, setEffectTarget, updateEffectProp, toggleEffectChannelingTurn, renderEffects, handleAffinityChange } from './forge.js';
 import { getVoieButtonColor, getSpiritButtonColor, resetFilters, renderOriginButtons, toggleFilterVoie, toggleFilterSpirit } from './filters.js';
+
+window.handleAffinityChange = handleAffinityChange;
+window.setViolenceType = setViolenceType;
 
 export function renderFilteredSpells() {
     const container = document.getElementById('createdSpellsContainer');
@@ -465,6 +468,23 @@ export function getSpellCardHtml(sp) {
         </span>`;
     }
 
+    let mutationBadge = '';
+    if (sp.mutation) {
+        const mHex = sp.mutation.color || '#e879f9';
+        const mRgb = hexToRgb(mHex);
+        const mIcon = sp.mutation.icon || 'pets';
+        mutationBadge = `<span class="badge" style="cursor: help; color: ${mHex}; border-color: rgba(${mRgb}, 0.3); background: rgba(${mRgb}, 0.05); display:inline-flex; align-items:center; gap:0.2rem;" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
+            <span class="material-symbols-outlined" style="font-size:1.1em;">${mIcon}</span>${sp.mutation.nom}
+            <template class="tooltip-data">
+                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${mHex};">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem;">${mIcon}</span>
+                    Mutation : ${sp.mutation.nom}
+                </div>
+                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.mutation.description || 'Description de la mutation.'}</div>
+            </template>
+        </span>`;
+    }
+
     let castBadge = '';
     if (sp.castingType === 'INSTANTANE') {
         castBadge = `<span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">bolt</span>Instantané</span>`;
@@ -530,6 +550,7 @@ export function getSpellCardHtml(sp) {
                                 ${lvlBadge}
                                 ${voieBadge}
                                 ${spiritBadge}
+                                ${mutationBadge}
                             </div>
                         </div>
                         <div style="display: flex; gap: 0.3rem; align-items: center; flex-wrap: wrap;">
@@ -576,6 +597,15 @@ export function cancelEditSpell() {
     document.getElementById('percentHeatCost').value = 0;
     state.currentEffects = [];
     renderEffects();
+
+    // Réinitialiser le type de cible du sort
+    const checkboxMonster = document.getElementById('isMonsterSpell');
+    if (checkboxMonster) {
+        checkboxMonster.checked = false;
+        if (typeof window.toggleSpellTargetType === 'function') {
+            window.toggleSpellTargetType();
+        }
+    }
 
     // Réinitialiser les champs de canalisation
     const channelingDurInput = document.getElementById('channelingDuration');
@@ -673,6 +703,18 @@ export function editSpell(id) {
 
     document.getElementById('spiritSelect').value = sp.spiritualite ? sp.spiritualite.id : '';
     document.getElementById('spiritSelect').dispatchEvent(new Event('change'));
+
+    document.getElementById('mutationSelect').value = sp.mutation ? sp.mutation.id : '';
+    document.getElementById('mutationSelect').dispatchEvent(new Event('change'));
+
+    // Gérer le toggle de cible de sort
+    const checkboxMonster = document.getElementById('isMonsterSpell');
+    if (checkboxMonster) {
+        checkboxMonster.checked = !!sp.mutation;
+    }
+    if (typeof window.toggleSpellTargetType === 'function') {
+        window.toggleSpellTargetType();
+    }
 
     const isInspInput = document.getElementById('isInspiration');
     if (isInspInput) {

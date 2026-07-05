@@ -37,11 +37,14 @@ const RARITY_COLORS = {
 };
 
 let editingDungeonId = null;
+let editingMutationId = null;
 let allMonsters = [];
 let allEquipments = [];
 let allAnomalies = [];
 let allDungeons = [];
+let allMutations = [];
 let selectedRooms = [];
+let selectedMutationIds = [];
 
 const SECRETS_META = [
     { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
@@ -99,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadEquipments();
         loadAnomalies();
         loadDungeons();
+        loadMutations();
     };
 
     if (window.currentUser !== undefined) {
@@ -125,7 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rewardExp: parseInt(document.getElementById('mXp').value),
             monsterType: document.getElementById('mType').value,
             behavior: document.getElementById('mBehavior').value,
-            nativeSecret: document.getElementById('mNativeSecret').value || null
+            nativeSecret: document.getElementById('mNativeSecret').value || null,
+            mutations: selectedMutationIds.map(id => ({ id: id }))
         };
 
         try {
@@ -1661,12 +1666,28 @@ window.renderMonstersList = function () {
     filtered.forEach(m => {
         let secretBadgeHtml = getSecretBadgeHtml(m);
 
+        let mutationsHtml = '';
+        if (m.mutations && m.mutations.length > 0) {
+            mutationsHtml = `<div style="display: flex; flex-direction: column; gap: 0.5rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.8rem; margin-left: 0.8rem; justify-content: center; flex-shrink: 0;">`;
+            m.mutations.forEach(mut => {
+                mutationsHtml += `<div onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; border: 1px solid ${mut.color || '#e879f9'}; cursor: help;">
+                    <template class="tooltip-data">
+                        <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${mut.color || '#e879f9'}; border-bottom: 1px solid ${mut.color || '#e879f9'}; padding-bottom: 4px;">${mut.nom} (Lvl ${mut.level || 1})</div>
+                        <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 250px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${mut.description}</div>
+                    </template>
+                    <span class="material-symbols-outlined" style="font-size: 1.2rem; color: ${mut.color || '#e879f9'};">${mut.icon || 'pets'}</span>
+                </div>`;
+            });
+            mutationsHtml += `</div>`;
+        }
+
         list.innerHTML += `
             <div class="monster-card">
                 <div style="position: absolute; top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
                     ${secretBadgeHtml}
                     <div class="monster-level-badge" style="position: relative; top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
                 </div>
+                
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <div class="monster-card-title" style="margin-bottom: 0;">${m.name}</div>
                     <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
@@ -1678,22 +1699,28 @@ window.renderMonstersList = function () {
                         </button>
                     </div>
                 </div>
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                    ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                    ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
-                </div>
-                <div class="monster-card-stats">
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #38bdf8;">water_drop</span> Mana: ${m.manaMax || 0}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">bolt</span> Vit: ${m.speed}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ef4444;">gps_fixed</span> Crit: ${m.crit || 0}%</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f43f5e;">fitness_center</span> For: ${m.strength}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #a855f7;">auto_awesome</span> Pui: ${m.power}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">shield</span> Arm: ${m.armor}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #10b981;">shield</span> Rés: ${m.resistance}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">monetization_on</span> Or: ${m.rewardGold}</span>
-                    <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #fcd34d;">stars</span> XP: ${m.rewardExp}</span>
+
+                <div style="display: flex; align-items: stretch;">
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
+                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                        </div>
+                        <div class="monster-card-stats">
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #38bdf8;">water_drop</span> Mana: ${m.manaMax || 0}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">bolt</span> Vit: ${m.speed}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ef4444;">gps_fixed</span> Crit: ${m.crit || 0}%</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f43f5e;">fitness_center</span> For: ${m.strength}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #a855f7;">auto_awesome</span> Pui: ${m.power}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">shield</span> Arm: ${m.armor}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #10b981;">shield</span> Rés: ${m.resistance}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">monetization_on</span> Or: ${m.rewardGold}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #fcd34d;">stars</span> XP: ${m.rewardExp}</span>
+                        </div>
+                    </div>
+                    ${mutationsHtml}
                 </div>
             </div>
         `;
@@ -1732,6 +1759,9 @@ async function editMonster(id) {
             document.getElementById('mGold').value = m.rewardGold;
             document.getElementById('mXp').value = m.rewardExp;
             document.getElementById('mNativeSecret').value = m.nativeSecret || '';
+            selectedMutationIds = m.mutations ? m.mutations.map(mu => mu.id) : [];
+            renderMutationsSelector();
+            
             const mt = m.monsterType || 'NORMAL';
             const mb = m.behavior || 'NORMAL';
 
@@ -1779,6 +1809,12 @@ window.cancelMonsterEdit = function () {
     if (lvlTrigger) {
         lvlTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1.1rem;">star</span> <span style="flex:1; text-align:center;">1</span>`;
     }
+    const secretTrigger = document.getElementById('mNativeSecretWrapper')?.querySelector('.cs-label');
+    if (secretTrigger) {
+        secretTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b; font-size: 1.1rem;">close</span>Aucun (Optionnel)`;
+    }
+    selectedMutationIds = [];
+    renderMutationsSelector();
     document.getElementById('btnSubmitMonster').textContent = "Créer le monstre";
     document.getElementById('btnCancelMonster').style.display = 'none';
     document.getElementById('monsterFormPanel').classList.remove('editing-glow');
@@ -2543,3 +2579,149 @@ window.hideTooltipFixed = function () {
         tooltip.style.display = 'none';
     }
 }
+
+// --- MUTATIONS ---
+async function loadMutations() {
+    try {
+        const res = await fetch('/api/admin/pve/mutations');
+        if (res.ok) {
+            allMutations = await res.json();
+            renderMutationsList();
+            renderMutationsSelector();
+        }
+    } catch (e) { console.error('Erreur chargement mutations:', e); }
+}
+
+function renderMutationsList() {
+    const list = document.getElementById('mutationsList');
+    if (!list) return;
+    if (allMutations.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding: 2rem; color: #64748b; font-style: italic;">Aucune mutation trouvée</div>`;
+        return;
+    }
+    
+    let html = '';
+    allMutations.forEach(mut => {
+        const mHex = mut.color || '#e879f9';
+        const mIcon = mut.icon || 'pets';
+        html += `
+        <div class="list-item" style="border-left: 3px solid ${mHex}; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(15, 23, 42, 0.4); border-radius: 8px; margin-bottom: 0.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="material-symbols-outlined" style="color: ${mHex};">${mIcon}</span>
+                    <span style="font-weight: 600; color: #f8fafc;">${mut.nom}</span>
+                    <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 0.75rem;">Lvl ${mut.level}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #cbd5e1;">${mut.description}</div>
+            </div>
+            <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                <button type="button" class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editMutation(${mut.id})" title="Modifier">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button type="button" class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteMutation(${mut.id})" title="Supprimer">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
+        </div>`;
+    });
+    list.innerHTML = html;
+}
+
+window.editMutation = (id) => {
+    const mut = allMutations.find(m => m.id === id);
+    if (!mut) return;
+    editingMutationId = id;
+    document.getElementById('mutName').value = mut.nom;
+    document.getElementById('mutDesc').value = mut.description;
+    document.getElementById('mutLevel').value = mut.level;
+    document.getElementById('mutColor').value = mut.color || '#e879f9';
+    document.getElementById('mutIcon').value = mut.icon || 'pets';
+    document.getElementById('btnSubmitMutation').textContent = 'Modifier la mutation';
+    document.getElementById('btnCancelMutation').style.display = 'inline-block';
+    document.getElementById('mutationFormPanel').classList.add('editing-glow');
+    document.getElementById('mutationFormPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+window.deleteMutation = async (id) => {
+    if (!confirm('Voulez-vous vraiment supprimer cette mutation ?')) return;
+    try {
+        const res = await fetch(`/api/admin/pve/mutations/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showNotif('Mutation supprimée');
+            if (editingMutationId === id) window.cancelMutationEdit();
+            loadMutations();
+        } else showNotif('Erreur lors de la suppression', true);
+    } catch (e) { showNotif("Erreur: " + e.message, true); }
+};
+
+window.cancelMutationEdit = () => {
+    editingMutationId = null;
+    document.getElementById('mutationForm').reset();
+    document.getElementById('btnSubmitMutation').textContent = 'Créer la mutation';
+    document.getElementById('btnCancelMutation').style.display = 'none';
+    document.getElementById('mutationFormPanel').classList.remove('editing-glow');
+};
+
+document.getElementById('mutationForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mut = {
+        nom: document.getElementById('mutName').value,
+        description: document.getElementById('mutDesc').value,
+        level: parseInt(document.getElementById('mutLevel').value) || 1,
+        color: document.getElementById('mutColor').value,
+        icon: document.getElementById('mutIcon').value
+    };
+    try {
+        let url = '/api/admin/pve/mutations';
+        let method = 'POST';
+        if (editingMutationId) { url = `/api/admin/pve/mutations/${editingMutationId}`; method = 'PUT'; }
+        const res = await fetch(url, {
+            method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mut)
+        });
+        if (res.ok) {
+            showNotif(editingMutationId ? 'Mutation modifiée' : 'Mutation créée');
+            window.cancelMutationEdit();
+            loadMutations();
+        } else { showNotif("Erreur lors de l'enregistrement", true); }
+    } catch (e) { showNotif("Erreur: " + e.message, true); }
+});
+
+function renderMutationsSelector() {
+    const container = document.getElementById('mMutationsContainer');
+    if (!container) return;
+    if (allMutations.length === 0) {
+        container.innerHTML = `<span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Aucune mutation disponible. Créez-en une d'abord.</span>`;
+        return;
+    }
+    
+    let html = '';
+    allMutations.forEach(mut => {
+        const isSelected = selectedMutationIds.includes(mut.id);
+        const mHex = mut.color || '#e879f9';
+        const mIcon = mut.icon || 'pets';
+        const bg = isSelected ? `rgba(232, 121, 249, 0.2)` : 'rgba(15, 23, 42, 0.6)';
+        const border = isSelected ? `1px solid ${mHex}` : '1px solid rgba(255,255,255,0.1)';
+        const opacity = isSelected ? '1' : '0.6';
+        const shadow = isSelected ? `box-shadow: 0 0 8px rgba(232, 121, 249, 0.4);` : '';
+        
+        html += `
+        <div onclick="toggleMutationSelection(${mut.id})" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 6px; background: ${bg}; border: ${border}; opacity: ${opacity}; ${shadow} display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;" title="${mut.description}">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${mHex};">${mIcon}</span>
+            <span style="font-size: 0.85rem; color: #f8fafc;">${mut.nom}</span>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.toggleMutationSelection = (id) => {
+    if (selectedMutationIds.includes(id)) {
+        selectedMutationIds = selectedMutationIds.filter(x => x !== id);
+    } else {
+        if (selectedMutationIds.length >= 4) {
+            showNotif("Un monstre ne peut avoir que 4 mutations maximum", true);
+            return;
+        }
+        selectedMutationIds.push(id);
+    }
+    renderMutationsSelector();
+};

@@ -114,8 +114,18 @@ export async function fetchMeta() {
             if (optgroupSpirits) optgroupSpirits.innerHTML += `<option value="S_${s.id}">${s.nom}</option>`;
         });
 
+        // Remplir les Mutations
+        const mutationSel = document.getElementById('mutationSelect');
+        if (mutationSel) {
+            mutationSel.style.fontFamily = "";
+            state.metaData.mutations.forEach(m => {
+                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+            });
+        }
+
         makeCustomSelect('voieSelect');
         makeCustomSelect('spiritSelect');
+        makeCustomSelect('mutationSelect');
         makeCustomSelect('heroConfigVoie');
         makeCustomSelect('heroConfigSpiritualite');
 
@@ -204,9 +214,10 @@ export async function submitSpell() {
         heatCost: parseInt(document.getElementById('heatCost').value) || 0,
         percentHeatCost: parseInt(document.getElementById('percentHeatCost').value) || 0,
         heatGenerated: heatValue,
-        voieId: (document.getElementById('voieSelect').value && document.getElementById('voieSelect').value !== '0') ? parseInt(document.getElementById('voieSelect').value) : null,
-        spiritualiteId: (document.getElementById('spiritSelect').value && document.getElementById('spiritSelect').value !== '0') ? parseInt(document.getElementById('spiritSelect').value) : null,
-        inspiration: document.getElementById('isInspiration') ? document.getElementById('isInspiration').checked : false,
+        voieId: document.getElementById('voieSelect').value ? parseInt(document.getElementById('voieSelect').value) : null,
+        spiritualiteId: document.getElementById('spiritSelect').value ? parseInt(document.getElementById('spiritSelect').value) : null,
+        mutationId: document.getElementById('mutationSelect').value ? parseInt(document.getElementById('mutationSelect').value) : null,
+        inspiration: document.getElementById('isInspiration')?.checked || false,
         karmaAlignment: document.getElementById('karmaAlignment') ? document.getElementById('karmaAlignment').value : 'NONE',
 
         effects: state.currentEffects.map(e => ({

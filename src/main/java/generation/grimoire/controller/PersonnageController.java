@@ -233,6 +233,17 @@ public class PersonnageController {
         map.put("totalSpeed", p.getEffectiveStat(generation.grimoire.enumeration.StatType.SPEED));
         map.put("totalCrit", p.getEffectiveStat(generation.grimoire.enumeration.StatType.CRIT));
 
+        int totalRegenHp = p.getRegenHp();
+        int totalRegenMana = p.getRegenMana() + voieManaRegen;
+        if (p.getEquipments() != null) {
+            for (generation.grimoire.entity.Equipment eq : p.getEquipments()) {
+                totalRegenHp += eq.getRegenHealthPerTurn();
+                totalRegenMana += eq.getRegenManaPerTurn();
+            }
+        }
+        map.put("totalRegenHp", totalRegenHp);
+        map.put("totalRegenMana", totalRegenMana);
+
         map.put("experience", p.getExperience());
 
         int currentLevelXp = 0;

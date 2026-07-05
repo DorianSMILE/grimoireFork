@@ -112,7 +112,7 @@ const RARITY_COLORS = {
     LEGENDAIRE: '#eab308',
     EPIQUE: '#ef4444',
     RELIQUE: '#a855f7',
-    MAUDIT: '#9ca3af'
+    MAUDIT: '#7f1d1d'
 };
 
 let lastCombatLogCount = 0;
@@ -1265,8 +1265,8 @@ function generateEquipmentTooltipHTML(eq) {
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
         const isCursed = eq.specialEffect.startsWith('CURSED_');
         const icon = isCursed ? 'skull' : 'auto_awesome';
-        const color = isCursed ? '#9ca3af' : '#c084fc';
-        
+        const color = isCursed ? '#9b2d2d' : '#c084fc';
+
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="color: ${color}; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;">
                 <div style="display: flex; align-items: center; gap: 0.3rem;">
@@ -1799,7 +1799,7 @@ function updateUI(data) {
                             } else if (data.currentRoom.altarRewardType === 'ITEM') {
                                 const eq = data.currentRoom.altarRewardEquipment;
                                 if (eq) {
-                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#9ca3af' };
+                                    const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252' };
                                     const rarityColor = rarityColors[eq.rarity] || '#94a3b8';
                                     const tooltipDataHtml = typeof generateEquipmentTooltipHTML === 'function' ? generateEquipmentTooltipHTML(eq) : '';
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';
@@ -2673,7 +2673,7 @@ function generateFighterHtml(c, isHero) {
             const bIcon = { 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[c.behavior] || 'check_box_outline_blank';
             const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
-            
+
             monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${bLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${bTitle}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${bIcon}</span>${bLabel}</span>`;
         }
         monsterBadgesHtml += `</div>`;

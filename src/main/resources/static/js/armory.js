@@ -898,7 +898,7 @@ function renderEquipModal() {
                 const label = effectLabels[equipped.specialEffect] || equipped.specialEffect;
                 const isCursed = equipped.specialEffect.startsWith('CURSED_');
                 const icon = isCursed ? 'skull' : 'auto_awesome';
-                const color = isCursed ? '#9ca3af' : '#c084fc';
+                const color = isCursed ? '#9b2d2d' : '#c084fc';
                 const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
                 specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">

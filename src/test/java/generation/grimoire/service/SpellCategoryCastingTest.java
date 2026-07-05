@@ -120,15 +120,17 @@ class SpellCategoryCastingTest {
 
         // Cast channeled spell block instant -> Allowed
         spellService.castSpell(channeledSpellBlockInstant, caster, target, null);
+        spellService.tickChanneling(caster, target, null);
         assertThat(caster.isBanalSpellCastThisTurn()).isTrue();
-        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(3);
+        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(2);
         assertThat(caster.isAllowInstantDuringCurrentChanneling()).isFalse();
         assertThat(caster.getManaCurrent()).isEqualTo(90);
 
-        // --- Turn 2 (Channeling remaining: 2) ---
-        caster.startTurn(); // Decrements channeling turns by 1 to 2.
-        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(2);
-        assertThat(caster.isBanalSpellCastThisTurn()).isFalse(); // blocked by channeling
+        // --- Turn 2 (Channeling remaining: 1) ---
+        caster.startTurn();
+        spellService.tickChanneling(caster, target, null);
+        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(1);
+        assertThat(caster.isBanalSpellCastThisTurn()).isTrue(); // blocked by channeling
         assertThat(caster.isInstantSpellCastThisTurn()).isFalse(); // blocked by channeling
 
         // Attempting to cast banal spell -> Blocked
@@ -139,10 +141,11 @@ class SpellCategoryCastingTest {
         spellService.castSpell(instantSpell, caster, target, null);
         assertThat(caster.getManaCurrent()).isEqualTo(90);
 
-        // --- Turn 3 (Channeling remaining: 1) ---
-        caster.startTurn(); // Decrements to 1.
-        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(1);
-        assertThat(caster.isBanalSpellCastThisTurn()).isFalse(); // blocked by channeling
+        // --- Turn 3 (Channeling remaining: 0) ---
+        caster.startTurn();
+        spellService.tickChanneling(caster, target, null);
+        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(0);
+        assertThat(caster.isBanalSpellCastThisTurn()).isTrue(); // blocked by channeling
         assertThat(caster.isInstantSpellCastThisTurn()).isFalse(); // blocked by channeling
 
         // Attempting to cast instant spell -> Blocked
@@ -150,7 +153,7 @@ class SpellCategoryCastingTest {
         assertThat(caster.getManaCurrent()).isEqualTo(90);
 
         // --- Turn 4 (Channeling finished) ---
-        caster.startTurn(); // Decrements to 0, channeling terminates.
+        caster.startTurn();
         assertThat(caster.getRemainingChannelingTurns()).isEqualTo(0);
         assertThat(caster.isBanalSpellCastThisTurn()).isFalse(); // released
         assertThat(caster.isInstantSpellCastThisTurn()).isFalse(); // released
@@ -171,15 +174,17 @@ class SpellCategoryCastingTest {
 
         // Cast channeled spell allowing instant -> Allowed
         spellService.castSpell(channeledSpellAllowInstant, caster, target, null);
+        spellService.tickChanneling(caster, target, null);
         assertThat(caster.isBanalSpellCastThisTurn()).isTrue();
-        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(3);
+        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(2);
         assertThat(caster.isAllowInstantDuringCurrentChanneling()).isTrue();
         assertThat(caster.getManaCurrent()).isEqualTo(90);
 
-        // --- Turn 2 (Channeling remaining: 2) ---
-        caster.startTurn(); // Decrements channeling turns by 1 to 2.
-        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(2);
-        assertThat(caster.isBanalSpellCastThisTurn()).isFalse(); // blocked by channeling
+        // --- Turn 2 (Channeling remaining: 1) ---
+        caster.startTurn();
+        spellService.tickChanneling(caster, target, null);
+        assertThat(caster.getRemainingChannelingTurns()).isEqualTo(1);
+        assertThat(caster.isBanalSpellCastThisTurn()).isTrue(); // blocked by channeling
         assertThat(caster.isInstantSpellCastThisTurn()).isFalse(); // instant is ALLOWED
 
         // Attempting to cast banal spell -> Blocked
@@ -226,12 +231,15 @@ class SpellCategoryCastingTest {
         caster.startTurn();
         spellService.castSpell(spell, caster, target, null);
 
+        // End of Turn 1 tick
+        spellService.tickChanneling(caster, target, null);
+
         // Turn 1: Damage should apply (15 damage), Heal should NOT apply
         assertThat(target.getHealthCurrent()).isEqualTo(85); // 100 - 15
         assertThat(caster.getHealthCurrent()).isEqualTo(50); // No heal
 
         // --- Turn 2 ---
-        caster.startTurn(); // Decrements remaining turns to 2
+        caster.startTurn();
         spellService.tickChanneling(caster, target, null);
 
         // Turn 2: Damage should NOT apply, Heal should apply (20 heal)

@@ -89,14 +89,14 @@ function calculateEquipmentWeight() {
     let w = 0;
 
     let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+    let mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
 
     const slot = document.getElementById('eqSlot').value;
     if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
         mArm = 1.5; mRes = 1.5;
         mHp = 0.4; mMana = 0.4;
         mStr = 1.8; mPow = 1.8;
-        mRegHp = 1.2; mRegMana = 1.2;
+        mRegHp = 2.4; mRegMana = 1.2;
     } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
         mArm = 0.8; mRes = 0.8;
         mStr = 2.5; mPow = 2.5;

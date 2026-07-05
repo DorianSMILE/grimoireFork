@@ -108,7 +108,7 @@ public class Equipment {
         double w = this.baseWeight;
         
         double mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-        double mSpd = 3.0, mCrit = 1.5, mRegHp = 1.5, mRegMana = 1.5;
+        double mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
 
         if (this.slot != null) {
             switch (this.slot) {
@@ -118,7 +118,7 @@ public class Equipment {
                     mArm = 1.5; mRes = 1.5;
                     mHp = 0.4; mMana = 0.4;
                     mStr = 1.8; mPow = 1.8;
-                    mRegHp = 1.2; mRegMana = 1.2;
+                    mRegHp = 2.4; mRegMana = 1.2;
                     break;
                 case CASQUE:
                 case PLASTRON:

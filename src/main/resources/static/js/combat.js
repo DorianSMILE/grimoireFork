@@ -2698,6 +2698,9 @@ function generateFighterHtml(c, isHero) {
         mutationsHtml += `</div>`;
     }
 
+    let hpRegenBadge = (!isHero && c.regenHp && c.regenHp > 0) ? `<span title="Régénère ${c.regenHp} PV au début du tour" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(244, 114, 182, 0.15); color: #f472b6; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(244, 114, 182, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined" style="font-size: 0.85rem;">healing</span>${c.regenHp} PV/t</span>` : '';
+    let manaRegenBadge = (!isHero && c.regenMana && c.regenMana > 0) ? `<span title="Régénère ${c.regenMana} Mana au début du tour" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(125, 211, 252, 0.15); color: #7dd3fc; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(125, 211, 252, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined" style="font-size: 0.85rem;">opacity</span>${c.regenMana} MP/t</span>` : '';
+
     return `
         ${mutationsHtml}
         ${channelingBadgeHtml}
@@ -2707,10 +2710,10 @@ function generateFighterHtml(c, isHero) {
         ${monsterBadgesHtml}
         ${statsHtml}
         <div class="gauge-container" style="text-align: left;">
-            <div class="gauge-label"><span>Santé (PV)</span><span>${hpLabel}</span></div>
+            <div class="gauge-label"><span style="display:flex; align-items:center;">Santé (PV)${hpRegenBadge}</span><span>${hpLabel}</span></div>
             <div class="gauge-track"><div class="gauge-fill hp" style="width: ${hpPct}%;"></div></div>
         </div>
-        ${manaHtml}
+        ${manaHtml.replace('<span>Mana</span>', `<span style="display:flex; align-items:center;">Mana${manaRegenBadge}</span>`)}
         ${specialItemsHtml}
         <div class="sandbox-status-list" style="justify-content: center;">${passiveBadges}</div>
         <div class="sandbox-status-list" style="justify-content: center;">
@@ -2743,6 +2746,8 @@ function renderEnemies(enemies) {
         pMonster.monsterType = m.monsterType;
         pMonster.behavior = m.behavior;
         pMonster.mutations = m.mutations;
+        pMonster.regenHp = m.regenHp;
+        pMonster.regenMana = m.regenMana;
         if (typeof activeMonster.currentHp !== 'undefined') pMonster.healthCurrent = activeMonster.currentHp;
         if (typeof activeMonster.maxHp !== 'undefined') pMonster.healthMax = activeMonster.maxHp;
 

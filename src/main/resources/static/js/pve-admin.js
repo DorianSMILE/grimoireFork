@@ -118,7 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
             description: document.getElementById('mDesc').value,
             level: parseInt(document.getElementById('mLevel').value) || 1,
             healthMax: parseInt(document.getElementById('mHp').value),
+            regenHp: parseInt(document.getElementById('mRegenHp').value) || 0,
             manaMax: parseInt(document.getElementById('mMana').value),
+            regenMana: parseInt(document.getElementById('mRegenMana').value) || 0,
             speed: parseInt(document.getElementById('mSpeed').value),
             crit: parseInt(document.getElementById('mCrit').value),
             strength: parseInt(document.getElementById('mStrength').value),
@@ -1749,7 +1751,9 @@ async function editMonster(id) {
             if (lvlTrigger) lvlTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem;">star</span> <span style="flex:1; text-align:center;">${lvl}</span>`;
 
             document.getElementById('mHp').value = m.healthMax;
+            document.getElementById('mRegenHp').value = m.regenHp || 0;
             document.getElementById('mMana').value = m.manaMax || 0;
+            document.getElementById('mRegenMana').value = m.regenMana || 0;
             document.getElementById('mSpeed').value = m.speed;
             document.getElementById('mCrit').value = m.crit || 0;
             document.getElementById('mStrength').value = m.strength;

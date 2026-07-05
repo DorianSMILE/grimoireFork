@@ -1365,6 +1365,28 @@ public class CombatService {
                 session.addLog("--- Tour de l'ennemi " + m.getBase().getName() + " ---");
                 spellService.startTurn(m.getAsPersonnage());
 
+                // === REGÉNÉRATION HP & MANA ===
+                if (!m.isDead()) {
+                    int rHp = m.getBase().getRegenHp();
+                    if (rHp > 0) {
+                        int beforeHp = m.getAsPersonnage().getHealthCurrent();
+                        m.getAsPersonnage().heal(rHp);
+                        int healed = m.getAsPersonnage().getHealthCurrent() - beforeHp;
+                        if (healed > 0) {
+                            session.addLog("💖 " + m.getBase().getName() + " régénère " + healed + " PV.");
+                        }
+                    }
+                    int rMana = m.getBase().getRegenMana();
+                    if (rMana > 0) {
+                        int beforeMana = m.getAsPersonnage().getManaCurrent();
+                        m.getAsPersonnage().restoreMana(rMana);
+                        int recovered = m.getAsPersonnage().getManaCurrent() - beforeMana;
+                        if (recovered > 0) {
+                            session.addLog("💧 " + m.getBase().getName() + " régénère " + recovered + " Mana.");
+                        }
+                    }
+                }
+
                 // === PASSIF TYPE : MORT_VIVANT — Régénération début de tour ===
                 MonsterType mType = m.getBase().getMonsterType();
                 if (mType == null)

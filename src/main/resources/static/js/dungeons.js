@@ -522,27 +522,28 @@ window.selectCharacter = async function (id) {
     if (!char) return;
 
     let totalStats = {
-        healthMax: char.healthMax || 0,
-        manaMax: char.manaMax || 0,
-        power: char.power || 0,
-        strength: char.strength || 0,
-        armor: char.armor || 0,
-        resistance: char.resistance || 0,
-        speed: char.speed || 0,
-        crit: char.crit || 0,
+        healthMax: char.totalHealthMax !== undefined ? char.totalHealthMax : char.healthMax || 0,
+        manaMax: char.totalManaMax !== undefined ? char.totalManaMax : char.manaMax || 0,
+        power: char.totalPower !== undefined ? char.totalPower : char.power || 0,
+        strength: char.totalStrength !== undefined ? char.totalStrength : char.strength || 0,
+        armor: char.totalArmor !== undefined ? char.totalArmor : char.armor || 0,
+        resistance: char.totalResistance !== undefined ? char.totalResistance : char.resistance || 0,
+        speed: char.totalSpeed !== undefined ? char.totalSpeed : char.speed || 0,
+        crit: char.totalCrit !== undefined ? char.totalCrit : char.crit || 0,
         regenHealthPerTurn: char.regenHp || 0,
         regenManaPerTurn: char.regenMana || 0
     };
 
     equipments.forEach(eq => {
-        totalStats.healthMax += (eq.bonusHealthMax || 0);
-        totalStats.manaMax += (eq.bonusManaMax || 0);
-        totalStats.power += (eq.bonusPower || 0);
-        totalStats.strength += (eq.bonusStrength || 0);
-        totalStats.armor += (eq.bonusArmor || 0);
-        totalStats.resistance += (eq.bonusResistance || 0);
-        totalStats.speed += (eq.bonusSpeed || 0);
-        totalStats.crit += (eq.bonusCrit || 0);
+        if (char.totalHealthMax === undefined) totalStats.healthMax += (eq.bonusHealthMax || 0);
+        if (char.totalManaMax === undefined) totalStats.manaMax += (eq.bonusManaMax || 0);
+        if (char.totalPower === undefined) totalStats.power += (eq.bonusPower || 0);
+        if (char.totalStrength === undefined) totalStats.strength += (eq.bonusStrength || 0);
+        if (char.totalArmor === undefined) totalStats.armor += (eq.bonusArmor || 0);
+        if (char.totalResistance === undefined) totalStats.resistance += (eq.bonusResistance || 0);
+        if (char.totalSpeed === undefined) totalStats.speed += (eq.bonusSpeed || 0);
+        if (char.totalCrit === undefined) totalStats.crit += (eq.bonusCrit || 0);
+
         totalStats.regenHealthPerTurn += (eq.regenHealthPerTurn || 0);
         totalStats.regenManaPerTurn += (eq.regenManaPerTurn || 0);
     });

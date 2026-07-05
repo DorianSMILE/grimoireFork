@@ -1243,11 +1243,6 @@ function renderRooms() {
                                     return `<span style="display:flex; align-items:center; gap:0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1.1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span></span>`;
                                 };
 
-                                const sortedEquipments = [...allEquipments].sort((a, b) => {
-                                    if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
-                                    return a.name.localeCompare(b.name);
-                                });
-
                                 rewardValueHtml = `
                                     <div class="custom-select-wrapper" id="altar_rewardval_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${150 - (rIndex * 10 + oIndex * 3)};">
                                         <div class="custom-select-trigger" onclick="toggleAltarRewardValSelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
@@ -1257,7 +1252,7 @@ function renderRooms() {
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="altar_rewardval_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
-                                            ${sortedEquipments.map(eq => `
+                                            ${allEquipments.map(eq => `
                                                 <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardValue', ${eq.id})">
                                                     ${getEqHtml(eq)}
                                                 </div>
@@ -1555,9 +1550,14 @@ async function loadEquipments() {
         // Sort by rarity, then name
         const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
         allEquipments = Array.from(map.values()).sort((a, b) => {
-            const rA = rarityOrder[a.rarity] || 0;
-            const rB = rarityOrder[b.rarity] || 0;
+            const rA = rarityOrder[a.rarity] || 100;
+            const rB = rarityOrder[b.rarity] || 100;
             if (rA !== rB) return rA - rB;
+            
+            const tA = a.slot || '';
+            const tB = b.slot || '';
+            if (tA !== tB) return tA.localeCompare(tB);
+
             return a.name.localeCompare(b.name);
         });
     } catch (e) {

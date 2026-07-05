@@ -43,6 +43,45 @@ let allAnomalies = [];
 let allDungeons = [];
 let selectedRooms = [];
 
+const SECRETS_META = [
+    { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
+    { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
+    { name: "Secret de la Préservation", icon: "foundation", color: "#d97706" },
+    { name: "Secret de la Sérénité", icon: "water_drop", color: "#06b6d4" },
+    { name: "Secret de la Chasse", icon: "visibility_off", color: "#f43f5e" },
+    { name: "Secret du Carnage", icon: "explosion", color: "#be123c" },
+    { name: "Secret de la Joie", icon: "volcano", color: "#ea580c" },
+    { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
+    { name: "Secret du Destin", icon: "all_inclusive", color: "#fcd34d" },
+    { name: "Secret de l'Éther", icon: "blur_on", color: "#0ea5e9" },
+    { name: "Secret des Abysses", icon: "dark_mode", color: "#a855f7" }
+];
+
+function getSecretIconOnlyHtml(m) {
+    if (!m.nativeSecret) return '';
+    const sm = SECRETS_META.find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
+    return `<span class="material-symbols-outlined cs-icon" style="color: ${sm.color}; font-size: 1.1rem; margin-right: 4px; vertical-align: middle;" title="${m.nativeSecret}">${sm.icon}</span>`;
+}
+
+function getSecretBadgeHtml(m) {
+    if (!m.nativeSecret) return '';
+    const sm = SECRETS_META.find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
+    return `<div style="background: rgba(15, 23, 42, 0.9); color: ${sm.color}; padding: 0.2rem 0.4rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); border: 1px solid ${sm.color}60; display: flex; align-items: center; justify-content: center;" title="${m.nativeSecret}"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${sm.icon}</span></div>`;
+}
+
+function sortMonstersBySecret(monsters) {
+    return monsters.sort((a, b) => {
+        let idxA = SECRETS_META.findIndex(s => s.name === a.nativeSecret);
+        if (idxA === -1) idxA = 999;
+        let idxB = SECRETS_META.findIndex(s => s.name === b.nativeSecret);
+        if (idxB === -1) idxB = 999;
+        
+        if (idxA !== idxB) return idxA - idxB;
+        if ((a.level || 1) !== (b.level || 1)) return (a.level || 1) - (b.level || 1);
+        return a.name.localeCompare(b.name);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Check if auth loaded
     const checkAdmin = () => {
@@ -407,7 +446,7 @@ function renderRooms() {
     selectedRooms.forEach((room, rIndex) => {
         let optionsHtml = '';
         allMonsters.forEach(m => {
-            optionsHtml += `<div class="custom-option" data-value="${m.id}" onclick="selectMonsterOption(${rIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})"><span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span></div>`;
+            optionsHtml += `<div class="custom-option" data-value="${m.id}" onclick="selectMonsterOption(${rIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span></div>`;
         });
 
         const div = document.createElement('div');
@@ -1140,7 +1179,7 @@ function renderRooms() {
                                         <div class="custom-select-options" id="room_door_boss_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
                                             ${allMonsters.map(m => `
                                                 <div class="custom-option" onclick="selectDoorBossOption(${rIndex}, ${oIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">
-                                                    <span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span>
+                                                    ${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span>
                                                 </div>
                                             `).join('')}
                                         </div>
@@ -1494,7 +1533,7 @@ async function loadMonsters() {
         const res = await fetch('/api/admin/pve/monsters');
         if (res.ok) {
             const monsters = await res.json();
-            allMonsters = monsters;
+            allMonsters = sortMonstersBySecret(monsters);
             renderMonstersList();
         }
     } catch (e) {
@@ -1619,24 +1658,7 @@ window.renderMonstersList = function () {
 
     list.innerHTML = '';
     filtered.forEach(m => {
-        let secretBadgeHtml = '';
-        if (m.nativeSecret) {
-            const sm = [
-                { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
-                { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-                { name: "Secret de la Préservation", icon: "foundation", color: "#d97706" },
-                { name: "Secret de la Sérénité", icon: "water_drop", color: "#06b6d4" },
-                { name: "Secret de la Chasse", icon: "visibility_off", color: "#f43f5e" },
-                { name: "Secret du Carnage", icon: "explosion", color: "#be123c" },
-                { name: "Secret de la Joie", icon: "volcano", color: "#ea580c" },
-                { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
-                { name: "Secret du Destin", icon: "all_inclusive", color: "#fcd34d" },
-                { name: "Secret de l'Éther", icon: "blur_on", color: "#0ea5e9" },
-                { name: "Secret des Abysses", icon: "dark_mode", color: "#a855f7" }
-            ].find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
-            
-            secretBadgeHtml = `<div style="background: rgba(15, 23, 42, 0.9); color: ${sm.color}; padding: 0.2rem 0.4rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); border: 1px solid ${sm.color}60; display: flex; align-items: center; justify-content: center;" title="${m.nativeSecret}"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${sm.icon}</span></div>`;
-        }
+        let secretBadgeHtml = getSecretBadgeHtml(m);
 
         list.innerHTML += `
             <div class="monster-card">

@@ -812,13 +812,17 @@
             'AUTRE': 'category'
         };
 
+        let reqZIndexCounter = 1000;
         function addRequirement(type, selectedName = '', qty = 1) {
             const list = document.getElementById(type === 'anomalie' ? 'reqAnomaliesList' : 'reqConsumablesList');
             const div = document.createElement('div');
+            const currentZIndex = reqZIndexCounter--;
             div.className = 'req-item';
             div.style.display = 'flex';
             div.style.gap = '0.5rem';
             div.style.alignItems = 'center';
+            div.style.position = 'relative';
+            div.style.zIndex = currentZIndex;
 
             let optionsHtml = '';
             let displayLabel = 'Choisir un objet...';
@@ -856,10 +860,8 @@
                 }
             }
 
-            const zIndex = 100 - list.children.length;
-
             div.innerHTML = `
-                <div class="custom-select-wrapper" style="flex: 2; z-index: ${zIndex};">
+                <div class="custom-select-wrapper" style="flex: 2;">
                     <div class="custom-select-trigger" style="background: rgba(15,23,42,0.6); padding: 0.6rem; border-radius: 8px;">
                         <span class="cs-label" style="font-size: 0.9rem;">${displayLabel}</span>
                         <span class="material-symbols-outlined" style="color: #64748b; font-size: 1.1rem;">expand_more</span>

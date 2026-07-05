@@ -480,6 +480,10 @@
     background: rgba(255, 255, 255, 0.4);
 }
 
+.custom-select-wrapper.open {
+    z-index: 99999 !important;
+}
+
 /* Custom Switch Slider */
 .switch-container {
     display: flex;

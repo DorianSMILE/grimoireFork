@@ -785,7 +785,23 @@ public class CombatService {
             clone.setUser(user);
 
             equipmentRepository.save(clone);
-            session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ".");
+
+            if (clone.getSlot() == generation.grimoire.enumeration.EquipmentSlot.CONSOMMABLE) {
+                double currentWeight = session.getActiveConsumables().stream()
+                        .filter(java.util.Objects::nonNull)
+                        .mapToDouble(e -> e.calculateWeight())
+                        .sum();
+                double maxWeight = 10.0 + 5.0 * session.getPlayers().size();
+
+                if (currentWeight + clone.calculateWeight() <= maxWeight) {
+                    session.getActiveConsumables().add(clone);
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + " et l'a ajouté à l'inventaire du groupe.");
+                } else {
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ", envoyé au coffre (poids max atteint).");
+                }
+            } else {
+                session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ".");
+            }
         }
 
         session.getPurchasedMerchantItems().add(lootIndex);

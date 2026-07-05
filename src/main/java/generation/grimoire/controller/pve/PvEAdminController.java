@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class PvEAdminController {
     private final PvEAdminService pvEAdminService;
     private final generation.grimoire.repository.EquipmentRepository equipmentRepository;
-    private final generation.grimoire.repository.pve.MutationRepository mutationRepository;
 
     // --- MONSTERS ---
 

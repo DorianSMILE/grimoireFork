@@ -1248,9 +1248,10 @@ window.addEventListener('DOMContentLoaded', async () => {
                     diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
                     diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
                 } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
-                    stats.charMana = 130; stats.charResistance = 8;
+                    stats.charMana = 130; stats.charResistance = 8; stats.charRegenMana = 6;
                     diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
                     diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+                    diffHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', '#38bdf8');
                 } else if (voieNom.includes('Trahison')) {
                     stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
                     diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');

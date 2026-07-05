@@ -18,6 +18,29 @@
     <link rel="stylesheet" href="/styles/components.css">
     <link rel="stylesheet" href="/styles/vault.css?v=3">
     <style>
+        @keyframes unlock-flash {
+            0% { background: rgba(15, 23, 42, 0.75); }
+            30% { background: rgba(245, 158, 11, 0.9); }
+            100% { background: transparent; opacity: 0; }
+        }
+        @keyframes unlock-icon {
+            0% { transform: scale(1) rotate(0); color: #f59e0b; }
+            50% { transform: scale(1.5) rotate(15deg); color: #fff; text-shadow: 0 0 20px #f59e0b; }
+            100% { transform: scale(0) rotate(-15deg); opacity: 0; }
+        }
+        .dungeon-lock-overlay.unlocking {
+            animation: unlock-flash 0.8s forwards ease-in-out;
+            pointer-events: none;
+        }
+        .dungeon-lock-overlay.unlocking > * {
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        .dungeon-lock-overlay.unlocking .material-symbols-outlined:first-child {
+            opacity: 1;
+            animation: unlock-icon 0.8s forwards ease-in-out;
+        }
+
         .dungeons-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

@@ -237,7 +237,7 @@ async function loadDungeons() {
                             lockedHtml = `<div class="dungeon-lock-overlay" style="background: rgba(15, 23, 42, 0.75); color: #f59e0b;">
                                 <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon Verrouillé</div>
-                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold})" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
                             </div>`;
                         }
                     }
@@ -705,13 +705,18 @@ window.startCombat = async function () {
     window.location.href = url;
 };
 
-window.unlockDungeon = async function (id, cost) {
+window.unlockDungeon = async function (id, cost, event) {
+    const overlay = event ? (event.currentTarget || event.target).closest('.dungeon-lock-overlay') : null;
     const confirmed = await showUnlockModal(cost);
     if (!confirmed) return;
 
     try {
         const res = await fetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
         if (res.ok) {
+            if (overlay) {
+                overlay.classList.add('unlocking');
+                await new Promise(r => setTimeout(r, 800));
+            }
             showNotif("Donjon d\u00e9bloqu\u00e9 !");
             const authRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
             if (authRes.ok) window.currentUser = await authRes.json();

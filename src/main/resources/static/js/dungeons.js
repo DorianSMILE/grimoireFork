@@ -83,6 +83,13 @@ async function loadDungeons() {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
             const contentContainer = document.getElementById('dungeonsSectionsContainer');
+
+            // Find current active tab
+            let activeTabId = null;
+            const activeBtn = tabsHeader.querySelector('.tab-btn.active');
+            if (activeBtn) {
+                activeTabId = activeBtn.id.replace('tab-btn-', '');
+            }
             
             tabsHeader.innerHTML = '';
             contentContainer.innerHTML = '';
@@ -154,11 +161,17 @@ async function loadDungeons() {
                 categories.delete('free');
             }
 
+            if (activeTabId && !categories.has(activeTabId)) {
+                activeTabId = null; // Fallback if the tab category no longer exists
+            }
+
             let firstTab = true;
             categories.forEach(cat => {
+                const isActive = activeTabId ? cat.id === activeTabId : firstTab;
+
                 // Generate Tab Button
                 const btn = document.createElement('button');
-                btn.className = `tab-btn ${firstTab ? 'active' : ''}`;
+                btn.className = `tab-btn ${isActive ? 'active' : ''}`;
                 btn.id = `tab-btn-${cat.id}`;
                 // Apply a specific class for the colored active state
                 if (cat.id === 'free') btn.classList.add('tab-free');
@@ -172,7 +185,7 @@ async function loadDungeons() {
 
                 // Generate Content Section
                 const section = document.createElement('div');
-                section.className = `tab-content ${firstTab ? 'active' : ''}`;
+                section.className = `tab-content ${isActive ? 'active' : ''}`;
                 section.id = `${cat.id}DungeonsSection`;
                 
                 const grid = document.createElement('div');

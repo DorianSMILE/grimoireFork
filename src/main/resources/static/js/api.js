@@ -4,7 +4,6 @@ import * as ui from './ui.js?v=2';
 import * as forge from './forge.js';
 import * as grimoire from './grimoire.js';
 import * as filters from './filters.js';
-import * as sandbox from './sandbox.js';
 import * as animations from './animations.js';
 
 let currentUser = undefined;
@@ -53,29 +52,7 @@ export async function deleteSpellAPI(id) {
     return fetch(`/api/spells-editor/${id}`, { method: 'DELETE' });
 }
 
-export async function configSandboxHeroAPI(payload) {
-    return fetch('/api/spells-editor/sandbox/configure-hero', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-}
 
-export async function castSandboxSpellAPI(spellId, choiceKey) {
-    let url = `/api/spells-editor/sandbox/cast/${spellId}`;
-    if (choiceKey) {
-        url += `?choiceKey=${encodeURIComponent(choiceKey)}`;
-    }
-    return fetch(url, { method: 'POST' });
-}
-
-export async function passSandboxTurnAPI() {
-    return fetch('/api/spells-editor/sandbox/pass-turn', { method: 'POST' });
-}
-
-export async function resetSandboxAPI() {
-    return fetch('/api/spells-editor/sandbox/reset', { method: 'POST' });
-}
 
 
 
@@ -134,8 +111,6 @@ export async function fetchMeta() {
         makeCustomSelect('spiritSelect');
         makeCustomSelect('mutationSelect');
         makeCustomSelect('filterMutation');
-        makeCustomSelect('heroConfigVoie');
-        makeCustomSelect('heroConfigSpiritualite');
 
         // Remplir les sources de coûts
         const pms = document.getElementById('percentManaCostSource');
@@ -440,106 +415,7 @@ document.getElementById('deleteSpellConfirmBtn')?.addEventListener('click', asyn
 
 
 
-export async function configureSandboxHero() {
-    const voieId = document.getElementById('heroConfigVoie').value || null;
-    const voieLevel = parseInt(document.getElementById('heroConfigVoieLevel').value) || 1;
-    const spiritualiteId = document.getElementById('heroConfigSpiritualite').value || null;
-    const spiritualiteLevel = parseInt(document.getElementById('heroConfigSpiritLevel').value) || 1;
-    const healthMax = parseInt(document.getElementById('heroConfigHp').value) || 100;
-    const manaMax = parseInt(document.getElementById('heroConfigMana').value) || 100;
-    const power = parseInt(document.getElementById('heroConfigPower').value) || 0;
-    const strength = parseInt(document.getElementById('heroConfigStrength').value) || 0;
-    const armor = parseInt(document.getElementById('heroConfigArmor').value) || 0;
-    const resistance = parseInt(document.getElementById('heroConfigResistance').value) || 0;
-    const speed = parseInt(document.getElementById('heroConfigSpeed').value) || 0;
-    const crit = parseInt(document.getElementById('heroConfigCrit').value) || 0;
 
-    try {
-        const res = await fetch('/api/spells-editor/sandbox/configure', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                voieId: voieId ? parseInt(voieId) : null,
-                voieLevel,
-                spiritualiteId: spiritualiteId ? parseInt(spiritualiteId) : null,
-                spiritualiteLevel,
-                healthMax,
-                manaMax,
-                power,
-                strength,
-                armor,
-                resistance,
-                speed,
-                crit
-            })
-        });
-        if (res.ok) {
-            const state = await res.json();
-            updateSandboxUI(state);
-            // Fermer le panel de configuration après succès
-            document.getElementById('heroConfigPanel').classList.remove('expanded');
-        } else {
-            alert("Erreur lors de la configuration du héros.");
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-
-
-
-
-
-
-export async function castSandboxSpell(spellId) {
-    const choiceSelect = document.getElementById(`choice-select-${spellId}`);
-    const choiceKey = choiceSelect ? choiceSelect.value : '';
-
-    try {
-        let url = `/api/spells-editor/sandbox/cast/${spellId}`;
-        if (choiceKey) {
-            url += `?choiceKey=${choiceKey}`;
-        }
-        const res = await fetch(url, { method: 'POST' });
-        if (res.ok) {
-            const state = await res.json();
-            updateSandboxUI(state);
-        } else {
-            alert("Erreur lors du lancer du sort.");
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-export async function passSandboxTurn() {
-    try {
-        const res = await passSandboxTurnAPI();
-        if (res.ok) {
-            const state = await res.json();
-            updateSandboxUI(state);
-        } else {
-            alert("Erreur lors du passage du tour.");
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-export async function resetSandbox() {
-    try {
-        const res = await resetSandboxAPI();
-        if (res.ok) {
-            const state = await res.json();
-            updateSandboxUI(state);
-        } else {
-            alert("Erreur lors de la réinitialisation.");
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
 
 
 

@@ -122,10 +122,18 @@ export async function fetchMeta() {
                 mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
             });
         }
+        const filterMutationSel = document.getElementById('filterMutation');
+        if (filterMutationSel) {
+            filterMutationSel.style.fontFamily = "";
+            state.metaData.mutations.forEach(m => {
+                filterMutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+            });
+        }
 
         makeCustomSelect('voieSelect');
         makeCustomSelect('spiritSelect');
         makeCustomSelect('mutationSelect');
+        makeCustomSelect('filterMutation');
         makeCustomSelect('heroConfigVoie');
         makeCustomSelect('heroConfigSpiritualite');
 

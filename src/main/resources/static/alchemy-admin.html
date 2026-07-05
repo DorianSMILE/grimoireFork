@@ -849,14 +849,21 @@
                 }
             } else {
                 allConsumables.forEach(c => {
+                    const slotInfo = getSlotInfo(c);
                     optionsHtml += `<div class="custom-option" data-value="${c.name}">
-                                        <span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span>
+                                        <span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                                         ${c.name}
                                     </div>`;
                 });
 
                 if (selectedName) {
-                    displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span> ${selectedName}`;
+                    const selC = allConsumables.find(c => c.name === selectedName);
+                    if (selC) {
+                        const slotInfo = getSlotInfo(selC);
+                        displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: ${slotInfo.color};">${slotInfo.icon}</span> ${selectedName}`;
+                    } else {
+                        displayLabel = `<span class="material-symbols-outlined cs-icon" style="color: #10b981;">inventory_2</span> ${selectedName}`;
+                    }
                 }
             }
 

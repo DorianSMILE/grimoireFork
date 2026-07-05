@@ -17,9 +17,6 @@ import generation.grimoire.entity.voie.passif.VoiePassiveEffect;
 import generation.grimoire.service.SpellService;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
-import lombok.AllArgsConstructor;
-import generation.grimoire.entity.personnage.Personnage;
-import generation.grimoire.entity.personnage.ActiveShield;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,20 +34,17 @@ public class WebSpellCreationController {
     private final VoieRepository voieRepository;
     private final SpiritualiteRepository spiritualiteRepository;
     private final MutationRepository mutationRepository;
-    private final generation.grimoire.repository.PersonnageRepository personnageRepository;
 
     public WebSpellCreationController(SpellService spellService,
             SpellRepository spellRepository,
             VoieRepository voieRepository,
             SpiritualiteRepository spiritualiteRepository,
-            MutationRepository mutationRepository,
-            generation.grimoire.repository.PersonnageRepository personnageRepository) {
+            MutationRepository mutationRepository) {
         this.spellService = spellService;
         this.spellRepository = spellRepository;
         this.voieRepository = voieRepository;
         this.spiritualiteRepository = spiritualiteRepository;
         this.mutationRepository = mutationRepository;
-        this.personnageRepository = personnageRepository;
     }
 
     @PostConstruct
@@ -293,7 +287,6 @@ public class WebSpellCreationController {
         return ResponseEntity.notFound().build();
     }
 
-
     @PostMapping
     public ResponseEntity<String> createSpellPayload(@RequestBody SpellCreationDto dto) {
         Spell spell;
@@ -535,6 +528,5 @@ public class WebSpellCreationController {
         private generation.grimoire.enumeration.DetachedSoulRequirement detachedSoulRequirement;
         private List<Integer> channelingTurns = new ArrayList<>();
     }
-
 
 }

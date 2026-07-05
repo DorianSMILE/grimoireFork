@@ -5,6 +5,5 @@ export const state = {
     loadedSpells: [],
     selectedFilterVoieId: null,
     selectedFilterSpiritId: null,
-    grimoireDisplayMode: localStorage.getItem('grimoireDisplayMode') || 'scroll',
-    sandboxSpellIds: []
+    grimoireDisplayMode: localStorage.getItem('grimoireDisplayMode') || 'scroll'
 };

@@ -204,8 +204,8 @@ export function makeCustomSelect(selectIdOrElement) {
     const getIconInfo = (id, optionOrText) => {
         const text = typeof optionOrText === 'string' ? optionOrText : (optionOrText.text || '');
         
-        if (id === 'mutationSelect') {
-            if (text.includes('Aucune') || text.includes('Neutre')) return { icon: 'trip_origin', color: '#94a3b8' };
+        if (id === 'mutationSelect' || id === 'filterMutation') {
+            if (text.includes('Aucune') || text.includes('Neutre') || text.includes('Toutes') || text.includes('Sans')) return { icon: 'trip_origin', color: '#94a3b8' };
             if (typeof optionOrText === 'object' && optionOrText.dataset && optionOrText.dataset.icon) {
                 return { icon: optionOrText.dataset.icon, color: optionOrText.dataset.color || '#e879f9' };
             }

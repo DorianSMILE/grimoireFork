@@ -23,9 +23,22 @@ export function renderFilteredSpells() {
     const effectVal = document.getElementById('filterEffect')?.value || 'ALL';
     const levelVal = document.getElementById('filterLevel')?.value || 'ALL';
     const sortByVal = document.getElementById('sortBy')?.value || 'NEWEST';
+    const mutationVal = document.getElementById('filterMutation')?.value || 'ALL';
 
     // Filtrage multi-critères
     let filtered = state.loadedSpells.filter(sp => {
+        // Cacher les sorts de type mutation pour les non-admins
+        if (!window.isAdmin && sp.mutation) return false;
+
+        // Filtre de Mutation (pour admin)
+        if (window.isAdmin && mutationVal !== 'ALL') {
+            if (mutationVal === 'NONE') {
+                if (sp.mutation) return false;
+            } else {
+                if (!sp.mutation || sp.mutation.id != mutationVal) return false;
+            }
+        }
+
         // Recherche textuelle (nom ou description)
         if (searchVal) {
             const matchNom = (sp.nom || '').toLowerCase().includes(searchVal);

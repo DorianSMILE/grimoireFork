@@ -44,4 +44,6 @@ public class Monstre {
 
     @Enumerated(EnumType.STRING)
     private MonsterBehavior behavior = MonsterBehavior.NORMAL;
+
+    private String nativeSecret;
 }

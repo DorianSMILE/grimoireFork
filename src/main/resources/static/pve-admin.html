@@ -629,6 +629,72 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label style="display: flex; align-items: center; gap: 0.4rem;"><span
+                                            class="material-symbols-outlined"
+                                            style="font-size: 1.1rem; color: #10b981;">explore</span>
+                                        Voie Native (Secret)</label>
+                                    <div class="custom-select-wrapper" id="mNativeSecretWrapper" style="z-index: 95; width: 100%;">
+                                        <div class="custom-select-trigger" style="padding: 0.8rem;">
+                                            <span class="cs-label" style="display: flex; align-items: center; gap: 0.4rem;">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #64748b; font-size: 1.1rem;">close</span>
+                                                Aucun (Optionnel)
+                                            </span>
+                                            <span class="material-symbols-outlined" style="color: #64748b; font-size: 1.2rem; pointer-events: none;">expand_more</span>
+                                        </div>
+                                        <div class="custom-select-options custom-options">
+                                            <div class="custom-option" data-value="">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #64748b;">close</span>
+                                                Aucun (Optionnel)
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Chaos">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #ff0000;">local_fire_department</span>
+                                                Secret du Chaos
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de l'Abondance">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #10b981;">eco</span>
+                                                Secret de l'Abondance
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Préservation">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #99674c;">foundation</span>
+                                                Secret de la Préservation
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Sérénité">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #00e5cc;">water_drop</span>
+                                                Secret de la Sérénité
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Chasse">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #ed5677;">visibility_off</span>
+                                                Secret de la Chasse
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Carnage">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #a70740;">explosion</span>
+                                                Secret du Carnage
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de la Joie">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #b74c0b;">volcano</span>
+                                                Secret de la Joie
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Savoir">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #3b82f6;">psychology</span>
+                                                Secret du Savoir
+                                            </div>
+                                            <div class="custom-option" data-value="Secret du Destin">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #e7d198;">all_inclusive</span>
+                                                Secret du Destin
+                                            </div>
+                                            <div class="custom-option" data-value="Secret de l'Éther">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #38bdf8;">blur_on</span>
+                                                Secret de l'Éther
+                                            </div>
+                                            <div class="custom-option" data-value="Secret des Abysses">
+                                                <span class="material-symbols-outlined cs-icon" style="color: #c084fc;">dark_mode</span>
+                                                Secret des Abysses
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="mNativeSecret" value="">
+                                    </div>
+                                </div>
                             </div>
                             <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                                 <button type="submit" class="btn btn-primary" id="btnSubmitMonster">Créer le
@@ -1073,6 +1139,37 @@
                         });
                         if (!found && val) {
                             labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #f59e0b;">key</span> ${val}`;
+                        } else if (!val && !found) {
+                            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b;">close</span> Aucun (Optionnel)`;
+                        }
+                    }
+                },
+                get: function () {
+                    return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
+                }
+            });
+        }
+
+        // Intercept assignments to mNativeSecret to update the UI
+        const mInputEl = document.getElementById('mNativeSecret');
+        if (mInputEl) {
+            const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            Object.defineProperty(mInputEl, 'value', {
+                set: function (val) {
+                    originalSet.call(this, val);
+                    const wrapper = this.closest('.custom-select-wrapper');
+                    if (wrapper) {
+                        const labelEl = wrapper.querySelector('.cs-label');
+                        const options = wrapper.querySelectorAll('.custom-option');
+                        let found = false;
+                        options.forEach(opt => {
+                            if (opt.getAttribute('data-value') === (val || '')) {
+                                labelEl.innerHTML = opt.innerHTML;
+                                found = true;
+                            }
+                        });
+                        if (!found && val) {
+                            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #f59e0b;">explore</span> ${val}`;
                         } else if (!val && !found) {
                             labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b;">close</span> Aucun (Optionnel)`;
                         }

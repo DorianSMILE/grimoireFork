@@ -100,10 +100,12 @@ export function renderOptions(arr, selectedVal) {
 
 export function renderSourceOptions(arr, selectedVal) {
     if (!arr || !Array.isArray(arr)) return '';
-    return arr.map(s => {
+    let html = `<option value="" ${!selectedVal ? 'selected' : ''}>Stat. Actuelle (Multiplicateur)</option>`;
+    html += arr.map(s => {
         const val = typeof s === 'object' ? s.id || s : s;
         return `<option value="${val}" ${val === selectedVal ? 'selected' : ''}>${formatSrc(val)}</option>`;
     }).join('');
+    return html;
 }
 
 export function renderStatOptions(arr, selectedVal) {

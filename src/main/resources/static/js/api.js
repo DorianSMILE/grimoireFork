@@ -169,7 +169,7 @@ export async function submitSpell() {
     playForgeAnimation();
     const nomInput = document.getElementById('nom');
     if (!nomInput.value.trim()) {
-        alert("Veuillez saisir un nom de sort.");
+        ui.showNotif("Veuillez saisir un nom de sort.");
         return;
     }
 
@@ -262,11 +262,11 @@ export async function submitSpell() {
             // Recharger la liste
             await loadSpells();
         } else {
-            alert("Erreur lors de l'enregistrement du sort.");
+            ui.showNotif("Erreur lors de l'enregistrement du sort.");
         }
     } catch (err) {
         console.error(err);
-        alert("Erreur de connexion au serveur.");
+        ui.showNotif("Erreur de connexion au serveur.");
     }
 }
 
@@ -278,7 +278,8 @@ export async function loadSpells() {
         renderFilteredSpells();
     } catch (err) {
         console.error(err);
-        if (container) container.innerHTML = `<div class="empty-state" style="color:var(--danger); text-align:left; padding:2rem;">Erreur de chargement des sorts.<br><br><b>${err.message}</b><br><pre>${err.stack}</pre></div>`;
+        if (container) container.innerHTML = `<div class="empty-state error-state">Erreur de chargement des sorts.</div>`;
+        ui.showNotif("Erreur de chargement des sorts.");
     }
 }
 
@@ -402,11 +403,11 @@ document.getElementById('deleteSpellConfirmBtn')?.addEventListener('click', asyn
             }
             await loadSpells();
         } else {
-            alert("Erreur lors de la suppression du sort.");
+            ui.showNotif("Erreur lors de la suppression du sort.");
         }
     } catch (err) {
         console.error(err);
-        alert("Erreur de connexion au serveur.");
+        ui.showNotif("Erreur de connexion au serveur.");
     }
 });
 

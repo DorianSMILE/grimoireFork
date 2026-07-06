@@ -3,11 +3,15 @@ package generation.grimoire.entity;
 import generation.grimoire.entity.spiritualite.passif.SpiritualitePassiveEffect;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.List;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(exclude = {"passiveEffects"})
+@ToString(exclude = {"passiveEffects"})
 @Entity
 @Table(name = "spiritualite")
 public class Spiritualite {

@@ -30,3 +30,8 @@ body{ overflow-y: scroll;
             display: flex;
             flex-direction: column;
         }
+
+/* === Utility classes (F2-compliant state toggles) === */
+.is-hidden { display: none !important; }
+.error-state { color: var(--danger); text-align: center; padding: 2rem; }
+

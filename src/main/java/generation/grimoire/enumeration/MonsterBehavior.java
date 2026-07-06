@@ -1,12 +1,27 @@
 package generation.grimoire.enumeration;
 
 public enum MonsterBehavior {
-    NORMAL, // Cible aléatoire
-    PREDATEUR, // Toujours la même cible tant qu'elle est vivante
-    CORRUPTEUR, // Cible le joueur avec le plus de Mana restant et lui retire 5% de son mana
-                // actuel
-    LEADER, // Force tous les alliés monstres à attaquer la même cible
-    ASSASSIN, // Cible le joueur avec le moins de Résistance
-    BRUTAL, // Dégâts bruts (ignore armure/résistance)
-    TRANSCENDANT // Attaque toutes les cibles adverse à la fois
+    NORMAL("Normal", "Cible aléatoire", "casino"),
+    PREDATEUR("Prédateur", "Toujours la même cible tant qu'elle est vivante", "my_location"),
+    CORRUPTEUR("Corrupteur", "Cible le joueur avec le plus de Mana restant et lui retire 5% de son mana actuel", "bolt"),
+    LEADER("Leader", "Force tous les alliés monstres à attaquer la même cible", "military_tech"),
+    ASSASSIN("Assassin", "Cible le joueur avec le moins de Résistance", "visibility"),
+    BRUTAL("Brutal", "Dégâts bruts (ignore armure/résistance)", "local_fire_department"),
+    TRANSCENDANT("Transcendant", "Attaque toutes les cibles adverses à la fois", "flare");
+
+    private final String label;
+    private final String description;
+    private final String icon;
+
+    MonsterBehavior(String label, String description, String icon) {
+        this.label = label;
+        this.description = description;
+        this.icon = icon;
+    }
+
+    public String getName() { return name(); }
+    public String getLabel() { return label; }
+    public String getDescription() { return description; }
+    public String getIcon() { return icon; }
 }
+

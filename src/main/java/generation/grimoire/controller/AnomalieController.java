@@ -67,7 +67,7 @@ public class AnomalieController {
             if (name == null || name.trim().isEmpty()) continue;
             boolean hasIt = adminAnomalies.stream().anyMatch(a -> name.equals(a.getName()));
             if (!hasIt) {
-                Anomalie template = anomalieRepository.findFirstByName(name);
+                Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(name);
                 if (template != null) {
                     Anomalie newAno = new Anomalie();
                     newAno.setName(template.getName());
@@ -95,7 +95,7 @@ public class AnomalieController {
         List<Anomalie> templates = new java.util.ArrayList<>();
         for (String name : names) {
             if (name != null && !name.trim().isEmpty()) {
-                Anomalie template = anomalieRepository.findFirstByName(name);
+                Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(name);
                 if (template != null) {
                     templates.add(template);
                 }

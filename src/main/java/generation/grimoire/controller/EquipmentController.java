@@ -4,7 +4,9 @@ import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.personnage.Personnage;
 import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.repository.EquipmentRepository;
+import generation.grimoire.repository.pve.LootEntryRepository;
 import generation.grimoire.service.PersonnageService;
+import jakarta.transaction.Transactional;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +22,16 @@ public class EquipmentController {
     private final EquipmentRepository equipmentRepository;
     private final PersonnageService personnageService;
     private final generation.grimoire.repository.auth.UserRepository userRepository;
+    private final LootEntryRepository lootEntryRepository;
 
     public EquipmentController(EquipmentRepository equipmentRepository,
                                PersonnageService personnageService,
-                               generation.grimoire.repository.auth.UserRepository userRepository) {
+                               generation.grimoire.repository.auth.UserRepository userRepository,
+                               LootEntryRepository lootEntryRepository) {
         this.equipmentRepository = equipmentRepository;
         this.personnageService = personnageService;
         this.userRepository = userRepository;
+        this.lootEntryRepository = lootEntryRepository;
     }
 
     /** Liste tous les équipements du joueur */
@@ -56,7 +61,7 @@ public class EquipmentController {
         List<Equipment> templates = new java.util.ArrayList<>();
         for (String name : names) {
             if (name != null && !name.trim().isEmpty()) {
-                Equipment template = equipmentRepository.findFirstByName(name);
+                Equipment template = equipmentRepository.findFirstByNameOrderByIdAsc(name);
                 if (template != null) {
                     templates.add(template);
                 }
@@ -328,6 +333,7 @@ public class EquipmentController {
     }
 
     /** Supprimer un équipement */
+    @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable @org.springframework.lang.NonNull Long id, java.security.Principal principal) {
         if (principal == null) return ResponseEntity.status(401).build();
@@ -345,7 +351,15 @@ public class EquipmentController {
                 userRepository.save(owner);
             }
 
-            equipmentRepository.deleteById(id);
+            // Supprimer les références dans les tables de loot avant suppression
+            lootEntryRepository.deleteByEquipmentId(id);
+
+            if (equipment.getPersonnage() != null) {
+                equipment.getPersonnage().getEquipments().remove(equipment);
+                // On laisse orphanRemoval faire la suppression
+            } else {
+                equipmentRepository.deleteById(id);
+            }
             return ResponseEntity.ok("Équipement supprimé et monnaie ajoutée.");
         }
         return ResponseEntity.notFound().build();

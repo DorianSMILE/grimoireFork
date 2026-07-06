@@ -444,7 +444,7 @@ public class CombatService {
                     logged = true;
                 } else if ("SPECIAL_ITEM".equals(room.getAlterationRewardType())) {
                     String itemName = room.getAlterationSpecialItemReward();
-                    Anomalie template = anomalieRepository.findFirstByName(itemName);
+                    Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(itemName);
                     if (template != null && !session.getPlayers().isEmpty()) {
                         generation.grimoire.entity.auth.AppUser user = session.getPlayers().get(0).getUser();
                         if (user != null) {
@@ -765,7 +765,7 @@ public class CombatService {
             acheteur.addSpecialItem(itemName, 1);
 
             if (user != null) {
-                Anomalie template = anomalieRepository.findFirstByName(itemName);
+                Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(itemName);
                 if (template != null) {
                     Anomalie newAnomaly = new Anomalie();
                     newAnomaly.setName(template.getName());

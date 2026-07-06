@@ -221,26 +221,31 @@ public class ShopController {
         String name = "";
         double price = 0;
         double weight = 0;
+        generation.grimoire.enumeration.ConsumableCategory category = generation.grimoire.enumeration.ConsumableCategory.AUTRE;
         switch (type.toLowerCase()) {
             case "rope":
                 name = "Corde";
                 price = 15;
                 weight = 5.0;
+                category = generation.grimoire.enumeration.ConsumableCategory.CORDE;
                 break;
             case "key":
                 name = "Clé";
                 price = 25;
                 weight = 1.0;
+                category = generation.grimoire.enumeration.ConsumableCategory.CLE;
                 break;
             case "bread":
                 name = "Pain";
                 price = 5;
                 weight = 2.0;
+                category = generation.grimoire.enumeration.ConsumableCategory.NOURRITURE;
                 break;
             case "potion":
                 name = "Potion de mana";
                 price = 10;
                 weight = 2.0;
+                category = generation.grimoire.enumeration.ConsumableCategory.POTION_BLEUE;
                 break;
             default:
                 return ResponseEntity.badRequest().body(Map.of("message", "Consommable inconnu."));
@@ -256,6 +261,7 @@ public class ShopController {
         Equipment consumable = new Equipment();
         consumable.setName(name);
         consumable.setSlot(EquipmentSlot.CONSOMMABLE);
+        consumable.setConsumableCategory(category);
         consumable.setRarity(EquipmentRarity.COMMUN);
         consumable.setShopTemplate(false);
         consumable.setPersonnage(null); // Goes to vault

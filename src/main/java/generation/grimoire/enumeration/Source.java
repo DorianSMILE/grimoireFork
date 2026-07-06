@@ -1,7 +1,6 @@
 package generation.grimoire.enumeration;
 
 // Pour le calcul des statistiques
-@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.OBJECT)
 public enum Source {
     CASTER_POWER("Puiss. Lanceur"),
     TARGET_POWER("Puiss. Cible"),

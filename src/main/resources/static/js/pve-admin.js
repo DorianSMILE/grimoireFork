@@ -1,4 +1,4 @@
-﻿let editingMonsterId = null;
+let editingMonsterId = null;
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
@@ -49,14 +49,14 @@ let selectedMutationIds = [];
 const SECRETS_META = [
     { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
     { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-    { name: "Secret de la PrÃ©servation", icon: "foundation", color: "#d97706" },
-    { name: "Secret de la SÃ©rÃ©nitÃ©", icon: "water_drop", color: "#06b6d4" },
+    { name: "Secret de la Préservation", icon: "foundation", color: "#d97706" },
+    { name: "Secret de la Sérénité", icon: "water_drop", color: "#06b6d4" },
     { name: "Secret de la Chasse", icon: "visibility_off", color: "#f43f5e" },
     { name: "Secret du Carnage", icon: "explosion", color: "#be123c" },
     { name: "Secret de la Joie", icon: "volcano", color: "#ea580c" },
     { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
     { name: "Secret du Destin", icon: "all_inclusive", color: "#fcd34d" },
-    { name: "Secret de l'Ã‰ther", icon: "blur_on", color: "#0ea5e9" },
+    { name: "Secret de l'Éther", icon: "blur_on", color: "#0ea5e9" },
     { name: "Secret des Abysses", icon: "dark_mode", color: "#a855f7" }
 ];
 
@@ -78,7 +78,7 @@ function sortMonstersBySecret(monsters) {
         if (idxA === -1) idxA = 999;
         let idxB = SECRETS_META.findIndex(s => s.name === b.nativeSecret);
         if (idxB === -1) idxB = 999;
-        
+
         if (idxA !== idxB) return idxA - idxB;
         if ((a.level || 1) !== (b.level || 1)) return (a.level || 1) - (b.level || 1);
         return a.name.localeCompare(b.name);
@@ -1283,7 +1283,7 @@ function renderRooms() {
                             let rewardValueHtml = '';
                             if (outcome.altarRewardType === 'ITEM') {
                                 const selEq = allEquipments.find(e => e.id == outcome.altarRewardValue) || allEquipments[0];
-                                
+
                                 const getEqHtml = (eq) => {
                                     if (!eq) return 'Choisir un objet';
                                     const slotInfo = getSlotInfo(eq);
@@ -1602,7 +1602,7 @@ async function loadEquipments() {
             const rA = rarityOrder[a.rarity] || 100;
             const rB = rarityOrder[b.rarity] || 100;
             if (rA !== rB) return rA - rB;
-            
+
             const tA = a.slot || '';
             const tB = b.slot || '';
             if (tA !== tB) return tA.localeCompare(tB);
@@ -1708,8 +1708,8 @@ window.renderMonstersList = function () {
                     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
                         <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'DÃ©mon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'DÃ©mon : 10% des dÃ©gÃ¢ts infligÃ©s le sont en dÃ©gÃ¢ts bruts supplÃ©mentaires.', 'REPTILE': 'Reptile : RÃ©duit les dÃ©gÃ¢ts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : RÃ©gÃ©nÃ¨re 5% de ses PV max au dÃ©but de son tour.', 'HYBRIDE': 'Hybride : Ses dÃ©gÃ¢ts valent (Force + Puissance) * 1.2, rÃ©partis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dÃ©gÃ¢ts infligÃ©s.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un dÃ©buff de rÃ©sistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'DÃ©mon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'PrÃ©dateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'PrÃ©dateur : Verrouille une cible et l&apos;attaque jusqu&apos;Ã  sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne Ã  tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systÃ©matiquement le joueur avec le moins de RÃ©sistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dÃ©gÃ¢ts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse Ã  la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'PrÃ©dateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
+                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
                         </div>
                         <div class="monster-card-stats">
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
@@ -1771,7 +1771,7 @@ async function editMonster(id) {
             document.getElementById('mNativeSecret').value = m.nativeSecret || '';
             selectedMutationIds = m.mutations ? m.mutations.map(mu => mu.id) : [];
             renderMutationsSelector();
-            
+
             const mt = m.monsterType || 'NORMAL';
             const mb = m.behavior || 'NORMAL';
 
@@ -1915,14 +1915,14 @@ window.renderDungeonsList = function () {
             const DEFAULT_SECRETS_META = [
                 { name: "Secret du Chaos", icon: "local_fire_department", color: "#ff0000" },
                 { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-                { name: "Secret de la PrÃ©servation", icon: "foundation", color: "#99674c" },
-                { name: "Secret de la SÃ©rÃ©nitÃ©", icon: "water_drop", color: "#00e5cc" },
+                { name: "Secret de la Préservation", icon: "foundation", color: "#99674c" },
+                { name: "Secret de la Sérénité", icon: "water_drop", color: "#00e5cc" },
                 { name: "Secret de la Chasse", icon: "visibility_off", color: "#ed5677" },
                 { name: "Secret du Carnage", icon: "explosion", color: "#a70740" },
                 { name: "Secret de la Joie", icon: "volcano", color: "#b74c0b" },
                 { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
                 { name: "Secret du Destin", icon: "all_inclusive", color: "#e7d198" },
-                { name: "Secret de l'Ã‰ther", icon: "blur_on", color: "#38bdf8" },
+                { name: "Secret de l'Éther", icon: "blur_on", color: "#38bdf8" },
                 { name: "Secret des Abysses", icon: "dark_mode", color: "#c084fc" }
             ];
             secretMeta = DEFAULT_SECRETS_META.find(s => s.name === d.requiredSecret) || secretMeta;
@@ -1972,21 +1972,21 @@ async function moveDungeonOrder(id, direction) {
     const index = allDungeons.findIndex(d => d.id === id);
     if (index === -1) return;
     if (index + direction < 0 || index + direction >= allDungeons.length) return;
-    
+
     // Swap in array
     const temp = allDungeons[index];
     allDungeons[index] = allDungeons[index + direction];
     allDungeons[index + direction] = temp;
-    
+
     const orderedIds = allDungeons.map(d => d.id);
-    
+
     try {
         const res = await globalFetch('/api/admin/pve/dungeons/reorder', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderedIds)
         });
-        
+
         if (res.ok) {
             renderDungeonsList();
         } else {
@@ -2265,7 +2265,7 @@ window.addLootToRoom = function (rIndex) {
     const eqId = document.getElementById('room_loot_select_' + rIndex).value;
     const prob = parseFloat(document.getElementById('room_loot_prob_' + rIndex).value);
     if (!eqId || isNaN(prob) || prob < 0 || prob > 100) {
-        showNotif('Veuillez sÃ©lectionner un Ã©quipement et une probabilitÃ© (0-100).', true);
+        showNotif('Veuillez sélectionner un équipement et une probabilité (0-100).', true);
         return;
     }
     if (!selectedRooms[rIndex].lootTable) selectedRooms[rIndex].lootTable = [];
@@ -2284,14 +2284,14 @@ window.addDoorOutcome = function (rIndex) {
     const type = typeEl ? typeEl.value : '';
     const prob = parseFloat(probEl ? probEl.value : 0);
     if (!type || isNaN(prob) || prob <= 0 || prob > 100) {
-        showNotif('Veuillez sÃ©lectionner un type et une probabilitÃ© (1-100).', true);
+        showNotif('Veuillez sélectionner un type et une probabilité (1-100).', true);
         return;
     }
     if (!selectedRooms[rIndex].doorOutcomes) selectedRooms[rIndex].doorOutcomes = [];
 
     const currentTotal = selectedRooms[rIndex].doorOutcomes.reduce((sum, o) => sum + o.probability, 0);
     if (currentTotal + prob > 100) {
-        showNotif(`Impossible : le total dÃ©passe 100% (actuel: ${currentTotal}%). Reste disponible : ${100 - currentTotal}%`, true);
+        showNotif(`Impossible : le total dépasse 100% (actuel: ${currentTotal}%). Reste disponible : ${100 - currentTotal}%`, true);
         return;
     }
 
@@ -2429,7 +2429,7 @@ window.selectDoorBossOption = function (rIndex, oIndex, val, label, level) {
 window.addMonsterToBoss = function (rIndex, oIndex) {
     const input = document.getElementById(`room_door_boss_select_${rIndex}_${oIndex}`);
     if (!input || !input.value) {
-        showNotif('Veuillez sÃ©lectionner un boss.', true);
+        showNotif('Veuillez sélectionner un boss.', true);
         return;
     }
     const mId = parseInt(input.value);
@@ -2440,7 +2440,7 @@ window.addMonsterToBoss = function (rIndex, oIndex) {
     // Clear selection
     input.value = '';
     const triggerLabel = document.getElementById(`room_door_boss_label_${rIndex}_${oIndex}`);
-    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> SÃ©lectionner un boss...`;
+    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss...`;
 
     renderRooms();
 };
@@ -2465,7 +2465,7 @@ window.addGlobalBuffToRoomBoss = function (rIndex) {
     const dur = parseInt(durEl.value) || 0;
 
     if (val <= 0) {
-        showNotif('La valeur doit Ãªtre positive.', true);
+        showNotif('La valeur doit être positive.', true);
         return;
     }
 
@@ -2496,7 +2496,7 @@ window.addGlobalBuffToBoss = function (rIndex, oIndex) {
     const dur = parseInt(durEl.value) || 0;
 
     if (val <= 0) {
-        showNotif('La valeur doit Ãªtre positive.', true);
+        showNotif('La valeur doit être positive.', true);
         return;
     }
 
@@ -2609,7 +2609,7 @@ function renderMutationsList() {
         list.innerHTML = `<div style="text-align:center; padding: 2rem; color: #64748b; font-style: italic;">Aucune mutation trouvÃ©e</div>`;
         return;
     }
-    
+
     let html = '';
     allMutations.forEach(mut => {
         const mHex = mut.color || '#e879f9';
@@ -2657,7 +2657,7 @@ window.deleteMutation = async (id) => {
     try {
         const res = await globalFetch(`/api/admin/pve/mutations/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            showNotif('Mutation supprimÃ©e');
+            showNotif('Mutation supprimée');
             if (editingMutationId === id) window.cancelMutationEdit();
             loadMutations();
         } else showNotif('Erreur lors de la suppression', true);
@@ -2667,7 +2667,7 @@ window.deleteMutation = async (id) => {
 window.cancelMutationEdit = () => {
     editingMutationId = null;
     document.getElementById('mutationForm').reset();
-    document.getElementById('btnSubmitMutation').textContent = 'CrÃ©er la mutation';
+    document.getElementById('btnSubmitMutation').textContent = 'Créer la mutation';
     document.getElementById('btnCancelMutation').style.display = 'none';
     document.getElementById('mutationFormPanel').classList.remove('editing-glow');
 };
@@ -2689,7 +2689,7 @@ document.getElementById('mutationForm')?.addEventListener('submit', async (e) =>
             method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mut)
         });
         if (res.ok) {
-            showNotif(editingMutationId ? 'Mutation modifiÃ©e' : 'Mutation crÃ©Ã©e');
+            showNotif(editingMutationId ? 'Mutation modifiée' : 'Mutation créée');
             window.cancelMutationEdit();
             loadMutations();
         } else { showNotif("Erreur lors de l'enregistrement", true); }
@@ -2703,7 +2703,7 @@ function renderMutationsSelector() {
         container.innerHTML = `<span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Aucune mutation disponible. CrÃ©ez-en une d'abord.</span>`;
         return;
     }
-    
+
     let html = '';
     allMutations.forEach(mut => {
         const isSelected = selectedMutationIds.includes(mut.id);
@@ -2713,7 +2713,7 @@ function renderMutationsSelector() {
         const border = isSelected ? `1px solid ${mHex}` : '1px solid rgba(255,255,255,0.1)';
         const opacity = isSelected ? '1' : '0.6';
         const shadow = isSelected ? `box-shadow: 0 0 8px rgba(232, 121, 249, 0.4);` : '';
-        
+
         html += `
         <div onclick="toggleMutationSelection(${mut.id})" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 6px; background: ${bg}; border: ${border}; opacity: ${opacity}; ${shadow} display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;" title="${mut.description}">
             <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${mHex};">${mIcon}</span>

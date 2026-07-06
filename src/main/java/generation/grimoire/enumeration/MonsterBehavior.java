@@ -1,6 +1,5 @@
 package generation.grimoire.enumeration;
 
-@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.OBJECT)
 public enum MonsterBehavior {
     NORMAL("Normal", "Cible aléatoire", "casino"),
     PREDATEUR("Prédateur", "Toujours la même cible tant qu'elle est vivante", "my_location"),
@@ -24,5 +23,13 @@ public enum MonsterBehavior {
     public String getLabel() { return label; }
     public String getDescription() { return description; }
     public String getIcon() { return icon; }
+
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public static MonsterBehavior fromNode(com.fasterxml.jackson.databind.JsonNode node) {
+        if (node.isObject()) {
+            return MonsterBehavior.valueOf(node.get("name").asText());
+        }
+        return MonsterBehavior.valueOf(node.asText());
+    }
 }
 

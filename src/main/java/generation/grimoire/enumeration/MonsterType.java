@@ -1,6 +1,5 @@
 package generation.grimoire.enumeration;
 
-@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.OBJECT)
 public enum MonsterType {
     NORMAL("Normal", "Pas de passif", "pets"),
     DEMON("Démon", "10% des dégâts infligés sont aussi appliqués en brut", "whatshot"),
@@ -24,5 +23,13 @@ public enum MonsterType {
     public String getLabel() { return label; }
     public String getDescription() { return description; }
     public String getIcon() { return icon; }
+
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public static MonsterType fromNode(com.fasterxml.jackson.databind.JsonNode node) {
+        if (node.isObject()) {
+            return MonsterType.valueOf(node.get("name").asText());
+        }
+        return MonsterType.valueOf(node.asText());
+    }
 }
 

@@ -1,4 +1,4 @@
-﻿import * as ui from './ui.js?v=2';
+import * as ui from './ui.js?v=2';
 import { getSpellEffectsSummaryHtml } from './grimoire.js';
 import { getVoieButtonColor, getSpiritButtonColor } from './filters.js';
 
@@ -2662,7 +2662,7 @@ function generateFighterHtml(c, isHero) {
             };
             const tTitle = typeTitles[c.monsterType] || '';
             const tIcon = { 'DEMON': 'local_fire_department', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[c.monsterType] || 'check_box_outline_blank';
-            const tLabel = { 'DEMON': 'DÃ©mon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[c.monsterType] || c.monsterType;
+            const tLabel = { 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[c.monsterType] || c.monsterType;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
             monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${tLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tTitle}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${tIcon}</span>${tLabel}</span>`;

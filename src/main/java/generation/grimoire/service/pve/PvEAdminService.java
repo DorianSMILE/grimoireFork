@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
 @Service
 @RequiredArgsConstructor
 public class PvEAdminService {
-    
+
     private final MonstreRepository monstreRepository;
     private final DonjonRepository donjonRepository;
     private final MutationRepository mutationRepository;
@@ -25,7 +25,7 @@ public class PvEAdminService {
     public List<Monstre> getAllMonsters() {
         return monstreRepository.findAll();
     }
-    
+
     public Monstre getMonsterById(@NonNull Long id) {
         return monstreRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Monstre introuvable avec l'id : " + id));
@@ -33,6 +33,16 @@ public class PvEAdminService {
 
     @Transactional
     public Monstre createOrUpdateMonster(@NonNull Monstre monstre) {
+        if (monstre.getMutations() != null) {
+            java.util.List<Mutation> hydratedMutations = new java.util.ArrayList<>();
+            for (Mutation m : monstre.getMutations()) {
+                Long id = m.getId();
+                if (id != null) {
+                    mutationRepository.findById(id).ifPresent(hydratedMutations::add);
+                }
+            }
+            monstre.setMutations(hydratedMutations);
+        }
         return monstreRepository.save(monstre);
     }
 

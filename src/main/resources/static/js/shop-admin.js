@@ -447,8 +447,8 @@ function renderGrid(equipments) {
         INHABITUEL: { label: 'Inhabituel', icon: 'radio_button_unchecked' },
         RARE: { label: 'Rare', icon: 'adjust' },
         MYTHIQUE: { label: 'Mythique', icon: 'star_half' },
-        LEGENDAIRE: { label: 'LÃ©gendaire', icon: 'workspace_premium' },
-        EPIQUE: { label: 'Ã‰pique', icon: 'whatshot' },
+        LEGENDAIRE: { label: 'Légendaire', icon: 'workspace_premium' },
+        EPIQUE: { label: 'Épique', icon: 'whatshot' },
         RELIQUE: { label: 'Relique', icon: 'webhook' },
         MAUDIT: { label: 'Maudit', icon: 'skull' }
     };

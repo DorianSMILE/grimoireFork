@@ -299,8 +299,8 @@ function renderShop() {
         INHABITUEL: 'Inhabituel',
         RARE: 'Rare',
         MYTHIQUE: 'Mythique',
-        LEGENDAIRE: 'LÃ©gendaire',
-        EPIQUE: 'Ã‰pique',
+        LEGENDAIRE: 'Légendaire',
+        EPIQUE: 'Épique',
         RELIQUE: 'Relique',
         MAUDIT: 'Maudit'
     };

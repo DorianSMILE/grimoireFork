@@ -1,12 +1,12 @@
-export const GLOBAL_STAT_LABELS = {};
+﻿export const GLOBAL_STAT_LABELS = {};
 export const GLOBAL_SRC_LABELS = {};
 export const javaClassToCode = {};
 
 export async function initMeta() {
     try {
         const [statsRes, srcRes] = await Promise.all([
-            fetch('/api/meta/stat-types'),
-            fetch('/api/meta/sources')
+            globalFetch('/api/meta/stat-types'),
+            globalFetch('/api/meta/sources')
         ]);
         if (statsRes.ok) {
             const stats = await statsRes.json();

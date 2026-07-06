@@ -1,4 +1,4 @@
-let editingMonsterId = null;
+﻿let editingMonsterId = null;
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
@@ -49,14 +49,14 @@ let selectedMutationIds = [];
 const SECRETS_META = [
     { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
     { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-    { name: "Secret de la Préservation", icon: "foundation", color: "#d97706" },
-    { name: "Secret de la Sérénité", icon: "water_drop", color: "#06b6d4" },
+    { name: "Secret de la PrÃ©servation", icon: "foundation", color: "#d97706" },
+    { name: "Secret de la SÃ©rÃ©nitÃ©", icon: "water_drop", color: "#06b6d4" },
     { name: "Secret de la Chasse", icon: "visibility_off", color: "#f43f5e" },
     { name: "Secret du Carnage", icon: "explosion", color: "#be123c" },
     { name: "Secret de la Joie", icon: "volcano", color: "#ea580c" },
     { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
     { name: "Secret du Destin", icon: "all_inclusive", color: "#fcd34d" },
-    { name: "Secret de l'Éther", icon: "blur_on", color: "#0ea5e9" },
+    { name: "Secret de l'Ã‰ther", icon: "blur_on", color: "#0ea5e9" },
     { name: "Secret des Abysses", icon: "dark_mode", color: "#a855f7" }
 ];
 
@@ -146,13 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 method = 'PUT';
             }
 
-            const res = await fetch(url, {
+            const res = await globalFetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(monstre)
             });
             if (res.ok) {
-                showNotif(editingMonsterId ? 'Monstre modifié avec succès' : 'Monstre créé avec succès');
+                showNotif(editingMonsterId ? 'Monstre modifiÃ© avec succÃ¨s' : 'Monstre crÃ©Ã© avec succÃ¨s');
                 window.cancelMonsterEdit();
                 loadMonsters();
             } else {
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r.type === 'EVENT' && r.eventSubType === 'PORTE_ETRANGE') {
                 const total = (r.doorOutcomes || []).reduce((sum, o) => sum + o.probability, 0);
                 if (total > 100) {
-                    showNotif(`La salle ${i + 1} (Porte Étrange) a un total de probabilité de ${total}% (Maximum 100%).`, true);
+                    showNotif(`La salle ${i + 1} (Porte Ã‰trange) a un total de probabilitÃ© de ${total}% (Maximum 100%).`, true);
                     return;
                 }
             }
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else if (r.type === 'EVENT') {
                     s.eventSubType = r.eventSubType || 'ALTERATION';
-                    s.eventText = r.eventText || "Événement mystérieux";
+                    s.eventText = r.eventText || "Ã‰vÃ©nement mystÃ©rieux";
                     s.eventEffectAmount = r.eventEffectAmount || 0; // Legacy / Generic
                     s.alterationType = r.alterationType || 'VIE_XP';
                     s.alterationHpAmount = r.alterationHpAmount || 0;
@@ -242,13 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 method = 'PUT';
             }
 
-            const res = await fetch(url, {
+            const res = await globalFetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(donjon)
             });
             if (res.ok) {
-                showNotif(editingDungeonId ? 'Donjon modifié avec succès' : 'Donjon créé avec succès');
+                showNotif(editingDungeonId ? 'Donjon modifiÃ© avec succÃ¨s' : 'Donjon crÃ©Ã© avec succÃ¨s');
                 window.cancelDungeonEdit();
                 loadDungeons();
             } else {
@@ -274,13 +274,13 @@ window.addRoom = function (type) {
     } else if (type === 'TREASURE') {
         selectedRooms.push({ type: 'TREASURE', treasureGold: 50, treasureExp: 10 });
     } else if (type === 'ALTERATION') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'ALTERATION', eventText: 'Une aura mystérieuse émane des murs...', alterationType: 'VIE_XP', alterationHpAmount: 0, alterationExpAmount: 0, alterationRewardType: 'SPIRITUAL_XP', alterationSpiritualXpReward: 0, alterationSpecialItemReward: null, alterationRequiredItem: null });
+        selectedRooms.push({ type: 'EVENT', eventSubType: 'ALTERATION', eventText: 'Une aura mystÃ©rieuse Ã©mane des murs...', alterationType: 'VIE_XP', alterationHpAmount: 0, alterationExpAmount: 0, alterationRewardType: 'SPIRITUAL_XP', alterationSpiritualXpReward: 0, alterationSpecialItemReward: null, alterationRequiredItem: null });
     } else if (type === 'RENCONTRE') {
         selectedRooms.push({ type: 'EVENT', eventSubType: 'RENCONTRE', eventText: 'Un marchand ambulant vous interpelle...', lootTable: [] });
     } else if (type === 'PIEGE') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'PIEGE', eventText: 'Un piège se déclenche !', trapType: 'PV', trapAmount: 10, trapHasRopeOption: false });
+        selectedRooms.push({ type: 'EVENT', eventSubType: 'PIEGE', eventText: 'Un piÃ¨ge se dÃ©clenche !', trapType: 'PV', trapAmount: 10, trapHasRopeOption: false });
     } else if (type === 'PORTE_ETRANGE') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'PORTE_ETRANGE', eventText: 'Une porte étrange se dresse devant vous...', doorOutcomes: [] });
+        selectedRooms.push({ type: 'EVENT', eventSubType: 'PORTE_ETRANGE', eventText: 'Une porte Ã©trange se dresse devant vous...', doorOutcomes: [] });
     }
     renderRooms();
 };
@@ -491,7 +491,7 @@ function renderRooms() {
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
                     <div class="custom-select-wrapper" id="room_select_wrapper_${rIndex}" style="flex: 1; z-index: ${100 - rIndex}; margin: 0;">
                         <div class="custom-select-trigger" onclick="toggleMonsterSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un monstre...</span>
+                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> SÃ©lectionner un monstre...</span>
                             <span class="material-symbols-outlined">expand_more</span>
                         </div>
                         <div class="custom-select-options" id="room_select_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -512,7 +512,7 @@ function renderRooms() {
             // Monsters inside the room
             let monstersHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.monsters.length === 0) {
-                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun monstre configuré pour le boss.</div>`;
+                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun monstre configurÃ© pour le boss.</div>`;
             } else {
                 room.monsters.forEach((mId, mIndex) => {
                     const m = allMonsters.find(x => x.id === mId);
@@ -530,7 +530,7 @@ function renderRooms() {
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
                     <div class="custom-select-wrapper" id="room_select_wrapper_${rIndex}" style="flex: 1; z-index: ${100 - rIndex}; margin: 0;">
                         <div class="custom-select-trigger" onclick="toggleMonsterSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss/monstre...</span>
+                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> SÃ©lectionner un boss/monstre...</span>
                             <span class="material-symbols-outlined">expand_more</span>
                         </div>
                         <div class="custom-select-options" id="room_select_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -548,16 +548,16 @@ function renderRooms() {
             if (!room.globalBuffs) room.globalBuffs = [];
             let buffsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.globalBuffs.length === 0) {
-                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configuré.</div>`;
+                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configurÃ©.</div>`;
             } else {
                 room.globalBuffs.forEach((buff, bIndex) => {
                     let buffLabel = '';
                     if (buff.type === 'HP_PCT') buffLabel = `+${buff.value}% PV Max`;
                     else if (buff.type === 'SHIELD_PCT') buffLabel = `Bouclier ${buff.value}% PV Max (${buff.duration} tours)`;
                     else if (buff.type === 'ARMOR_FLAT') buffLabel = `+${buff.value} Armure (${buff.duration} tours)`;
-                    else if (buff.type === 'RESIST_FLAT') buffLabel = `+${buff.value} Résistance (${buff.duration} tours)`;
-                    else if (buff.type === 'BURN_ON_HIT') buffLabel = `Brûlure au touché : ${buff.value} dgts (${buff.duration} tours)`;
-                    else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touché : ${buff.value} dgts (${buff.duration} tours)`;
+                    else if (buff.type === 'RESIST_FLAT') buffLabel = `+${buff.value} RÃ©sistance (${buff.duration} tours)`;
+                    else if (buff.type === 'BURN_ON_HIT') buffLabel = `BrÃ»lure au touchÃ© : ${buff.value} dgts (${buff.duration} tours)`;
+                    else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touchÃ© : ${buff.value} dgts (${buff.duration} tours)`;
 
                     buffsHtml += `
                         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
@@ -578,9 +578,9 @@ function renderRooms() {
                         <option value="HP_PCT">+ PV Max (%)</option>
                         <option value="SHIELD_PCT">Bouclier (% PV)</option>
                         <option value="ARMOR_FLAT">+ Armure</option>
-                        <option value="RESIST_FLAT">+ Résistance</option>
-                        <option value="BURN_ON_HIT">Brûlure au touché</option>
-                        <option value="POISON_ON_HIT">Poison au touché</option>
+                        <option value="RESIST_FLAT">+ RÃ©sistance</option>
+                        <option value="BURN_ON_HIT">BrÃ»lure au touchÃ©</option>
+                        <option value="POISON_ON_HIT">Poison au touchÃ©</option>
                     </select>
                 </div>
                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
@@ -588,7 +588,7 @@ function renderRooms() {
                     <input type="number" id="room_boss_buff_val_${rIndex}" class="form-control" style="width: 100%;" value="10">
                 </div>
                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
+                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">DurÃ©e (Tours)</label>
                     <input type="number" id="room_boss_buff_dur_${rIndex}" class="form-control" style="width: 100%;" value="4">
                 </div>
                 <button type="button" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addGlobalBuffToRoomBoss(${rIndex})">
@@ -605,13 +605,13 @@ function renderRooms() {
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
                     <label style="font-size: 0.8rem; color: #e11d48; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.6rem;">
                         <span class="material-symbols-outlined" style="font-size: 1rem;">emoji_events</span>
-                        Récompenses de fin de combat (Boss vaincu)
+                        RÃ©compenses de fin de combat (Boss vaincu)
                     </label>
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
                                 <span class="material-symbols-outlined" style="font-size: 0.9rem;">blur_on</span>
-                                XP Spiritualité
+                                XP SpiritualitÃ©
                             </label>
                             <input type="number" class="form-control" min="0" value="${room.bossRewardSpiritualXp || 0}" onchange="updateRoomField(${rIndex}, 'bossRewardSpiritualXp', parseInt(this.value) || 0)">
                         </div>
@@ -627,13 +627,13 @@ function renderRooms() {
             `;
 
         } else if (room.type === 'TREASURE') {
-            headerIcon = 'shopping_bag'; headerColor = '#f59e0b'; headerTitle = 'Salle de Trésor';
+            headerIcon = 'shopping_bag'; headerColor = '#f59e0b'; headerTitle = 'Salle de TrÃ©sor';
 
             if (!room.lootTable) room.lootTable = [];
 
             let lootHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.lootTable.length === 0) {
-                lootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configuré.</div>`;
+                lootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configurÃ©.</div>`;
             } else {
                 room.lootTable.forEach((loot, lIndex) => {
                     const eq = allEquipments.find(x => x.id === loot.equipmentId);
@@ -683,7 +683,7 @@ function renderRooms() {
                         <input type="number" class="form-control" value="${room.treasureGold}" onchange="updateRoomField(${rIndex}, 'treasureGold', parseInt(this.value))">
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Expérience</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">ExpÃ©rience</label>
                         <input type="number" class="form-control" value="${room.treasureExp}" onchange="updateRoomField(${rIndex}, 'treasureExp', parseInt(this.value))">
                     </div>
                 </div>
@@ -693,28 +693,28 @@ function renderRooms() {
             const subType = room.eventSubType || 'ALTERATION';
 
             if (subType === 'ALTERATION') {
-                headerIcon = 'blur_on'; headerColor = '#8b5cf6'; headerTitle = 'Altération';
+                headerIcon = 'blur_on'; headerColor = '#8b5cf6'; headerTitle = 'AltÃ©ration';
                 const altType = room.alterationType || 'VIE_XP';
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'Ã©vÃ©nement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     <div style="margin-top: 0.75rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Possibilité offerte</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">PossibilitÃ© offerte</label>
                         <div class="custom-select-wrapper" id="room_alt_type_wrapper_${rIndex}" style="width: 100%; z-index: ${102 - rIndex}; margin: 0; margin-top: 0.2rem;">
                             <div class="custom-select-trigger" onclick="const w = document.getElementById('room_alt_type_wrapper_${rIndex}'); document.querySelectorAll('.custom-select-wrapper.open').forEach(el => { if(el !== w) el.classList.remove('open'); }); w.classList.toggle('open');" style="padding: 0.6rem 1rem; border-radius: 8px;">
                                 <span class="cs-label" id="room_alt_type_label_${rIndex}">
                                     ${altType === 'VIE_XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">favorite</span> Don de vie et/ou d\'xp' :
-                        (altType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d\'un item spécial' :
+                        (altType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d\'un item spÃ©cial' :
                             '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">block</span> Ne rien faire')}
                                 </span>
                                 <span class="material-symbols-outlined">expand_more</span>
                             </div>
                             <div class="custom-select-options" id="room_alt_type_options_${rIndex}">
                                 <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'VIE_XP'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #ef4444;">favorite</span> Don de vie et/ou d'xp</div>
-                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'ITEM'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d'un item spécial</div>
+                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'ITEM'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d'un item spÃ©cial</div>
                                 <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'RIEN'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">block</span> Ne rien faire</div>
                             </div>
                         </div>
@@ -735,25 +735,25 @@ function renderRooms() {
                         </div>
                     </div>
                     <div style="margin-top: 0.75rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
-                        <label style="font-size: 0.8rem; color: #fbbf24;">Récompense en échange</label>
+                        <label style="font-size: 0.8rem; color: #fbbf24;">RÃ©compense en Ã©change</label>
                         <div class="custom-select-wrapper" id="room_alt_reward_type_wrapper_${rIndex}" style="width: 100%; z-index: ${105 - rIndex}; margin: 0; margin-top: 0.2rem; margin-bottom: 0.5rem;">
                             <div class="custom-select-trigger" onclick="const w = document.getElementById('room_alt_reward_type_wrapper_${rIndex}'); document.querySelectorAll('.custom-select-wrapper.open').forEach(el => { if(el !== w) el.classList.remove('open'); }); w.classList.toggle('open');" style="padding: 0.6rem 1rem; border-radius: 8px;">
                                 <span class="cs-label" id="room_alt_reward_type_label_${rIndex}">
-                                    ${rewType === 'SPIRITUAL_XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #8b5cf6;">blur_on</span> XP de Spiritualité' :
-                            '<span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item Spécial'}
+                                    ${rewType === 'SPIRITUAL_XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #8b5cf6;">blur_on</span> XP de SpiritualitÃ©' :
+                            '<span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item SpÃ©cial'}
                                 </span>
                                 <span class="material-symbols-outlined">expand_more</span>
                             </div>
                             <div class="custom-select-options" id="room_alt_reward_type_options_${rIndex}">
-                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationRewardType', 'SPIRITUAL_XP'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #8b5cf6;">blur_on</span> XP de Spiritualité</div>
-                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationRewardType', 'SPECIAL_ITEM'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item Spécial</div>
+                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationRewardType', 'SPIRITUAL_XP'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #8b5cf6;">blur_on</span> XP de SpiritualitÃ©</div>
+                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationRewardType', 'SPECIAL_ITEM'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item SpÃ©cial</div>
                             </div>
                         </div>
                         ${rewType === 'SPIRITUAL_XP' ? `
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Gain XP Spiritualité</label>
+                            <label style="font-size: 0.8rem; color: #94a3b8;">Gain XP SpiritualitÃ©</label>
                             <input type="number" class="form-control" value="${room.alterationSpiritualXpReward || 0}" onchange="updateRoomField(${rIndex}, 'alterationSpiritualXpReward', parseInt(this.value))">
                         ` : `
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Item Spécial Donné en récompense</label>
+                            <label style="font-size: 0.8rem; color: #94a3b8;">Item SpÃ©cial DonnÃ© en rÃ©compense</label>
                             ${(() => {
                             const CATEGORY_ICONS = {
                                 'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -793,7 +793,7 @@ function renderRooms() {
                 } else if (altType === 'ITEM') {
                     contentHtml += `
                     <div style="margin-top: 0.75rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Item Spécial Requis (que le joueur donne)</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Item SpÃ©cial Requis (que le joueur donne)</label>
                         ${(() => {
                             const CATEGORY_ICONS = {
                                 'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -829,7 +829,7 @@ function renderRooms() {
                         })()}
                     </div>
                     <div style="margin-top: 0.5rem;">
-                        <label style="font-size: 0.8rem; color: #fbbf24;">Récompense (XP Spiritualité)</label>
+                        <label style="font-size: 0.8rem; color: #fbbf24;">RÃ©compense (XP SpiritualitÃ©)</label>
                         <input type="number" class="form-control" value="${room.alterationSpiritualXpReward || 0}" onchange="updateRoomField(${rIndex}, 'alterationSpiritualXpReward', parseInt(this.value))">
                     </div>
                     `;
@@ -872,7 +872,7 @@ function renderRooms() {
                                         </span>
                                         <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
                                             <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
-                                            ${an && an.magicObject ? 'Objet Magique' : 'Matériau'}
+                                            ${an && an.magicObject ? 'Objet Magique' : 'MatÃ©riau'}
                                         </span>
                                         ${an && an.spiritualite ?
                                     `<span style="border: 1px solid ${color}; color: ${color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
@@ -920,7 +920,7 @@ function renderRooms() {
                                         </span>
                                         <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
                                             <span class="material-symbols-outlined" style="font-size: 0.9rem;">${priceIcon}</span>
-                                            ${anPrice && anPrice.magicObject ? 'Objet Magique' : 'Matériau'}
+                                            ${anPrice && anPrice.magicObject ? 'Objet Magique' : 'MatÃ©riau'}
                                         </span>
                                         ${anPrice && anPrice.spiritualite ?
                                     `<span style="border: 1px solid ${priceColor}; color: ${priceColor}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
@@ -954,12 +954,12 @@ function renderRooms() {
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; position: relative;">
                             <div class="custom-select-wrapper" id="room_merchant_type_wrapper_${rIndex}" style="width: 100%; z-index: ${102 - rIndex}; margin: 0;">
                                 <div class="custom-select-trigger" onclick="toggleMerchantTypeSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                    <span class="cs-label" id="room_merchant_type_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Équipement</span>
+                                    <span class="cs-label" id="room_merchant_type_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Ã‰quipement</span>
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" id="room_merchant_type_options_${rIndex}">
-                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'EQ', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8;\\'>category</span> Équipement')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Équipement</div>
-                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'SPECIAL', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #d946ef;\\'>diamond</span> Item Spécial')"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item Spécial</div>
+                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'EQ', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8;\\'>category</span> Ã‰quipement')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Ã‰quipement</div>
+                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'SPECIAL', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #d946ef;\\'>diamond</span> Item SpÃ©cial')"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item SpÃ©cial</div>
                                 </div>
                                 <input type="hidden" id="room_merchant_type_${rIndex}" value="EQ">
                             </div>
@@ -983,14 +983,14 @@ function renderRooms() {
                                 <input type="hidden" id="room_loot_select_${rIndex}" value="">
                             </div>
                             
-                            <!-- Mode Spécial -->
+                            <!-- Mode SpÃ©cial -->
                             <div class="custom-select-wrapper" id="room_merchant_special_wrapper_${rIndex}" style="width: 100%; display: none; z-index: ${101 - rIndex}; margin: 0;">
                                 <div class="custom-select-trigger" onclick="toggleMerchantSpecialSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                    <span class="cs-label" id="room_merchant_special_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spécial...</span>
+                                    <span class="cs-label" id="room_merchant_special_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spÃ©cial...</span>
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" id="room_merchant_special_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
-                                    <div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '', 'Choisir un item spécial...')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spécial...</div>
+                                    <div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '', 'Choisir un item spÃ©cial...')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spÃ©cial...</div>
                                     ${allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -1013,14 +1013,14 @@ function renderRooms() {
                                 <input type="number" id="room_merchant_gold_${rIndex}" class="form-control" style="width: 100%; margin: 0;" placeholder="0" min="0">
                             </div>
                             <div style="position: relative; z-index: ${99 - rIndex};">
-                                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Ou Prix en Item Spécial</label>
+                                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Ou Prix en Item SpÃ©cial</label>
                                 <div class="custom-select-wrapper" id="room_merchant_cost_item_wrapper_${rIndex}" style="width: 100%; margin: 0;">
                                     <div class="custom-select-trigger" onclick="toggleMerchantCostSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                        <span class="cs-label" id="room_merchant_cost_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Sélectionner (Optionnel)</span>
+                                        <span class="cs-label" id="room_merchant_cost_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> SÃ©lectionner (Optionnel)</span>
                                         <span class="material-symbols-outlined">expand_more</span>
                                     </div>
                                     <div class="custom-select-options" id="room_merchant_cost_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
-                                        <div class="custom-option" onclick="selectMerchantCost(${rIndex}, '', 'Sélectionner (Optionnel)')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Sélectionner (Optionnel)</div>
+                                        <div class="custom-option" onclick="selectMerchantCost(${rIndex}, '', 'SÃ©lectionner (Optionnel)')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> SÃ©lectionner (Optionnel)</div>
                                         ${allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -1046,16 +1046,16 @@ function renderRooms() {
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'Ã©vÃ©nement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     ${shopHtml}
                 `;
             } else if (subType === 'PIEGE') {
-                headerIcon = 'warning'; headerColor = '#f87171'; headerTitle = 'Piège';
+                headerIcon = 'warning'; headerColor = '#f87171'; headerTitle = 'PiÃ¨ge';
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte du piège</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte du piÃ¨ge</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem;">
@@ -1079,9 +1079,9 @@ function renderRooms() {
                     <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                             <span style="font-size: 0.9rem; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
-                                <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'évitement
+                                <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'Ã©vitement
                             </span>
-                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
+                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux hÃ©ros d'utiliser une Corde pour ignorer ce piÃ¨ge.</span>
                         </div>
                         <label style="position: relative; display: block; width: 40px; height: 24px; margin: 0; flex-shrink: 0;">
                             <input type="checkbox" style="opacity: 0; width: 0; height: 0;" ${room.trapHasRopeOption ? 'checked' : ''} onchange="updateRoomField(${rIndex}, 'trapHasRopeOption', this.checked); this.nextElementSibling.style.backgroundColor = this.checked ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'; this.nextElementSibling.children[0].style.transform = this.checked ? 'translateX(16px)' : 'translateX(0)';">
@@ -1092,7 +1092,7 @@ function renderRooms() {
                     </div>
                 `;
             } else if (subType === 'PORTE_ETRANGE') {
-                headerIcon = 'door_front'; headerColor = '#fbbf24'; headerTitle = 'Porte Étrange';
+                headerIcon = 'door_front'; headerColor = '#fbbf24'; headerTitle = 'Porte Ã‰trange';
 
                 if (!room.doorOutcomes) room.doorOutcomes = [];
                 if (!room.lootTable) room.lootTable = [];
@@ -1101,7 +1101,7 @@ function renderRooms() {
                     <label style="font-size: 0.8rem; color: #8b5cf6;">Loot possible si l'issue "Item" est choisie</label>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">`;
                 if (room.lootTable.length === 0) {
-                    doorLootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configuré.</div>`;
+                    doorLootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configurÃ©.</div>`;
                 } else {
                     room.lootTable.forEach((loot, lIndex) => {
                         const eq = allEquipments.find(x => x.id === loot.equipmentId);
@@ -1146,15 +1146,15 @@ function renderRooms() {
 
                 let outcomesHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                 if (room.doorOutcomes.length === 0) {
-                    outcomesHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucune issue configurée.</div>`;
+                    outcomesHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucune issue configurÃ©e.</div>`;
                 } else {
                     room.doorOutcomes.forEach((outcome, oIndex) => {
                         const outcomeConfig = {
                             'BOSS': { icon: 'skull', color: '#ef4444', text: 'Boss' },
                             'ITEM': { icon: 'redeem', color: '#8b5cf6', text: 'Item' },
                             'AUTEL': { icon: 'hand_bones', color: '#f97316', text: 'Autel Sacrificiel' },
-                            'TRESOR': { icon: 'crown', color: '#eab308', text: 'Trésor' },
-                            'PIEGE': { icon: 'bomb', color: '#f87171', text: 'Piège' },
+                            'TRESOR': { icon: 'crown', color: '#eab308', text: 'TrÃ©sor' },
+                            'PIEGE': { icon: 'bomb', color: '#f87171', text: 'PiÃ¨ge' },
                             'RIEN': { icon: 'door_front', color: '#94a3b8', text: 'Rien' }
                         };
                         const conf = outcomeConfig[outcome.type] || { icon: 'help', color: '#94a3b8', text: outcome.type };
@@ -1164,7 +1164,7 @@ function renderRooms() {
                             if (!outcome.monsters) outcome.monsters = [];
                             let monstersHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                             if (outcome.monsters.length === 0) {
-                                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun boss configuré.</div>`;
+                                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun boss configurÃ©.</div>`;
                             } else {
                                 outcome.monsters.forEach((mId, mIndex) => {
                                     const m = allMonsters.find(x => x.id === mId);
@@ -1182,7 +1182,7 @@ function renderRooms() {
                                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
                                     <div class="custom-select-wrapper" id="room_door_boss_wrapper_${rIndex}_${oIndex}" style="flex: 1; z-index: ${150 - (rIndex * 10 + oIndex * 3)}; margin: 0;">
                                         <div class="custom-select-trigger" onclick="toggleDoorBossSelect(${rIndex}, ${oIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                            <span class="cs-label" id="room_door_boss_label_${rIndex}_${oIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss...</span>
+                                            <span class="cs-label" id="room_door_boss_label_${rIndex}_${oIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> SÃ©lectionner un boss...</span>
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="room_door_boss_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -1202,16 +1202,16 @@ function renderRooms() {
                             if (!outcome.globalBuffs) outcome.globalBuffs = [];
                             let buffsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                             if (outcome.globalBuffs.length === 0) {
-                                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configuré.</div>`;
+                                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configurÃ©.</div>`;
                             } else {
                                 outcome.globalBuffs.forEach((buff, bIndex) => {
                                     let buffLabel = '';
                                     if (buff.type === 'HP_PCT') buffLabel = `+${buff.value}% PV Max`;
                                     else if (buff.type === 'SHIELD_PCT') buffLabel = `Bouclier ${buff.value}% PV Max (${buff.duration} tours)`;
                                     else if (buff.type === 'ARMOR_FLAT') buffLabel = `+${buff.value} Armure (${buff.duration} tours)`;
-                                    else if (buff.type === 'RESIST_FLAT') buffLabel = `+${buff.value} Résistance (${buff.duration} tours)`;
-                                    else if (buff.type === 'BURN_ON_HIT') buffLabel = `Brûlure au touché : ${buff.value} dgts (${buff.duration} tours)`;
-                                    else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touché : ${buff.value} dgts (${buff.duration} tours)`;
+                                    else if (buff.type === 'RESIST_FLAT') buffLabel = `+${buff.value} RÃ©sistance (${buff.duration} tours)`;
+                                    else if (buff.type === 'BURN_ON_HIT') buffLabel = `BrÃ»lure au touchÃ© : ${buff.value} dgts (${buff.duration} tours)`;
+                                    else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touchÃ© : ${buff.value} dgts (${buff.duration} tours)`;
 
                                     buffsHtml += `
                                         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
@@ -1232,9 +1232,9 @@ function renderRooms() {
                                         <option value="HP_PCT">+ PV Max (%)</option>
                                         <option value="SHIELD_PCT">Bouclier (% PV)</option>
                                         <option value="ARMOR_FLAT">+ Armure</option>
-                                        <option value="RESIST_FLAT">+ Résistance</option>
-                                        <option value="BURN_ON_HIT">Brûlure au touché</option>
-                                        <option value="POISON_ON_HIT">Poison au touché</option>
+                                        <option value="RESIST_FLAT">+ RÃ©sistance</option>
+                                        <option value="BURN_ON_HIT">BrÃ»lure au touchÃ©</option>
+                                        <option value="POISON_ON_HIT">Poison au touchÃ©</option>
                                     </select>
                                 </div>
                                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
@@ -1242,7 +1242,7 @@ function renderRooms() {
                                     <input type="number" id="room_door_boss_buff_val_${rIndex}_${oIndex}" class="form-control" style="width: 100%;" value="10">
                                 </div>
                                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
+                                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">DurÃ©e (Tours)</label>
                                     <input type="number" id="room_door_boss_buff_dur_${rIndex}_${oIndex}" class="form-control" style="width: 100%;" value="4">
                                 </div>
                                 <button type="button" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addGlobalBuffToBoss(${rIndex}, ${oIndex})">
@@ -1260,7 +1260,7 @@ function renderRooms() {
                                     ${buffsHtml}
                                 </div>
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #f59e0b;">Récompenses du Boss (Fin de combat)</label>
+                                    <label style="font-size: 0.8rem; color: #f59e0b;">RÃ©compenses du Boss (Fin de combat)</label>
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                         <div style="flex: 1;">
                                             <label style="font-size: 0.75rem; color: #94a3b8;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #fbbf24;">monetization_on</span> Or bonus</label>
@@ -1318,17 +1318,17 @@ function renderRooms() {
                                     <label style="font-size: 0.8rem; color: #f97316;">Configuration du Sacrifice</label>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Spiritualité acceptée</label>
+                                            <label style="font-size: 0.75rem; color: #94a3b8;">SpiritualitÃ© acceptÃ©e</label>
                                             <div class="custom-select-wrapper" id="altar_spirituality_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${152 - (rIndex * 10 + oIndex * 3)};">
                                                 <div class="custom-select-trigger" onclick="toggleAltarSpiritualitySelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                                     <span class="cs-label" id="altar_spirituality_label_${rIndex}_${oIndex}">
-                                                        ${outcome.altarSpirituality === 'ESPRIT' ? '<span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">blur_on</span> Esprit' : outcome.altarSpirituality === 'KARMA' ? '<span class="material-symbols-outlined cs-icon" style="color: #e7d198; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">all_inclusive</span> Karma' : '<span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> Ténèbres'}
+                                                        ${outcome.altarSpirituality === 'ESPRIT' ? '<span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">blur_on</span> Esprit' : outcome.altarSpirituality === 'KARMA' ? '<span class="material-symbols-outlined cs-icon" style="color: #e7d198; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">all_inclusive</span> Karma' : '<span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> TÃ©nÃ¨bres'}
                                                     </span>
                                                     <span class="material-symbols-outlined">expand_more</span>
                                                 </div>
                                                 <div class="custom-select-options" id="altar_spirituality_options_${rIndex}_${oIndex}">
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarSpirituality', 'TENEBRES')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> Ténèbres
+                                                        <span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> TÃ©nÃ¨bres
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarSpirituality', 'ESPRIT')">
                                                         <span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">blur_on</span> Esprit
@@ -1340,11 +1340,11 @@ function renderRooms() {
                                             </div>
                                         </div>
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Type de récompense</label>
+                                            <label style="font-size: 0.75rem; color: #94a3b8;">Type de rÃ©compense</label>
                                             <div class="custom-select-wrapper" id="altar_reward_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${151 - (rIndex * 10 + oIndex * 3)};">
                                                 <div class="custom-select-trigger" onclick="toggleAltarRewardSelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                                     <span class="cs-label" id="altar_reward_label_${rIndex}_${oIndex}">
-                                                        ${outcome.altarRewardType === 'XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP Spiritualité' : outcome.altarRewardType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Équipement' : '<span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">monetization_on</span> Or (Gold)'}
+                                                        ${outcome.altarRewardType === 'XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP SpiritualitÃ©' : outcome.altarRewardType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Ã‰quipement' : '<span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">monetization_on</span> Or (Gold)'}
                                                     </span>
                                                     <span class="material-symbols-outlined">expand_more</span>
                                                 </div>
@@ -1353,16 +1353,16 @@ function renderRooms() {
                                                         <span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">monetization_on</span> Or (Gold)
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardType', 'XP')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP Spiritualité
+                                                        <span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP SpiritualitÃ©
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardType', 'ITEM')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Équipement
+                                                        <span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Ã‰quipement
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div style="grid-column: span 2;">
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Valeur de la récompense</label>
+                                            <label style="font-size: 0.75rem; color: #94a3b8;">Valeur de la rÃ©compense</label>
                                             ${rewardValueHtml}
                                         </div>
                                     </div>
@@ -1388,7 +1388,7 @@ function renderRooms() {
 
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #eab308;">Anomalie (Trésor)</label>
+                                    <label style="font-size: 0.8rem; color: #eab308;">Anomalie (TrÃ©sor)</label>
                                     <div class="custom-select-wrapper" id="altar_treasure_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${150 - (rIndex * 10 + oIndex * 3)};">
                                         <div class="custom-select-trigger" onclick="toggleAltarTreasureSelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                             <span class="cs-label" id="altar_treasure_label_${rIndex}_${oIndex}">
@@ -1415,10 +1415,10 @@ function renderRooms() {
                         } else if (outcome.type === 'PIEGE') {
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #f87171;">Configuration du Piège</label>
+                                    <label style="font-size: 0.8rem; color: #f87171;">Configuration du PiÃ¨ge</label>
                                     
                                     <div style="margin-top: 0.5rem;">
-                                        <label style="font-size: 0.75rem; color: #94a3b8;">Texte du piège</label>
+                                        <label style="font-size: 0.75rem; color: #94a3b8;">Texte du piÃ¨ge</label>
                                         <input type="text" class="form-control" value="${outcome.trapText || ''}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapText', this.value)">
                                     </div>
                                     
@@ -1444,9 +1444,9 @@ function renderRooms() {
                                     <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
                                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                                             <span style="font-size: 0.9rem; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
-                                                <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'évitement
+                                                <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'Ã©vitement
                                             </span>
-                                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
+                                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux hÃ©ros d'utiliser une Corde pour ignorer ce piÃ¨ge.</span>
                                         </div>
                                         <label style="position: relative; display: block; width: 40px; height: 24px; margin: 0; flex-shrink: 0;">
                                             <input type="checkbox" style="opacity: 0; width: 0; height: 0;" ${outcome.trapHasRopeOption ? 'checked' : ''} onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapHasRopeOption', this.checked); this.nextElementSibling.style.backgroundColor = this.checked ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'; this.nextElementSibling.children[0].style.transform = this.checked ? 'translateX(16px)' : 'translateX(0)';">
@@ -1493,11 +1493,11 @@ function renderRooms() {
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'AUTEL', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #f97316; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>hand_bones</span> Autel Sacrificiel')">
                                     <span class="material-symbols-outlined cs-icon" style="color: #f97316; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">hand_bones</span> Autel Sacrificiel
                                 </div>
-                                <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'TRESOR', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>crown</span> Trésor')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">crown</span> Trésor
+                                <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'TRESOR', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>crown</span> TrÃ©sor')">
+                                    <span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">crown</span> TrÃ©sor
                                 </div>
-                                <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'PIEGE', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>bomb</span> Piège')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">bomb</span> Piège
+                                <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'PIEGE', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>bomb</span> PiÃ¨ge')">
+                                    <span class="material-symbols-outlined cs-icon" style="color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">bomb</span> PiÃ¨ge
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'RIEN', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>door_front</span> Rien')">
                                     <span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">door_front</span> Rien
@@ -1514,7 +1514,7 @@ function renderRooms() {
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'Ã©vÃ©nement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     ${outcomesHtml}
@@ -1526,7 +1526,7 @@ function renderRooms() {
             <button type="button" onclick="removeRoom(${rIndex})" style="position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem;"><span class="material-symbols-outlined">delete</span></button>
             <div style="font-family: 'Outfit'; font-weight: 600; color: ${headerColor}; display: flex; align-items: center; gap: 0.5rem;">
                 <span class="material-symbols-outlined" style="font-size: 1.2rem;">${headerIcon}</span>
-                Étape ${rIndex + 1} : ${headerTitle}
+                Ã‰tape ${rIndex + 1} : ${headerTitle}
             </div>
             ${contentHtml}
         `;
@@ -1539,7 +1539,7 @@ function renderRooms() {
 
 async function loadMonsters() {
     try {
-        const res = await fetch('/api/admin/pve/monsters');
+        const res = await globalFetch('/api/admin/pve/monsters');
         if (res.ok) {
             const monsters = await res.json();
             allMonsters = sortMonstersBySecret(monsters);
@@ -1552,7 +1552,7 @@ async function loadMonsters() {
 
 async function loadAnomalies() {
     try {
-        const res = await fetch('/api/anomalies/all');
+        const res = await globalFetch('/api/anomalies/all');
         if (res.ok) {
             let data = await res.json();
             const uniqueNames = new Set();
@@ -1578,8 +1578,8 @@ async function loadAnomalies() {
 
 async function loadEquipments() {
     try {
-        const res1 = await fetch('/api/shop/templates');
-        const res2 = await fetch('/api/equipment/all');
+        const res1 = await globalFetch('/api/shop/templates');
+        const res2 = await globalFetch('/api/equipment/all');
 
         let templates = [];
         let instances = [];
@@ -1708,8 +1708,8 @@ window.renderMonstersList = function () {
                     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
                         <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'DÃ©mon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'DÃ©mon : 10% des dÃ©gÃ¢ts infligÃ©s le sont en dÃ©gÃ¢ts bruts supplÃ©mentaires.', 'REPTILE': 'Reptile : RÃ©duit les dÃ©gÃ¢ts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : RÃ©gÃ©nÃ¨re 5% de ses PV max au dÃ©but de son tour.', 'HYBRIDE': 'Hybride : Ses dÃ©gÃ¢ts valent (Force + Puissance) * 1.2, rÃ©partis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dÃ©gÃ¢ts infligÃ©s.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un dÃ©buff de rÃ©sistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'DÃ©mon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
+                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'PrÃ©dateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'PrÃ©dateur : Verrouille une cible et l&apos;attaque jusqu&apos;Ã  sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne Ã  tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systÃ©matiquement le joueur avec le moins de RÃ©sistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dÃ©gÃ¢ts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse Ã  la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'PrÃ©dateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
                         </div>
                         <div class="monster-card-stats">
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
@@ -1721,7 +1721,7 @@ window.renderMonstersList = function () {
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f43f5e;">fitness_center</span> For: ${m.strength}</span>
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #a855f7;">auto_awesome</span> Pui: ${m.power}</span>
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">shield</span> Arm: ${m.armor}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #10b981;">shield</span> Rés: ${m.resistance}</span>
+                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #10b981;">shield</span> RÃ©s: ${m.resistance}</span>
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">monetization_on</span> Or: ${m.rewardGold}</span>
                             <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #fcd34d;">stars</span> XP: ${m.rewardExp}</span>
                         </div>
@@ -1735,7 +1735,7 @@ window.renderMonstersList = function () {
 
 async function editMonster(id) {
     try {
-        const res = await fetch('/api/admin/pve/monsters');
+        const res = await globalFetch('/api/admin/pve/monsters');
         if (res.ok) {
             const monsters = await res.json();
             const m = monsters.find(x => x.id === id);
@@ -1777,7 +1777,7 @@ async function editMonster(id) {
 
             const tMap = {
                 'NORMAL': { l: 'Normal', i: 'check_box_outline_blank', c: '#94a3b8' },
-                'DEMON': { l: 'Démon', i: 'rib_cage', c: '#ef4444' },
+                'DEMON': { l: 'DÃ©mon', i: 'rib_cage', c: '#ef4444' },
                 'REPTILE': { l: 'Reptile', i: 'grass', c: '#10b981' },
                 'MORT_VIVANT': { l: 'Mort-vivant', i: 'skull', c: '#94a3b8' },
                 'HYBRIDE': { l: 'Hybride', i: 'network_node', c: '#3b82f6' },
@@ -1786,7 +1786,7 @@ async function editMonster(id) {
             };
             const bMap = {
                 'NORMAL': { l: 'Normal', i: 'check_box_outline_blank', c: '#94a3b8' },
-                'PREDATEUR': { l: 'Prédateur', i: 'track_changes', c: '#f59e0b' },
+                'PREDATEUR': { l: 'PrÃ©dateur', i: 'track_changes', c: '#f59e0b' },
                 'CORRUPTEUR': { l: 'Corrupteur', i: 'allergy', c: '#8b5cf6' },
                 'LEADER': { l: 'Leader', i: 'crown', c: '#fcd34d' },
                 'ASSASSIN': { l: 'Assassin', i: 'gps_fixed', c: '#ef4444' },
@@ -1825,7 +1825,7 @@ window.cancelMonsterEdit = function () {
     }
     selectedMutationIds = [];
     renderMutationsSelector();
-    document.getElementById('btnSubmitMonster').textContent = "Créer le monstre";
+    document.getElementById('btnSubmitMonster').textContent = "CrÃ©er le monstre";
     document.getElementById('btnCancelMonster').style.display = 'none';
     document.getElementById('monsterFormPanel').classList.remove('editing-glow');
     window.selectMonsterType('NORMAL', 'Normal', 'check_box_outline_blank', '#94a3b8');
@@ -1835,7 +1835,7 @@ window.cancelMonsterEdit = function () {
 async function deleteMonster(id) {
     if (!confirm('Voulez-vous vraiment supprimer ce monstre ?')) return;
     try {
-        const res = await fetch('/api/admin/pve/monsters/' + id, { method: 'DELETE' });
+        const res = await globalFetch('/api/admin/pve/monsters/' + id, { method: 'DELETE' });
         if (res.ok) {
             loadMonsters();
             loadDungeons();
@@ -1847,7 +1847,7 @@ async function deleteMonster(id) {
 
 async function loadDungeons() {
     try {
-        const res = await fetch('/api/admin/pve/dungeons');
+        const res = await globalFetch('/api/admin/pve/dungeons');
         if (res.ok) {
             allDungeons = await res.json();
             window.renderDungeonsList();
@@ -1915,14 +1915,14 @@ window.renderDungeonsList = function () {
             const DEFAULT_SECRETS_META = [
                 { name: "Secret du Chaos", icon: "local_fire_department", color: "#ff0000" },
                 { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-                { name: "Secret de la Préservation", icon: "foundation", color: "#99674c" },
-                { name: "Secret de la Sérénité", icon: "water_drop", color: "#00e5cc" },
+                { name: "Secret de la PrÃ©servation", icon: "foundation", color: "#99674c" },
+                { name: "Secret de la SÃ©rÃ©nitÃ©", icon: "water_drop", color: "#00e5cc" },
                 { name: "Secret de la Chasse", icon: "visibility_off", color: "#ed5677" },
                 { name: "Secret du Carnage", icon: "explosion", color: "#a70740" },
                 { name: "Secret de la Joie", icon: "volcano", color: "#b74c0b" },
                 { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
                 { name: "Secret du Destin", icon: "all_inclusive", color: "#e7d198" },
-                { name: "Secret de l'Éther", icon: "blur_on", color: "#38bdf8" },
+                { name: "Secret de l'Ã‰ther", icon: "blur_on", color: "#38bdf8" },
                 { name: "Secret des Abysses", icon: "dark_mode", color: "#c084fc" }
             ];
             secretMeta = DEFAULT_SECRETS_META.find(s => s.name === d.requiredSecret) || secretMeta;
@@ -1959,9 +1959,9 @@ window.renderDungeonsList = function () {
                         <span class="material-symbols-outlined" style="font-size: 1rem;">skull</span> Boss : ${bosses} (avec ${totalBossMobs} mob${totalBossMobs > 1 ? 's' : ''})
                     </div>` : ''}
                     ${treasures > 0 ? `<div style="color: #f59e0b; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
-                        <span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> Trésors : ${treasures}
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> TrÃ©sors : ${treasures}
                     </div>` : ''}
-                    ${eventDetails ? `<div style="margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">Événements : ${eventDetails}</div>` : ''}
+                    ${eventDetails ? `<div style="margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">Ã‰vÃ©nements : ${eventDetails}</div>` : ''}
                 </div>
             </div>
         `;
@@ -1981,7 +1981,7 @@ async function moveDungeonOrder(id, direction) {
     const orderedIds = allDungeons.map(d => d.id);
     
     try {
-        const res = await fetch('/api/admin/pve/dungeons/reorder', {
+        const res = await globalFetch('/api/admin/pve/dungeons/reorder', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderedIds)
@@ -1994,13 +1994,13 @@ async function moveDungeonOrder(id, direction) {
         }
     } catch (e) {
         console.error(e);
-        showNotif("Erreur réseau.", true);
+        showNotif("Erreur rÃ©seau.", true);
     }
 }
 
 async function editDungeon(id) {
     try {
-        const res = await fetch('/api/admin/pve/dungeons');
+        const res = await globalFetch('/api/admin/pve/dungeons');
         if (res.ok) {
             const dungeons = await res.json();
             const d = dungeons.find(x => x.id === id);
@@ -2109,7 +2109,7 @@ window.cancelDungeonEdit = function () {
     document.getElementById('dungeonForm').reset();
     selectedRooms = [];
     renderRooms();
-    document.getElementById('btnSubmitDungeon').textContent = "Créer le donjon";
+    document.getElementById('btnSubmitDungeon').textContent = "CrÃ©er le donjon";
     document.getElementById('btnCancelDungeon').style.display = 'none';
     document.getElementById('dungeonFormPanel').classList.remove('editing-glow');
 };
@@ -2117,7 +2117,7 @@ window.cancelDungeonEdit = function () {
 async function deleteDungeon(id) {
     if (!confirm('Voulez-vous vraiment supprimer ce donjon ?')) return;
     try {
-        const res = await fetch('/api/admin/pve/dungeons/' + id, { method: 'DELETE' });
+        const res = await globalFetch('/api/admin/pve/dungeons/' + id, { method: 'DELETE' });
         if (res.ok) {
             loadDungeons();
         }
@@ -2244,14 +2244,14 @@ window.addMerchantItemToRoom = function (rIndex) {
     if (type === 'EQ') {
         const eqId = document.getElementById('room_loot_select_' + rIndex).value;
         if (!eqId) {
-            showNotif('Veuillez sélectionner un équipement.', true);
+            showNotif('Veuillez sÃ©lectionner un Ã©quipement.', true);
             return;
         }
         newItem.equipmentId = parseInt(eqId);
     } else {
         const specName = document.getElementById('room_merchant_special_' + rIndex).value.trim();
         if (!specName) {
-            showNotif('Veuillez entrer le nom de l\'item spécial.', true);
+            showNotif('Veuillez entrer le nom de l\'item spÃ©cial.', true);
             return;
         }
         newItem.specialItemName = specName;
@@ -2265,7 +2265,7 @@ window.addLootToRoom = function (rIndex) {
     const eqId = document.getElementById('room_loot_select_' + rIndex).value;
     const prob = parseFloat(document.getElementById('room_loot_prob_' + rIndex).value);
     if (!eqId || isNaN(prob) || prob < 0 || prob > 100) {
-        showNotif('Veuillez sélectionner un équipement et une probabilité (0-100).', true);
+        showNotif('Veuillez sÃ©lectionner un Ã©quipement et une probabilitÃ© (0-100).', true);
         return;
     }
     if (!selectedRooms[rIndex].lootTable) selectedRooms[rIndex].lootTable = [];
@@ -2284,14 +2284,14 @@ window.addDoorOutcome = function (rIndex) {
     const type = typeEl ? typeEl.value : '';
     const prob = parseFloat(probEl ? probEl.value : 0);
     if (!type || isNaN(prob) || prob <= 0 || prob > 100) {
-        showNotif('Veuillez sélectionner un type et une probabilité (1-100).', true);
+        showNotif('Veuillez sÃ©lectionner un type et une probabilitÃ© (1-100).', true);
         return;
     }
     if (!selectedRooms[rIndex].doorOutcomes) selectedRooms[rIndex].doorOutcomes = [];
 
     const currentTotal = selectedRooms[rIndex].doorOutcomes.reduce((sum, o) => sum + o.probability, 0);
     if (currentTotal + prob > 100) {
-        showNotif(`Impossible : le total dépasse 100% (actuel: ${currentTotal}%). Reste disponible : ${100 - currentTotal}%`, true);
+        showNotif(`Impossible : le total dÃ©passe 100% (actuel: ${currentTotal}%). Reste disponible : ${100 - currentTotal}%`, true);
         return;
     }
 
@@ -2429,7 +2429,7 @@ window.selectDoorBossOption = function (rIndex, oIndex, val, label, level) {
 window.addMonsterToBoss = function (rIndex, oIndex) {
     const input = document.getElementById(`room_door_boss_select_${rIndex}_${oIndex}`);
     if (!input || !input.value) {
-        showNotif('Veuillez sélectionner un boss.', true);
+        showNotif('Veuillez sÃ©lectionner un boss.', true);
         return;
     }
     const mId = parseInt(input.value);
@@ -2440,7 +2440,7 @@ window.addMonsterToBoss = function (rIndex, oIndex) {
     // Clear selection
     input.value = '';
     const triggerLabel = document.getElementById(`room_door_boss_label_${rIndex}_${oIndex}`);
-    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss...`;
+    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> SÃ©lectionner un boss...`;
 
     renderRooms();
 };
@@ -2465,7 +2465,7 @@ window.addGlobalBuffToRoomBoss = function (rIndex) {
     const dur = parseInt(durEl.value) || 0;
 
     if (val <= 0) {
-        showNotif('La valeur doit être positive.', true);
+        showNotif('La valeur doit Ãªtre positive.', true);
         return;
     }
 
@@ -2496,7 +2496,7 @@ window.addGlobalBuffToBoss = function (rIndex, oIndex) {
     const dur = parseInt(durEl.value) || 0;
 
     if (val <= 0) {
-        showNotif('La valeur doit être positive.', true);
+        showNotif('La valeur doit Ãªtre positive.', true);
         return;
     }
 
@@ -2593,7 +2593,7 @@ window.hideTooltipFixed = function () {
 // --- MUTATIONS ---
 async function loadMutations() {
     try {
-        const res = await fetch('/api/admin/pve/mutations');
+        const res = await globalFetch('/api/admin/pve/mutations');
         if (res.ok) {
             allMutations = await res.json();
             renderMutationsList();
@@ -2606,7 +2606,7 @@ function renderMutationsList() {
     const list = document.getElementById('mutationsList');
     if (!list) return;
     if (allMutations.length === 0) {
-        list.innerHTML = `<div style="text-align:center; padding: 2rem; color: #64748b; font-style: italic;">Aucune mutation trouvée</div>`;
+        list.innerHTML = `<div style="text-align:center; padding: 2rem; color: #64748b; font-style: italic;">Aucune mutation trouvÃ©e</div>`;
         return;
     }
     
@@ -2655,9 +2655,9 @@ window.editMutation = (id) => {
 window.deleteMutation = async (id) => {
     if (!confirm('Voulez-vous vraiment supprimer cette mutation ?')) return;
     try {
-        const res = await fetch(`/api/admin/pve/mutations/${id}`, { method: 'DELETE' });
+        const res = await globalFetch(`/api/admin/pve/mutations/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            showNotif('Mutation supprimée');
+            showNotif('Mutation supprimÃ©e');
             if (editingMutationId === id) window.cancelMutationEdit();
             loadMutations();
         } else showNotif('Erreur lors de la suppression', true);
@@ -2667,7 +2667,7 @@ window.deleteMutation = async (id) => {
 window.cancelMutationEdit = () => {
     editingMutationId = null;
     document.getElementById('mutationForm').reset();
-    document.getElementById('btnSubmitMutation').textContent = 'Créer la mutation';
+    document.getElementById('btnSubmitMutation').textContent = 'CrÃ©er la mutation';
     document.getElementById('btnCancelMutation').style.display = 'none';
     document.getElementById('mutationFormPanel').classList.remove('editing-glow');
 };
@@ -2685,11 +2685,11 @@ document.getElementById('mutationForm')?.addEventListener('submit', async (e) =>
         let url = '/api/admin/pve/mutations';
         let method = 'POST';
         if (editingMutationId) { url = `/api/admin/pve/mutations/${editingMutationId}`; method = 'PUT'; }
-        const res = await fetch(url, {
+        const res = await globalFetch(url, {
             method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mut)
         });
         if (res.ok) {
-            showNotif(editingMutationId ? 'Mutation modifiée' : 'Mutation créée');
+            showNotif(editingMutationId ? 'Mutation modifiÃ©e' : 'Mutation crÃ©Ã©e');
             window.cancelMutationEdit();
             loadMutations();
         } else { showNotif("Erreur lors de l'enregistrement", true); }
@@ -2700,7 +2700,7 @@ function renderMutationsSelector() {
     const container = document.getElementById('mMutationsContainer');
     if (!container) return;
     if (allMutations.length === 0) {
-        container.innerHTML = `<span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Aucune mutation disponible. Créez-en une d'abord.</span>`;
+        container.innerHTML = `<span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Aucune mutation disponible. CrÃ©ez-en une d'abord.</span>`;
         return;
     }
     

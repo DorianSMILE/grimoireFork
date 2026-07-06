@@ -1,4 +1,4 @@
-import { state } from './state.js';
+﻿import { state } from './state.js';
 import { GLOBAL_STAT_LABELS, GLOBAL_SRC_LABELS, javaClassToCode } from './constants.js';
 import * as ui from './ui.js?v=2';
 import * as forge from './forge.js';
@@ -11,7 +11,7 @@ let currentUser = undefined;
 export async function getCurrentUser() {
     if (currentUser !== undefined) return currentUser;
     try {
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        const res = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
         if (res.ok) {
             currentUser = await res.json();
             return currentUser;
@@ -29,19 +29,19 @@ export function isAdmin(user) {
 }
 
 export async function getMeta() {
-    const res = await fetch('/api/spells-editor/meta');
+    const res = await globalFetch('/api/spells-editor/meta');
     if (!res.ok) throw new Error("Failed to fetch meta");
     return res.json();
 }
 
 export async function getSpells() {
-    const res = await fetch('/api/spells-editor');
+    const res = await globalFetch('/api/spells-editor');
     if (!res.ok) throw new Error("Failed to fetch spells");
     return res.json();
 }
 
 export async function createSpell(spellDto) {
-    return fetch('/api/spells-editor', {
+    return globalFetch('/api/spells-editor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(spellDto)
@@ -49,7 +49,7 @@ export async function createSpell(spellDto) {
 }
 
 export async function deleteSpellAPI(id) {
-    return fetch(`/api/spells-editor/${id}`, { method: 'DELETE' });
+    return globalFetch(`/api/spells-editor/${id}`, { method: 'DELETE' });
 }
 
 
@@ -67,7 +67,7 @@ export async function deleteSpellAPI(id) {
 
 
 
-// Au chargement, récupérer les métadonnées
+// Au chargement, rÃ©cupÃ©rer les mÃ©tadonnÃ©es
 
 export async function fetchMeta() {
     try {
@@ -82,7 +82,7 @@ export async function fetchMeta() {
             if (optgroupVoies) optgroupVoies.innerHTML += `<option value="V_${v.id}">${v.nom}</option>`;
         });
 
-        // Remplir les Spiritualités
+        // Remplir les SpiritualitÃ©s
         const spiritSel = document.getElementById('spiritSelect');
         if (spiritSel) spiritSel.style.fontFamily = "";
         const optgroupSpirits = document.getElementById('optgroupSpiritsFilter');
@@ -112,18 +112,18 @@ export async function fetchMeta() {
         makeCustomSelect('mutationSelect');
         makeCustomSelect('filterMutation');
 
-        // Remplir les sources de coûts
+        // Remplir les sources de coÃ»ts
         const pms = document.getElementById('percentManaCostSource');
         const phs = document.getElementById('percentHealCostSource');
         const sourcesHtml = renderSourceOptions(state.metaData.sources, '');
         if (pms) pms.innerHTML = sourcesHtml;
         if (phs) phs.innerHTML = sourcesHtml;
 
-        // Sélectionner des valeurs par défaut pertinentes
+        // SÃ©lectionner des valeurs par dÃ©faut pertinentes
         if (pms) pms.value = 'CASTER_MANA_MAX';
         if (phs) phs.value = 'CASTER_HEALTH_MAX';
 
-        // Appliquer le style Premium à TOUTES les combo boxes
+        // Appliquer le style Premium Ã  TOUTES les combo boxes
         ['voieSelect', 'spiritSelect', 'niveau', 'castingTypeSelect',
             'percentManaCostSource', 'percentHealCostSource',
             'filterEffect', 'filterLevel', 'sortBy'].forEach(id => makeCustomSelect(id));
@@ -140,7 +140,7 @@ export async function fetchMeta() {
         }
         toggleChannelingFields();
     } catch (err) {
-        console.error("Erreur de chargement des métadonnées", err);
+        console.error("Erreur de chargement des mÃ©tadonnÃ©es", err);
     }
 }
 
@@ -223,7 +223,7 @@ export async function submitSpell() {
     };
 
     try {
-        const res = await fetch('/api/spells-editor', {
+        const res = await globalFetch('/api/spells-editor', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -233,17 +233,17 @@ export async function submitSpell() {
             const msg = await res.text();
             showNotif(msg);
 
-            // Réinitialiser le formulaire et l'état d'édition
+            // RÃ©initialiser le formulaire et l'Ã©tat d'Ã©dition
             state.editingSpellId = null;
             document.getElementById('spellForgePanel').classList.remove('editing-mode');
-            document.getElementById('submitSpellBtn').innerText = '✦ Forger le Sort';
+            document.getElementById('submitSpellBtn').innerText = 'âœ¦ Forger le Sort';
             nomInput.value = '';
             document.getElementById('description').value = '';
             state.currentEffects = [];
             renderEffects();
             updateSpecialVoieConfig();
 
-            // Réinitialiser les champs de canalisation
+            // RÃ©initialiser les champs de canalisation
             const channelingDurInput = document.getElementById('channelingDuration');
             if (channelingDurInput) channelingDurInput.value = 1;
             const allowInstantInput = document.getElementById('allowInstantDuringChanneling');
@@ -256,7 +256,7 @@ export async function submitSpell() {
                 updateViolenceLabel();
             }
 
-            // Mettre à jour l'aperçu d'édition flottant
+            // Mettre Ã  jour l'aperÃ§u d'Ã©dition flottant
             updateEditingPreview();
 
             // Recharger la liste
@@ -289,12 +289,12 @@ export async function loadSpells() {
 
 
 /* ================================================================
-   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualité
+   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualitÃ©
    ================================================================ */
 
 
 // ================================================================
-//   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualité
+//   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualitÃ©
 // ================================================================
 
 // ---- ENTER (mouseenter) ----
@@ -302,71 +302,71 @@ export async function loadSpells() {
 // ---- LEAVE (mouseleave) ----
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES — ENTER
+//   EFFETS Ã‰LÃ‰MENTAIRES â€” ENTER
 // ================================================================
 
-// 💨 VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
+// ðŸ’¨ VENT (Raison) : traits de vent qui balayent la carte de gauche Ã  droite
 
-// 💧 EAU (Sûreté) : vague qui monte depuis le bas de la carte
+// ðŸ’§ EAU (SÃ»retÃ©) : vague qui monte depuis le bas de la carte
 
-// ☠️ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
+// â˜ ï¸ POISON (Trahison) : bulles de poison verdÃ¢tres qui Ã©manent du centre
 
-// 🪨 TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
+// ðŸª¨ TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
 
-// 🌋 LAVE (Conviction) : coulées de lave qui descendent depuis le haut
+// ðŸŒ‹ LAVE (Conviction) : coulÃ©es de lave qui descendent depuis le haut
 
-// 🌿 PLANTE (Création) : vrilles de vigne qui s'élancent depuis les bords
+// ðŸŒ¿ PLANTE (CrÃ©ation) : vrilles de vigne qui s'Ã©lancent depuis les bords
 
-// 🔥 FEU (Destruction) : gerbe de flammes qui explose vers le haut
+// ðŸ”¥ FEU (Destruction) : gerbe de flammes qui explose vers le haut
 
-// 💥 EXPLOSION (Violence) : onde de choc circulaire + éclats
+// ðŸ’¥ EXPLOSION (Violence) : onde de choc circulaire + Ã©clats
 
-// 👻 ESPRIT : orbes d'âme qui orbitent autour de la carte
+// ðŸ‘» ESPRIT : orbes d'Ã¢me qui orbitent autour de la carte
 
-// 🌑 TÉNÈBRES : tentacules d'ombre qui surgissent des bords
+// ðŸŒ‘ TÃ‰NÃˆBRES : tentacules d'ombre qui surgissent des bords
 
-// ⚖️ KARMA : deux orbes — or et argent — qui convergent
+// âš–ï¸ KARMA : deux orbes â€” or et argent â€” qui convergent
 
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES — LEAVE
+//   EFFETS Ã‰LÃ‰MENTAIRES â€” LEAVE
 // ================================================================
 
-// 💨 VENT — le vent retombe : quelques tourbillons qui se dissipent
+// ðŸ’¨ VENT â€” le vent retombe : quelques tourbillons qui se dissipent
 
-// 💧 EAU — gouttelettes qui tombent et éclaboussent
+// ðŸ’§ EAU â€” gouttelettes qui tombent et Ã©claboussent
 
-// ☠️ POISON — Brume toxique lourde, poisseuse et lente
+// â˜ ï¸ POISON â€” Brume toxique lourde, poisseuse et lente
 
-// 🪨 TERRE — poussière de pierre qui retombe lourdement depuis le bas
+// ðŸª¨ TERRE â€” poussiÃ¨re de pierre qui retombe lourdement depuis le bas
 
-// 🌋 LAVE — braises qui refroidissent et tombent
+// ðŸŒ‹ LAVE â€” braises qui refroidissent et tombent
 
-// 🌱 PLANTE — Liane grimpante lente + nuage de pollen
+// ðŸŒ± PLANTE â€” Liane grimpante lente + nuage de pollen
 
-// 🔥 FEU — cendres et fumée qui s'élèvent
+// ðŸ”¥ FEU â€” cendres et fumÃ©e qui s'Ã©lÃ¨vent
 
-// 💥 EXPLOSION — retombée : éclats qui tombent + fumée
+// ðŸ’¥ EXPLOSION â€” retombÃ©e : Ã©clats qui tombent + fumÃ©e
 
-// 👻 ESPRIT — dissolution : la carte libère des âmes spectrales
+// ðŸ‘» ESPRIT â€” dissolution : la carte libÃ¨re des Ã¢mes spectrales
 
-// 🌑 TÉNÈBRES — le vide se referme : brume noire/violette qui s'absorbe
+// ðŸŒ‘ TÃ‰NÃˆBRES â€” le vide se referme : brume noire/violette qui s'absorbe
 
-// ⚖️ KARMA — les orbes se séparent et partent en orbites opposées
-
-
-// Crée un div de base pour les particules
+// âš–ï¸ KARMA â€” les orbes se sÃ©parent et partent en orbites opposÃ©es
 
 
-// Convertit un hex code (#RRGGBB) en chaîne "R, G, B"
+// CrÃ©e un div de base pour les particules
 
 
+// Convertit un hex code (#RRGGBB) en chaÃ®ne "R, G, B"
 
 
 
-// Couleur dédiée aux Voies (même logique que getSpellColor)
 
-// Couleur dédiée aux Spiritualités (même logique que getSpellColor)
+
+// Couleur dÃ©diÃ©e aux Voies (mÃªme logique que getSpellColor)
+
+// Couleur dÃ©diÃ©e aux SpiritualitÃ©s (mÃªme logique que getSpellColor)
 
 
 

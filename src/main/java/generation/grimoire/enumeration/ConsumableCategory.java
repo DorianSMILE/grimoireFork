@@ -1,5 +1,6 @@
 package generation.grimoire.enumeration;
 
+@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.OBJECT)
 public enum ConsumableCategory {
     POTION_ROSE("Potion Rose", "science", "cat-potion-rose"),
     POTION_BLEUE("Potion Bleue", "science", "cat-potion-bleue"),

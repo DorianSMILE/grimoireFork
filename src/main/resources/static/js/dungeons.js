@@ -1,4 +1,4 @@
-window.switchDungeonTab = function(tabName) {
+﻿window.switchDungeonTab = function(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
@@ -78,7 +78,7 @@ function showNotif(message, isError = false) {
 
 async function loadDungeons() {
     try {
-        const res = await fetch('/api/pve/dungeons');
+        const res = await globalFetch('/api/pve/dungeons');
         if (res.ok) {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
@@ -110,14 +110,14 @@ async function loadDungeons() {
             const DEFAULT_SECRETS_META = [
                 { name: "Secret du Chaos", icon: "local_fire_department", color: "#ff0000" },
                 { name: "Secret de l'Abondance", icon: "eco", color: "#10b981" },
-                { name: "Secret de la Préservation", icon: "foundation", color: "#99674c" },
-                { name: "Secret de la Sérénité", icon: "water_drop", color: "#00e5cc" },
+                { name: "Secret de la PrÃ©servation", icon: "foundation", color: "#99674c" },
+                { name: "Secret de la SÃ©rÃ©nitÃ©", icon: "water_drop", color: "#00e5cc" },
                 { name: "Secret de la Chasse", icon: "visibility_off", color: "#ed5677" },
                 { name: "Secret du Carnage", icon: "explosion", color: "#a70740" },
                 { name: "Secret de la Joie", icon: "volcano", color: "#b74c0b" },
                 { name: "Secret du Savoir", icon: "psychology", color: "#3b82f6" },
                 { name: "Secret du Destin", icon: "all_inclusive", color: "#e7d198" },
-                { name: "Secret de l'Éther", icon: "blur_on", color: "#38bdf8" },
+                { name: "Secret de l'Ã‰ther", icon: "blur_on", color: "#38bdf8" },
                 { name: "Secret des Abysses", icon: "dark_mode", color: "#c084fc" }
             ];
 
@@ -225,7 +225,7 @@ async function loadDungeons() {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay">
                                 <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
-                                <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.3rem;">Accès Verrouillé</div>
+                                <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.3rem;">AccÃ¨s VerrouillÃ©</div>
                                 <div style="font-size: 0.95rem; color: #fca5a5;">Secret requis : <strong style="color: #f8fafc;">${d.requiredSecret}</strong> (Niv. ${reqLevel})</div>
                             </div>`;
                         }
@@ -236,7 +236,7 @@ async function loadDungeons() {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay" style="background: rgba(15, 23, 42, 0.75); color: #f59e0b;">
                                 <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
-                                <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon Verrouillé</div>
+                                <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon VerrouillÃ©</div>
                                 <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
                             </div>`;
                         }
@@ -288,7 +288,7 @@ async function loadDungeons() {
 
 async function loadCharacters() {
     try {
-        const res = await fetch('/api/personnages');
+        const res = await globalFetch('/api/personnages');
         if (res.ok) {
             userCharacters = await res.json();
             const list = document.getElementById('prepCharList');
@@ -336,7 +336,7 @@ async function loadCharacters() {
                             <div style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem; display: flex; align-items: center;">
                                 ${c.name} ${iconsHtml}
                             </div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} • ${c.healthMax} PV max</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} â€¢ ${c.healthMax} PV max</div>
                         </div>
                     </div>
                 `;
@@ -349,7 +349,7 @@ async function loadCharacters() {
 
 async function loadConsumables() {
     try {
-        const res = await fetch('/api/equipment/unassigned');
+        const res = await globalFetch('/api/equipment/unassigned');
         if (res.ok) {
             const allUnassigned = await res.json();
             availableConsumables = allUnassigned
@@ -422,7 +422,7 @@ function renderConsumablesList() {
     }
 
     if (filteredConsumables.length === 0) {
-        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
+        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun consommable ne correspond Ã  ces filtres.</div>`;
         return;
     }
 
@@ -512,7 +512,7 @@ window.selectCharacter = async function (id) {
 
     let equipments = [];
     try {
-        const res = await fetch(`/api/equipment/personnage/${id}`);
+        const res = await globalFetch(`/api/equipment/personnage/${id}`);
         if (res.ok) {
             equipments = await res.json();
         }
@@ -554,8 +554,8 @@ window.selectCharacter = async function (id) {
     grid.innerHTML = `
         <div class="stat-item" style="color: #ec4899;"><span class="material-symbols-outlined">favorite</span> ${totalStats.healthMax} PV</div>
         <div class="stat-item" style="color: #38bdf8;"><span class="material-symbols-outlined">water_drop</span> ${totalStats.manaMax} Mana</div>
-        <div class="stat-item" style="color: #ec4899;"><span class="material-symbols-outlined">healing</span> ${totalStats.regenHealthPerTurn > 0 ? '+' : ''}${totalStats.regenHealthPerTurn} Régen PV</div>
-        <div class="stat-item" style="color: #38bdf8;"><span class="material-symbols-outlined">cyclone</span> ${totalStats.regenManaPerTurn > 0 ? '+' : ''}${totalStats.regenManaPerTurn} Régen Mana</div>
+        <div class="stat-item" style="color: #ec4899;"><span class="material-symbols-outlined">healing</span> ${totalStats.regenHealthPerTurn > 0 ? '+' : ''}${totalStats.regenHealthPerTurn} RÃ©gen PV</div>
+        <div class="stat-item" style="color: #38bdf8;"><span class="material-symbols-outlined">cyclone</span> ${totalStats.regenManaPerTurn > 0 ? '+' : ''}${totalStats.regenManaPerTurn} RÃ©gen Mana</div>
         <div class="stat-item" style="color: #a855f7;"><span class="material-symbols-outlined">auto_awesome</span> ${totalStats.power} Puissance</div>
         <div class="stat-item" style="color: #f43f5e;"><span class="material-symbols-outlined">fitness_center</span> ${totalStats.strength} Force</div>
         <div class="stat-item" style="color: #3b82f6;"><span class="material-symbols-outlined">shield</span> ${totalStats.armor} Armure</div>
@@ -661,7 +661,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     document.getElementById('prepStatEmpty').style.display = 'flex';
     document.getElementById('prepStatGrid').style.display = 'none';
-    document.getElementById('prepEquipList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun équipement à afficher.</div>';
+    document.getElementById('prepEquipList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun Ã©quipement Ã  afficher.</div>';
 
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
@@ -712,14 +712,14 @@ window.unlockDungeon = async function (id, cost, event) {
     if (!confirmed) return;
 
     try {
-        const res = await fetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
         if (res.ok) {
             if (overlay) {
                 overlay.classList.add('unlocking');
                 await new Promise(r => setTimeout(r, 800));
             }
             showNotif("Donjon d\u00e9bloqu\u00e9 !");
-            const authRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
+            const authRes = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
             if (authRes.ok) window.currentUser = await authRes.json();
             loadDungeons();
         } else {

@@ -1,4 +1,4 @@
-// Auth scripts for login and register pages
+﻿// Auth scripts for login and register pages
 
 window.globalFetch = async function(url, options = {}) {
     try {
@@ -25,7 +25,7 @@ window.globalFetch = async function(url, options = {}) {
         if (typeof showNotif !== 'undefined') {
             showNotif(error.message, true);
         } else if (typeof alert !== 'undefined') {
-            alert(error.message);
+            ui.showNotif(error.message, true);
         }
         throw error;
     }
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorDiv.innerText = data.message || "Erreur lors de l'inscription";
                     errorDiv.style.display = 'block';
                 } else {
-                    successDiv.innerText = data.message || "Inscription réussie ! Redirection...";
+                    successDiv.innerText = data.message || "Inscription rÃ©ussie ! Redirection...";
                     successDiv.style.display = 'block';
                     setTimeout(() => {
                         window.location.href = '/';
@@ -352,8 +352,8 @@ function injectUnlockModal() {
             <div class="global-unlock-modal-icon">
                 <span class="material-symbols-outlined" style="font-size: 2.2rem; color: #fbbf24;" id="globalUnlockIcon">lock_open</span>
             </div>
-            <div class="global-unlock-modal-title" id="globalUnlockTitle">Débloquer ?</div>
-            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong style="color: #f8fafc;">définitif</strong> pour votre compte. Vous n’aurez plus jamais à payer ce coût.</div>
+            <div class="global-unlock-modal-title" id="globalUnlockTitle">DÃ©bloquer ?</div>
+            <div class="global-unlock-modal-desc">Ce dÃ©vÃ©rouillage est <strong style="color: #f8fafc;">dÃ©finitif</strong> pour votre compte. Vous nâ€™aurez plus jamais Ã  payer ce coÃ»t.</div>
             <div class="global-unlock-modal-cost">
                 <span class="material-symbols-outlined" style="font-size: 1.3rem;">monetization_on</span>
                 <span id="globalUnlockCost">0</span> Or
@@ -362,7 +362,7 @@ function injectUnlockModal() {
                 <button class="global-unlock-btn-cancel" id="globalUnlockCancel">Annuler</button>
                 <button class="global-unlock-btn-confirm" id="globalUnlockConfirm">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span>
-                    Débloquer
+                    DÃ©bloquer
                 </button>
             </div>
         </div>
@@ -372,15 +372,15 @@ function injectUnlockModal() {
 
 window.promptUnlockFeature = function(featureId, featureName, cost) {
     if (!window.currentUser) {
-        if (typeof showNotif !== 'undefined') showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
-        else alert("Veuillez vous connecter pour débloquer cette fonctionnalité.");
+        if (typeof showNotif !== 'undefined') showNotif("Veuillez vous connecter pour dÃ©bloquer cette fonctionnalitÃ©.", true);
+        else ui.showNotif("Veuillez vous connecter pour dÃ©bloquer cette fonctionnalitÃ©.", true);
         return;
     }
     
     injectUnlockModal();
     
     const overlay = document.getElementById('globalUnlockOverlay');
-    document.getElementById('globalUnlockTitle').textContent = `Débloquer ${featureName} ?`;
+    document.getElementById('globalUnlockTitle').textContent = `DÃ©bloquer ${featureName} ?`;
     document.getElementById('globalUnlockCost').textContent = cost;
     
     if (featureId === 'vault') {
@@ -420,12 +420,12 @@ window.promptUnlockFeature = function(featureId, featureName, cost) {
                 window.location.reload();
             } else {
                 if (typeof showNotif !== 'undefined') showNotif(res.data.message || "Erreur lors de l'achat.", true);
-                else alert(res.data.message || "Erreur lors de l'achat.");
+                else ui.showNotif(res.data.message || "Erreur lors de l'achat.", true);
                 cleanup();
             }
         }).catch(err => {
             if (typeof showNotif !== 'undefined') showNotif("Erreur serveur.", true);
-            else alert("Erreur serveur.");
+            else ui.showNotif("Erreur serveur.", true);
             cleanup();
         });
     });

@@ -1,4 +1,4 @@
-import { state } from './state.js';
+﻿import { state } from './state.js';
 import { GLOBAL_STAT_LABELS, GLOBAL_SRC_LABELS, javaClassToCode } from './constants.js';
 import * as ui from './ui.js?v=2';
 import * as api from './api.js';
@@ -156,7 +156,7 @@ export function updateSpecialSpiritConfig() {
             if (s.nom.toLowerCase().includes('karma')) {
                 isKarma = true;
             }
-            if (s.nom.toLowerCase().includes('ténèbre') || s.nom.toLowerCase().includes('tenebre')) {
+            if (s.nom.toLowerCase().includes('tÃ©nÃ¨bre') || s.nom.toLowerCase().includes('tenebre')) {
                 isTenebres = true;
             }
         }
@@ -290,10 +290,10 @@ export function addEffectPanel(type) {
     if (type === 'BURN') { stat = 'BURN'; actualType = 'BUFF_DEBUFF'; }
     if (type === 'AME_DETACHEE') { stat = 'AME_DETACHEE'; actualType = 'BUFF_DEBUFF'; }
 
-    // Rétrocompatibilité ou conservation du type d'origine pour le visuel si besoin, 
-    // mais ici POISON/BURN ont déjà leur propre rendu dans renderEffects.
+    // RÃ©trocompatibilitÃ© ou conservation du type d'origine pour le visuel si besoin, 
+    // mais ici POISON/BURN ont dÃ©jÃ  leur propre rendu dans renderEffects.
     // Pour AME_DETACHEE, on peut utiliser son propre type ou le traiter comme BUFF_DEBUFF.
-    // On va garder le type d'origine pour l'UI, et laisser le backend gérer ou le mapper.
+    // On va garder le type d'origine pour l'UI, et laisser le backend gÃ©rer ou le mapper.
     // Wait, POISON/BURN are sent as POISON/BURN ? Let's check how they are sent.
     // In grimoire.js, they might be mapped. Let's just use the 'type' directly.
     if (type === 'POISON') stat = 'POISON';
@@ -302,8 +302,8 @@ export function addEffectPanel(type) {
     else stat = 'ARMURE';
 
     if (type === 'AME_DETACHEE' && state.currentEffects.some(e => e.effectType === 'AME_DETACHEE')) {
-        if (typeof showNotif !== 'undefined') showNotif("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.", true);
-        else alert("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.");
+        if (typeof showNotif !== 'undefined') showNotif("L'effet Ã‚me DÃ©tachÃ©e ne peut Ãªtre ajoutÃ© qu'une seule fois par sort.", true);
+        else ui.showNotif("L'effet Ã‚me DÃ©tachÃ©e ne peut Ãªtre ajoutÃ© qu'une seule fois par sort.", true);
         return;
     }
 
@@ -387,7 +387,7 @@ export function renderEffects() {
     container.innerHTML = '';
 
     if (state.currentEffects.length === 0) {
-        container.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Aucun effet configuré. Le sort n'aura que ses coûts.</div>`;
+        container.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Aucun effet configurÃ©. Le sort n'aura que ses coÃ»ts.</div>`;
         return;
     }
 
@@ -400,7 +400,7 @@ export function renderEffects() {
     let isTenebres = false;
     if (spiritId && state.metaData.spiritualites) {
         const s = state.metaData.spiritualites.find(sp => sp.id == spiritId);
-        if (s && s.nom && (s.nom.toLowerCase().includes('ténèbre') || s.nom.toLowerCase().includes('tenebre'))) {
+        if (s && s.nom && (s.nom.toLowerCase().includes('tÃ©nÃ¨bre') || s.nom.toLowerCase().includes('tenebre'))) {
             isTenebres = true;
         }
     }
@@ -412,8 +412,8 @@ export function renderEffects() {
             'HEAT_PERCENTAGE': 'Chaleur %',
             'HEAT_OVER_TIME': 'Chaleur Tick',
             'POISON': 'Poison',
-            'BURN': 'Brûlure',
-            'AME_DETACHEE': 'Âme Détachée'
+            'BURN': 'BrÃ»lure',
+            'AME_DETACHEE': 'Ã‚me DÃ©tachÃ©e'
         };
         const typeLabel = labelObj ? labelObj.label : (customLabels[eff.effectType] || eff.effectType);
 
@@ -425,16 +425,16 @@ export function renderEffects() {
 
         let fieldsHtml = '';
 
-        // Champs spécifiques en fonction du type
+        // Champs spÃ©cifiques en fonction du type
         if (eff.effectType === 'FIXED_DAMAGE') {
             fieldsHtml = `
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Dégâts</label>
+                                <label>DÃ©gÃ¢ts</label>
                                 <input type="number" value="${eff.damage}" onchange="updateEffectProp('${eff.id}', 'damage', this.value)">
                             </div>
                             <div class="form-group">
-                                <label>Type de Dégâts</label>
+                                <label>Type de DÃ©gÃ¢ts</label>
                                 <select class="custom-select-dynamic" id="damageType-${eff.id}" onchange="updateEffectProp('${eff.id}', 'damageType', this.value)">
                                     ${renderOptions(state.metaData.damageTypes, eff.damageType)}
                                 </select>
@@ -488,13 +488,13 @@ export function renderEffects() {
             fieldsHtml = `
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Stat Affectée</label>
+                                <label>Stat AffectÃ©e</label>
                                 <select class="custom-select-dynamic" id="statAffected-${eff.id}" onchange="updateEffectProp('${eff.id}', 'statAffected', this.value)">
                                     ${renderStatOptions(state.metaData.statTypes, eff.statAffected)}
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                         </div>
@@ -519,13 +519,13 @@ export function renderEffects() {
             fieldsHtml = `
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Dégâts Fixes (+/-)</label>
+                                <label>DÃ©gÃ¢ts Fixes (+/-)</label>
                                 <input type="number" value="${eff.flatValue}" onchange="updateEffectProp('${eff.id}', 'flatValue', this.value)">
                             </div>
                             <div class="form-group">
@@ -544,7 +544,7 @@ export function renderEffects() {
             fieldsHtml = `
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Dégâts Fixes / Tour</label>
+                                <label>DÃ©gÃ¢ts Fixes / Tour</label>
                                 <input type="number" value="${eff.damage}" onchange="updateEffectProp('${eff.id}', 'damage', this.value)">
                             </div>
                             <div class="form-group">
@@ -554,11 +554,11 @@ export function renderEffects() {
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                             <div class="form-group">
-                                <label>Type de Dégâts</label>
+                                <label>Type de DÃ©gÃ¢ts</label>
                                 <select class="custom-select-dynamic" id="damageType-${eff.id}" onchange="updateEffectProp('${eff.id}', 'damageType', this.value)">
                                     ${renderOptions(state.metaData.damageTypes, eff.damageType)}
                                 </select>
@@ -585,7 +585,7 @@ export function renderEffects() {
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                             <div class="form-group">
@@ -632,7 +632,7 @@ export function renderEffects() {
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                             <div class="form-group">
@@ -657,7 +657,7 @@ export function renderEffects() {
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration || 0}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                             <div class="form-group">
@@ -671,13 +671,13 @@ export function renderEffects() {
         } else if (eff.effectType === 'PURGE') {
             fieldsHtml = `
                         <div style="padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px; font-size: 0.85rem; color: #10b981;">
-                            ✨ Dissipe instantanément tous les bonus, malus et altérations d'état (DoT/HoT) actifs sur la cible.
+                            âœ¨ Dissipe instantanÃ©ment tous les bonus, malus et altÃ©rations d'Ã©tat (DoT/HoT) actifs sur la cible.
                         </div>
                     `;
         } else if (eff.effectType === 'HEAT_FIXED') {
             fieldsHtml = `
                         <div class="form-group">
-                            <label>Montant de Chaleur Générée (Fixe)</label>
+                            <label>Montant de Chaleur GÃ©nÃ©rÃ©e (Fixe)</label>
                             <input type="number" min="0" value="${eff.flatValue || 0}" onchange="updateEffectProp('${eff.id}', 'flatValue', this.value)">
                         </div>
                     `;
@@ -710,7 +710,7 @@ export function renderEffects() {
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Durée (Tours)</label>
+                                <label>DurÃ©e (Tours)</label>
                                 <input type="number" value="${eff.duration}" onchange="updateEffectProp('${eff.id}', 'duration', this.value)">
                             </div>
                             <div class="form-group">
@@ -724,7 +724,7 @@ export function renderEffects() {
         } else if (eff.effectType === 'AME_DETACHEE') {
             fieldsHtml = `
                         <div style="padding: 0.5rem; background: rgba(244, 63, 94, 0.1); border-left: 3px solid #f43f5e; border-radius: 4px; font-size: 0.85rem; color: #fda4af;">
-                            ✨ Confère au lanceur +5 Dégâts Physiques et +40% de Dégâts Physiques supplémentaires pendant 2 tours.
+                            âœ¨ ConfÃ¨re au lanceur +5 DÃ©gÃ¢ts Physiques et +40% de DÃ©gÃ¢ts Physiques supplÃ©mentaires pendant 2 tours.
                         </div>
                     `;
         }
@@ -754,34 +754,34 @@ export function renderEffects() {
             typeBadgeStyle = 'background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(190, 18, 60, 0.4)); color: #fda4af; border: 1px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
         }
 
-        const deleteOrLinkedButton = `<button type="button" class="btn-danger" onclick="removeEffect('${eff.id}')">✕ Supprimer</button>`;
+        const deleteOrLinkedButton = `<button type="button" class="btn-danger" onclick="removeEffect('${eff.id}')">âœ• Supprimer</button>`;
 
         const targetSelectorHtml = (isHeatEffect || eff.effectType === 'AME_DETACHEE') ? `
                         <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.08); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25); margin-bottom: 0.5rem;">
                             <span class="material-symbols-outlined" style="color: #fca5a5; font-size: 1.25rem;">person</span>
-                            <span style="font-size: 0.85rem; color: #fca5a5; font-weight: 600;">Cible : Lanceur (${eff.effectType === 'AME_DETACHEE' ? 'Âme Détachée' : 'Chaleur générée'})</span>
+                            <span style="font-size: 0.85rem; color: #fca5a5; font-weight: 600;">Cible : Lanceur (${eff.effectType === 'AME_DETACHEE' ? 'Ã‚me DÃ©tachÃ©e' : 'Chaleur gÃ©nÃ©rÃ©e'})</span>
                         </div>
                 ` : `
-                        <!-- Sélection de la cible de l'Effet -->
+                        <!-- SÃ©lection de la cible de l'Effet -->
                         <div style="display: flex; flex-direction: column; gap: 0.8rem; background: rgba(0,0,0,0.25); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                             <label style="color: #fff; font-weight: 600; font-size: 0.9rem;">Cible de l'Effet :</label>
                             <div class="target-selector" style="flex-wrap: wrap; gap: 0.5rem;">
                                 <button type="button" class="target-btn target-caster-btn ${eff.effectTarget === 'CASTER' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'CASTER')" title="Affecte uniquement le lanceur du sort">
                                     <span class="material-symbols-outlined">person</span> Lanceur
                                 </button>
-                                <button type="button" class="target-btn target-ally-btn ${eff.effectTarget === 'ALLY' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALLY')" title="Affecte un allié ciblé">
-                                    <span class="material-symbols-outlined">shield</span> Allié (Ciblé)
+                                <button type="button" class="target-btn target-ally-btn ${eff.effectTarget === 'ALLY' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALLY')" title="Affecte un alliÃ© ciblÃ©">
+                                    <span class="material-symbols-outlined">shield</span> AlliÃ© (CiblÃ©)
                                 </button>
                                 <button type="button" class="target-btn target-enemy-btn ${eff.effectTarget === 'TARGET' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'TARGET')" title="Affecte la cible ennemie principale">
                                     <span class="material-symbols-outlined">my_location</span> Ennemi (Cible)
                                 </button>
-                                <button type="button" class="target-btn target-all-allies-btn ${eff.effectTarget === 'ALL_ALLIES' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALL_ALLIES')" title="Affecte le lanceur et tous ses alliés">
-                                    <span class="material-symbols-outlined">groups</span> Lanceur &amp; Alliés
+                                <button type="button" class="target-btn target-all-allies-btn ${eff.effectTarget === 'ALL_ALLIES' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALL_ALLIES')" title="Affecte le lanceur et tous ses alliÃ©s">
+                                    <span class="material-symbols-outlined">groups</span> Lanceur &amp; AlliÃ©s
                                 </button>
                                 <button type="button" class="target-btn target-all-enemies-btn ${eff.effectTarget === 'ALL_ENEMIES' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALL_ENEMIES')" title="Affecte tous les ennemis (zone)">
                                     <span class="material-symbols-outlined">local_fire_department</span> Tous les Ennemis
                                 </button>
-                                <button type="button" class="target-btn target-everyone-btn ${eff.effectTarget === 'ALL_COMBATANTS' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALL_COMBATANTS')" title="Affecte tout le monde (alliés et ennemis)">
+                                <button type="button" class="target-btn target-everyone-btn ${eff.effectTarget === 'ALL_COMBATANTS' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'ALL_COMBATANTS')" title="Affecte tout le monde (alliÃ©s et ennemis)">
                                     <span class="material-symbols-outlined">public</span> Tout le Monde
                                 </button>
                             </div>
@@ -797,19 +797,19 @@ export function renderEffects() {
 
                         ${targetSelectorHtml}
 
-                            <!-- Option / Clé d'activation de la ligne d'effet -->
+                            <!-- Option / ClÃ© d'activation de la ligne d'effet -->
                             <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
                                 <label style="font-size: 0.8rem; color: #f59e0b; font-weight:600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">key</span> S'active uniquement si l'Option de sort choisie est :</label>
-                                <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par défaut)" style="width: 140px; font-size: 0.85rem; padding: 0.2rem 0.4rem; background: var(--glass-bg); color: #fff; border: 1px solid var(--glass-border); border-radius: 4px;" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
+                                <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par dÃ©faut)" style="width: 140px; font-size: 0.85rem; padding: 0.2rem 0.4rem; background: var(--glass-bg); color: #fff; border: 1px solid var(--glass-border); border-radius: 4px;" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
                                 <span style="font-size: 0.75rem; color: var(--text-muted);">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
                             </div>
 
-                            <!-- Condition Âme Détachée -->
+                            <!-- Condition Ã‚me DÃ©tachÃ©e -->
                             ${(isTenebres && eff.effectType !== 'AME_DETACHEE') ? `
                         <div style="margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <label style="color: #fda4af; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
-                                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">hand_bones</span> Condition "Âme Détachée"
+                                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">hand_bones</span> Condition "Ã‚me DÃ©tachÃ©e"
                                 </label>
                                 ${(() => {
                                     const r = eff.detachedSoulRequirement || 'NOT_AFFECTED';
@@ -829,7 +829,7 @@ export function renderEffects() {
                                 })()}
                     ` : ''}
 
-                            <!-- Tour(s) d'activation de l'effet dans la canalisation (uniquement si le sort est canalisé) -->
+                            <!-- Tour(s) d'activation de l'effet dans la canalisation (uniquement si le sort est canalisÃ©) -->
                             ${isCanalise ? `
                             <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
                                 <label style="font-size: 0.8rem; color: #a78bfa; font-weight: 600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">cyclone</span> Activation par Tour de Canalisation :</label>
@@ -846,7 +846,7 @@ export function renderEffects() {
                                             </button>
                                         `;
         }).join('')}
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem;">Sélectionnez les tours où cet effet se déclenche.</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem;">SÃ©lectionnez les tours oÃ¹ cet effet se dÃ©clenche.</span>
                                 </div>
                             </div>
                             ` : ''}
@@ -861,7 +861,7 @@ export function renderEffects() {
         container.innerHTML += itemHtml;
     });
 
-    // Styliser les sélecteurs dynamiques customisés
+    // Styliser les sÃ©lecteurs dynamiques customisÃ©s
     container.querySelectorAll('.custom-select-dynamic').forEach(sel => {
         makeCustomSelect(sel);
     });

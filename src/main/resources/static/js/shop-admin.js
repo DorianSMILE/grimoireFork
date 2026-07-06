@@ -1,4 +1,4 @@
-let allEquipments = [];
+﻿let allEquipments = [];
 
 const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
@@ -40,7 +40,7 @@ const STAT_DEFS = [
     { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
     { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
     { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
+    { key: 'bonusResistance', label: 'RÃ©s', icon: 'shield', color: '#10b981' },
     { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
     { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
     { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
@@ -207,7 +207,7 @@ document.addEventListener('click', (e) => {
         } else if (hiddenInput.id.startsWith('eq') || hiddenInput.id === 'eqSpecialEffect') {
             updateWeightUI();
         } else {
-            renderVault(); // Mettre à jour l'affichage au changement
+            renderVault(); // Mettre Ã  jour l'affichage au changement
         }
     }
 });
@@ -215,10 +215,10 @@ document.addEventListener('click', (e) => {
 // ===== API =====
 async function loadEquipments() {
     try {
-        const res = await fetch('/api/shop/templates');
+        const res = await globalFetch('/api/shop/templates');
         if (!res.ok) {
             if (res.status === 403 || res.status === 401) {
-                document.getElementById('vaultGrid').innerHTML = `<div style="color: #ef4444;"><span class="material-symbols-outlined">error</span> Accès refusé.</div>`;
+                document.getElementById('vaultGrid').innerHTML = `<div style="color: #ef4444;"><span class="material-symbols-outlined">error</span> AccÃ¨s refusÃ©.</div>`;
             }
             return;
         }
@@ -228,7 +228,7 @@ async function loadEquipments() {
         });
         renderVault();
     } catch (e) {
-        console.error('Erreur chargement équipements:', e);
+        console.error('Erreur chargement Ã©quipements:', e);
         document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state" style="color: #ef4444;"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
@@ -259,7 +259,7 @@ function getTypeColor(isMagic) {
 
 async function loadAnomalies() {
     try {
-        const res = await fetch('/api/anomalies/all-templates');
+        const res = await globalFetch('/api/anomalies/all-templates');
         if (res.ok) {
             let data = await res.json();
             window.allAnomalies = data.sort((a, b) => {
@@ -334,7 +334,7 @@ function addAnomalyRow(selectedName = '', qty = 1) {
             <input type="hidden" class="anomaly-select-hidden" value="${selectedName}">
         </div>
         <div style="display: flex; align-items: center; gap: 0.3rem;">
-            <span style="color: #94a3b8; font-size: 0.8rem;">Qté:</span>
+            <span style="color: #94a3b8; font-size: 0.8rem;">QtÃ©:</span>
             <input type="number" class="anomaly-qty-input" value="${qty}" min="1" style="width: 60px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif;">
         </div>
         <button type="button" class="btn-remove-row" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; cursor: pointer; padding: 0.4rem; display: flex; justify-content: center; align-items: center;">
@@ -357,7 +357,7 @@ function deleteEquipment(id) {
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, dÃ©truire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
@@ -374,9 +374,9 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
     closeDeleteModal();
 
     try {
-        const res = await fetch(`/api/shop/templates/${id}`, { method: 'DELETE' });
+        const res = await globalFetch(`/api/shop/templates/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            showNotif('Équipement détruit.');
+            showNotif('Ã‰quipement dÃ©truit.');
             await loadEquipments();
             if (window.checkAuthStatus) {
                 window.checkAuthStatus();
@@ -385,7 +385,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
             showNotif('Erreur lors de la suppression.', true);
         }
     } catch (e) {
-        showNotif('Erreur réseau.', true);
+        showNotif('Erreur rÃ©seau.', true);
     }
 });
 
@@ -417,7 +417,7 @@ function renderGrid(equipments) {
         container.innerHTML = `
             <div class="vault-empty-state">
                 <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5;">search_off</span>
-                Aucun objet ne correspond à votre recherche.
+                Aucun objet ne correspond Ã  votre recherche.
             </div>`;
         return;
     }
@@ -447,8 +447,8 @@ function renderGrid(equipments) {
         INHABITUEL: { label: 'Inhabituel', icon: 'radio_button_unchecked' },
         RARE: { label: 'Rare', icon: 'adjust' },
         MYTHIQUE: { label: 'Mythique', icon: 'star_half' },
-        LEGENDAIRE: { label: 'Légendaire', icon: 'workspace_premium' },
-        EPIQUE: { label: 'Épique', icon: 'whatshot' },
+        LEGENDAIRE: { label: 'LÃ©gendaire', icon: 'workspace_premium' },
+        EPIQUE: { label: 'Ã‰pique', icon: 'whatshot' },
         RELIQUE: { label: 'Relique', icon: 'webhook' },
         MAUDIT: { label: 'Maudit', icon: 'skull' }
     };
@@ -468,7 +468,7 @@ function renderGrid(equipments) {
         `;
 
         if (items.length === 0) {
-            html += `<div style="padding: 1rem; color: #64748b; font-style: italic; text-align: center;">Aucun article dans cette rareté</div>`;
+            html += `<div style="padding: 1rem; color: #64748b; font-style: italic; text-align: center;">Aucun article dans cette raretÃ©</div>`;
         } else {
             items.forEach(eq => {
                 const slotInfo = getSlotInfo(eq);
@@ -490,17 +490,17 @@ function renderGrid(equipments) {
                 if (eq.specialEffect && eq.specialEffect !== 'NONE') {
                     const effectLabels = {
                         'LIFESTEAL': 'Vol de Vie',
-                        'THORNS': 'Épines',
+                        'THORNS': 'Ã‰pines',
                         'MANA_SHIELD': 'Bouclier de Mana',
                         'CHEAT_DEATH': 'Ange Gardien',
-                        'CRIT_DAMAGE': 'Dégâts Critiques',
+                        'CRIT_DAMAGE': 'DÃ©gÃ¢ts Critiques',
                         'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-                        'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
-                        'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
-                        'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
-                        'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
-                        'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
-                        'EXECUTION': 'Exécution (% Phy)',
+                        'CURSED_HP_LOSS_ON_MANA': 'BrÃ¨che spirituelle (- hp % en mana Act.)',
+                        'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dÃ©gÃ¢ts magique -)',
+                        'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dÃ©gÃ¢ts physique -)',
+                        'CURSED_VULNERABILITY': 'VulnÃ©rabilitÃ© (DÃ©gÃ¢ts subis % +)',
+                        'CURSED_HEALING_REDUCTION': 'Chair putrÃ©fiÃ©e (Soins % -)',
+                        'EXECUTION': 'ExÃ©cution (% Phy)',
                         'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
                     };
                     const label = effectLabels[eq.specialEffect] || eq.specialEffect;
@@ -557,7 +557,7 @@ function renderGrid(equipments) {
                                                 </span>
                                                 <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
                                                     <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
-                                                    ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
+                                                    ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'MatÃ©riau'}
                                                 </span>
                                                 ${aTemp && aTemp.spiritualite ?
                                         `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
@@ -580,7 +580,7 @@ function renderGrid(equipments) {
                         ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editEquipment(${eq.id})" title="Modifier l'objet" style="padding: 0.4rem; border-radius: 6px;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">edit</span>
                         </button>` : ''}
-                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment(${eq.id})" title="Détruire l'objet" style="padding: 0.4rem; border-radius: 6px;">
+                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment(${eq.id})" title="DÃ©truire l'objet" style="padding: 0.4rem; border-radius: 6px;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
                         </button>` : ''}
                     </div>
@@ -854,14 +854,14 @@ window.editEquipment = function (id) {
 window.submitEquipment = async function () {
     const name = document.getElementById('eqName').value.trim();
     const slot = document.getElementById('eqSlot').value;
-    if (!name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
+    if (!name) { showNotif('Nom de l\'Ã©quipement obligatoire.', true); return; }
     if (!slot) { showNotif('Slot obligatoire.', true); return; }
 
     const rarity = document.getElementById('eqRarity').value;
     const maxWeight = (WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) ? WEIGHT_LIMITS[slot][rarity] : 5;
     const currentWeight = calculateEquipmentWeight();
     if (currentWeight > maxWeight) {
-        showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
+        showNotif('Le poids de cet Ã©quipement dÃ©passe la limite autorisÃ©e !', true);
         return;
     }
 
@@ -881,11 +881,11 @@ window.submitEquipment = async function () {
         if (rarity === 'MAUDIT') {
             if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
             if (specialEffectValue === 0) {
-                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
+                showNotif('La valeur de l\'effet spÃ©cial maudit ne peut pas Ãªtre 0.', true);
                 return;
             }
         } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
-            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
+            showNotif('La valeur de l\'effet spÃ©cial doit Ãªtre strictement supÃ©rieure Ã  0.', true);
             return;
         }
     }
@@ -939,7 +939,7 @@ window.submitEquipment = async function () {
             method = 'PUT';
         }
 
-        const res = await fetch(url, {
+        const res = await globalFetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
@@ -951,11 +951,11 @@ window.submitEquipment = async function () {
         }
 
         closeCreateEqModal();
-        showNotif(editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
+        showNotif(editingEquipmentId ? 'Ã‰quipement modifiÃ© !' : 'Ã‰quipement forgÃ© !');
         await loadEquipments();
     } catch (e) {
         console.error(e);
-        showNotif('Erreur réseau', true);
+        showNotif('Erreur rÃ©seau', true);
     }
 }
 

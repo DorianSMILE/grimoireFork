@@ -391,7 +391,8 @@ window.fleeCombatAction = async function () {
         if (!res.ok) {
             isFleeing = false;
             const err = await res.text();
-            alert("Erreur lors de la fuite : " + err);
+            if (typeof showNotif !== 'undefined') showNotif("Erreur lors de la fuite : " + err, true);
+            else alert("Erreur lors de la fuite : " + err);
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = "Oui, fuir";
@@ -448,7 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const consumableIds = urlParams.get('consumableIds');
 
     if (!dungeonId || !characterIds) {
-        alert("Paramètres de combat manquants.");
+        if (typeof showNotif !== 'undefined') showNotif("Paramètres de combat manquants.", true);
+        else alert("Paramètres de combat manquants.");
         window.location.href = '/vault.html';
         return;
     }
@@ -470,7 +472,8 @@ async function resumeCombat(savedSessionId) {
         const res = await fetch(`/api/pve/combat/${savedSessionId}/resume`, { method: 'POST' });
         if (!res.ok) {
             localStorage.removeItem('activeCombatId');
-            alert("Combat introuvable ou expiré.");
+            if (typeof showNotif !== 'undefined') showNotif("Combat introuvable ou expiré.", true);
+            else alert("Combat introuvable ou expiré.");
             window.location.href = '/vault.html';
             return;
         }
@@ -502,7 +505,8 @@ async function startCombat(characterIds, dungeonId, consumableIds) {
         });
 
         if (!res.ok) {
-            alert("Erreur lors de l'initialisation du donjon.");
+            if (typeof showNotif !== 'undefined') showNotif("Erreur lors de l'initialisation du donjon.", true);
+            else alert("Erreur lors de l'initialisation du donjon.");
             window.location.href = '/vault.html';
             return;
         }
@@ -520,7 +524,8 @@ async function startCombat(characterIds, dungeonId, consumableIds) {
         updateUI(data);
     } catch (e) {
         console.error(e);
-        alert("Erreur de connexion.");
+        if (typeof showNotif !== 'undefined') showNotif("Erreur de connexion.", true);
+        else alert("Erreur de connexion.");
     }
 }
 
@@ -1305,7 +1310,8 @@ async function openChest(useKey = false) {
         const res = await fetch(`/api/pve/combat/${sessionId}/open-chest?useKey=${useKey}`, { method: 'POST' });
         if (!res.ok) {
             const err = await res.text();
-            alert("Erreur : " + err);
+            if (typeof showNotif !== 'undefined') showNotif("Erreur : " + err, true);
+            else alert("Erreur : " + err);
             isProcessing = false;
             return;
         }
@@ -1327,7 +1333,8 @@ async function openChest(useKey = false) {
 
     } catch (e) {
         console.error(e);
-        alert("Erreur lors de l'ouverture du coffre.");
+        if (typeof showNotif !== 'undefined') showNotif("Erreur lors de l'ouverture du coffre.", true);
+        else alert("Erreur lors de l'ouverture du coffre.");
     } finally {
         isProcessing = false;
         setButtonsProcessing(false);

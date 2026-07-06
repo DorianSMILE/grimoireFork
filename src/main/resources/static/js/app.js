@@ -21,6 +21,7 @@ Object.assign(window, ui);
 window.addEventListener('DOMContentLoaded', async () => {
     ui.updateDisplayModeUI();
     ui.initResizeObserver();
+    await constants.initMeta();
     await api.fetchMeta();
     
     // RBAC: Check user and update layout

@@ -29,28 +29,39 @@ let editingId = null;
 let equipModalPersoId = null;
 let allEquipments = [];
 
-const SLOT_LABELS = {
-    CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
-    PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
-    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
-    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
-    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
-    ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
-    ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
-    BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
-    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
-    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
-};
+let SLOT_LABELS = {};
+let CONSUMABLE_CATEGORIES = {};
+
+async function loadArmoryMeta() {
+    try {
+        const [slotsRes, catsRes] = await Promise.all([
+            fetch('/api/meta/equipment-slots'),
+            fetch('/api/meta/consumable-categories')
+        ]);
+        if (slotsRes.ok) {
+            const slots = await slotsRes.json();
+            slots.forEach(s => {
+                SLOT_LABELS[s.name] = { label: s.label, icon: s.icon, color: 'var(--' + s.cssClass + ', #ef4444)' }; // Uses css variable or fallback
+            });
+        }
+        if (catsRes.ok) {
+            const cats = await catsRes.json();
+            cats.forEach(c => {
+                CONSUMABLE_CATEGORIES[c.name] = { label: c.label, icon: c.icon, color: 'var(--' + c.cssClass + ', #854c4c)' };
+            });
+        }
+    } catch (e) { console.error("Error loading armory meta", e); }
+}
 
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
     if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
-        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
-        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
-        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
-        info.color = catColors[eq.consumableCategory] || '#854c4c';
+        const catInfo = CONSUMABLE_CATEGORIES[eq.consumableCategory];
+        if (catInfo) {
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
@@ -72,76 +83,44 @@ const STAT_DEFS = [
     { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
 ];
 
-const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
-    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
-};
+function buildEquipmentDto() {
+    const slot = document.getElementById('eqSlot')?.value || '';
+    const rarity = document.getElementById('eqRarity')?.value || 'COMMUN';
+    let specialEffect = document.getElementById('eqSpecialEffect')?.value || 'NONE';
+    let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue')?.value) || 0;
 
-function calculateEquipmentWeight() {
-    let w = 0;
-
-    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-    let mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
-
-    const slot = document.getElementById('eqSlot').value;
-    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
-        mArm = 1.5; mRes = 1.5;
-        mHp = 0.4; mMana = 0.4;
-        mStr = 1.8; mPow = 1.8;
-        mRegHp = 2.4; mRegMana = 1.2;
-    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
-        mArm = 0.8; mRes = 0.8;
-        mStr = 2.5; mPow = 2.5;
-        mSpd = 3.5;
-        mCrit = 2.0;
-    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
-        mMana = 0.1;
-        mArm = 2.0; mRes = 2.0;
-        mRegMana = 0.8;
-    } else if (slot === 'BOTTES') {
-        mSpd = 1.5;
-    } else if (slot === 'CAPE') {
-        mCrit = 1.5;
+    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
+        specialEffect = 'NONE';
+        specialEffectValue = 0;
     }
 
-    w += (parseFloat(document.getElementById('eqHp').value) || 0) * mHp;
-    w += (parseFloat(document.getElementById('eqMana').value) || 0) * mMana;
-    w += (parseFloat(document.getElementById('eqPower').value) || 0) * mPow;
-    w += (parseFloat(document.getElementById('eqStr').value) || 0) * mStr;
-    w += (parseFloat(document.getElementById('eqArmor').value) || 0) * mArm;
-    w += (parseFloat(document.getElementById('eqRes').value) || 0) * mRes;
-    w += (parseFloat(document.getElementById('eqSpeed').value) || 0) * mSpd;
-    w += (parseFloat(document.getElementById('eqCrit').value) || 0) * mCrit;
-    w += (parseFloat(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
-    w += (parseFloat(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
-
-    const baseWeightVal = parseFloat(document.getElementById('eqBaseWeight')?.value) || 0;
-    w += baseWeightVal;
-
-    // Add special effect weight if Epic/Relic/Maudit
-    const rarity = document.getElementById('eqRarity').value;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
-        const specialEffect = document.getElementById('eqSpecialEffect')?.value;
-        const effectVal = parseFloat(document.getElementById('eqSpecialEffectValue').value) || 0;
-
-        if (specialEffect && specialEffect !== 'NONE' && effectVal !== 0) {
-            w += effectVal * 1.5;
-        }
-    }
-    return w;
+    return {
+        name: document.getElementById('eqName')?.value?.trim() || '',
+        slot: slot,
+        rarity: rarity,
+        bonusHealthMax: parseInt(document.getElementById('eqHp')?.value) || 0,
+        bonusManaMax: parseInt(document.getElementById('eqMana')?.value) || 0,
+        bonusPower: parseInt(document.getElementById('eqPower')?.value) || 0,
+        bonusStrength: parseInt(document.getElementById('eqStr')?.value) || 0,
+        bonusArmor: parseInt(document.getElementById('eqArmor')?.value) || 0,
+        bonusResistance: parseInt(document.getElementById('eqRes')?.value) || 0,
+        bonusSpeed: parseInt(document.getElementById('eqSpeed')?.value) || 0,
+        bonusCrit: parseInt(document.getElementById('eqCrit')?.value) || 0,
+        regenHealthPerTurn: parseInt(document.getElementById('eqRegenHp')?.value) || 0,
+        regenManaPerTurn: parseInt(document.getElementById('eqRegenMana')?.value) || 0,
+        consumableHpPercent: document.getElementById('eqConsumableHpPercent') ? (parseInt(document.getElementById('eqConsumableHpPercent').value) || 0) : 0,
+        consumableManaPercent: document.getElementById('eqConsumableManaPercent') ? (parseInt(document.getElementById('eqConsumableManaPercent').value) || 0) : 0,
+        consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
+        consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
+        baseWeight: parseFloat(document.getElementById('eqBaseWeight')?.value) || 0,
+        specialEffect: specialEffect,
+        specialEffectValue: specialEffectValue,
+        personnageId: typeof equipModalPersoId !== 'undefined' ? equipModalPersoId : null,
+    };
 }
 
-function updateWeightUI() {
+async function updateWeightUI() {
     const slot = document.getElementById('eqSlot').value;
-    const rarity = document.getElementById('eqRarity').value;
 
     const row = document.getElementById('eqBaseWeightRow');
     if (row) {
@@ -155,12 +134,27 @@ function updateWeightUI() {
         el.style.display = slot === 'CONSOMMABLE' ? 'flex' : 'none';
     });
 
-    let maxWeight = 5; // Fallback
-    if (slot && rarity && WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) {
-        maxWeight = WEIGHT_LIMITS[slot][rarity];
+    const dto = buildEquipmentDto();
+    let currentWeight = 0;
+    let maxWeight = 5;
+
+    try {
+        const res = await fetch('/api/equipment/simulate-weight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            currentWeight = data.weight || 0;
+            maxWeight = data.maxWeight || 5;
+            window.lastSimulatedWeight = currentWeight;
+            window.lastSimulatedMaxWeight = maxWeight;
+        }
+    } catch (e) {
+        console.error("Error simulating weight:", e);
     }
 
-    const currentWeight = calculateEquipmentWeight();
     let pct = maxWeight > 0 ? (currentWeight / maxWeight) * 100 : 0;
 
     const textEl = document.getElementById('eqWeightText');
@@ -395,71 +389,30 @@ document.getElementById('deletePersoConfirmBtn').addEventListener('click', async
 // ===== Equipment API =====
 
 async function submitEquipment() {
-    const name = document.getElementById('eqName').value.trim();
-    const slot = document.getElementById('eqSlot').value;
-    if (!name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
-    if (!slot) { showNotif('Slot obligatoire.', true); return; }
+    const dto = buildEquipmentDto();
+    if (!dto.name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
+    if (!dto.slot) { showNotif('Slot obligatoire.', true); return; }
 
-    const rarity = document.getElementById('eqRarity').value;
-    const maxWeight = (WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) ? WEIGHT_LIMITS[slot][rarity] : 5;
-    const currentWeight = calculateEquipmentWeight();
+    const currentWeight = window.lastSimulatedWeight || 0;
+    const maxWeight = window.lastSimulatedMaxWeight || 5;
     if (currentWeight > maxWeight) {
         showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
         return;
     }
 
-
-    let specialEffect = document.getElementById('eqSpecialEffect').value;
-    let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
-
-    // Security: Only Epic, Relic and Maudit can have special effects
-    if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
-        specialEffect = 'NONE';
-        specialEffectValue = 0;
-    } else {
-        // If they chose no effect on an Epic/Relic/Maudit, we just ignore the value
-        if (specialEffect === 'NONE') {
-            specialEffectValue = 0;
-        }
-    }
-
     // Security: Special effect value must not be 0
-    if (specialEffect !== 'NONE') {
-        if (rarity === 'MAUDIT') {
-            if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
-            if (specialEffectValue === 0) {
+    if (dto.specialEffect !== 'NONE') {
+        if (dto.rarity === 'MAUDIT') {
+            if (dto.specialEffectValue > 0) dto.specialEffectValue = -dto.specialEffectValue;
+            if (dto.specialEffectValue === 0) {
                 showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
                 return;
             }
-        } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
+        } else if (dto.rarity !== 'MAUDIT' && dto.specialEffectValue <= 0) {
             showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
             return;
         }
     }
-
-    const dto = {
-        name,
-        slot,
-        bonusHealthMax: parseInt(document.getElementById('eqHp').value) || 0,
-        bonusManaMax: parseInt(document.getElementById('eqMana').value) || 0,
-        bonusPower: parseInt(document.getElementById('eqPower').value) || 0,
-        bonusStrength: parseInt(document.getElementById('eqStr').value) || 0,
-        bonusArmor: parseInt(document.getElementById('eqArmor').value) || 0,
-        bonusResistance: parseInt(document.getElementById('eqRes').value) || 0,
-        bonusSpeed: parseInt(document.getElementById('eqSpeed').value) || 0,
-        bonusCrit: parseInt(document.getElementById('eqCrit').value) || 0,
-        regenHealthPerTurn: parseInt(document.getElementById('eqRegenHp').value) || 0,
-        regenManaPerTurn: parseInt(document.getElementById('eqRegenMana').value) || 0,
-        consumableHpPercent: document.getElementById('eqConsumableHpPercent') ? (parseInt(document.getElementById('eqConsumableHpPercent').value) || 0) : 0,
-        consumableManaPercent: document.getElementById('eqConsumableManaPercent') ? (parseInt(document.getElementById('eqConsumableManaPercent').value) || 0) : 0,
-        consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
-        consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
-        baseWeight: parseFloat(document.getElementById('eqBaseWeight')?.value) || 0,
-        rarity,
-        specialEffect,
-        specialEffectValue,
-        personnageId: equipModalPersoId,
-    };
 
     try {
         const res = await fetch('/api/equipment', {
@@ -849,7 +802,7 @@ function renderEquipModal() {
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
-    const slots = Object.keys(SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS');
+    const slots = Object.keys(SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS' && s !== 'ARME');
     const equippedItems = allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
 
     slotsContainer.innerHTML = slots.map(slotKey => {
@@ -1204,6 +1157,8 @@ document.addEventListener('click', (e) => {
 // ===== Init =====
 
 window.addEventListener('DOMContentLoaded', async () => {
+    await loadArmoryMeta();
+
     // Listeners for Weight Calculation
     const eqInputs = ['eqSlot', 'eqRarity', 'eqHp', 'eqMana', 'eqPower', 'eqStr', 'eqArmor', 'eqRes', 'eqSpeed', 'eqCrit', 'eqRegenHp', 'eqRegenMana', 'eqSpecialEffectValue', 'eqBaseWeight'];
     eqInputs.forEach(id => {

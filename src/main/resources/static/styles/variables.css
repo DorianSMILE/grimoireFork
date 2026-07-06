@@ -13,6 +13,13 @@
             --success: #10b981;
             --caster-color: #34d399;
             --target-color: #fb7185;
+            --slot-casque: var(--primary);
+            --slot-plastron: var(--accent);
+            --slot-arme: var(--danger);
+            --slot-anneau: #f59e0b;
+            --slot-bottes: var(--success);
+            --slot-cape: var(--secondary);
+            --slot-consommable: #854c4c;
         }
 
 *{

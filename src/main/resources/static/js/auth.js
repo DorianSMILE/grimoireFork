@@ -332,7 +332,8 @@ function injectUnlockModal() {
 
 window.promptUnlockFeature = function(featureId, featureName, cost) {
     if (!window.currentUser) {
-        alert("Veuillez vous connecter pour débloquer cette fonctionnalité.");
+        if (typeof showNotif !== 'undefined') showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
+        else alert("Veuillez vous connecter pour débloquer cette fonctionnalité.");
         return;
     }
     
@@ -378,11 +379,13 @@ window.promptUnlockFeature = function(featureId, featureName, cost) {
             if (res.status === 200) {
                 window.location.reload();
             } else {
-                alert(res.data.message || "Erreur lors de l'achat.");
+                if (typeof showNotif !== 'undefined') showNotif(res.data.message || "Erreur lors de l'achat.", true);
+                else alert(res.data.message || "Erreur lors de l'achat.");
                 cleanup();
             }
         }).catch(err => {
-            alert("Erreur serveur.");
+            if (typeof showNotif !== 'undefined') showNotif("Erreur serveur.", true);
+            else alert("Erreur serveur.");
             cleanup();
         });
     });

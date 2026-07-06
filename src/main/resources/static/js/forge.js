@@ -302,7 +302,8 @@ export function addEffectPanel(type) {
     else stat = 'ARMURE';
 
     if (type === 'AME_DETACHEE' && state.currentEffects.some(e => e.effectType === 'AME_DETACHEE')) {
-        alert("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.");
+        if (typeof showNotif !== 'undefined') showNotif("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.", true);
+        else alert("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.");
         return;
     }
 

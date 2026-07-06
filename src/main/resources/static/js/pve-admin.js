@@ -1990,11 +1990,11 @@ async function moveDungeonOrder(id, direction) {
         if (res.ok) {
             renderDungeonsList();
         } else {
-            alert("Erreur lors du changement d'ordre.");
+            showNotif("Erreur lors du changement d'ordre.", true);
         }
     } catch (e) {
         console.error(e);
-        alert("Erreur réseau.");
+        showNotif("Erreur réseau.", true);
     }
 }
 

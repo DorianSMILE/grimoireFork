@@ -1,5 +1,45 @@
 // Auth scripts for login and register pages
 
+window.globalFetch = async function(url, options = {}) {
+    try {
+        const res = await fetch(url, options);
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login.html';
+            return null;
+        }
+        if (!res.ok) {
+            let errorMsg = "Erreur serveur";
+            try {
+                const data = await res.json();
+                errorMsg = data.message || data.error || errorMsg;
+            } catch (e) {
+                try {
+                    const text = await res.text();
+                    errorMsg = text || errorMsg;
+                } catch(e2){}
+            }
+            throw new Error(errorMsg);
+        }
+        return res;
+    } catch (error) {
+        if (typeof showNotif !== 'undefined') {
+            showNotif(error.message, true);
+        } else if (typeof alert !== 'undefined') {
+            alert(error.message);
+        }
+        throw error;
+    }
+};
+
+window.formatRichText = function(text) {
+    if (!text) return '';
+    return text
+        .replace(/\[c=(.*?)\](.*?)\[\/c\]/g, '<strong class="text-$1">$2</strong>')
+        .replace(/\[ul\](.*?)\[\/ul\]/gs, '<ul class="list-disc mt-1 mb-1 pl-5">$1</ul>')
+        .replace(/\[li\](.*?)\[\/li\]/g, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     
     const loginForm = document.getElementById('loginForm');

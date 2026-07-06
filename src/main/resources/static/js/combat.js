@@ -2591,7 +2591,7 @@ function generateFighterHtml(c, isHero) {
                 <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
                 <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${vColor};">bolt</span>
-                    <span style="font-style: italic;">${vFull.passiveDescription || 'Passif spécifique.'}</span>
+                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -2610,7 +2610,7 @@ function generateFighterHtml(c, isHero) {
                 <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
                 <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${sColor};">bolt</span>
-                    <span style="font-style: italic;">${sFull.passiveDescription || 'Passif spécifique.'}</span>
+                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;

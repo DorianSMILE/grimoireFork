@@ -135,7 +135,6 @@ public class EquipmentController {
                     case COMMUN: return 4; case INHABITUEL: return 8; case RARE: return 12; case MYTHIQUE: return 15; case LEGENDAIRE: return 19; case EPIQUE: return 30; case RELIQUE: return 34; case MAUDIT: return 25;
                 }
                 break;
-            case ARME:
             case ARME_GAUCHE:
             case ARME_DROITE:
                 switch (rarity) {

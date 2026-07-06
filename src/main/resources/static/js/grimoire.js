@@ -454,7 +454,7 @@ export function getSpellCardHtml(sp) {
                 <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.voie.description || 'Description générique.'}</div>
                 <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${vHex};">bolt</span>
-                    <span style="font-style: italic;">${sp.voie.passiveDescription || 'Passif spécifique.'}</span>
+                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sp.voie.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -475,7 +475,7 @@ export function getSpellCardHtml(sp) {
                 <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.spiritualite.description || 'Description générique.'}</div>
                 <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${sHex};">bolt</span>
-                    <span style="font-style: italic;">${sp.spiritualite.passiveDescription || 'Passif spécifique.'}</span>
+                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sp.spiritualite.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;

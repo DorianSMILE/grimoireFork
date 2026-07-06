@@ -35,16 +35,16 @@ let CONSUMABLE_CATEGORIES = {};
 async function loadArmoryMeta() {
     try {
         const [slotsRes, catsRes] = await Promise.all([
-            fetch('/api/meta/equipment-slots'),
-            fetch('/api/meta/consumable-categories')
+            globalFetch('/api/meta/equipment-slots'),
+            globalFetch('/api/meta/consumable-categories')
         ]);
-        if (slotsRes.ok) {
+        if (slotsRes) {
             const slots = await slotsRes.json();
             slots.forEach(s => {
                 SLOT_LABELS[s.name] = { label: s.label, icon: s.icon, color: 'var(--' + s.cssClass + ', #ef4444)' }; // Uses css variable or fallback
             });
         }
-        if (catsRes.ok) {
+        if (catsRes) {
             const cats = await catsRes.json();
             cats.forEach(c => {
                 CONSUMABLE_CATEGORIES[c.name] = { label: c.label, icon: c.icon, color: 'var(--' + c.cssClass + ', #854c4c)' };
@@ -138,13 +138,19 @@ async function updateWeightUI() {
     let currentWeight = 0;
     let maxWeight = 5;
 
+    if (!dto.slot) {
+        document.getElementById('eqWeightText').innerText = "0 / 5";
+        document.getElementById('eqWeightText').style.color = 'var(--text-muted)';
+        return;
+    }
+
     try {
-        const res = await fetch('/api/equipment/simulate-weight', {
+        const res = await globalFetch('/api/equipment/simulate-weight', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
         });
-        if (res.ok) {
+        if (res) {
             const data = await res.json();
             currentWeight = data.weight || 0;
             maxWeight = data.maxWeight || 5;
@@ -207,11 +213,13 @@ async function updateWeightUI() {
 
 async function fetchMeta() {
     try {
-        const res = await fetch('/api/spells-editor/meta');
-        const data = await res.json();
-        voies = data.voies || [];
-        spiritualites = data.spiritualites || [];
-        populateSelects();
+        const res = await globalFetch('/api/spells-editor/meta');
+        if (res) {
+            const data = await res.json();
+            voies = data.voies || [];
+            spiritualites = data.spiritualites || [];
+            populateSelects();
+        }
     } catch (e) {
         console.error('Erreur chargement meta:', e);
     }
@@ -220,10 +228,12 @@ async function fetchMeta() {
 async function loadPersonnages() {
     try {
         const url = window.isAdmin ? '/api/personnages/all' : '/api/personnages';
-        const res = await fetch(url);
-        personnages = await res.json();
-        renderPersonnages();
-        await updateCharLimitUI();
+        const res = await globalFetch(url);
+        if (res) {
+            personnages = await res.json();
+            renderPersonnages();
+            await updateCharLimitUI();
+        }
     } catch (e) {
         console.error('Erreur chargement personnages:', e);
     }
@@ -231,8 +241,8 @@ async function loadPersonnages() {
 
 async function updateCharLimitUI() {
     try {
-        const res = await fetch('/api/personnages/limit');
-        if (res.ok) {
+        const res = await globalFetch('/api/personnages/limit');
+        if (res) {
             const data = await res.json();
             const limitContainer = document.getElementById('charLimitContainer');
             if (!limitContainer) return;
@@ -267,12 +277,12 @@ window.closeRosterModal = function () {
 document.getElementById('buyRosterConfirmBtn').addEventListener('click', async () => {
     closeRosterModal();
     try {
-        const res = await fetch('/api/auth/unlock/roster', { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) {
+        const res = await globalFetch('/api/auth/unlock/roster', { method: 'POST' });
+        if (res) {
+            const data = await res.json();
             showNotif(data.message);
             // Update auth state so UI syncs
-            await fetch('/api/auth/me').then(r => r.json()).then(u => {
+            await globalFetch('/api/auth/me').then(r => r.json()).then(u => {
                 if (window.updateGoldDisplay) window.updateGoldDisplay(u.monnaie);
                 window.currentUser = u;
             });
@@ -281,9 +291,6 @@ document.getElementById('buyRosterConfirmBtn').addEventListener('click', async (
             // Si le panneau de création était caché par applyRbac (pas géré directement mais au cas où)
             const eqCreateSection = document.querySelector('.equip-create-section');
             if (eqCreateSection && window.currentUser) eqCreateSection.style.display = 'block';
-
-        } else {
-            showNotif(data.message, true);
         }
     } catch (e) {
         showNotif('Erreur réseau', true);
@@ -293,8 +300,10 @@ document.getElementById('buyRosterConfirmBtn').addEventListener('click', async (
 async function loadAllEquipments() {
     try {
         const url = window.isAdmin ? '/api/equipment/all' : '/api/equipment';
-        const res = await fetch(url);
-        allEquipments = await res.json();
+        const res = await globalFetch(url);
+        if (res) {
+            allEquipments = await res.json();
+        }
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
         allEquipments = [];
@@ -340,15 +349,17 @@ async function submitPersonnage() {
     if (dto.spiritualiteId) dto.spiritualiteId = parseInt(dto.spiritualiteId);
 
     try {
-        const res = await fetch('/api/personnages', {
+        const res = await globalFetch('/api/personnages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
         });
-        const data = await res.json();
-        showNotif(data.message || 'Personnage sauvegardé !');
-        resetForm();
-        await loadPersonnages();
+        if (res) {
+            const data = await res.json();
+            showNotif(data.message || 'Personnage sauvegardé !');
+            resetForm();
+            await loadPersonnages();
+        }
     } catch (e) {
         showNotif('Erreur lors de la sauvegarde.', true);
         console.error(e);
@@ -377,10 +388,12 @@ document.getElementById('deletePersoConfirmBtn').addEventListener('click', async
     closeDeletePersoModal();
 
     try {
-        await fetch(`/api/personnages/${id}`, { method: 'DELETE' });
-        showNotif('Personnage supprimé.');
-        if (editingId === id) resetForm();
-        await loadPersonnages();
+        const res = await globalFetch(`/api/personnages/${id}`, { method: 'DELETE' });
+        if (res) {
+            showNotif('Personnage supprimé.');
+            if (editingId === id) resetForm();
+            await loadPersonnages();
+        }
     } catch (e) {
         showNotif('Erreur lors de la suppression.', true);
     }
@@ -415,17 +428,14 @@ async function submitEquipment() {
     }
 
     try {
-        const res = await fetch('/api/equipment', {
+        const res = await globalFetch('/api/equipment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
         });
-        const data = await res.json();
-        if (!res.ok) {
-            showNotif(data.message || 'Erreur', true);
-            return;
-        }
-        showNotif(data.message || 'Équipement créé !');
+        if (res) {
+            const data = await res.json();
+            showNotif(data.message || 'Équipement créé !');
         // Reset equipment form
         document.getElementById('eqName').value = '';
         document.getElementById('eqHp').value = 0;
@@ -453,6 +463,7 @@ async function submitEquipment() {
         await loadAllEquipments();
         renderEquipModal();
         await loadPersonnages();
+        }
     } catch (e) {
         showNotif('Erreur création équipement.', true);
     }
@@ -464,18 +475,14 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
         if (targetSlot) {
             url += `?targetSlot=${targetSlot}`;
         }
-        const res = await fetch(url, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) {
-            showNotif(data.message || 'Erreur', true);
-            // Reset dropdown
+        const res = await globalFetch(url, { method: 'POST' });
+        if (res) {
+            const data = await res.json();
+            showNotif(data.message);
+            await loadAllEquipments();
             renderEquipModal();
-            return;
+            await loadPersonnages();
         }
-        showNotif(data.message);
-        await loadAllEquipments();
-        renderEquipModal();
-        await loadPersonnages();
     } catch (e) {
         showNotif('Erreur lors de l\'équipement.', true);
     }
@@ -483,12 +490,14 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
 
 async function unequipItem(equipmentId) {
     try {
-        const res = await fetch(`/api/equipment/${equipmentId}/unequip`, { method: 'POST' });
-        const data = await res.json();
-        showNotif(data.message);
-        await loadAllEquipments();
-        renderEquipModal();
-        await loadPersonnages();
+        const res = await globalFetch(`/api/equipment/${equipmentId}/unequip`, { method: 'POST' });
+        if (res) {
+            const data = await res.json();
+            showNotif(data.message);
+            await loadAllEquipments();
+            renderEquipModal();
+            await loadPersonnages();
+        }
     } catch (e) {
         showNotif('Erreur lors du déséquipement.', true);
     }
@@ -496,11 +505,13 @@ async function unequipItem(equipmentId) {
 
 async function deleteEquipment(id) {
     try {
-        await fetch(`/api/equipment/${id}`, { method: 'DELETE' });
-        showNotif('Équipement supprimé.');
-        await loadAllEquipments();
-        renderEquipModal();
-        await loadPersonnages();
+        const res = await globalFetch(`/api/equipment/${id}`, { method: 'DELETE' });
+        if (res) {
+            showNotif('Équipement supprimé.');
+            await loadAllEquipments();
+            renderEquipModal();
+            await loadPersonnages();
+        }
     } catch (e) {
         showNotif('Erreur suppression.', true);
     }
@@ -668,7 +679,7 @@ function renderPersonnages() {
                     <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
                     <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                        <span style="font-style: italic;">${vFull.passiveDescription || 'Passif spécifique.'}</span>
+                        <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
                     </div>
                 </template>
             </span>`;
@@ -688,7 +699,7 @@ function renderPersonnages() {
                     <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
                     <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                        <span style="font-style: italic;">${sFull.passiveDescription || 'Passif spécifique.'}</span>
+                        <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
                     </div>
                 </template>
             </span>`;
@@ -758,21 +769,21 @@ function renderPersonnages() {
                     ${(p.totalRegenHp !== undefined ? p.totalRegenHp : p.regenHp || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f472b6;">healing</span>${p.totalRegenHp !== undefined ? p.totalRegenHp : p.regenHp} Régen PV</span>` : ''}
                     ${(p.totalRegenMana !== undefined ? p.totalRegenMana : p.regenMana || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #67e8f9;">dew_point</span>${p.totalRegenMana !== undefined ? p.totalRegenMana : p.regenMana} Régen Mana</span>` : ''}
                 </div>
-                <div class="char-xp-container" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #cbd5e1; font-family: 'Inter', sans-serif; font-weight: 500;">
+                <div class="char-xp-container">
+                    <div class="char-xp-header">
                         <span>Expérience Voie</span>
                         <span>${p.experience} / ${p.nextLevelXp} XP</span>
                     </div>
-                    <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); width: ${p.nextLevelXp > p.currentLevelXp ? Math.min(100, Math.max(0, ((p.experience - p.currentLevelXp) / (p.nextLevelXp - p.currentLevelXp)) * 100)) : 100}%; border-radius: 3px; box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);"></div>
+                    <div class="char-xp-bar-bg">
+                        <div class="char-xp-bar-fill-voie" style="width: ${p.nextLevelXp > p.currentLevelXp ? Math.min(100, Math.max(0, ((p.experience - p.currentLevelXp) / (p.nextLevelXp - p.currentLevelXp)) * 100)) : 100}%;"></div>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #cbd5e1; font-family: 'Inter', sans-serif; font-weight: 500; margin-top: 0.3rem;">
+                    <div class="char-xp-header" style="margin-top: 0.3rem;">
                         <span>Expérience Spirituelle</span>
                         <span>${p.spiritualiteExperience} / ${p.nextLevelSpiritXp} XP</span>
                     </div>
-                    <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="height: 100%; background: linear-gradient(90deg, #fb923c, #f59e0b); width: ${p.nextLevelSpiritXp > p.currentLevelSpiritXp ? Math.min(100, Math.max(0, ((p.spiritualiteExperience - p.currentLevelSpiritXp) / (p.nextLevelSpiritXp - p.currentLevelSpiritXp)) * 100)) : 100}%; border-radius: 3px; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);"></div>
+                    <div class="char-xp-bar-bg">
+                        <div class="char-xp-bar-fill-spirit" style="width: ${p.nextLevelSpiritXp > p.currentLevelSpiritXp ? Math.min(100, Math.max(0, ((p.spiritualiteExperience - p.currentLevelSpiritXp) / (p.nextLevelSpiritXp - p.currentLevelSpiritXp)) * 100)) : 100}%;"></div>
                     </div>
                 </div>
             </div>`;
@@ -1277,7 +1288,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                         <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${v.description || 'Description générique.'}</div>
                         <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                             <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                            <span style="font-style: italic;">${v.passiveDescription || 'Passif spécifique.'}</span>
+                            <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(v.passiveDescription) || 'Passif spécifique.'}</span>
                         </div>
                     `;
                 }
@@ -1315,7 +1326,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                         <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${s.description || 'Description générique.'}</div>
                         <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
                             <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                            <span style="font-style: italic;">${s.passiveDescription || 'Passif spécifique.'}</span>
+                            <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
                         </div>
                     `;
                 }

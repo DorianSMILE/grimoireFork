@@ -40,7 +40,7 @@ const STAT_DEFS = [
     { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
     { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
     { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'RÃ©s', icon: 'shield', color: '#10b981' },
+    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
     { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
     { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
     { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
@@ -208,7 +208,7 @@ document.addEventListener('click', (e) => {
         } else if (hiddenInput.id.startsWith('eq') || hiddenInput.id === 'eqSpecialEffect') {
             updateWeightUI();
         } else {
-            filterVault(); // Mettre Ã  jour l'affichage au changement
+            filterVault(); // Mettre à jour l'affichage au changement
         }
     }
 });
@@ -235,7 +235,7 @@ async function loadEquipments() {
 
         allEquipments = eqData.concat(anomaliesData);
 
-        // PrÃ©-calculer le poids pour le tri
+        // Pré-calculer le poids pour le tri
         allEquipments.forEach(eq => {
             eq._weight = calculateWeight(eq);
         });
@@ -244,7 +244,7 @@ async function loadEquipments() {
 
         filterVault();
     } catch (e) {
-        console.error('Erreur chargement Ã©quipements:', e);
+        console.error('Erreur chargement équipements:', e);
         document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state" style="color: #ef4444;"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
@@ -259,7 +259,7 @@ window.deleteAnomalie = function (idsStr) {
     const eq = allEquipments.find(e => e.id === firstId && e.isAnomalie);
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, dÃ©truire l'anomalie`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire l'anomalie`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
@@ -272,7 +272,7 @@ window.deleteEquipment = function (idsStr) {
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, dÃ©truire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
@@ -296,28 +296,28 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
                 const res = await globalFetch(`/api/equipment/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     success = true;
-                    showNotif('Ã‰quipement dÃ©truit.');
+                    showNotif('Équipement détruit.');
                     await loadEquipments();
                     if (window.checkAuthStatus) window.checkAuthStatus();
                     break;
                 }
             }
-            if (!success) showNotif('Impossible de dÃ©truire cet objet (liÃ©).', true);
+            if (!success) showNotif('Impossible de détruire cet objet (lié).', true);
         } else if (idsAn) {
             let success = false;
             for (let id of idsAn) {
                 const res = await globalFetch(`/api/anomalies/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     success = true;
-                    showNotif('Anomalie dÃ©truite.');
+                    showNotif('Anomalie détruite.');
                     await loadEquipments();
                     break;
                 }
             }
-            if (!success) showNotif('Impossible de dÃ©truire cette anomalie (liÃ©e).', true);
+            if (!success) showNotif('Impossible de détruire cette anomalie (liée).', true);
         }
     } catch (e) {
-        showNotif('Erreur rÃ©seau.', true);
+        showNotif('Erreur réseau.', true);
     }
 });
 
@@ -431,7 +431,7 @@ function renderGrid(equipments) {
         container.innerHTML = `
             <div class="vault-empty-state">
                 <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5;">search_off</span>
-                Aucun objet ne correspond Ã  votre recherche.
+                Aucun objet ne correspond à votre recherche.
             </div>`;
         return;
     }
@@ -475,7 +475,7 @@ function renderGrid(equipments) {
             let typeStr = 'Objet Magique';
             if (eq.magicObject === false) {
                 typeIcon = catIcon;
-                typeStr = 'MatÃ©riau';
+                typeStr = 'Matériau';
             }
 
             const badgeHtml = (eq.stackCount && eq.stackCount > 1)
@@ -504,19 +504,19 @@ function renderGrid(equipments) {
                         ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editAnomalie(${eq.id})" title="Modifier l'anomalie">
                             <span class="material-symbols-outlined">edit</span>
                         </button>` : ''}
-                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteAnomalie('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="DÃ©truire l'anomalie">
+                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteAnomalie('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="Détruire l'anomalie">
                             <span class="material-symbols-outlined">delete</span>
                         </button>` : ''}
                     </div>
                 </div>
                 <div class="vault-card-stats" style="color: ${spColor}; font-size: 0.9rem; text-align: center; font-style: italic; background: ${spColor}10; border-radius: 8px; padding: 1rem; border: 1px dashed ${spColor}30;">
-                    ${eq.description || "Une relique impie imprÃ©gnÃ©e d'une aura mystique."}
+                    ${eq.description || "Une relique impie imprégnée d'une aura mystique."}
                 </div>
                 <div class="vault-card-footer">
                     <div class="vault-card-weight"></div>
                     <span class="vault-card-status status-equipped" style="background: ${spColor}20; color: ${spColor};">
                         <span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span>
-                        PossÃ©dÃ©
+                        Possédé
                     </span>
                 </div>
             </div>`;
@@ -541,17 +541,17 @@ function renderGrid(equipments) {
         if (eq.specialEffect && eq.specialEffect !== 'NONE') {
             const effectLabels = {
                 'LIFESTEAL': 'Vol de Vie',
-                'THORNS': 'Ã‰pines',
+                'THORNS': 'Épines',
                 'MANA_SHIELD': 'Bouclier de Mana',
                 'CHEAT_DEATH': 'Ange Gardien',
-                'CRIT_DAMAGE': 'DÃ©gÃ¢ts Critiques',
+                'CRIT_DAMAGE': 'Dégâts Critiques',
                 'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-                'CURSED_HP_LOSS_ON_MANA': 'BrÃ¨che spirituelle (- hp % en mana Act.)',
-                'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dÃ©gÃ¢ts magique -)',
-                'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dÃ©gÃ¢ts physique -)',
-                'CURSED_VULNERABILITY': 'VulnÃ©rabilitÃ© (DÃ©gÃ¢ts subis % +)',
-                'CURSED_HEALING_REDUCTION': 'Chair putrÃ©fiÃ©e (Soins % -)',
-                'EXECUTION': 'ExÃ©cution (% Phy)',
+                'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+                'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+                'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+                'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+                'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+                'EXECUTION': 'Exécution (% Phy)',
                 'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
             };
             const label = effectLabels[eq.specialEffect] || eq.specialEffect;
@@ -621,7 +621,7 @@ function renderGrid(equipments) {
                         ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editEquipment(${eq.id})" title="Modifier l'objet">
                             <span class="material-symbols-outlined">edit</span>
                         </button>` : ''}
-                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="DÃ©truire l'objet">
+                        ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="Détruire l'objet">
                             <span class="material-symbols-outlined">delete</span>
                         </button>` : ''}
                     </div>
@@ -880,9 +880,9 @@ let editingAnomalieId = null;
 window.openCreateAnomalieModal = function () {
     editingAnomalieId = null;
     const titleEl = document.getElementById('anomalieModalTitle');
-    if (titleEl) titleEl.innerText = 'CrÃ©er une anomalie';
+    if (titleEl) titleEl.innerText = 'Créer une anomalie';
     const btnTextEl = document.getElementById('submitAnomalieBtnText');
-    if (btnTextEl) btnTextEl.innerText = "CrÃ©er l'Anomalie";
+    if (btnTextEl) btnTextEl.innerText = "Créer l'Anomalie";
     const btnIconEl = document.getElementById('submitAnomalieBtnIcon');
     if (btnIconEl) btnIconEl.innerText = "add";
 
@@ -988,9 +988,9 @@ window.submitAnomalie = async function () {
             return;
         }
 
-        showNotif(editingAnomalieId ? "Anomalie modifiÃ©e avec succÃ¨s !" : "Anomalie crÃ©Ã©e avec succÃ¨s !");
+        showNotif(editingAnomalieId ? "Anomalie modifiée avec succès !" : "Anomalie créée avec succès !");
         closeCreateAnomalieModal();
-        await loadEquipments(); // Recharger les anomalies et Ã©quipements
+        await loadEquipments(); // Recharger les anomalies et équipements
     } catch (e) {
         console.error(e);
         showNotif("Erreur lors de la sauvegarde de l'anomalie.", true);
@@ -1000,14 +1000,14 @@ window.submitAnomalie = async function () {
 window.submitEquipment = async function () {
     const name = document.getElementById('eqName').value.trim();
     const slot = document.getElementById('eqSlot').value;
-    if (!name) { showNotif('Nom de l\'Ã©quipement obligatoire.', true); return; }
+    if (!name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
     if (!slot) { showNotif('Slot obligatoire.', true); return; }
 
     const rarity = document.getElementById('eqRarity').value;
     const maxWeight = (WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) ? WEIGHT_LIMITS[slot][rarity] : 5;
     const currentWeight = calculateEquipmentWeight();
     if (currentWeight > maxWeight) {
-        showNotif('Le poids de cet Ã©quipement dÃ©passe la limite autorisÃ©e !', true);
+        showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
         return;
     }
 
@@ -1027,11 +1027,11 @@ window.submitEquipment = async function () {
         if (rarity === 'MAUDIT') {
             if (specialEffectValue > 0) specialEffectValue = -specialEffectValue;
             if (specialEffectValue === 0) {
-                showNotif('La valeur de l\'effet spÃ©cial maudit ne peut pas Ãªtre 0.', true);
+                showNotif('La valeur de l\'effet spécial maudit ne peut pas être 0.', true);
                 return;
             }
         } else if (rarity !== 'MAUDIT' && specialEffectValue <= 0) {
-            showNotif('La valeur de l\'effet spÃ©cial doit Ãªtre strictement supÃ©rieure Ã  0.', true);
+            showNotif('La valeur de l\'effet spécial doit être strictement supérieure à 0.', true);
             return;
         }
     }
@@ -1075,11 +1075,11 @@ window.submitEquipment = async function () {
         }
 
         closeCreateEqModal();
-        showNotif(editingEquipmentId ? 'Ã‰quipement modifiÃ© !' : 'Ã‰quipement forgÃ© !');
+        showNotif(editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
         await loadEquipments();
     } catch (e) {
         console.error(e);
-        showNotif('Erreur rÃ©seau', true);
+        showNotif('Erreur réseau', true);
     }
 }
 

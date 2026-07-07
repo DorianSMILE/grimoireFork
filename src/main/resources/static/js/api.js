@@ -67,7 +67,7 @@ export async function deleteSpellAPI(id) {
 
 
 
-// Au chargement, rÃ©cupÃ©rer les mÃ©tadonnÃ©es
+// Au chargement, récupérer les métadonnées
 
 export async function fetchMeta() {
     try {
@@ -82,7 +82,7 @@ export async function fetchMeta() {
             if (optgroupVoies) optgroupVoies.innerHTML += `<option value="V_${v.id}">${v.nom}</option>`;
         });
 
-        // Remplir les SpiritualitÃ©s
+        // Remplir les Spiritualités
         const spiritSel = document.getElementById('spiritSelect');
         if (spiritSel) spiritSel.style.fontFamily = "";
         const optgroupSpirits = document.getElementById('optgroupSpiritsFilter');
@@ -112,18 +112,18 @@ export async function fetchMeta() {
         makeCustomSelect('mutationSelect');
         makeCustomSelect('filterMutation');
 
-        // Remplir les sources de coÃ»ts
+        // Remplir les sources de coûts
         const pms = document.getElementById('percentManaCostSource');
         const phs = document.getElementById('percentHealCostSource');
         const sourcesHtml = renderSourceOptions(state.metaData.sources, '');
         if (pms) pms.innerHTML = sourcesHtml;
         if (phs) phs.innerHTML = sourcesHtml;
 
-        // SÃ©lectionner des valeurs par dÃ©faut pertinentes
+        // Sélectionner des valeurs par défaut pertinentes
         if (pms) pms.value = 'CASTER_MANA_MAX';
         if (phs) phs.value = 'CASTER_HEALTH_MAX';
 
-        // Appliquer le style Premium Ã  TOUTES les combo boxes
+        // Appliquer le style Premium à TOUTES les combo boxes
         ['voieSelect', 'spiritSelect', 'niveau', 'castingTypeSelect',
             'percentManaCostSource', 'percentHealCostSource',
             'filterEffect', 'filterLevel', 'sortBy'].forEach(id => makeCustomSelect(id));
@@ -140,7 +140,7 @@ export async function fetchMeta() {
         }
         toggleChannelingFields();
     } catch (err) {
-        console.error("Erreur de chargement des mÃ©tadonnÃ©es", err);
+        console.error("Erreur de chargement des métadonnées", err);
     }
 }
 
@@ -233,7 +233,7 @@ export async function submitSpell() {
             const msg = await res.text();
             showNotif(msg);
 
-            // RÃ©initialiser le formulaire et l'Ã©tat d'Ã©dition
+            // Réinitialiser le formulaire et l'état d'édition
             state.editingSpellId = null;
             document.getElementById('spellForgePanel').classList.remove('editing-mode');
             document.getElementById('submitSpellBtn').innerText = 'âœ¦ Forger le Sort';
@@ -243,7 +243,7 @@ export async function submitSpell() {
             renderEffects();
             updateSpecialVoieConfig();
 
-            // RÃ©initialiser les champs de canalisation
+            // Réinitialiser les champs de canalisation
             const channelingDurInput = document.getElementById('channelingDuration');
             if (channelingDurInput) channelingDurInput.value = 1;
             const allowInstantInput = document.getElementById('allowInstantDuringChanneling');
@@ -256,7 +256,7 @@ export async function submitSpell() {
                 updateViolenceLabel();
             }
 
-            // Mettre Ã  jour l'aperÃ§u d'Ã©dition flottant
+            // Mettre à jour l'aperçu d'édition flottant
             updateEditingPreview();
 
             // Recharger la liste
@@ -289,12 +289,12 @@ export async function loadSpells() {
 
 
 /* ================================================================
-   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualitÃ©
+   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualité
    ================================================================ */
 
 
 // ================================================================
-//   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualitÃ©
+//   EFFETS HOVER LVL-5 : enter/leave par voie / spiritualité
 // ================================================================
 
 // ---- ENTER (mouseenter) ----
@@ -302,71 +302,71 @@ export async function loadSpells() {
 // ---- LEAVE (mouseleave) ----
 
 // ================================================================
-//   EFFETS Ã‰LÃ‰MENTAIRES â€” ENTER
+//   EFFETS ÉLÉMENTAIRES â€” ENTER
 // ================================================================
 
-// ðŸ’¨ VENT (Raison) : traits de vent qui balayent la carte de gauche Ã  droite
+// ðŸ’¨ VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
 
-// ðŸ’§ EAU (SÃ»retÃ©) : vague qui monte depuis le bas de la carte
+// ðŸ’§ EAU (Sûreté) : vague qui monte depuis le bas de la carte
 
-// â˜ ï¸ POISON (Trahison) : bulles de poison verdÃ¢tres qui Ã©manent du centre
+// â˜ ï¸ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
 
 // ðŸª¨ TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
 
-// ðŸŒ‹ LAVE (Conviction) : coulÃ©es de lave qui descendent depuis le haut
+// ðŸŒ‹ LAVE (Conviction) : coulées de lave qui descendent depuis le haut
 
-// ðŸŒ¿ PLANTE (CrÃ©ation) : vrilles de vigne qui s'Ã©lancent depuis les bords
+// ðŸŒ¿ PLANTE (Création) : vrilles de vigne qui s'élancent depuis les bords
 
 // ðŸ”¥ FEU (Destruction) : gerbe de flammes qui explose vers le haut
 
-// ðŸ’¥ EXPLOSION (Violence) : onde de choc circulaire + Ã©clats
+// ðŸ’¥ EXPLOSION (Violence) : onde de choc circulaire + éclats
 
-// ðŸ‘» ESPRIT : orbes d'Ã¢me qui orbitent autour de la carte
+// ðŸ‘» ESPRIT : orbes d'âme qui orbitent autour de la carte
 
-// ðŸŒ‘ TÃ‰NÃˆBRES : tentacules d'ombre qui surgissent des bords
+// ðŸŒ‘ TÉNÈBRES : tentacules d'ombre qui surgissent des bords
 
 // âš–ï¸ KARMA : deux orbes â€” or et argent â€” qui convergent
 
 
 // ================================================================
-//   EFFETS Ã‰LÃ‰MENTAIRES â€” LEAVE
+//   EFFETS ÉLÉMENTAIRES â€” LEAVE
 // ================================================================
 
 // ðŸ’¨ VENT â€” le vent retombe : quelques tourbillons qui se dissipent
 
-// ðŸ’§ EAU â€” gouttelettes qui tombent et Ã©claboussent
+// ðŸ’§ EAU â€” gouttelettes qui tombent et éclaboussent
 
 // â˜ ï¸ POISON â€” Brume toxique lourde, poisseuse et lente
 
-// ðŸª¨ TERRE â€” poussiÃ¨re de pierre qui retombe lourdement depuis le bas
+// ðŸª¨ TERRE â€” poussière de pierre qui retombe lourdement depuis le bas
 
 // ðŸŒ‹ LAVE â€” braises qui refroidissent et tombent
 
 // ðŸŒ± PLANTE â€” Liane grimpante lente + nuage de pollen
 
-// ðŸ”¥ FEU â€” cendres et fumÃ©e qui s'Ã©lÃ¨vent
+// ðŸ”¥ FEU â€” cendres et fumée qui s'élèvent
 
-// ðŸ’¥ EXPLOSION â€” retombÃ©e : Ã©clats qui tombent + fumÃ©e
+// ðŸ’¥ EXPLOSION â€” retombée : éclats qui tombent + fumée
 
-// ðŸ‘» ESPRIT â€” dissolution : la carte libÃ¨re des Ã¢mes spectrales
+// ðŸ‘» ESPRIT â€” dissolution : la carte libère des âmes spectrales
 
-// ðŸŒ‘ TÃ‰NÃˆBRES â€” le vide se referme : brume noire/violette qui s'absorbe
+// ðŸŒ‘ TÉNÈBRES â€” le vide se referme : brume noire/violette qui s'absorbe
 
-// âš–ï¸ KARMA â€” les orbes se sÃ©parent et partent en orbites opposÃ©es
-
-
-// CrÃ©e un div de base pour les particules
+// âš–ï¸ KARMA â€” les orbes se séparent et partent en orbites opposées
 
 
-// Convertit un hex code (#RRGGBB) en chaÃ®ne "R, G, B"
+// Crée un div de base pour les particules
 
 
+// Convertit un hex code (#RRGGBB) en chaîne "R, G, B"
 
 
 
-// Couleur dÃ©diÃ©e aux Voies (mÃªme logique que getSpellColor)
 
-// Couleur dÃ©diÃ©e aux SpiritualitÃ©s (mÃªme logique que getSpellColor)
+
+// Couleur dédiée aux Voies (même logique que getSpellColor)
+
+// Couleur dédiée aux Spiritualités (même logique que getSpellColor)
 
 
 

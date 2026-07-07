@@ -143,7 +143,7 @@ public class ShopController {
         if (user == null)
             return ResponseEntity.status(401).build();
 
-        double price = calculateShopPrice(template);
+        double price = template.calculateShopPrice();
         if (isPromo) {
             price = Math.ceil(price * 0.8);
         }
@@ -285,44 +285,7 @@ public class ShopController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
     }
 
-    private double calculateShopPrice(Equipment eq) {
-        double weight = eq.calculateWeight();
-        double multiplier = 1.0;
-        if (eq.getRarity() == EquipmentRarity.COMMUN)
-            multiplier = 1.0;
-        else if (eq.getRarity() == EquipmentRarity.INHABITUEL)
-            multiplier = 1.5;
-        else if (eq.getRarity() == EquipmentRarity.RARE)
-            multiplier = 2.0;
-        else if (eq.getRarity() == EquipmentRarity.MYTHIQUE)
-            multiplier = 2.5;
-        else if (eq.getRarity() == EquipmentRarity.LEGENDAIRE)
-            multiplier = 3.0;
-        else if (eq.getRarity() == EquipmentRarity.EPIQUE)
-            multiplier = 5.0;
-        else if (eq.getRarity() == EquipmentRarity.RELIQUE)
-            multiplier = 6.0;
-        else if (eq.getRarity() == EquipmentRarity.MAUDIT)
-            multiplier = 4;
 
-        double slotMultiplier = 1.0;
-        if (eq.getSlot() == EquipmentSlot.PLASTRON)
-            slotMultiplier = 1.1;
-        else if (eq.getSlot() == EquipmentSlot.ANNEAU_GAUCHE || eq.getSlot() == EquipmentSlot.ANNEAU_DROIT)
-            slotMultiplier = 1.5;
-        else if (eq.getSlot() == EquipmentSlot.BOTTES)
-            slotMultiplier = 0.9;
-        else if (eq.getSlot() == EquipmentSlot.CAPE)
-            slotMultiplier = 1.2;
-        else if (eq.getSlot() == EquipmentSlot.ARME_DROITE)
-            slotMultiplier = 1.5;
-        else if (eq.getSlot() == EquipmentSlot.ARME_GAUCHE)
-            slotMultiplier = 1.4;
-        else if (eq.getSlot() == EquipmentSlot.ARME_DEUX_MAINS)
-            slotMultiplier = 1.1;
-
-        return Math.ceil(weight * 2 * multiplier * slotMultiplier);
-    }
 
     private Map<String, Object> toShopDto(Equipment e) {
         Map<String, Object> map = new HashMap<>();
@@ -342,7 +305,7 @@ public class ShopController {
         map.put("rarity", e.getRarity());
         map.put("specialEffect", e.getSpecialEffect());
         map.put("specialEffectValue", e.getSpecialEffectValue());
-        double shopPrice = calculateShopPrice(e);
+        double shopPrice = e.calculateShopPrice();
         if (e.getSlot() == EquipmentSlot.CONSOMMABLE && e.getName() != null) {
             String nameLower = e.getName().toLowerCase().trim();
             if (nameLower.equals("corde")) shopPrice = 15;

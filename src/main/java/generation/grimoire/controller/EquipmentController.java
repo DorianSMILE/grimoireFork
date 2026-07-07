@@ -110,10 +110,12 @@ public class EquipmentController {
 
         double weight = temp.calculateWeight();
         double maxWeight = getMaxWeight(dto.getSlot(), dto.getRarity());
+        double shopPrice = temp.calculateShopPrice();
 
         Map<String, Double> response = new HashMap<>();
         response.put("weight", weight);
         response.put("maxWeight", maxWeight);
+        response.put("shopPrice", shopPrice);
         return ResponseEntity.ok(response);
     }
 

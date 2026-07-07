@@ -485,11 +485,11 @@ function renderGrid(equipments) {
             let adminOwnerHtml = '';
             if (window.isAdmin) {
                 if (eq.isTemplate || eq.ownerUsername === 'MODELE') {
-                    adminOwnerHtml = `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle;">[MODÈLE]</span>`;
+                    adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;">[MODÈLE]</span>`;
                 } else {
                     const displayOwner = eq._groupOwner || eq.ownerUsername;
                     if (displayOwner) {
-                        adminOwnerHtml = `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
+                        adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
                     }
                 }
             }
@@ -503,11 +503,11 @@ function renderGrid(equipments) {
                             <span class="material-symbols-outlined" style="font-size: 0.9rem; color: ${spColor};">${typeIcon}</span>
                             ${typeStr} <span style="opacity:0.5; margin-left:4px;">${eq.spiritualite}</span> <span style="opacity:0.5; margin-left:4px;">(Niv. ${eq.level || 1})</span>
                         </div>
-                        <div class="vault-card-name" style="color: #fdf4ff; display: flex; align-items: center; gap: 0.3rem;">
-                            <span class="material-symbols-outlined" style="font-size: 1.2rem; opacity: 0.8; color: ${spColor};">${catIcon}</span>
-                            <span>${eq.name}</span>
-                            ${adminOwnerHtml}
+                        <div class="vault-card-name" style="color: #fdf4ff; display: flex; align-items: flex-start; gap: 0.3rem;">
+                            <span class="material-symbols-outlined" style="font-size: 1.2rem; opacity: 0.8; color: ${spColor}; flex-shrink: 0; margin-top: 2px;">${catIcon}</span>
+                            <span style="word-break: break-word;" title="${eq.name}">${eq.name}</span>
                         </div>
+                        ${adminOwnerHtml ? `<div>${adminOwnerHtml}</div>` : ''}
                     </div>
                     <div class="vault-card-actions">
                         ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editAnomalie(${eq.id})" title="Modifier l'anomalie">
@@ -612,11 +612,11 @@ function renderGrid(equipments) {
         let adminOwnerHtml = '';
         if (window.isAdmin) {
             if (eq.isTemplate || eq.ownerUsername === 'MODELE') {
-                adminOwnerHtml = `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle;">[MODÈLE]</span>`;
+                adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;">[MODÈLE]</span>`;
             } else {
                 const displayOwner = eq._groupOwner || eq.ownerUsername;
                 if (displayOwner) {
-                    adminOwnerHtml = `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
+                    adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
                 }
             }
         }
@@ -630,10 +630,10 @@ function renderGrid(equipments) {
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 0.9rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
                             ${slotInfo.label} ${eq.rarity ? `<span style="opacity:0.5; margin-left:4px;">${eq.rarity}</span>` : ''}
                         </div>
-                        <div class="vault-card-name">
+                        <div class="vault-card-name" style="word-break: break-word;">
                             ${eq.name}
-                            ${adminOwnerHtml}
                         </div>
+                        ${adminOwnerHtml ? `<div style="margin-top: 0.2rem;">${adminOwnerHtml}</div>` : ''}
                     </div>
                     <div class="vault-card-actions">
                         ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editEquipment(${eq.id})" title="Modifier l'objet">

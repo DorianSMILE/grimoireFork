@@ -452,6 +452,9 @@ public class CombatService {
                             newAnomaly.setName(template.getName());
                             newAnomaly.setDescription(template.getDescription());
                             newAnomaly.setSpiritualite(template.getSpiritualite());
+                            newAnomaly.setCategory(template.getCategory());
+                            newAnomaly.setLevel(template.getLevel() != null ? template.getLevel() : 1);
+                            newAnomaly.setMagicObject(template.isMagicObject());
                             newAnomaly.setOwnerUsername(user.getUsername());
                             newAnomaly.setUser(user);
                             anomalieRepository.save(newAnomaly);
@@ -771,6 +774,9 @@ public class CombatService {
                     newAnomaly.setName(template.getName());
                     newAnomaly.setDescription(template.getDescription());
                     newAnomaly.setSpiritualite(template.getSpiritualite());
+                    newAnomaly.setCategory(template.getCategory());
+                    newAnomaly.setLevel(template.getLevel() != null ? template.getLevel() : 1);
+                    newAnomaly.setMagicObject(template.isMagicObject());
                     newAnomaly.setOwnerUsername(user.getUsername());
                     newAnomaly.setUser(user);
                     anomalieRepository.save(newAnomaly);

@@ -12,42 +12,40 @@ Le document pose de **bonnes fondations** — les 3 piliers sont solides et bien
 
 La règle **B3 (DTOs Actifs)** + **B4 (Simulate)** couvrent ce cas. Constat terrain :
 
-- [armory.js:88-139](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L88-L139) contient `calculateEquipmentWeight()` avec **tous les multiplicateurs hardcodés** (mHp=0.2, mPow=2.0, etc.) et une logique `if slot === 'ARME_GAUCHE'` dupliquée côté front.
-- [armory.js:75-86](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L75-L86) contient `WEIGHT_LIMITS` — une matrice slot×rarity entièrement hardcodée en JS.
+- ~~[armory.js] contenait `calculateEquipmentWeight()` avec tous les multiplicateurs hardcodés.~~ **(CORRIGÉ)**
+- ~~[armory.js] contenait `WEIGHT_LIMITS` hardcodé en JS.~~ **(CORRIGÉ)**
 
-**Verdict** : B3+B4 suffisent à résoudre le problème si appliquées. `WEIGHT_LIMITS` devrait être servi par un endpoint `GET /api/equipment/meta` et `calculateEquipmentWeight` remplacé par `POST /api/equipment/simulate-weight`.
+**Verdict** : B3+B4 ont été appliquées avec succès. La logique a été déportée côté back-end.
 
 ### ✅ HTML/CSS dans le code Java/BDD
 
 La règle **B1** couvre exactement ce cas. Constat terrain :
 
-- [WebSpellCreationController.java](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/java/generation/grimoire/controller/WebSpellCreationController.java) lignes 89-240 : **au moins 12 occurrences** de `<strong style="color: #facc15;">`, `<ul style="margin-top:...">`, etc. directement dans les strings Java des descriptions de Voies et Spiritualités.
+- ~~[WebSpellCreationController.java] contenait de nombreuses balises HTML (strong, ul, style inline).~~ **(CORRIGÉ)**
 
-**Verdict** : B1 est bien formulée. Le problème réel est massif dans ce contrôleur.
+**Verdict** : B1 a été appliquée avec succès, le code Java a été purgé de ses balises HTML.
 
 ### ✅ Hardcodage de dictionnaires de traduction en JS
 
 La règle **F1** couvre ce cas. Constat terrain :
 
-- [constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` (25 entrées), `GLOBAL_SRC_LABELS` (14 entrées), `javaClassToCode` (14 entrées) — 100% de dictionnaires qui devraient venir du backend.
-- [armory.js:32-43](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L32-L43) : `SLOT_LABELS` avec label/icon/color hardcodés.
-- [armory.js:58-73](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L58-L73) : `STAT_DEFS` — un mapping stat→label/icon/color hardcodé.
-- [armory.js:49-54](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L49-L54) : `catIcons`/`catColors` pour les catégories de consommables, hardcodés inline.
+- [constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end. **(CORRIGÉ)**
+- `SLOT_LABELS` et d'autres constantes (ex: `catIcons`) sont encore dupliqués et hardcodés dans `combat.js`, `shop-admin.js`, `vault.js` etc. **(À FINIR)**
 
-**Verdict** : F1 bien formulée. Ironie : `StatType.java` est déjà un Rich Enum avec `label` → `GLOBAL_STAT_LABELS` est un doublon parfait. Mais les autres enums (`MonsterBehavior`, `EquipmentRarity`, `EquipmentSlot`, `Source`, `MonsterType`) sont des **enums nues** sans métadonnées — B2 ne peut pas être appliquée en l'état.
+**Verdict** : F1 a commencé à être appliquée, mais la migration n'est pas totale. Certaines enums nues (`MonsterBehavior`, `EquipmentRarity`, `EquipmentSlot`, `Source`, `MonsterType`) attendent toujours leurs métadonnées pour être exposées proprement au front.
 
 ---
 
 ## 2. Angles morts identifiés
 
-### 🔴 AM-1 : Sécurité des appels API — CRITIQUE
+### ✅ AM-1 : Sécurité des appels API — CORRIGÉ
 
-[SecurityConfig.java:24](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/java/generation/grimoire/security/SecurityConfig.java#L24) : `.anyRequest().permitAll()` — **toutes les routes API sont ouvertes à tous**, y compris les routes admin (PVE, Shop, Equipment CRUD). Le commentaire dit "temporarily" mais ça ne suffit pas.
+~~[SecurityConfig.java:24] : `.anyRequest().permitAll()` — toutes les routes API étaient ouvertes à tous.~~ **(CORRIGÉ)**
 
-De plus, ligne 20 : `csrf.disable()` sans aucune alternative (pas de token dans les headers). Le RBAC côté front ([armory.js:3-16](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L3-L16)) fait du `style.display = 'none'` pour cacher les boutons admin — **sécurité cosmétique uniquement**.
+Le fichier `SecurityConfig.java` a été mis à jour pour exiger le rôle `ADMIN` sur toutes les routes d'administration (`/api/admin/**`, `/api/equipment/**`, `/api/spells-editor/**`, etc.). La faille critique est fermée.
 
-> [!CAUTION]
-> Le document architecture ne mentionne AUCUNE règle de sécurité. Un joueur peut actuellement créer/supprimer des équipements, des monstres, des donjons via les API admin sans authentification.
+> [!NOTE]
+> Le document architecture doit quand même mentionner les règles de sécurité comme proposé plus bas pour éviter toute régression future.
 
 ### 🔴 AM-2 : Inline CSS dans les templates JS — NON COUVERT
 
@@ -209,7 +207,7 @@ La section "Master System Prompt" (§ dernier) doit refléter les nouvelles règ
 
 | Angle mort | Criticité | Section proposée |
 |---|---|---|
-| Sécurité API (permitAll) | 🔴 CRITIQUE | Nouvelle section 4 (S1, S2, S3) |
+| Sécurité API (permitAll) | ✅ CORRIGÉ | Nouvelle section 4 (S1, S2, S3) |
 | Template literals inline | 🔴 Haute | F2 renforcée + F7 |
 | Gestion d'erreurs | 🟠 Moyenne | F5 |
 | Couche API centralisée | 🟠 Moyenne | F4 |

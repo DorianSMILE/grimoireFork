@@ -34,13 +34,21 @@ public class ShopController {
     @GetMapping("/daily")
     public ResponseEntity<Map<String, Object>> getDailyShop() {
         List<Equipment> templates = equipmentRepository.findAll().stream()
-                .filter(e -> e != null && e.isShopTemplate())
+                .filter(e -> e != null && e.isTemplate())
                 .collect(Collectors.toList());
 
-        List<Equipment> commons = templates.stream().filter(e -> e.getRarity() == EquipmentRarity.COMMUN).toList();
-        List<Equipment> rares = templates.stream().filter(e -> e.getRarity() == EquipmentRarity.RARE).toList();
-        List<Equipment> legendaries = templates.stream().filter(e -> e.getRarity() == EquipmentRarity.LEGENDAIRE)
+        List<Equipment> equipmentTemplates = templates.stream()
+                .filter(e -> e.getSlot() != EquipmentSlot.CONSOMMABLE)
                 .toList();
+
+        List<String> shopConsumables = List.of("corde", "clé", "pain", "potion de mana");
+        List<Equipment> consumableTemplates = templates.stream()
+                .filter(e -> e.getSlot() == EquipmentSlot.CONSOMMABLE && e.getName() != null && shopConsumables.contains(e.getName().toLowerCase().trim()))
+                .toList();
+
+        List<Equipment> commons = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.COMMUN).toList();
+        List<Equipment> rares = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.RARE).toList();
+        List<Equipment> legendaries = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.LEGENDAIRE).toList();
 
         // Seeded random based on today's date
         long seed = LocalDate.now().toEpochDay();
@@ -52,7 +60,7 @@ public class ShopController {
         dailySelection.addAll(pickRandom(legendaries, 1, random));
 
         // Promo
-        List<Equipment> remainingTemplates = new ArrayList<>(templates);
+        List<Equipment> remainingTemplates = new ArrayList<>(equipmentTemplates);
         remainingTemplates.removeAll(dailySelection);
         Equipment promoItem = null;
         if (!remainingTemplates.isEmpty()) {
@@ -71,30 +79,15 @@ public class ShopController {
             response.put("discount", promoDto);
         }
 
-        // Consumables
-        List<Map<String, Object>> consumables = List.of(
-                createConsumable("Corde", 15, "gesture", "rope", "Sert à éviter certains pièges", 5.0),
-                createConsumable("Clé", 25, "vpn_key", "key", "Ouvre les compartiments secrets des coffres", 1.0),
-                createConsumable("Pain", 5, "bakery_dining", "bread", "Régénère 10% de la vie max", 2.0),
-                createConsumable("Potion de mana", 10, "water_drop", "potion", "Régénère 10% du mana max", 2.0));
+        // Consumables from templates
+        List<Map<String, Object>> consumables = consumableTemplates.stream()
+                .map(this::toShopDto)
+                .toList();
         response.put("consumables", consumables);
 
         return ResponseEntity.ok(response);
     }
 
-    private Map<String, Object> createConsumable(String name, double price, String icon, String typeId,
-            String description, double weight) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", name);
-        map.put("shopPrice", price);
-        map.put("slot", "CONSOMMABLE");
-        map.put("iconId", icon); // Custom icon for display
-        map.put("typeId", typeId); // ID for purchasing
-        map.put("isConsumable", true);
-        map.put("description", description);
-        map.put("weight", weight);
-        return map;
-    }
 
     private List<Equipment> pickRandom(List<Equipment> source, int count, Random random) {
         if (source.isEmpty())
@@ -111,7 +104,7 @@ public class ShopController {
             return ResponseEntity.status(401).build();
 
         Equipment template = equipmentRepository.findById(templateId).orElse(null);
-        if (template == null || !template.isShopTemplate()) {
+        if (template == null || !template.isTemplate()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Objet introuvable dans la boutique."));
         }
 
@@ -119,7 +112,7 @@ public class ShopController {
         long seed = LocalDate.now().toEpochDay();
         Random random = new Random(seed);
         List<Equipment> allTemplates = equipmentRepository.findAll().stream()
-                .filter(e -> e != null && e.isShopTemplate())
+                .filter(e -> e != null && e.isTemplate())
                 .toList();
         List<Equipment> commons = allTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.COMMUN).toList();
         List<Equipment> rares = allTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.RARE).toList();
@@ -140,8 +133,9 @@ public class ShopController {
 
         boolean isDaily = dailySelection.stream().anyMatch(e -> e.getId().equals(templateId));
         boolean isPromo = promoItem != null && promoItem.getId().equals(templateId);
+        boolean isConsumable = template.getSlot() == EquipmentSlot.CONSOMMABLE;
 
-        if (!isDaily && !isPromo) {
+        if (!isDaily && !isPromo && !isConsumable) {
             return ResponseEntity.badRequest().body(Map.of("message", "Cet objet n'est pas en vente aujourd'hui."));
         }
 
@@ -201,7 +195,7 @@ public class ShopController {
         Equipment clone = new Equipment();
         clone.copyStatsFrom(template);
 
-        clone.setShopTemplate(false);
+        clone.setTemplate(false);
         clone.setUser(user);
         clone.setOwnerUsername(user.getUsername());
 
@@ -210,85 +204,7 @@ public class ShopController {
         return ResponseEntity.ok(Map.of("message", "Achat réussi !"));
     }
 
-    @PostMapping("/buy/consumable/{type}")
-    public ResponseEntity<?> buyConsumable(@PathVariable String type, Principal principal) {
-        if (principal == null)
-            return ResponseEntity.status(401).build();
-        AppUser user = userRepository.findByUsername(principal.getName()).orElse(null);
-        if (user == null)
-            return ResponseEntity.status(401).build();
 
-        String name = "";
-        double price = 0;
-        double weight = 0;
-        generation.grimoire.enumeration.ConsumableCategory category = generation.grimoire.enumeration.ConsumableCategory.AUTRE;
-        switch (type.toLowerCase()) {
-            case "rope":
-                name = "Corde";
-                price = 15;
-                weight = 5.0;
-                category = generation.grimoire.enumeration.ConsumableCategory.CORDE;
-                break;
-            case "key":
-                name = "Clé";
-                price = 25;
-                weight = 1.0;
-                category = generation.grimoire.enumeration.ConsumableCategory.CLE;
-                break;
-            case "bread":
-                name = "Pain";
-                price = 5;
-                weight = 2.0;
-                category = generation.grimoire.enumeration.ConsumableCategory.NOURRITURE;
-                break;
-            case "potion":
-                name = "Potion de mana";
-                price = 10;
-                weight = 2.0;
-                category = generation.grimoire.enumeration.ConsumableCategory.POTION_BLEUE;
-                break;
-            default:
-                return ResponseEntity.badRequest().body(Map.of("message", "Consommable inconnu."));
-        }
-
-        if (user.getMonnaie() < price) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Fonds insuffisants."));
-        }
-
-        user.setMonnaie(user.getMonnaie() - price);
-        userRepository.save(user);
-
-        Equipment consumable = new Equipment();
-        consumable.setName(name);
-        consumable.setSlot(EquipmentSlot.CONSOMMABLE);
-        consumable.setConsumableCategory(category);
-        consumable.setRarity(EquipmentRarity.COMMUN);
-        consumable.setShopTemplate(false);
-        consumable.setPersonnage(null); // Goes to vault
-        consumable.setUser(user);
-        consumable.setOwnerUsername(user.getUsername());
-        consumable.setBonusHealthMax(0);
-        consumable.setBonusManaMax(0);
-        consumable.setBonusPower(0);
-        consumable.setBonusStrength(0);
-        consumable.setBonusArmor(0);
-        consumable.setBonusResistance(0);
-        consumable.setBonusSpeed(0);
-        consumable.setBonusCrit(0);
-        consumable.setRegenHealthPerTurn(0);
-        consumable.setRegenManaPerTurn(0);
-        consumable.setBaseWeight(weight);
-
-        if ("bread".equalsIgnoreCase(type)) {
-            consumable.setConsumableHpPercent(10);
-        } else if ("potion".equalsIgnoreCase(type)) {
-            consumable.setConsumableManaPercent(10);
-        }
-
-        equipmentRepository.save(consumable);
-
-        return ResponseEntity.ok(Map.of("message", "Achat réussi !"));
-    }
 
     // --- ADMIN TEMPLATES CRUD ---
 
@@ -297,7 +213,7 @@ public class ShopController {
         if (principal == null || !isAdmin(principal))
             return ResponseEntity.status(403).build();
         List<Equipment> templates = equipmentRepository.findAll().stream()
-                .filter(e -> e != null && e.isShopTemplate())
+                .filter(e -> e != null && e.isTemplate())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(templates.stream().map(this::toShopDto).toList());
     }
@@ -310,7 +226,9 @@ public class ShopController {
 
         Equipment eq = new Equipment();
         updateFromDto(eq, dto);
-        eq.setShopTemplate(true);
+        eq.setTemplate(true);
+        eq.setOwnerUsername("MODELE");
+        eq.setUser(null);
         equipmentRepository.save(eq);
         return ResponseEntity.ok(toShopDto(eq));
     }
@@ -322,7 +240,7 @@ public class ShopController {
             return ResponseEntity.status(403).build();
 
         return equipmentRepository.findById(id).map(eq -> {
-            if (!eq.isShopTemplate())
+            if (!eq.isTemplate())
                 return ResponseEntity.badRequest().body(Map.of("message", "Not a template"));
 
             String oldName = eq.getName();
@@ -336,7 +254,7 @@ public class ShopController {
                     if (instance.getId().equals(eq.getId()))
                         continue;
                     updateFromDto(instance, dto);
-                    instance.setShopTemplate(false); // ensure it remains an instance
+                    instance.setTemplate(false); // ensure it remains an instance
                     equipmentRepository.save(instance);
                 }
             }
@@ -352,7 +270,7 @@ public class ShopController {
             return ResponseEntity.status(403).build();
 
         return equipmentRepository.findById(id).map(eq -> {
-            if (eq.isShopTemplate()) {
+            if (eq.isTemplate()) {
                 equipmentRepository.delete(eq);
                 return ResponseEntity.ok().build();
             }
@@ -424,7 +342,15 @@ public class ShopController {
         map.put("rarity", e.getRarity());
         map.put("specialEffect", e.getSpecialEffect());
         map.put("specialEffectValue", e.getSpecialEffectValue());
-        map.put("shopPrice", calculateShopPrice(e));
+        double shopPrice = calculateShopPrice(e);
+        if (e.getSlot() == EquipmentSlot.CONSOMMABLE && e.getName() != null) {
+            String nameLower = e.getName().toLowerCase().trim();
+            if (nameLower.equals("corde")) shopPrice = 15;
+            else if (nameLower.equals("clé")) shopPrice = 25;
+            else if (nameLower.equals("pain")) shopPrice = 5;
+            else if (nameLower.equals("potion de mana")) shopPrice = 10;
+        }
+        map.put("shopPrice", shopPrice);
         map.put("priceAnomalies", e.getPriceAnomalies());
         map.put("weight", e.calculateWeight());
         map.put("baseWeight", e.getBaseWeight());
@@ -433,6 +359,7 @@ public class ShopController {
         map.put("consumableMissingHpPercent", e.getConsumableMissingHpPercent());
         map.put("consumableMissingManaPercent", e.getConsumableMissingManaPercent());
         map.put("consumableCategory", e.getConsumableCategory() != null ? e.getConsumableCategory().name() : "AUTRE");
+        map.put("isConsumable", e.getSlot() == EquipmentSlot.CONSOMMABLE);
         return map;
     }
 

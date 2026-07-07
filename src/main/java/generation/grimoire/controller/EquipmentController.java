@@ -40,7 +40,7 @@ public class EquipmentController {
         if (principal == null)
             return ResponseEntity.status(401).build();
         List<Equipment> equipmentList = equipmentRepository.findByUser_Username(principal.getName());
-        return ResponseEntity.ok(equipmentList.stream().filter(e -> !e.isShopTemplate()).map(this::toDto).toList());
+        return ResponseEntity.ok(equipmentList.stream().filter(e -> !e.isTemplate()).map(this::toDto).toList());
     }
 
     /** Liste TOUS les équipements (réservé aux admins) */
@@ -64,7 +64,7 @@ public class EquipmentController {
         List<Equipment> templates = new java.util.ArrayList<>();
         for (String name : names) {
             if (name != null && !name.trim().isEmpty()) {
-                Equipment template = equipmentRepository.findFirstByNameOrderByIdAsc(name);
+                Equipment template = equipmentRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(name);
                 if (template != null) {
                     templates.add(template);
                 }
@@ -96,7 +96,7 @@ public class EquipmentController {
             return ResponseEntity.status(401).build();
         return ResponseEntity.ok(
                 equipmentRepository.findByPersonnageIsNullAndUser_Username(principal.getName()).stream()
-                        .filter(e -> !e.isShopTemplate())
+                        .filter(e -> !e.isTemplate())
                         .map(this::toDto).toList());
     }
 
@@ -304,9 +304,16 @@ public class EquipmentController {
             isUpdate = true;
         } else {
             equipment = new Equipment();
-            equipment.setUser(currentUser);
-            if (currentUser != null) {
-                equipment.setOwnerUsername(currentUser.getUsername());
+            if (isAdmin) {
+                equipment.setTemplate(true);
+                equipment.setOwnerUsername("MODELE");
+                equipment.setUser(null);
+            } else {
+                equipment.setTemplate(false);
+                equipment.setUser(currentUser);
+                if (currentUser != null) {
+                    equipment.setOwnerUsername(currentUser.getUsername());
+                }
             }
         }
 
@@ -601,9 +608,14 @@ public class EquipmentController {
             map.put("personnage", perso);
         }
 
-        if (e.getUser() != null) {
+        if (e.getOwnerUsername() != null) {
+            map.put("ownerUsername", e.getOwnerUsername());
+        } else if (e.getUser() != null) {
             map.put("ownerUsername", e.getUser().getUsername());
         }
+        
+        map.put("isTemplate", e.isTemplate());
+        map.put("availableInShop", e.isAvailableInShop());
 
         return map;
     }

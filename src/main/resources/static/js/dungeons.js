@@ -1,4 +1,4 @@
-﻿window.switchDungeonTab = function(tabName) {
+window.switchDungeonTab = function(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
@@ -336,7 +336,7 @@ async function loadCharacters() {
                             <div style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem; display: flex; align-items: center;">
                                 ${c.name} ${iconsHtml}
                             </div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} â€¢ ${c.healthMax} PV max</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} &bull; ${c.healthMax} PV max</div>
                         </div>
                     </div>
                 `;

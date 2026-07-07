@@ -349,7 +349,7 @@ public class CombatService {
                         session.addLog("Un équipement a été dégradé à cause des recharges abusives.");
                     }
 
-                    clone.setShopTemplate(false);
+                    clone.setTemplate(false);
                     clone.setUser(user);
                     clone.setOwnerUsername(user.getUsername());
 
@@ -444,7 +444,7 @@ public class CombatService {
                     logged = true;
                 } else if ("SPECIAL_ITEM".equals(room.getAlterationRewardType())) {
                     String itemName = room.getAlterationSpecialItemReward();
-                    Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(itemName);
+                    Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(itemName);
                     if (template != null && !session.getPlayers().isEmpty()) {
                         generation.grimoire.entity.auth.AppUser user = session.getPlayers().get(0).getUser();
                         if (user != null) {
@@ -576,7 +576,7 @@ public class CombatService {
                     if (template != null) {
                         generation.grimoire.entity.Equipment clone = new generation.grimoire.entity.Equipment();
                         clone.copyStatsFrom(template);
-                        clone.setShopTemplate(false);
+                        clone.setTemplate(false);
                         clone.setUser(user);
                         clone.setOwnerUsername(user.getUsername());
                         equipmentRepository.save(clone);
@@ -765,7 +765,7 @@ public class CombatService {
             acheteur.addSpecialItem(itemName, 1);
 
             if (user != null) {
-                Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(itemName);
+                Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(itemName);
                 if (template != null) {
                     Anomalie newAnomaly = new Anomalie();
                     newAnomaly.setName(template.getName());

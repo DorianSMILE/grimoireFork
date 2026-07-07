@@ -113,7 +113,7 @@ public class AlchemyService {
                 
                 List<Anomalie> matchingProvided = anomalieIds.stream()
                         .map(id -> userAnomalies.stream().filter(a -> a.getId().equals(id)).findFirst().orElse(null))
-                        .filter(a -> a != null && a.getName().equalsIgnoreCase(requiredName))
+                        .filter(a -> a != null && a.getName().equalsIgnoreCase(requiredName) && !a.isTemplate())
                         .toList();
                         
                 if (matchingProvided.size() < requiredQty) {
@@ -147,7 +147,7 @@ public class AlchemyService {
 
                 List<Equipment> matchingProvided = consumableIds.stream()
                         .map(id -> userEquipments.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null))
-                        .filter(e -> e != null && e.getSlot() == EquipmentSlot.CONSOMMABLE && e.getName().equalsIgnoreCase(requiredName))
+                        .filter(e -> e != null && e.getSlot() == EquipmentSlot.CONSOMMABLE && e.getName().equalsIgnoreCase(requiredName) && !e.isTemplate())
                         .toList();
 
                 if (matchingProvided.size() < requiredQty) {
@@ -217,7 +217,7 @@ public class AlchemyService {
                 anomaly.setLevel(recipe.getRewardLevel());
                 
                 // Cherche un template existant pour copier la spiritualité et la catégorie
-                Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(recipe.getRewardName());
+                Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
                 if (template != null) {
                     anomaly.setSpiritualite(template.getSpiritualite());
                     anomaly.setCategory(template.getCategory());
@@ -230,7 +230,7 @@ public class AlchemyService {
             }
             return "Vous avez obtenu " + recipe.getRewardQuantity() + "x Anomalie : " + recipe.getRewardName();
         } else if (recipe.getRewardType() == RecipeRewardType.GIVE_CONSUMABLE) {
-            Equipment template = equipmentRepository.findFirstByNameOrderByIdAsc(recipe.getRewardName());
+            Equipment template = equipmentRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
             for (int i = 0; i < recipe.getRewardQuantity(); i++) {
                 Equipment consumable = new Equipment();
                 consumable.setName(recipe.getRewardName());
@@ -244,7 +244,7 @@ public class AlchemyService {
             }
             return "Vous avez obtenu " + recipe.getRewardQuantity() + "x Consommable : " + recipe.getRewardName();
         } else if (recipe.getRewardType() == RecipeRewardType.GIVE_EQUIPMENT) {
-            Equipment template = equipmentRepository.findFirstByNameOrderByIdAsc(recipe.getRewardName());
+            Equipment template = equipmentRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
             for (int i = 0; i < recipe.getRewardQuantity(); i++) {
                 Equipment eq = new Equipment();
                 eq.setName(recipe.getRewardName());
@@ -268,7 +268,7 @@ public class AlchemyService {
             upgraded.setUser(user);
             upgraded.setLevel(recipe.getRewardLevel());
             
-            Anomalie template = anomalieRepository.findFirstByNameOrderByIdAsc(recipe.getRewardName());
+            Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
             if (template != null) {
                 upgraded.setSpiritualite(template.getSpiritualite());
                 upgraded.setCategory(template.getCategory());

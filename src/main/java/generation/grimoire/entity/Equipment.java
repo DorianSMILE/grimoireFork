@@ -73,8 +73,11 @@ public class Equipment {
     @Column(name = "owner_username")
     private String ownerUsername;
 
-    @Column(name = "is_shop_template", nullable = false)
-    private boolean isShopTemplate = false;
+    @Column(name = "is_template", nullable = false)
+    private boolean isTemplate = false;
+
+    @Column(name = "available_in_shop", nullable = false)
+    private boolean availableInShop = false;
 
     @ElementCollection
     @CollectionTable(name = "equipment_anomaly_prices", joinColumns = @JoinColumn(name = "equipment_id"))

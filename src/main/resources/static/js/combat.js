@@ -4,7 +4,7 @@ import { getVoieButtonColor, getSpiritButtonColor } from './filters.js';
 
 if (!window.allAnomaliesCombat || !Array.isArray(window.allAnomaliesCombat)) {
     window.allAnomaliesCombat = [];
-    globalFetch('/api/anomalies/all-templates').then(res => {
+    window.globalFetch('/api/anomalies/all-templates').then(res => {
         if (!res.ok) throw new Error("HTTP error " + res.status);
         return res.json();
     }).then(data => {

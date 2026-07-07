@@ -1,4 +1,4 @@
-﻿const SLOT_LABELS = {
+const SLOT_LABELS = {
     CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
     PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
     ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
@@ -121,7 +121,6 @@ function generateStandHtml(eq) {
 
     if (isConsumable && eq.iconId) {
         slotInfo.icon = eq.iconId;
-        slotInfo.color = '#c084fc';
     }
 
     const statsHtml = STAT_DEFS
@@ -208,12 +207,12 @@ function generateStandHtml(eq) {
             <div class="shop-stand-name">${eq.name}</div>
             
             <div class="shop-stand-stats">
-                ${!isConsumable ? (statsHtml || '<div style="color:#64748b; font-style:italic; font-size: 0.85rem; margin-top: 0.5rem;">Aucune stat</div>') : ''}
+                ${statsHtml ? statsHtml : (!isConsumable ? '<div style="color:#64748b; font-style:italic; font-size: 0.85rem; margin-top: 0.5rem;">Aucune stat</div>' : '')}
                 ${effectHtml}
-                ${isConsumable && eq.description ? `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic; text-align: center; margin-top: 0.5rem;">${eq.description}</div>` : ''}
+                ${eq.description ? `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic; text-align: center; margin-top: 0.5rem;">${eq.description}</div>` : ''}
             </div>
             
-            <button class="shop-stand-price" onclick="openBuyModal('${isConsumable ? eq.typeId : eq.id}', ${isConsumable})" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <button class="shop-stand-price" onclick="window.openBuyModal('${eq.id}', ${isConsumable})" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
                 <div>${oldPriceHtml} ${priceStr} <span class="material-symbols-outlined" style="font-size: 1.2rem; vertical-align: middle;">monetization_on</span></div>
                 ${(() => {
             if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
@@ -372,15 +371,15 @@ function renderSpecials() {
     container.innerHTML = html;
 }
 
-window.openBuyModal = function (idOrType, isConsumable = false) {
+window.openBuyModal = function (id, isConsumable = false) {
     let eq = null;
 
     if (isConsumable) {
-        eq = (shopItems.consumables || []).find(e => e.typeId === idOrType);
+        eq = (shopItems.consumables || []).find(e => e.id === parseInt(id));
     } else {
-        eq = (shopItems.daily || []).find(e => e.id === parseInt(idOrType));
+        eq = (shopItems.daily || []).find(e => e.id === parseInt(id));
         if (!eq && shopItems.discount) {
-            if (shopItems.discount.id === parseInt(idOrType)) {
+            if (shopItems.discount.id === parseInt(id)) {
                 eq = shopItems.discount;
             }
         }
@@ -388,7 +387,7 @@ window.openBuyModal = function (idOrType, isConsumable = false) {
 
     if (!eq) return;
 
-    itemToBuy = { idOrType, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
+    itemToBuy = { id, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
 
     document.getElementById('buyTargetName').textContent = eq.name;
 
@@ -450,14 +449,11 @@ window.closeBuyModal = function () {
 document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
     if (!itemToBuy) return;
 
-    const { idOrType, isConsumable } = itemToBuy;
+    const { id } = itemToBuy;
     closeBuyModal();
 
     try {
-        let url = `/api/shop/buy/${idOrType}`;
-        if (isConsumable) {
-            url = `/api/shop/buy/consumable/${idOrType}`;
-        }
+        let url = `/api/shop/buy/${id}`;
 
         const res = await globalFetch(url, { method: 'POST' });
         const data = await res.json();
@@ -468,7 +464,7 @@ document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
                 window.checkAuthStatus(); // Met à jour l'or affiché
             }
         } else {
-            showNotif(data.message || 'Erreur lors de l\'achat.', true);
+            showNotif(data.message || "Erreur lors de l'achat.", true);
         }
     } catch (e) {
         showNotif('Erreur réseau.', true);

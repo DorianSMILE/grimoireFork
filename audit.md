@@ -13,9 +13,9 @@ Le document pose de **bonnes fondations** — les 3 piliers sont solides et bien
 La règle **B3 (DTOs Actifs)** + **B4 (Simulate)** couvrent ce cas. Constat terrain :
 
 - ~~[armory.js] contenait `calculateEquipmentWeight()` avec tous les multiplicateurs hardcodés.~~ **(CORRIGÉ)**
-- ~~[armory.js] contenait `WEIGHT_LIMITS` hardcodé en JS.~~ **(CORRIGÉ)**
+- ~~[shop-admin.js] contenait `calculateEquipmentWeight()`, `calculateShopPrice()` et `WEIGHT_LIMITS` en dur.~~ **(CORRIGÉ)**
 
-**Verdict** : B3+B4 ont été appliquées avec succès. La logique a été déportée côté back-end.
+**Verdict** : B3+B4 ont été appliquées avec succès. L'intégralité du calcul (poids, limites, prix) est centralisée dans le back-end (`Equipment.java`) et interrogée via l'endpoint de simulation (`/api/equipment/simulate-weight`).
 
 ### ✅ HTML/CSS dans le code Java/BDD
 
@@ -29,10 +29,10 @@ La règle **B1** couvre exactement ce cas. Constat terrain :
 
 La règle **F1** couvre ce cas. Constat terrain :
 
-- [constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end. **(CORRIGÉ)**
-- `SLOT_LABELS` et d'autres constantes (ex: `catIcons`) sont encore dupliqués et hardcodés dans `combat.js`, `shop-admin.js`, `vault.js` etc. **(À FINIR)**
+- ~~[constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end.~~ **(CORRIGÉ)**
+- ~~`SLOT_LABELS` et d'autres constantes (ex: `catIcons`) sont encore dupliqués et hardcodés dans `combat.js`, `shop-admin.js`, `vault.js` etc.~~ **(CORRIGÉ)**
 
-**Verdict** : F1 a commencé à être appliquée, mais la migration n'est pas totale. Certaines enums nues (`MonsterBehavior`, `EquipmentRarity`, `EquipmentSlot`, `Source`, `MonsterType`) attendent toujours leurs métadonnées pour être exposées proprement au front.
+**Verdict** : F1 a été appliquée avec succès. Un `EnumMetaController` charge toutes les métadonnées (icônes, couleurs, libellés) au démarrage de l'app UI via `window.initAppMeta()`. Plus aucun dictionnaire n'est codé en dur en JS.
 
 ---
 

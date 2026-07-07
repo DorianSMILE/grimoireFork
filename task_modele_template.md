@@ -1,7 +1,0 @@
-- [ ] Mettre à jour `Equipment.java` (`isTemplate`, `availableInShop`) et `Anomalie.java` (`isTemplate`).
-- [ ] Mettre à jour `EquipmentRepository` et `AnomalieRepository` avec les requêtes spécifiques (`findByIsTemplateTrue`, etc.).
-- [ ] Modifier `EquipmentController` et `AnomalieController` pour la création par les admins (`ownerUsername = "MODELE"`).
-- [ ] Modifier `ShopController`, `CombatService` et `AlchemyService` pour utiliser les modèles pour la duplication.
-- [ ] Modifier `AlchemyService` pour filtrer les ingrédients avec `isTemplate = false`.
-- [ ] Adapter le frontend (`vault.js` / requêtes d'armurerie) pour afficher le badge `[MODÈLE]` et ne charger que les instances pour les joueurs.
-- [ ] Créer une route API jetable pour la migration des données existantes (passer les templates actuels en `ownerUsername = "MODELE"`).

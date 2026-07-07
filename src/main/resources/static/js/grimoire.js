@@ -263,7 +263,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                 if (dt === 'brut') dtColor = '#ef4444';
 
                 const dtStr = dt === 'magic' ? 'Magiques' : (dt === 'physic' ? 'Physiques' : 'Bruts');
-                const dtHtml = `<span style="color: ${dtColor}; font-weight: bold;">${dtStr}</span>`;
+                const dtHtml = `<span class="font-bold" style="color: ${dtColor};">${dtStr}</span>`;
 
                 let detailsStr = '';
                 if (t === 'DamageFixed' || t === 'FIXED_DAMAGE') {
@@ -447,14 +447,14 @@ export function getSpellCardHtml(sp) {
         voieBadge = `<span class="badge" style="cursor: help; color: ${vHex}; border-color: rgba(${vRgb}, 0.3); background: rgba(${vRgb}, 0.05); display:inline-flex; align-items:center; gap:0.2rem;" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
             <span class="material-symbols-outlined" style="font-size:1.1em;">${vIcon}</span>${sp.voie.nom}
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${vHex};">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${vHex};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${vIcon}</span>
                     ${sp.voie.nom}
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.voie.description || 'Description générique.'}</div>
-                <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.voie.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${vHex};">bolt</span>
-                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sp.voie.passiveDescription) || 'Passif spécifique.'}</span>
+                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sp.voie.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -468,14 +468,14 @@ export function getSpellCardHtml(sp) {
         spiritBadge = `<span class="badge" style="cursor: help; color: ${sHex}; border-color: rgba(${sRgb}, 0.3); background: rgba(${sRgb}, 0.05); display:inline-flex; align-items:center; gap:0.2rem;" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
             <span class="material-symbols-outlined" style="font-size:1.1em;">${sIcon}</span>${sp.spiritualite.nom}
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${sHex};">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${sHex};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${sIcon}</span>
                     ${sp.spiritualite.nom}
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.spiritualite.description || 'Description générique.'}</div>
-                <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.spiritualite.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${sHex};">bolt</span>
-                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sp.spiritualite.passiveDescription) || 'Passif spécifique.'}</span>
+                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sp.spiritualite.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -489,11 +489,11 @@ export function getSpellCardHtml(sp) {
         mutationBadge = `<span class="badge" style="cursor: help; color: ${mHex}; border-color: rgba(${mRgb}, 0.3); background: rgba(${mRgb}, 0.05); display:inline-flex; align-items:center; gap:0.2rem;" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
             <span class="material-symbols-outlined" style="font-size:1.1em;">${mIcon}</span>${sp.mutation.nom}
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${mHex};">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${mHex};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${mIcon}</span>
                     Mutation : ${sp.mutation.nom}
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sp.mutation.description || 'Description de la mutation.'}</div>
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.mutation.description || 'Description de la mutation.'}</div>
             </template>
         </span>`;
     }
@@ -504,12 +504,12 @@ export function getSpellCardHtml(sp) {
     } else if (sp.castingType === 'CANALISE') {
         castBadge = `<span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">cyclone</span>Canalisé</span>`;
     } else {
-        castBadge = `<span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">hourglass_empty</span>Banal</span>`;
+        castBadge = `<span class="badge text-muted" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(100, 116, 139, 0.2); border: 1px solid rgba(100, 116, 139, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">hourglass_empty</span>Banal</span>`;
     }
 
     if (sp.voie && sp.voie.nom && sp.voie.nom.toLowerCase().includes('violence')) {
         if (sp.inspiration) {
-            castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">storm</span>Inspiration</span>`;
+            castBadge += ` <span class="badge text-error" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">storm</span>Inspiration</span>`;
         } else {
             castBadge += ` <span class="badge" style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(217, 70, 239, 0.2); color: #d946ef; border: 1px solid rgba(217, 70, 239, 0.4);"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Expiration</span>`;
         }
@@ -569,25 +569,25 @@ export function getSpellCardHtml(sp) {
                         <div style="display: flex; gap: 0.3rem; align-items: center; flex-wrap: wrap;">
                             ${api.isAdmin(window.currentUser) ? `
                             <button type="button" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; line-height: 1; border-radius: 4px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); display: inline-flex; align-items: center; gap: 0.2rem;" onclick="editSpell(${sp.id})" title="Modifier les propriétés de ce sort"><span class="material-symbols-outlined" style="font-size: 1.05rem;">edit</span><span>Éditer</span></button>
-                            <button type="button" class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; line-height: 1; border-radius: 4px; opacity: 0.75; display: inline-flex; align-items: center; justify-content: center;" onclick="deleteSpell(${sp.id})" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" title="Supprimer définitivement ce sort"><span class="material-symbols-outlined" style="font-size: 1.05rem;">delete</span></button>
+                            <button type="button" class="btn-danger text-xs" onclick="deleteSpell(${sp.id})" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" title="Supprimer définitivement ce sort" style="padding: 0.25rem 0.5rem; line-height: 1; border-radius: 4px; opacity: 0.75; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1.05rem;">delete</span></button>
                             ` : ''}
                         </div>
                     </div>
                     ${rankTitleBadge}
                     <div class="spell-meta" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #38bdf8; vertical-align: middle;">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
-                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f43f5e; vertical-align: middle;">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
-                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.05rem; color: #f97316; vertical-align: middle;">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
+                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #38bdf8;">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
+                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #f43f5e;">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
+                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #f97316;">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
                         ${sp.castingType === 'CANALISE' ? `
                             <span style="color: #a78bfa; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;" title="Paramètres du sort canalisé">
-                                <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #a78bfa; vertical-align: middle;">cyclone</span>
+                                <span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; color: #a78bfa;">cyclone</span>
                                 <span>${sp.channelingDuration} tour${sp.channelingDuration > 1 ? 's' : ''}</span>
                                 ${sp.allowInstantDuringChanneling ? `
-                                    <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #f59e0b; vertical-align: middle;" title="Instantanés autorisés pendant la canalisation">bolt</span>
+                                    <span class="material-symbols-outlined align-middle" title="Instantanés autorisés pendant la canalisation" style="font-size: 1.1rem; color: #f59e0b;">bolt</span>
                                 ` : `
-                                    <span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; vertical-align: middle;" title="Instantanés interdits pendant la canalisation">
+                                    <span class="relative align-middle" title="Instantanés interdits pendant la canalisation" style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem;">
                                         <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #64748b;">bolt</span>
-                                        <span style="position: absolute; width: 100%; height: 2px; background: #ef4444; transform: rotate(-45deg);"></span>
+                                        <span class="absolute" style="width: 100%; height: 2px; background: #ef4444; transform: rotate(-45deg);"></span>
                                     </span>
                                 `}
                             </span>

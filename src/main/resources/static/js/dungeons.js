@@ -224,7 +224,7 @@ async function loadDungeons() {
                         if (userLevel < reqLevel) {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay">
-                                <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
+                                <span class="material-symbols-outlined opacity-80" style="font-size: 3.5rem; margin-bottom: 0.5rem;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.3rem;">Accès Verrouillé</div>
                                 <div style="font-size: 0.95rem; color: #fca5a5;">Secret requis : <strong style="color: #f8fafc;">${d.requiredSecret}</strong> (Niv. ${reqLevel})</div>
                             </div>`;
@@ -235,14 +235,14 @@ async function loadDungeons() {
                         if (!userDungeons.includes(d.id)) {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay" style="background: rgba(15, 23, 42, 0.75); color: #f59e0b;">
-                                <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
+                                <span class="material-symbols-outlined opacity-80" style="font-size: 3.5rem; margin-bottom: 0.5rem;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon Verrouillé</div>
-                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
+                                <button class="btn btn-primary flex-center" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
                             </div>`;
                         }
                     }
 
-                    const entryCostHtml = d.entryCostGold > 0 ? `<div style="color: #f59e0b; font-weight: 600; font-size: 0.9rem; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">monetization_on</span> Co\u00fbt d'entr\u00e9e : ${d.entryCostGold} Or</div>` : '';
+                    const entryCostHtml = d.entryCostGold > 0 ? `<div class="text-sm" style="color: #f59e0b; font-weight: 600; margin-top: 0.5rem;"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">monetization_on</span> Co\u00fbt d'entr\u00e9e : ${d.entryCostGold} Or</div>` : '';
 
                     const cardHtml = `
                         <div class="dungeon-card ${isLocked ? 'locked' : ''}" ${isLocked ? '' : `onclick="openPrepInterface(${d.id}, '${d.name.replace(/'/g, "\\'")}', '${sallesData}', ${d.maxHeroes || 1}, ${d.entryCostGold || 0}, ${d.recommendedLevel || 1})"`}>
@@ -255,20 +255,20 @@ async function loadDungeons() {
                             <div class="dungeon-desc">${d.description || 'Affrontez les dangers qui r\u00f4dent.'}</div>
                             ${entryCostHtml}
                             <div style="font-size: 0.85rem; color: #f8fafc; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; gap: 0.4rem;">
-                                <div style="color: #0ea5e9; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">
+                                <div class="flex-center" style="color: #0ea5e9; font-weight: 600; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">group</span> H\u00e9ros max : ${d.maxHeroes || 1}
                                 </div>
                                 <div><span style="font-weight: 600;">Salles totales :</span> ${totalSalles}</div>
-                                ${combats > 0 ? `<div style="color: #ef4444; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${combats > 0 ? `<div class="flex-center text-error" style="margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">swords</span> Combats : ${combats} (avec ${totalMobs} mob${totalMobs > 1 ? 's' : ''})
                                 </div>` : ''}
-                                ${bosses > 0 ? `<div style="color: #dc2626; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${bosses > 0 ? `<div class="flex-center" style="color: #dc2626; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">skull</span> Boss : ${bosses} (avec ${totalBossMobs} mob${totalBossMobs > 1 ? 's' : ''})
                                 </div>` : ''}
-                                ${treasures > 0 ? `<div style="color: #f59e0b; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${treasures > 0 ? `<div class="flex-center" style="color: #f59e0b; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> Tr\u00e9sors : ${treasures}
                                 </div>` : ''}
-                                <div style="color: #8b5cf6; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                <div class="flex-center" style="color: #8b5cf6; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9v\u00e9nements : ${events}
                                 </div>
                             </div>
@@ -295,7 +295,7 @@ async function loadCharacters() {
             list.innerHTML = '';
 
             if (userCharacters.length === 0) {
-                list.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem;">Vous n'avez aucun personnage. Allez dans le Grimoire pour en cr\u00e9er un.</div>`;
+                list.innerHTML = `<div class="text-sm text-muted">Vous n'avez aucun personnage. Allez dans le Grimoire pour en cr\u00e9er un.</div>`;
                 return;
             }
 
@@ -333,10 +333,10 @@ async function loadCharacters() {
                     <div class="char-card" id="charCard_${c.id}" onclick="selectCharacter(${c.id})">
                         <div class="char-avatar">${c.name.charAt(0).toUpperCase()}</div>
                         <div>
-                            <div style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem; display: flex; align-items: center;">
+                            <div class="flex-center" style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem;">
                                 ${c.name} ${iconsHtml}
                             </div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} &bull; ${c.healthMax} PV max</div>
+                            <div class="text-muted" style="font-size: 0.85rem;">Niv. ${c.voieLevel || 1} &bull; ${c.healthMax} PV max</div>
                         </div>
                     </div>
                 `;
@@ -385,13 +385,13 @@ function renderConsumablesList() {
     const maxWeight = getMaxWeight();
     const isOverweight = curWeight > maxWeight;
 
-    const counterHtml = `<div style="text-align: center; margin-bottom: 0.8rem; font-size: 0.85rem; color: ${isOverweight ? '#ef4444' : '#94a3b8'};">
-        <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">scale</span>
+    const counterHtml = `<div class="text-center" style="margin-bottom: 0.8rem; font-size: 0.85rem; color: ${isOverweight ? '#ef4444' : '#94a3b8'};">
+        <span class="material-symbols-outlined text-sm align-middle">scale</span>
         Poids: ${curWeight % 1 === 0 ? curWeight : curWeight.toFixed(1)} / ${maxWeight}
     </div>`;
 
     if (availableConsumables.length === 0) {
-        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Vous n'avez aucun consommable dans votre coffre.</div>`;
+        list.innerHTML = counterHtml + `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Vous n'avez aucun consommable dans votre coffre.</div>`;
         return;
     }
 
@@ -422,7 +422,7 @@ function renderConsumablesList() {
     }
 
     if (filteredConsumables.length === 0) {
-        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
+        list.innerHTML = counterHtml + `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
         return;
     }
 
@@ -434,16 +434,16 @@ function renderConsumablesList() {
         const iconColor = c.consumableCategory ? (catColors[c.consumableCategory] || '#854c4c') : '#854c4c';
         const isSelected = selectedConsumableIds.includes(c.id);
         const selIndex = selectedConsumableIds.indexOf(c.id);
-        const badgeHtml = isSelected ? `<div style="position: absolute; top: -6px; right: -6px; background: #10b981; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">${selIndex + 1}</div>` : '';
+        const badgeHtml = isSelected ? `<div class="flex-center text-xxs absolute" style="top: -6px; right: -6px; background: #10b981; color: white; width: 18px; height: 18px; border-radius: 50%; justify-content: center; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">${selIndex + 1}</div>` : '';
         cardsHtml += `
-            <div class="consumable-card ${isSelected ? 'selected' : ''}" onclick="selectConsumable(${c.id})" style="position: relative; overflow: visible;">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${isSelected ? '#10b981' : iconColor}; flex-shrink: 0;">${iconName}</span>
+            <div class="consumable-card ${isSelected ? 'selected' : ''} relative" onclick="selectConsumable(${c.id})" style="overflow: visible;">
+                <span class="material-symbols-outlined flex-shrink-0" style="font-size: 1.1rem; color: ${isSelected ? '#10b981' : iconColor};">${iconName}</span>
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="color: #f8fafc; font-weight: 600; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${c.name}">${c.name}</div>
-                        <div style="color: #94a3b8; font-size: 0.65rem; font-weight: bold; background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.1rem;"><span class="material-symbols-outlined" style="font-size: 0.7rem;">scale</span>${c.weight % 1 === 0 ? c.weight : Number(c.weight).toFixed(1)}</div>
+                    <div class="flex-between" style="align-items: center;">
+                        <div class="whitespace-nowrap" title="${c.name}" style="color: #f8fafc; font-weight: 600; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
+                        <div class="text-xxs font-bold text-muted" style="background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.1rem;"><span class="material-symbols-outlined" style="font-size: 0.7rem;">scale</span>${c.weight % 1 === 0 ? c.weight : Number(c.weight).toFixed(1)}</div>
                     </div>
-                    <div style="color: var(--text-muted); font-size: 0.75rem; display: flex; gap: 0.4rem; flex-wrap: wrap; overflow: visible; align-items: center; margin-top: 2px;">
+                    <div class="text-muted" style="font-size: 0.75rem; display: flex; gap: 0.4rem; flex-wrap: wrap; overflow: visible; align-items: center; margin-top: 2px;">
                         ${c.bonusHealthMax ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV">+${c.bonusHealthMax}<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">favorite</span></span>` : ''}
                         ${c.bonusManaMax ? `<span style="display:inline-flex; align-items:center; color:#38bdf8;" title="Mana">+${c.bonusManaMax}<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">water_drop</span></span>` : ''}
                         ${c.consumableHpPercent ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV Max">+${c.consumableHpPercent}%<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">favorite</span></span>` : ''}
@@ -559,15 +559,15 @@ window.selectCharacter = async function (id) {
         <div class="stat-item" style="color: #a855f7;"><span class="material-symbols-outlined">auto_awesome</span> ${totalStats.power} Puissance</div>
         <div class="stat-item" style="color: #f43f5e;"><span class="material-symbols-outlined">fitness_center</span> ${totalStats.strength} Force</div>
         <div class="stat-item" style="color: #3b82f6;"><span class="material-symbols-outlined">shield</span> ${totalStats.armor} Armure</div>
-        <div class="stat-item" style="color: #10b981;"><span class="material-symbols-outlined">shield</span> ${totalStats.resistance} R\u00e9sist</div>
+        <div class="stat-item text-success"><span class="material-symbols-outlined">shield</span> ${totalStats.resistance} R\u00e9sist</div>
         <div class="stat-item" style="color: #f59e0b;"><span class="material-symbols-outlined">bolt</span> ${totalStats.speed} Vitesse</div>
-        <div class="stat-item" style="color: #ef4444;"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
+        <div class="stat-item text-error"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
     `;
 
     const equipList = document.getElementById('prepEquipList');
     equipList.innerHTML = '';
     if (equipments.length === 0) {
-        equipList.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun \u00e9quipement port\u00e9.</div>`;
+        equipList.innerHTML = `<div class="text-sm text-muted">Aucun \u00e9quipement port\u00e9.</div>`;
     } else {
         const iconMap = {
             'CASQUE': 'masks', 'PLASTRON': 'shield', 'BOTTES': 'footprint',
@@ -585,8 +585,8 @@ window.selectCharacter = async function (id) {
                 <div class="equip-slot" style="border-left: 3px solid ${color};">
                     <div class="equip-slot-icon"><span class="material-symbols-outlined ${extraClass}">${icon}</span></div>
                     <div>
-                        <div style="color: ${color}; font-weight: 600; font-size: 0.9rem;">${eq.name}</div>
-                        <div style="color: var(--text-muted); font-size: 0.75rem;">${eq.slot}</div>
+                        <div class="text-sm" style="color: ${color}; font-weight: 600;">${eq.name}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${eq.slot}</div>
                     </div>
                 </div>
             `;
@@ -622,17 +622,17 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
         let html = '';
         salles.forEach((s, index) => {
             if (s.type === 'COMBAT' || s.type === 'BOSS') {
-                html += `<div style="margin-bottom: 0.5rem; color: #ef4444; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">${s.type === 'BOSS' ? 'skull' : 'swords'}</span> \u00c9tape ${index + 1} : ${s.type === 'BOSS' ? 'Boss' : 'Combat'}</div>`;
+                html += `<div class="flex-center text-error" style="margin-bottom: 0.5rem; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">${s.type === 'BOSS' ? 'skull' : 'swords'}</span> \u00c9tape ${index + 1} : ${s.type === 'BOSS' ? 'Boss' : 'Combat'}</div>`;
                 if (!s.monsters || s.monsters.length === 0) {
-                    html += `<div style="margin-left: 1.5rem; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.85rem;">Aucun ennemi d\u00e9tect\u00e9</div>`;
+                    html += `<div class="text-muted" style="margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">Aucun ennemi d\u00e9tect\u00e9</div>`;
                 } else {
                     const count = s.monsters.length;
                     html += `<div style="margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: #f8fafc;">${count} ennemi${count > 1 ? 's' : ''}</div>`;
                 }
             } else if (s.type === 'TREASURE') {
-                html += `<div style="margin-bottom: 0.5rem; color: #f59e0b; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> \u00c9tape ${index + 1} : Tr\u00e9sor</div>`;
+                html += `<div class="flex-center" style="margin-bottom: 0.5rem; color: #f59e0b; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> \u00c9tape ${index + 1} : Tr\u00e9sor</div>`;
             } else if (s.type === 'EVENT') {
-                html += `<div style="margin-bottom: 0.5rem; color: #8b5cf6; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9tape ${index + 1} : \u00c9v\u00e9nement</div>`;
+                html += `<div class="flex-center" style="margin-bottom: 0.5rem; color: #8b5cf6; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9tape ${index + 1} : \u00c9v\u00e9nement</div>`;
             }
         });
         list.innerHTML = html;
@@ -661,7 +661,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     document.getElementById('prepStatEmpty').style.display = 'flex';
     document.getElementById('prepStatGrid').style.display = 'none';
-    document.getElementById('prepEquipList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun équipement à afficher.</div>';
+    document.getElementById('prepEquipList').innerHTML = '<div class="text-sm text-muted">Aucun équipement à afficher.</div>';
 
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {

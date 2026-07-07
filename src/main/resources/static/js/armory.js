@@ -229,12 +229,12 @@ async function updateCharLimitUI() {
             const isMaxedOut = data.currentCharacters >= data.maxCharacters;
             const color = (isMaxedOut && !window.isAdmin) ? '#ef4444' : '#94a3b8';
 
-            let html = `<span style="font-size: 0.9rem; color: ${color}; font-weight: 500;">${data.currentCharacters}/${data.maxCharacters}</span>`;
+            let html = `<span class="text-sm font-medium" style="color: ${color};">${data.currentCharacters}/${data.maxCharacters}</span>`;
 
             if (isMaxedOut && data.maxCharacters < 8 && !window.isAdmin) {
                 const costs = { 2: 20, 3: 50, 4: 75, 5: 150, 6: 200, 7: 300 };
                 const cost = costs[data.maxCharacters];
-                html += `<button onclick="buyRosterSlot(${cost})" style="margin-left: 0.5rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; border-radius: 4px; cursor: pointer; padding: 0.1rem 0.3rem; display: inline-flex; align-items: center;" title="Acheter un emplacement pour ${cost} or"><span class="material-symbols-outlined" style="font-size: 0.9rem;">add</span></button>`;
+                html += `<button class="text-success" onclick="buyRosterSlot(${cost})" title="Acheter un emplacement pour ${cost} or" style="margin-left: 0.5rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; cursor: pointer; padding: 0.1rem 0.3rem; display: inline-flex; align-items: center;"><span class="material-symbols-outlined text-sm">add</span></button>`;
             }
 
             limitContainer.innerHTML = html;
@@ -540,7 +540,7 @@ function populateSelects() {
     const searchSpiritOptions = document.getElementById('searchSpiritOptions');
 
     if (charVoieOptions) {
-        charVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —</div>`;
+        charVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
         pageState.voies.forEach(v => {
             const info = getVoieInfo(v.nom);
             charVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
@@ -548,7 +548,7 @@ function populateSelects() {
     }
 
     if (searchVoieOptions) {
-        searchVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> Toutes</div>`;
+        searchVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
         pageState.voies.forEach(v => {
             const info = getVoieInfo(v.nom);
             searchVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
@@ -556,7 +556,7 @@ function populateSelects() {
     }
 
     if (charSpiritOptions) {
-        charSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —</div>`;
+        charSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
         pageState.spiritualites.forEach(s => {
             const info = getSpiritInfo(s.nom);
             charSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
@@ -564,7 +564,7 @@ function populateSelects() {
     }
 
     if (searchSpiritOptions) {
-        searchSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> Toutes</div>`;
+        searchSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
         pageState.spiritualites.forEach(s => {
             const info = getSpiritInfo(s.nom);
             searchSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
@@ -648,17 +648,17 @@ function renderPersonnages() {
             const vFull = pageState.voies.find(v => v.id == p.voie.id) || p.voie;
             const info = getVoieInfo(p.voie.nom);
             badges += `<span class="char-badge" style="color: ${vColor}; border-color: ${vColor}40; background: ${vColor}15; cursor: help;" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
-                <span class="material-symbols-outlined" style="font-size: 0.8rem;">route</span>
+                <span class="material-symbols-outlined text-xs">route</span>
                 ${p.voie.nom} Lvl ${p.voieLevel}
                 <template class="tooltip-data">
-                    <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
+                    <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
                         <span class="material-symbols-outlined" style="font-size:1.1rem;">${info.icon}</span>
                         ${vFull.nom}
                     </div>
-                    <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
-                    <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                    <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
+                    <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                        <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
+                        <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
                     </div>
                 </template>
             </span>`;
@@ -668,23 +668,23 @@ function renderPersonnages() {
             const sFull = pageState.spiritualites.find(s => s.id == p.spiritualite.id) || p.spiritualite;
             const info = getSpiritInfo(p.spiritualite.nom);
             badges += `<span class="char-badge" style="color: ${sColor}; border-color: ${sColor}40; background: ${sColor}15; cursor: help;" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
-                <span class="material-symbols-outlined" style="font-size: 0.8rem;">psychology</span>
+                <span class="material-symbols-outlined text-xs">psychology</span>
                 ${p.spiritualite.nom} Lvl ${p.spiritualiteLevel}
                 <template class="tooltip-data">
-                    <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
+                    <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
                         <span class="material-symbols-outlined" style="font-size:1.1rem;">${info.icon}</span>
                         ${sFull.nom}
                     </div>
-                    <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
-                    <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                    <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
+                    <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                        <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
+                        <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
                     </div>
                 </template>
             </span>`;
         }
         if (!p.voie && !p.spiritualite) {
-            badges = `<span style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">Aucune affiliation</span>`;
+            badges = `<span class="font-italic text-muted" style="font-size: 0.72rem;">Aucune affiliation</span>`;
         }
 
         // Equipment summary
@@ -702,7 +702,7 @@ function renderPersonnages() {
                     const rarityClass = eq.rarity ? `rarity-${eq.rarity}` : '';
                     let effectStar = '';
                     if (eq.specialEffect && eq.specialEffect !== 'NONE') {
-                        effectStar = `<span class="material-symbols-outlined" style="font-size: 0.8rem; color: #c084fc; margin-left: 0.2rem;">auto_awesome</span>`;
+                        effectStar = `<span class="material-symbols-outlined text-xs" style="color: #c084fc; margin-left: 0.2rem;">auto_awesome</span>`;
                     }
                     return `<span class="char-equip-chip ${rarityClass}" title="${statsStr || 'Aucun bonus'}">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 0.85rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
@@ -718,7 +718,7 @@ function renderPersonnages() {
                     <div class="char-card-name">
                         <span class="material-symbols-outlined">person</span>
                         ${p.name}
-                        ${window.isAdmin ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${p.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${p.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${p.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${p.ownerUsername}</span>` : ''}
+                        ${window.isAdmin ? `<span class="text-xxs whitespace-nowrap" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; background: ${p.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${p.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${p.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined align-middle" style="font-size: 0.7rem; margin-right: 2px;">account_circle</span>${p.ownerUsername}</span>` : ''}
                     </div>
                     <div class="char-card-actions">
                         <button class="char-btn-equip" onclick="openEquipModal(${p.id})" title="Gérer l'équipement">
@@ -742,9 +742,9 @@ function renderPersonnages() {
                     <span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #a855f7;">auto_awesome</span>${p.totalPower !== undefined ? p.totalPower : p.power} Pui</span>
                     <span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f43f5e;">fitness_center</span>${p.totalStrength !== undefined ? p.totalStrength : p.strength} For</span>
                     <span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #3b82f6;">shield</span>${p.totalArmor !== undefined ? p.totalArmor : p.armor} Arm</span>
-                    <span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #10b981;">shield</span>${p.totalResistance !== undefined ? p.totalResistance : p.resistance} Rés</span>
+                    <span class="char-stat-chip"><span class="material-symbols-outlined text-success">shield</span>${p.totalResistance !== undefined ? p.totalResistance : p.resistance} Rés</span>
                     ${(p.totalSpeed !== undefined ? p.totalSpeed : p.speed) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f59e0b;">bolt</span>${p.totalSpeed !== undefined ? p.totalSpeed : p.speed} Vit</span>` : ''}
-                    ${(p.totalCrit !== undefined ? p.totalCrit : p.crit) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #ef4444;">gps_fixed</span>${p.totalCrit !== undefined ? p.totalCrit : p.crit}% Crit</span>` : ''}
+                    ${(p.totalCrit !== undefined ? p.totalCrit : p.crit) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined text-error">gps_fixed</span>${p.totalCrit !== undefined ? p.totalCrit : p.crit}% Crit</span>` : ''}
                     ${(p.totalRegenHp !== undefined ? p.totalRegenHp : p.regenHp || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #f472b6;">healing</span>${p.totalRegenHp !== undefined ? p.totalRegenHp : p.regenHp} Régen PV</span>` : ''}
                     ${(p.totalRegenMana !== undefined ? p.totalRegenMana : p.regenMana || 0) > 0 ? `<span class="char-stat-chip"><span class="material-symbols-outlined" style="color: #67e8f9;">dew_point</span>${p.totalRegenMana !== undefined ? p.totalRegenMana : p.regenMana} Régen Mana</span>` : ''}
                 </div>
@@ -845,7 +845,7 @@ function renderEquipModal() {
                 const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
                 specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
+                    <span class="material-symbols-outlined text-xs">${icon}</span>
                     ${label} : ${equipped.specialEffectValue}
                 </div>`;
             }
@@ -858,7 +858,7 @@ function renderEquipModal() {
                             ${slotInfo.label}
                         </span>
                         <button class="eq-unequip-btn" onclick="unequipItem(${equipped.id})" title="Retirer">
-                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">close</span>
+                            <span class="material-symbols-outlined text-sm">close</span>
                         </button>
                     </div>
                     <div class="equip-slot-item-name ${rarityClass}">${equipped.name}</div>
@@ -908,12 +908,12 @@ function renderEquipModal() {
             if (available.length > 0) {
                 availableHtml = `
                 <div class="custom-select-wrapper" tabindex="0" style="margin-top: 0.5rem; width: 100%;">
-                    <div class="custom-select-trigger" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-                        <span class="cs-label" style="color: var(--text-muted);">Choisir un équipement...</span>
-                        <span class="material-symbols-outlined cs-arrow" style="font-size: 1.1rem; color: var(--text-muted);">expand_more</span>
+                    <div class="custom-select-trigger text-xs" style="padding: 0.4rem 0.6rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                        <span class="cs-label text-muted">Choisir un équipement...</span>
+                        <span class="material-symbols-outlined cs-arrow text-muted" style="font-size: 1.1rem;">expand_more</span>
                     </div>
                     <div class="custom-select-options" style="font-size: 0.85rem;">
-                        <div class="custom-option" data-value=""><span style="color: var(--text-muted);">Choisir...</span></div>
+                        <div class="custom-option" data-value=""><span class="text-muted">Choisir...</span></div>
                         ${available.map(a => {
                     const aStatsChips = STAT_DEFS
                         .filter(s => a[s.key] && a[s.key] !== 0)
@@ -936,14 +936,14 @@ function renderEquipModal() {
                         };
                         const label = effectLabels[a.specialEffect] || a.specialEffect;
                         aSpecialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: #c084fc; background: rgba(168, 85, 247, 0.1); padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;">
-                                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">auto_awesome</span>
+                                    <span class="material-symbols-outlined text-xs">auto_awesome</span>
                                     ${label} : ${a.specialEffectValue}
                                 </div>`;
                     }
 
                     const tooltipHtml = `
                                 <div class="tooltip-data" style="display:none;">
-                                    <div style="font-weight: bold; margin-bottom: 0.3rem; font-size: 1rem;" class="${a.rarity ? 'rarity-' + a.rarity : ''}">${a.name} ${a.rarity ? '(' + a.rarity + ')' : ''}</div>
+                                    <div class="${a.rarity ? 'rarity-' + a.rarity : ''} font-bold" style="margin-bottom: 0.3rem; font-size: 1rem;">${a.name} ${a.rarity ? '(' + a.rarity + ')' : ''}</div>
                                     <div class="equip-slot-stats" style="flex-wrap: wrap;">
                                         ${aStatsChips || '<span style="opacity:0.4;">Aucun bonus</span>'}
                                         ${aSpecialEffectHtml}
@@ -954,8 +954,8 @@ function renderEquipModal() {
                     return `
                                 <div class="custom-option" data-value="${a.id}" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
                                     <span class="${a.rarity ? 'rarity-' + a.rarity : ''}">${a.name}</span>
-                                    ${a.rarity ? '<span style="font-size: 0.7rem; opacity: 0.5; margin-left: 0.3rem;">(' + a.rarity + ')</span>' : ''}
-                                    ${a.slot === 'ARME_DEUX_MAINS' ? '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.3rem; font-weight: bold;">[2 Mains]</span>' : ''}
+                                    ${a.rarity ? '<span class="opacity-50" style="font-size: 0.7rem; margin-left: 0.3rem;">(' + a.rarity + ')</span>' : ''}
+                                    ${a.slot === 'ARME_DEUX_MAINS' ? '<span class="font-bold text-error" style="font-size: 0.7rem; margin-left: 0.3rem;">[2 Mains]</span>' : ''}
                                     ${tooltipHtml}
                                 </div>
                             `;
@@ -964,14 +964,14 @@ function renderEquipModal() {
                     <input type="hidden" class="eq-assign-hidden" data-perso-id="${perso.id}" data-slot="${slotKey}" value="">
                 </div>`;
             } else {
-                availableHtml = `<span style="font-size: 0.72rem; color: #475569; font-style: italic;">Aucun disponible</span>`;
+                availableHtml = `<span class="font-italic" style="font-size: 0.72rem; color: #475569;">Aucun disponible</span>`;
             }
 
             return `
                 <div class="equip-slot-card empty" data-slot="${slotKey}">
                     <div class="equip-slot-header">
                         <span class="equip-slot-label">
-                            <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.1rem; color: ${slotInfo.color}; opacity: 0.5;">${slotInfo.icon}</span>
+                            <span class="material-symbols-outlined ${slotInfo.extraClass || ''} opacity-50" style="font-size: 1.1rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
                             ${slotInfo.label}
                         </span>
                     </div>
@@ -1027,7 +1027,7 @@ function editPersonnage(id) {
         const info = getVoieInfo(p.voie.nom);
         document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.voie.nom}`;
     } else {
-        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
+        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
     }
 
     document.getElementById('charExperience').value = p.experience || 0;
@@ -1037,7 +1037,7 @@ function editPersonnage(id) {
         const info = getSpiritInfo(p.spiritualite.nom);
         document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.spiritualite.nom}`;
     } else {
-        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
+        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
     }
 
     document.getElementById('charSpiritExperience').value = p.spiritualiteExperience || 0;
@@ -1068,12 +1068,12 @@ function resetForm() {
     document.getElementById('charRegenHp').value = 2;
     document.getElementById('charRegenMana').value = 4;
     document.getElementById('charVoie').value = '';
-    document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
+    document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
 
     document.getElementById('charExperience').value = 0;
 
     document.getElementById('charSpirit').value = '';
-    document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —`;
+    document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
 
     document.getElementById('charSpiritExperience').value = 0;
 
@@ -1167,8 +1167,8 @@ window.addEventListener('DOMContentLoaded', async () => {
                 const isPos = val > 0;
                 const valColor = isPos ? '#10b981' : '#ef4444';
                 return `
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; background: #0f172a; border-radius: 0.3rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;">
+                    <div class="flex-center" style="justify-content: space-between; padding: 0.4rem 0.6rem; background: #0f172a; border-radius: 0.3rem;">
+                        <div class="flex-center" style="gap: 0.5rem; color: #cbd5e1;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${baseColor};">${icon}</span>
                             ${label}
                         </div>
@@ -1177,7 +1177,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 `;
             }
 
-            let diffHtml = '<span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Sélectionnez une voie pour voir les effets.</span>';
+            let diffHtml = '<span class="font-italic text-muted" style="font-size: 0.85rem;">Sélectionnez une voie pour voir les effets.</span>';
             // Statistiques par défaut
             let stats = {
                 charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
@@ -1260,14 +1260,14 @@ window.addEventListener('DOMContentLoaded', async () => {
                 const template = iconEl.querySelector('.tooltip-data');
                 if (template) {
                     template.innerHTML = `
-                        <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
+                        <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
                             <span class="material-symbols-outlined" style="font-size:1.1rem;">${info.icon}</span>
                             ${v.nom}
                         </div>
-                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${v.description || 'Description générique.'}</div>
-                        <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                        <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${v.description || 'Description générique.'}</div>
+                        <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                             <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                            <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(v.passiveDescription) || 'Passif spécifique.'}</span>
+                            <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(v.passiveDescription) || 'Passif spécifique.'}</span>
                         </div>
                     `;
                 }
@@ -1298,14 +1298,14 @@ window.addEventListener('DOMContentLoaded', async () => {
                 const template = iconEl.querySelector('.tooltip-data');
                 if (template) {
                     template.innerHTML = `
-                        <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
+                        <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${info.color};">
                             <span class="material-symbols-outlined" style="font-size:1.1rem;">${info.icon}</span>
                             ${s.nom}
                         </div>
-                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${s.description || 'Description générique.'}</div>
-                        <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                        <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${s.description || 'Description générique.'}</div>
+                        <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                             <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${info.color};">bolt</span>
-                            <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
+                            <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
                         </div>
                     `;
                 }
@@ -1360,7 +1360,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                     // Update label manually since there's no native value changing
                     const labelSpan = document.getElementById('eqSpecialEffectLabel');
                     if (labelSpan) {
-                        labelSpan.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun`;
+                        labelSpan.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun`;
                     }
                 }
 

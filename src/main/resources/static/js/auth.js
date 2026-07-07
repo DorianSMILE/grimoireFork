@@ -144,15 +144,15 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.isAdmin = data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN');
             window.dispatchEvent(new Event('authLoaded'));
             container.innerHTML = `
-                <a href="/secrets.html" style="display: flex; align-items: center; gap: 0.3rem; color: #10b981; font-weight: 500; font-size: 0.85rem; text-decoration: none; padding: 0.2rem 0.5rem; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
+                <a class="flex-center font-medium text-success" href="/secrets.html" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'" style="gap: 0.3rem; font-size: 0.85rem; text-decoration: none; padding: 0.2rem 0.5rem; border-radius: 6px; transition: background 0.2s;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_circle</span>
                     ${data.username}
                 </a>
-                <div style="display: flex; align-items: center; gap: 0.2rem; color: #f59e0b; font-weight: 600; font-size: 0.85rem; margin-left: 0.5rem;" title="Monnaie">
+                <div class="flex-center" title="Monnaie" style="gap: 0.2rem; color: #f59e0b; font-weight: 600; font-size: 0.85rem; margin-left: 0.5rem;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>
                     ${data.monnaie !== undefined ? (data.monnaie % 1 === 0 ? data.monnaie : data.monnaie.toFixed(1)) : '0'}
                 </div>
-                <button onclick="logout()" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 6px; padding: 0.25rem 0.5rem; cursor: pointer; display: flex; align-items: center; font-family: 'Outfit'; font-size: 0.8rem; margin-left: 0.5rem; transition: all 0.2s;">
+                <button class="flex-center text-xs text-error" onclick="logout()" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.25rem 0.5rem; cursor: pointer; font-family: 'Outfit'; margin-left: 0.5rem; transition: all 0.2s;">
                     <span class="material-symbols-outlined" style="font-size: 1rem;">logout</span>
                 </button>
             `;
@@ -161,16 +161,16 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.isAdmin = false;
             window.dispatchEvent(new Event('authLoaded'));
             container.innerHTML = `
-                <a href="/login.html" style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.2s;">
+                <a class="font-medium" href="/login.html" style="color: #3b82f6; text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.2s;">
                     Se connecter
                 </a>
-                <a href="/register.html" style="color: #10b981; text-decoration: none; font-weight: 500; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                <a class="font-medium text-success" href="/register.html" style="text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;">
                     S'inscrire
                 </a>
             `;
         }
     } catch (e) {
-        container.innerHTML = `<span style="font-size: 0.8rem; color: #ef4444;">Erreur auth</span>`;
+        container.innerHTML = `<span class="text-xs text-error">Erreur auth</span>`;
     }
 }
 
@@ -219,7 +219,7 @@ function applyFeatureLock(el, isUnlocked, featureName, cost, featureId, original
         el.setAttribute('onclick', `promptUnlockFeature('${featureId}', '${featureName}', ${cost})`);
         
         if (!el.querySelector('.feature-lock-icon')) {
-            el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon" style="font-size: 0.9rem; margin-left: auto; color: #ef4444;">lock</span>');
+            el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon text-sm text-error" style="margin-left: auto;">lock</span>');
         }
     }
 }

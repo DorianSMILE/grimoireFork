@@ -167,13 +167,13 @@ document.addEventListener('click', (e) => {
                 if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
                     (!isMaudit && currentEffect.startsWith('CURSED_'))) {
                     document.getElementById('eqSpecialEffect').value = 'NONE';
-                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                     document.getElementById('eqSpecialEffectValue').value = 0;
                 }
             } else {
                 row.style.display = 'none';
                 document.getElementById('eqSpecialEffect').value = 'NONE';
-                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                 document.getElementById('eqSpecialEffectValue').value = 0;
             }
             updateWeightUI();
@@ -191,7 +191,7 @@ async function loadEquipments() {
         const res = await globalFetch('/api/shop/templates');
         if (!res.ok) {
             if (res.status === 403 || res.status === 401) {
-                document.getElementById('vaultGrid').innerHTML = `<div style="color: #ef4444;"><span class="material-symbols-outlined">error</span> Accès refusé.</div>`;
+                document.getElementById('vaultGrid').innerHTML = `<div class="text-error"><span class="material-symbols-outlined">error</span> Accès refusé.</div>`;
             }
             return;
         }
@@ -202,7 +202,7 @@ async function loadEquipments() {
         renderVault();
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
-        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state" style="color: #ef4444;"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
+        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state text-error"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
 
@@ -297,8 +297,8 @@ function addAnomalyRow(selectedName = '', qty = 1) {
 
     row.innerHTML = `
         <div class="custom-select-wrapper" style="flex: 1;">
-            <div class="custom-select-trigger" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.6rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span class="cs-label" style="color: #cbd5e1; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">${displayLabel}</span>
+            <div class="custom-select-trigger flex-between" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.6rem; cursor: pointer; align-items: center; width: 100%;">
+                <span class="cs-label flex-center" style="color: #cbd5e1; font-size: 0.85rem; gap: 0.3rem;">${displayLabel}</span>
                 <span class="material-symbols-outlined" style="color: #64748b; font-size: 1.1rem;">expand_more</span>
             </div>
             <div class="custom-select-options custom-options" style="max-height: 150px; overflow-y: auto;">
@@ -306,8 +306,8 @@ function addAnomalyRow(selectedName = '', qty = 1) {
             </div>
             <input type="hidden" class="anomaly-select-hidden" value="${selectedName}">
         </div>
-        <div style="display: flex; align-items: center; gap: 0.3rem;">
-            <span style="color: #94a3b8; font-size: 0.8rem;">Qté:</span>
+        <div class="flex-center" style="gap: 0.3rem;">
+            <span class="text-xs text-muted">Qté:</span>
             <input type="number" class="anomaly-qty-input" value="${qty}" min="1" style="width: 60px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif;">
         </div>
         <button type="button" class="btn-remove-row" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; cursor: pointer; padding: 0.4rem; display: flex; justify-content: center; align-items: center;">
@@ -330,7 +330,7 @@ function deleteEquipment(id) {
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined align-middle" style="font-size: 1rem; margin-top: -2px;">monetization_on</span>`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
@@ -389,7 +389,7 @@ function renderGrid(equipments) {
     if (equipments.length === 0) {
         container.innerHTML = `
             <div class="vault-empty-state">
-                <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5;">search_off</span>
+                <span class="material-symbols-outlined opacity-50" style="font-size: 3rem;">search_off</span>
                 Aucun objet ne correspond à votre recherche.
             </div>`;
         return;
@@ -441,7 +441,7 @@ function renderGrid(equipments) {
         `;
 
         if (items.length === 0) {
-            html += `<div style="padding: 1rem; color: #64748b; font-style: italic; text-align: center;">Aucun article dans cette rareté</div>`;
+            html += `<div class="font-italic text-center" style="padding: 1rem; color: #64748b;">Aucun article dans cette rareté</div>`;
         } else {
             items.forEach(eq => {
                 const slotInfo = getSlotInfo(eq);
@@ -454,7 +454,7 @@ function renderGrid(equipments) {
                         const sign = val > 0 ? '+' : '';
                         const suffix = s.isPercent ? '%' : '';
                         return `<span class="stat-badge ${isMalus ? 'malus' : ''}" title="${s.label}">
-                        <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.8rem;">${s.icon}</span>
+                        <span class="material-symbols-outlined text-xs" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>
                         ${sign}${val}${suffix}
                     </span>`;
                     }).join('');
@@ -483,7 +483,7 @@ function renderGrid(equipments) {
                     const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
                     effectHtml = `<span class="stat-badge" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
+                    <span class="material-symbols-outlined text-xs">${icon}</span>
                     ${label} : ${eq.specialEffectValue}
                 </span>`;
                 }
@@ -495,7 +495,7 @@ function renderGrid(equipments) {
                     <div class="shop-admin-row-name">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.4rem; color: ${slotInfo.color};" title="${slotInfo.label}">${slotInfo.icon}</span>
                         ${eq.name}
-                        ${window.isAdmin && eq.ownerUsername ? `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${eq.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${eq.ownerUsername}</span>` : ''}
+                        ${window.isAdmin && eq.ownerUsername ? `<span class="text-xxs" style="padding: 0.15rem 0.4rem; background: ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${eq.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined align-middle" style="font-size: 0.7rem; margin-right: 2px;">account_circle</span>${eq.ownerUsername}</span>` : ''}
                     </div>
                     
                     <div class="shop-admin-row-stats">
@@ -525,22 +525,22 @@ function renderGrid(equipments) {
                                 const tooltipData = `
                                             <div class="anomaly-tooltip-title">${aTemp ? aTemp.name : n}</div>
                                             <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                                <span style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                                <span class="font-bold" style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                                                     Lvl ${aTemp ? aTemp.level || 1 : 1}
                                                 </span>
-                                                <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                                    <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                                                <span class="flex-center font-bold" style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                                                    <span class="material-symbols-outlined text-sm">${catIcon}</span>
                                                     ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                                 </span>
                                                 ${aTemp && aTemp.spiritualite ?
-                                        `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                                        `<span class="font-bold" style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                                                     ${aTemp.spiritualite}
                                                 </span>` : ''}
                                             </div>
                                             <div class="anomaly-tooltip-desc">${aTemp && aTemp.description ? aTemp.description : 'Aucune description'}</div>
                                     `;
                                 anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: ${spiriColor}25; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
-                                        <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${spiriColor};">${catIcon}</span> ${q}
+                                        <span class="material-symbols-outlined text-sm align-middle" style="color: ${spiriColor};">${catIcon}</span> ${q}
                                     </span>`);
                             }
                             priceHtml += ` <br><div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 4px;">${anos.join('')}</div>`;
@@ -661,7 +661,7 @@ function resetEqForm() {
     if (document.getElementById('eqConsumableCategory')) {
         document.getElementById('eqConsumableCategory').value = 'AUTRE';
         const label = document.getElementById('eqConsumableCategoryLabel');
-        if (label) label.innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">inventory_2</span> Autre';
+        if (label) label.innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">inventory_2</span> Autre';
     }
     if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
 
@@ -674,7 +674,7 @@ function resetEqForm() {
     const rarityInput = document.getElementById('eqRarity');
     if (rarityInput) {
         rarityInput.value = 'COMMUN';
-        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon" style="color: #94a3b8; font-weight: bold;">C</span> Commun';
+        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon font-bold text-muted">C</span> Commun';
         const row = document.getElementById('eqSpecialEffectRow');
         if (row) row.style.display = 'none';
     }
@@ -683,7 +683,7 @@ function resetEqForm() {
     const effectInput = document.getElementById('eqSpecialEffect');
     if (effectInput) {
         effectInput.value = 'NONE';
-        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
         document.getElementById('eqSpecialEffectValue').value = 0;
     }
 

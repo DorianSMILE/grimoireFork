@@ -50,13 +50,13 @@ const SECRETS_META = [
 function getSecretIconOnlyHtml(m) {
     if (!m.nativeSecret) return '';
     const sm = SECRETS_META.find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
-    return `<span class="material-symbols-outlined cs-icon" style="color: ${sm.color}; font-size: 1.1rem; margin-right: 4px; vertical-align: middle;" title="${m.nativeSecret}">${sm.icon}</span>`;
+    return `<span class="material-symbols-outlined cs-icon align-middle" title="${m.nativeSecret}" style="color: ${sm.color}; font-size: 1.1rem; margin-right: 4px;">${sm.icon}</span>`;
 }
 
 function getSecretBadgeHtml(m) {
     if (!m.nativeSecret) return '';
     const sm = SECRETS_META.find(s => s.name === m.nativeSecret) || { icon: "explore", color: "#10b981" };
-    return `<div style="background: rgba(15, 23, 42, 0.9); color: ${sm.color}; padding: 0.2rem 0.4rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); border: 1px solid ${sm.color}60; display: flex; align-items: center; justify-content: center;" title="${m.nativeSecret}"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${sm.icon}</span></div>`;
+    return `<div class="flex-center" title="${m.nativeSecret}" style="background: rgba(15, 23, 42, 0.9); color: ${sm.color}; padding: 0.2rem 0.4rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); border: 1px solid ${sm.color}60; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${sm.icon}</span></div>`;
 }
 
 function sortMonstersBySecret(monsters) {
@@ -307,7 +307,7 @@ window.selectMonsterOption = function (rIndex, monsterId, monsterName, monsterLv
 
     const label = document.getElementById(`room_select_label_${rIndex}`);
     if (label) {
-        label.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${monsterName} (Lvl ${monsterLvl})`;
+        label.innerHTML = `<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${monsterName} (Lvl ${monsterLvl})`;
     }
 
     const wrapper = document.getElementById(`room_select_wrapper_${rIndex}`);
@@ -361,7 +361,7 @@ window.selectMonsterType = function (val, label, icon, color) {
     document.getElementById('mType').value = val;
     const trigger = document.getElementById('mTypeTrigger');
     if (trigger) {
-        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem;">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
+        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem;">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined text-muted" style="font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
     }
     const wrapper = document.getElementById('mTypeWrapper');
     if (wrapper) wrapper.classList.remove('open');
@@ -376,7 +376,7 @@ window.selectMonsterBehavior = function (val, label, icon, color) {
     document.getElementById('mBehavior').value = val;
     const trigger = document.getElementById('mBehaviorTrigger');
     if (trigger) {
-        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem;">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
+        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem;">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined text-muted" style="font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
     }
     const wrapper = document.getElementById('mBehaviorWrapper');
     if (wrapper) wrapper.classList.remove('open');
@@ -412,7 +412,7 @@ window.selectSortOption = function (val, label, icon, color) {
     if (trigger) {
         // For name_desc, we need the scaleY(-1) transform on the icon
         const transformStr = val === 'name_desc' ? 'transform: scaleY(-1);' : '';
-        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem; ${transformStr}">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
+        trigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem; ${transformStr}">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined text-muted" style="font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
     }
     const wrapper = document.getElementById('mSortWrapper');
     if (wrapper) wrapper.classList.remove('open');
@@ -443,7 +443,7 @@ function renderRooms() {
     selectedRooms.forEach((room, rIndex) => {
         let optionsHtml = '';
         allMonsters.forEach(m => {
-            optionsHtml += `<div class="custom-option" data-value="${m.id}" onclick="selectMonsterOption(${rIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span></div>`;
+            optionsHtml += `<div class="custom-option" data-value="${m.id}" onclick="selectMonsterOption(${rIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span></div>`;
         });
 
         const div = document.createElement('div');
@@ -461,25 +461,25 @@ function renderRooms() {
             // Monsters inside the room
             let monstersHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.monsters.length === 0) {
-                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun monstre dans cette salle.</div>`;
+                monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun monstre dans cette salle.</div>`;
             } else {
                 room.monsters.forEach((mId, mIndex) => {
                     const m = allMonsters.find(x => x.id === mId);
                     if (m) {
                         monstersHtml += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;"><span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px; color: #94a3b8;">Lvl ${m.level || 1}</span> ${m.name}</span>
-                                <button type="button" onclick="removeMonsterFromRoom(${rIndex}, ${mIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                            <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;"><span class="text-muted" style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px;">Lvl ${m.level || 1}</span> ${m.name}</span>
+                                <button class="text-error" type="button" onclick="removeMonsterFromRoom(${rIndex}, ${mIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                             </div>
                         `;
                     }
                 });
             }
             monstersHtml += `</div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
+                <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
                     <div class="custom-select-wrapper" id="room_select_wrapper_${rIndex}" style="flex: 1; z-index: ${100 - rIndex}; margin: 0;">
                         <div class="custom-select-trigger" onclick="toggleMonsterSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un monstre...</span>
+                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">pest_control</span> Sélectionner un monstre...</span>
                             <span class="material-symbols-outlined">expand_more</span>
                         </div>
                         <div class="custom-select-options" id="room_select_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -487,7 +487,7 @@ function renderRooms() {
                         </div>
                         <input type="hidden" id="room_monster_select_${rIndex}" value="">
                     </div>
-                    <button type="button" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);" onclick="addMonsterToRoom(${rIndex})" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.5)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)';">
+                    <button class="flex-center text-sm" type="button" onclick="addMonsterToRoom(${rIndex})" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.5)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)';" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem; transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
                         <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span> Ajouter
                     </button>
                 </div>
@@ -500,25 +500,25 @@ function renderRooms() {
             // Monsters inside the room
             let monstersHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.monsters.length === 0) {
-                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun monstre configuré pour le boss.</div>`;
+                monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun monstre configuré pour le boss.</div>`;
             } else {
                 room.monsters.forEach((mId, mIndex) => {
                     const m = allMonsters.find(x => x.id === mId);
                     if (m) {
                         monstersHtml += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;"><span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px; color: #94a3b8;">Lvl ${m.level || 1}</span> ${m.name}</span>
-                                <button type="button" onclick="removeMonsterFromRoom(${rIndex}, ${mIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                            <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;"><span class="text-muted" style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px;">Lvl ${m.level || 1}</span> ${m.name}</span>
+                                <button class="text-error" type="button" onclick="removeMonsterFromRoom(${rIndex}, ${mIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                             </div>
                         `;
                     }
                 });
             }
             monstersHtml += `</div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
+                <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
                     <div class="custom-select-wrapper" id="room_select_wrapper_${rIndex}" style="flex: 1; z-index: ${100 - rIndex}; margin: 0;">
                         <div class="custom-select-trigger" onclick="toggleMonsterSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss/monstre...</span>
+                            <span class="cs-label" id="room_select_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">pest_control</span> Sélectionner un boss/monstre...</span>
                             <span class="material-symbols-outlined">expand_more</span>
                         </div>
                         <div class="custom-select-options" id="room_select_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -526,7 +526,7 @@ function renderRooms() {
                         </div>
                         <input type="hidden" id="room_monster_select_${rIndex}" value="">
                     </div>
-                    <button type="button" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addMonsterToRoom(${rIndex})">
+                    <button class="flex-center text-sm" type="button" onclick="addMonsterToRoom(${rIndex})" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                         <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span> Ajouter
                     </button>
                 </div>
@@ -536,7 +536,7 @@ function renderRooms() {
             if (!room.globalBuffs) room.globalBuffs = [];
             let buffsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.globalBuffs.length === 0) {
-                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configuré.</div>`;
+                buffsHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun buff global configuré.</div>`;
             } else {
                 room.globalBuffs.forEach((buff, bIndex) => {
                     let buffLabel = '';
@@ -548,21 +548,21 @@ function renderRooms() {
                     else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touché : ${buff.value} dgts (${buff.duration} tours)`;
 
                     buffsHtml += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                            <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                            <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;">
                                 <span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">upgrade</span>
                                 ${buffLabel}
                             </span>
-                            <button type="button" onclick="removeGlobalBuffFromRoomBoss(${rIndex}, ${bIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                            <button class="text-error" type="button" onclick="removeGlobalBuffFromRoomBoss(${rIndex}, ${bIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                         </div>
                     `;
                 });
             }
             buffsHtml += `</div>
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: flex-end; position: relative; flex-wrap: wrap;">
+            <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: flex-end; flex-wrap: wrap;">
                 <div style="flex: 2; min-width: 120px; display: flex; flex-direction: column; gap: 0.2rem;">
-                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Type de buff</label>
-                    <select id="room_boss_buff_type_${rIndex}" class="form-control" style="font-size: 0.8rem; width: 100%;">
+                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Type de buff</label>
+                    <select id="room_boss_buff_type_${rIndex}" class="form-control text-xs" style="width: 100%;">
                         <option value="HP_PCT">+ PV Max (%)</option>
                         <option value="SHIELD_PCT">Bouclier (% PV)</option>
                         <option value="ARMOR_FLAT">+ Armure</option>
@@ -572,14 +572,14 @@ function renderRooms() {
                     </select>
                 </div>
                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Stat (Valeur)</label>
+                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Stat (Valeur)</label>
                     <input type="number" id="room_boss_buff_val_${rIndex}" class="form-control" style="width: 100%;" value="10">
                 </div>
                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
+                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
                     <input type="number" id="room_boss_buff_dur_${rIndex}" class="form-control" style="width: 100%;" value="4">
                 </div>
-                <button type="button" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addGlobalBuffToRoomBoss(${rIndex})">
+                <button class="flex-center text-sm" type="button" onclick="addGlobalBuffToRoomBoss(${rIndex})" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                 </button>
             </div>`;
@@ -587,25 +587,25 @@ function renderRooms() {
             contentHtml = `
                 ${monstersHtml}
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
-                    <label style="font-size: 0.8rem; color: #3b82f6;">Buffs Globaux du Boss</label>
+                    <label class="text-xs" style="color: #3b82f6;">Buffs Globaux du Boss</label>
                     ${buffsHtml}
                 </div>
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
-                    <label style="font-size: 0.8rem; color: #e11d48; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.6rem;">
+                    <label class="flex-center text-xs" style="color: #e11d48; gap: 0.3rem; margin-bottom: 0.6rem;">
                         <span class="material-symbols-outlined" style="font-size: 1rem;">emoji_events</span>
                         Récompenses de fin de combat (Boss vaincu)
                     </label>
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
-                            <label style="font-size: 0.75rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                                <span class="material-symbols-outlined" style="font-size: 0.9rem;">blur_on</span>
+                            <label class="flex-center" style="font-size: 0.75rem; color: #8b5cf6; gap: 0.3rem; margin-bottom: 0.3rem;">
+                                <span class="material-symbols-outlined text-sm">blur_on</span>
                                 XP Spiritualité
                             </label>
                             <input type="number" class="form-control" min="0" value="${room.bossRewardSpiritualXp || 0}" onchange="updateRoomField(${rIndex}, 'bossRewardSpiritualXp', parseInt(this.value) || 0)">
                         </div>
                         <div style="flex: 1;">
-                            <label style="font-size: 0.75rem; color: #f59e0b; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                                <span class="material-symbols-outlined" style="font-size: 0.9rem;">paid</span>
+                            <label class="flex-center" style="font-size: 0.75rem; color: #f59e0b; gap: 0.3rem; margin-bottom: 0.3rem;">
+                                <span class="material-symbols-outlined text-sm">paid</span>
                                 Or bonus
                             </label>
                             <input type="number" class="form-control" min="0" value="${room.bossRewardGold || 0}" onchange="updateRoomField(${rIndex}, 'bossRewardGold', parseInt(this.value) || 0)">
@@ -621,7 +621,7 @@ function renderRooms() {
 
             let lootHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
             if (room.lootTable.length === 0) {
-                lootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configuré.</div>`;
+                lootHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun loot configuré.</div>`;
             } else {
                 room.lootTable.forEach((loot, lIndex) => {
                     const eq = allEquipments.find(x => x.id === loot.equipmentId);
@@ -630,19 +630,19 @@ function renderRooms() {
                         const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                         const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                         lootHtml += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span> <span style="color:#94a3b8; font-size:0.8rem;">(${loot.probability}%)</span></span>
-                                <button type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                            <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span> <span style="color:#94a3b8; font-size:0.8rem;">(${loot.probability}%)</span></span>
+                                <button class="text-error" type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                             </div>
                         `;
                     }
                 });
             }
             lootHtml += `</div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
+                <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
                     <div class="custom-select-wrapper" id="room_loot_select_wrapper_${rIndex}" style="flex: 2; z-index: ${100 - rIndex}; margin: 0;">
                         <div class="custom-select-trigger" onclick="toggleLootSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                            <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Objet...</span>
+                            <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">category</span> Objet...</span>
                             <span class="material-symbols-outlined">expand_more</span>
                         </div>
                         <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -658,7 +658,7 @@ function renderRooms() {
                         <input type="hidden" id="room_loot_select_${rIndex}" value="">
                     </div>
                     <input type="number" id="room_loot_prob_${rIndex}" class="form-control" style="flex: 1; min-width: 60px;" placeholder="Prob (%)" step="0.1" min="0" max="100">
-                    <button type="button" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addLootToRoom(${rIndex})">
+                    <button class="flex-center text-sm" type="button" onclick="addLootToRoom(${rIndex})" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                         <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                     </button>
                 </div>
@@ -667,11 +667,11 @@ function renderRooms() {
             contentHtml = `
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                     <div style="flex: 1;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Or</label>
+                        <label class="text-xs text-muted">Or</label>
                         <input type="number" class="form-control" value="${room.treasureGold}" onchange="updateRoomField(${rIndex}, 'treasureGold', parseInt(this.value))">
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Expérience</label>
+                        <label class="text-xs text-muted">Expérience</label>
                         <input type="number" class="form-control" value="${room.treasureExp}" onchange="updateRoomField(${rIndex}, 'treasureExp', parseInt(this.value))">
                     </div>
                 </div>
@@ -686,24 +686,24 @@ function renderRooms() {
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label class="text-xs text-muted">Texte de l'événement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     <div style="margin-top: 0.75rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Possibilité offerte</label>
+                        <label class="text-xs text-muted">Possibilité offerte</label>
                         <div class="custom-select-wrapper" id="room_alt_type_wrapper_${rIndex}" style="width: 100%; z-index: ${102 - rIndex}; margin: 0; margin-top: 0.2rem;">
                             <div class="custom-select-trigger" onclick="const w = document.getElementById('room_alt_type_wrapper_${rIndex}'); document.querySelectorAll('.custom-select-wrapper.open').forEach(el => { if(el !== w) el.classList.remove('open'); }); w.classList.toggle('open');" style="padding: 0.6rem 1rem; border-radius: 8px;">
                                 <span class="cs-label" id="room_alt_type_label_${rIndex}">
-                                    ${altType === 'VIE_XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">favorite</span> Don de vie et/ou d\'xp' :
+                                    ${altType === 'VIE_XP' ? '<span class="material-symbols-outlined cs-icon text-error">favorite</span> Don de vie et/ou d\'xp' :
                         (altType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d\'un item spécial' :
-                            '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">block</span> Ne rien faire')}
+                            '<span class="material-symbols-outlined cs-icon text-muted">block</span> Ne rien faire')}
                                 </span>
                                 <span class="material-symbols-outlined">expand_more</span>
                             </div>
                             <div class="custom-select-options" id="room_alt_type_options_${rIndex}">
-                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'VIE_XP'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #ef4444;">favorite</span> Don de vie et/ou d'xp</div>
+                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'VIE_XP'); renderRooms();"><span class="material-symbols-outlined cs-icon text-error">favorite</span> Don de vie et/ou d'xp</div>
                                 <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'ITEM'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Don d'un item spécial</div>
-                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'RIEN'); renderRooms();"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">block</span> Ne rien faire</div>
+                                <div class="custom-option" onclick="updateRoomField(${rIndex}, 'alterationType', 'RIEN'); renderRooms();"><span class="material-symbols-outlined cs-icon text-muted">block</span> Ne rien faire</div>
                             </div>
                         </div>
                     </div>
@@ -714,16 +714,16 @@ function renderRooms() {
                     contentHtml += `
                     <div style="display: flex; gap: 1rem; margin-top: 0.75rem;">
                         <div style="flex: 1;">
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Effet PV (+ soin, - perte)</label>
+                            <label class="text-xs text-muted">Effet PV (+ soin, - perte)</label>
                             <input type="number" class="form-control" value="${room.alterationHpAmount || 0}" onchange="updateRoomField(${rIndex}, 'alterationHpAmount', parseInt(this.value))">
                         </div>
                         <div style="flex: 1;">
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Effet XP (+ gain, - perte)</label>
+                            <label class="text-xs text-muted">Effet XP (+ gain, - perte)</label>
                             <input type="number" class="form-control" value="${room.alterationExpAmount || 0}" onchange="updateRoomField(${rIndex}, 'alterationExpAmount', parseInt(this.value))">
                         </div>
                     </div>
                     <div style="margin-top: 0.75rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
-                        <label style="font-size: 0.8rem; color: #fbbf24;">Récompense en échange</label>
+                        <label class="text-xs" style="color: #fbbf24;">Récompense en échange</label>
                         <div class="custom-select-wrapper" id="room_alt_reward_type_wrapper_${rIndex}" style="width: 100%; z-index: ${105 - rIndex}; margin: 0; margin-top: 0.2rem; margin-bottom: 0.5rem;">
                             <div class="custom-select-trigger" onclick="const w = document.getElementById('room_alt_reward_type_wrapper_${rIndex}'); document.querySelectorAll('.custom-select-wrapper.open').forEach(el => { if(el !== w) el.classList.remove('open'); }); w.classList.toggle('open');" style="padding: 0.6rem 1rem; border-radius: 8px;">
                                 <span class="cs-label" id="room_alt_reward_type_label_${rIndex}">
@@ -738,10 +738,10 @@ function renderRooms() {
                             </div>
                         </div>
                         ${rewType === 'SPIRITUAL_XP' ? `
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Gain XP Spiritualité</label>
+                            <label class="text-xs text-muted">Gain XP Spiritualité</label>
                             <input type="number" class="form-control" value="${room.alterationSpiritualXpReward || 0}" onchange="updateRoomField(${rIndex}, 'alterationSpiritualXpReward', parseInt(this.value))">
                         ` : `
-                            <label style="font-size: 0.8rem; color: #94a3b8;">Item Spécial Donné en récompense</label>
+                            <label class="text-xs text-muted">Item Spécial Donné en récompense</label>
                             ${(() => {
                             const CATEGORY_ICONS = {
                                 'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -749,7 +749,7 @@ function renderRooms() {
                                 'ECAILLE': 'waves', 'AUTRE': 'category'
                             };
                             const selAnomalie = allAnomalies.find(a => a.name === room.alterationSpecialItemReward);
-                            let selHtml = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">star</span> Choisir une anomalie...';
+                            let selHtml = '<span class="material-symbols-outlined cs-icon text-muted">star</span> Choisir une anomalie...';
                             if (selAnomalie) {
                                 let color = '#a855f7';
                                 if (selAnomalie.spiritualite === 'ESPRIT') color = '#38bdf8';
@@ -781,7 +781,7 @@ function renderRooms() {
                 } else if (altType === 'ITEM') {
                     contentHtml += `
                     <div style="margin-top: 0.75rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Item Spécial Requis (que le joueur donne)</label>
+                        <label class="text-xs text-muted">Item Spécial Requis (que le joueur donne)</label>
                         ${(() => {
                             const CATEGORY_ICONS = {
                                 'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -789,7 +789,7 @@ function renderRooms() {
                                 'ECAILLE': 'waves', 'AUTRE': 'category'
                             };
                             const selAnomalie = allAnomalies.find(a => a.name === room.alterationRequiredItem);
-                            let selHtml = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">star</span> Choisir une anomalie...';
+                            let selHtml = '<span class="material-symbols-outlined cs-icon text-muted">star</span> Choisir une anomalie...';
                             if (selAnomalie) {
                                 let color = '#a855f7';
                                 if (selAnomalie.spiritualite === 'ESPRIT') color = '#38bdf8';
@@ -817,7 +817,7 @@ function renderRooms() {
                         })()}
                     </div>
                     <div style="margin-top: 0.5rem;">
-                        <label style="font-size: 0.8rem; color: #fbbf24;">Récompense (XP Spiritualité)</label>
+                        <label class="text-xs" style="color: #fbbf24;">Récompense (XP Spiritualité)</label>
                         <input type="number" class="form-control" value="${room.alterationSpiritualXpReward || 0}" onchange="updateRoomField(${rIndex}, 'alterationSpiritualXpReward', parseInt(this.value))">
                     </div>
                     `;
@@ -829,7 +829,7 @@ function renderRooms() {
 
                 let shopHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                 if (room.lootTable.length === 0) {
-                    shopHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun objet en vente.</div>`;
+                    shopHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun objet en vente.</div>`;
                 } else {
                     room.lootTable.forEach((loot, lIndex) => {
                         const CATEGORY_ICONS = {
@@ -855,22 +855,22 @@ function renderRooms() {
                             const tooltipDataHtml = `
                                     <div class="anomaly-tooltip-title">${loot.specialItemName}</div>
                                     <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                        <span style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                        <span class="font-bold" style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                                             Lvl ${an ? an.level || 1 : 1}
                                         </span>
-                                        <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
+                                        <span class="flex-center font-bold" style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                                            <span class="material-symbols-outlined text-sm">${icon}</span>
                                             ${an && an.magicObject ? 'Objet Magique' : 'Matériau'}
                                         </span>
                                         ${an && an.spiritualite ?
-                                    `<span style="border: 1px solid ${color}; color: ${color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                                    `<span class="font-bold" style="border: 1px solid ${color}; color: ${color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                                             ${an.spiritualite}
                                         </span>` : ''}
                                     </div>
                                     <div class="anomaly-tooltip-desc">${tooltipDesc}</div>
                             `;
                             nameHtml = `<span class="anomaly-badge" style="border-color: ${color}; background: ${color}25; color: ${color}; cursor: help;" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipDataHtml.replace(/"/g, '&quot;')}">
-                                <span class="material-symbols-outlined" style="font-size: 1.1rem; vertical-align: middle; color: ${color};">${icon}</span>
+                                <span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; color: ${color};">${icon}</span>
                             </span>`;
                         } else {
                             const eq = allEquipments.find(x => x.id === loot.equipmentId);
@@ -903,35 +903,35 @@ function renderRooms() {
                             const tooltipDataHtml2 = `
                                     <div class="anomaly-tooltip-title">${loot.priceSpecialItemName}</div>
                                     <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                        <span style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                        <span class="font-bold" style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                                             Lvl ${anPrice ? anPrice.level || 1 : 1}
                                         </span>
-                                        <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">${priceIcon}</span>
+                                        <span class="flex-center font-bold" style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                                            <span class="material-symbols-outlined text-sm">${priceIcon}</span>
                                             ${anPrice && anPrice.magicObject ? 'Objet Magique' : 'Matériau'}
                                         </span>
                                         ${anPrice && anPrice.spiritualite ?
-                                    `<span style="border: 1px solid ${priceColor}; color: ${priceColor}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                                    `<span class="font-bold" style="border: 1px solid ${priceColor}; color: ${priceColor}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                                             ${anPrice.spiritualite}
                                         </span>` : ''}
                                     </div>
                                     <div class="anomaly-tooltip-desc">${tooltipDesc}</div>
                             `;
                             priceHtml += `<span class="anomaly-badge" style="border-color: ${priceColor}; background: ${priceColor}25; color: ${priceColor}; margin-left: 0.5rem; cursor: help; display: inline-flex; align-items: center; gap: 0.2rem;" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipDataHtml2.replace(/"/g, '&quot;')}">
-                                <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${priceColor};">${priceIcon}</span> 1x
+                                <span class="material-symbols-outlined text-sm align-middle" style="color: ${priceColor};">${priceIcon}</span> 1x
                             </span>`;
                         }
 
                         shopHtml += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;">
+                            <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;">
                                     ${nameHtml}
                                 </span>
-                                <div style="display: flex; align-items: center; gap: 0.8rem;">
-                                    <span style="display: flex; align-items: center;">
+                                <div class="flex-center" style="gap: 0.8rem;">
+                                    <span class="flex-center">
                                         ${priceHtml}
                                     </span>
-                                    <button type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                                    <button class="text-error" type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                                 </div>
                             </div>
                         `;
@@ -939,14 +939,14 @@ function renderRooms() {
                 }
                 shopHtml += `</div>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 6px;">
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem; position: relative;">
+                        <div class="relative" style="display: flex; flex-direction: column; gap: 0.5rem;">
                             <div class="custom-select-wrapper" id="room_merchant_type_wrapper_${rIndex}" style="width: 100%; z-index: ${102 - rIndex}; margin: 0;">
                                 <div class="custom-select-trigger" onclick="toggleMerchantTypeSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                    <span class="cs-label" id="room_merchant_type_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Équipement</span>
+                                    <span class="cs-label" id="room_merchant_type_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">category</span> Équipement</span>
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" id="room_merchant_type_options_${rIndex}">
-                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'EQ', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8;\\'>category</span> Équipement')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Équipement</div>
+                                    <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'EQ', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8;\\'>category</span> Équipement')"><span class="material-symbols-outlined cs-icon text-muted">category</span> Équipement</div>
                                     <div class="custom-option" onclick="selectMerchantType(${rIndex}, 'SPECIAL', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #d946ef;\\'>diamond</span> Item Spécial')"><span class="material-symbols-outlined cs-icon" style="color: #d946ef;">diamond</span> Item Spécial</div>
                                 </div>
                                 <input type="hidden" id="room_merchant_type_${rIndex}" value="EQ">
@@ -955,7 +955,7 @@ function renderRooms() {
                             <!-- Mode Equipement -->
                             <div class="custom-select-wrapper" id="room_loot_select_wrapper_${rIndex}" style="width: 100%; z-index: ${101 - rIndex}; margin: 0;">
                                 <div class="custom-select-trigger" onclick="toggleLootSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                    <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Objet...</span>
+                                    <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">category</span> Objet...</span>
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -974,11 +974,11 @@ function renderRooms() {
                             <!-- Mode Spécial -->
                             <div class="custom-select-wrapper" id="room_merchant_special_wrapper_${rIndex}" style="width: 100%; display: none; z-index: ${101 - rIndex}; margin: 0;">
                                 <div class="custom-select-trigger" onclick="toggleMerchantSpecialSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                    <span class="cs-label" id="room_merchant_special_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spécial...</span>
+                                    <span class="cs-label" id="room_merchant_special_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Choisir un item spécial...</span>
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" id="room_merchant_special_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
-                                    <div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '', 'Choisir un item spécial...')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Choisir un item spécial...</div>
+                                    <div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '', 'Choisir un item spécial...')"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Choisir un item spécial...</div>
                                     ${allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -997,18 +997,18 @@ function renderRooms() {
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.8rem;">
                             <div>
-                                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Prix en Or</label>
+                                <label class="text-xs text-muted" style="display: block; margin-bottom: 0.3rem;">Prix en Or</label>
                                 <input type="number" id="room_merchant_gold_${rIndex}" class="form-control" style="width: 100%; margin: 0;" placeholder="0" min="0">
                             </div>
-                            <div style="position: relative; z-index: ${99 - rIndex};">
-                                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Ou Prix en Item Spécial</label>
+                            <div class="relative" style="z-index: ${99 - rIndex};">
+                                <label class="text-xs text-muted" style="display: block; margin-bottom: 0.3rem;">Ou Prix en Item Spécial</label>
                                 <div class="custom-select-wrapper" id="room_merchant_cost_item_wrapper_${rIndex}" style="width: 100%; margin: 0;">
                                     <div class="custom-select-trigger" onclick="toggleMerchantCostSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                        <span class="cs-label" id="room_merchant_cost_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Sélectionner (Optionnel)</span>
+                                        <span class="cs-label" id="room_merchant_cost_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Sélectionner (Optionnel)</span>
                                         <span class="material-symbols-outlined">expand_more</span>
                                     </div>
                                     <div class="custom-select-options" id="room_merchant_cost_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
-                                        <div class="custom-option" onclick="selectMerchantCost(${rIndex}, '', 'Sélectionner (Optionnel)')"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">diamond</span> Sélectionner (Optionnel)</div>
+                                        <div class="custom-option" onclick="selectMerchantCost(${rIndex}, '', 'Sélectionner (Optionnel)')"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Sélectionner (Optionnel)</div>
                                         ${allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
@@ -1025,7 +1025,7 @@ function renderRooms() {
                                     <input type="hidden" id="room_merchant_cost_item_${rIndex}" value="">
                                 </div>
                             </div>
-                            <button type="button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.8rem; font-size: 0.95rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; transition: all 0.2s ease; margin-top: 0.5rem;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'" onclick="addMerchantItemToRoom(${rIndex})">
+                            <button class="flex-center" type="button" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'" onclick="addMerchantItemToRoom(${rIndex})" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.8rem; font-size: 0.95rem; font-weight: 600; border-radius: 8px; cursor: pointer; justify-content: center; width: 100%; transition: all 0.2s ease; margin-top: 0.5rem;">
                                 <span class="material-symbols-outlined" style="font-size: 1.2rem; margin-right: 0.5rem;">add_shopping_cart</span> Ajouter cet objet
                             </button>
                         </div>
@@ -1034,7 +1034,7 @@ function renderRooms() {
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label class="text-xs text-muted">Texte de l'événement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     ${shopHtml}
@@ -1043,38 +1043,38 @@ function renderRooms() {
                 headerIcon = 'warning'; headerColor = '#f87171'; headerTitle = 'Piège';
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte du piège</label>
+                        <label class="text-xs text-muted">Texte du piège</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem;">
                         <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte PV (% max)</label>
+                            <label class="text-muted" style="font-size: 0.75rem;">Perte PV (% max)</label>
                             <input type="number" class="form-control" value="${room.trapDamageHpPct || 0}" onchange="updateRoomField(${rIndex}, 'trapDamageHpPct', parseInt(this.value) || 0)" min="0" max="100">
                         </div>
                         <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte Mana (% max)</label>
+                            <label class="text-muted" style="font-size: 0.75rem;">Perte Mana (% max)</label>
                             <input type="number" class="form-control" value="${room.trapDamageManaPct || 0}" onchange="updateRoomField(${rIndex}, 'trapDamageManaPct', parseInt(this.value) || 0)" min="0" max="100">
                         </div>
                         <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte PV (Fixe)</label>
+                            <label class="text-muted" style="font-size: 0.75rem;">Perte PV (Fixe)</label>
                             <input type="number" class="form-control" value="${room.trapDamageHpFixed || 0}" onchange="updateRoomField(${rIndex}, 'trapDamageHpFixed', parseInt(this.value) || 0)" min="0">
                         </div>
                         <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte Mana (Fixe)</label>
+                            <label class="text-muted" style="font-size: 0.75rem;">Perte Mana (Fixe)</label>
                             <input type="number" class="form-control" value="${room.trapDamageManaFixed || 0}" onchange="updateRoomField(${rIndex}, 'trapDamageManaFixed', parseInt(this.value) || 0)" min="0">
                         </div>
                     </div>
-                    <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <div class="flex-center" style="margin-top: 1rem; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-                            <span style="font-size: 0.9rem; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
+                            <span class="flex-center text-sm font-medium" style="color: #f8fafc; gap: 0.4rem;">
                                 <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'évitement
                             </span>
-                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
+                            <span class="text-muted" style="font-size: 0.75rem;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
                         </div>
-                        <label style="position: relative; display: block; width: 40px; height: 24px; margin: 0; flex-shrink: 0;">
+                        <label class="flex-shrink-0 relative" style="display: block; width: 40px; height: 24px; margin: 0;">
                             <input type="checkbox" style="opacity: 0; width: 0; height: 0;" ${room.trapHasRopeOption ? 'checked' : ''} onchange="updateRoomField(${rIndex}, 'trapHasRopeOption', this.checked); this.nextElementSibling.style.backgroundColor = this.checked ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'; this.nextElementSibling.children[0].style.transform = this.checked ? 'translateX(16px)' : 'translateX(0)';">
-                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${room.trapHasRopeOption ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}; transition: .3s; border-radius: 24px;">
-                                <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; transform: ${room.trapHasRopeOption ? 'translateX(16px)' : 'translateX(0)'}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                            <span class="absolute" style="cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${room.trapHasRopeOption ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}; transition: .3s; border-radius: 24px;">
+                                <span class="absolute" style="content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; transform: ${room.trapHasRopeOption ? 'translateX(16px)' : 'translateX(0)'}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
                             </span>
                         </label>
                     </div>
@@ -1086,10 +1086,10 @@ function renderRooms() {
                 if (!room.lootTable) room.lootTable = [];
 
                 let doorLootHtml = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                    <label style="font-size: 0.8rem; color: #8b5cf6;">Loot possible si l'issue "Item" est choisie</label>
+                    <label class="text-xs" style="color: #8b5cf6;">Loot possible si l'issue "Item" est choisie</label>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">`;
                 if (room.lootTable.length === 0) {
-                    doorLootHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun loot configuré.</div>`;
+                    doorLootHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun loot configuré.</div>`;
                 } else {
                     room.lootTable.forEach((loot, lIndex) => {
                         const eq = allEquipments.find(x => x.id === loot.equipmentId);
@@ -1098,19 +1098,19 @@ function renderRooms() {
                             const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                             const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                             doorLootHtml += `
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                    <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span> <span style="color:#94a3b8; font-size:0.8rem;">(${loot.probability}%)</span></span>
-                                    <button type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                                <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                    <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;"><span class="material-symbols-outlined${extraClass}" style="font-size:1rem; color:${slotInfo.color};">${slotInfo.icon}</span> <span style="color:${rarityColor};">${eq.name}</span> <span style="color:#94a3b8; font-size:0.8rem;">(${loot.probability}%)</span></span>
+                                    <button class="text-error" type="button" onclick="removeLootFromRoom(${rIndex}, ${lIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                                 </div>
                             `;
                         }
                     });
                 }
                 doorLootHtml += `</div>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
+                    <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
                         <div class="custom-select-wrapper" id="room_loot_select_wrapper_${rIndex}" style="flex: 2; z-index: ${90 - rIndex}; margin: 0;">
                             <div class="custom-select-trigger" onclick="toggleLootSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">category</span> Objet...</span>
+                                <span class="cs-label" id="room_loot_label_${rIndex}"><span class="material-symbols-outlined cs-icon text-muted">category</span> Objet...</span>
                                 <span class="material-symbols-outlined">expand_more</span>
                             </div>
                             <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
@@ -1126,7 +1126,7 @@ function renderRooms() {
                             <input type="hidden" id="room_loot_select_${rIndex}" value="">
                         </div>
                         <input type="number" id="room_loot_prob_${rIndex}" class="form-control" style="flex: 1; min-width: 60px;" placeholder="Prob (%)" step="0.1" min="0" max="100">
-                        <button type="button" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addLootToRoom(${rIndex})">
+                        <button class="flex-center text-sm" type="button" onclick="addLootToRoom(${rIndex})" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                         </button>
                     </div></div>
@@ -1134,7 +1134,7 @@ function renderRooms() {
 
                 let outcomesHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                 if (room.doorOutcomes.length === 0) {
-                    outcomesHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucune issue configurée.</div>`;
+                    outcomesHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucune issue configurée.</div>`;
                 } else {
                     room.doorOutcomes.forEach((outcome, oIndex) => {
                         const outcomeConfig = {
@@ -1152,37 +1152,37 @@ function renderRooms() {
                             if (!outcome.monsters) outcome.monsters = [];
                             let monstersHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                             if (outcome.monsters.length === 0) {
-                                monstersHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun boss configuré.</div>`;
+                                monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun boss configuré.</div>`;
                             } else {
                                 outcome.monsters.forEach((mId, mIndex) => {
                                     const m = allMonsters.find(x => x.id === mId);
                                     if (m) {
                                         monstersHtml += `
-                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                                <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;"><span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px; color: #94a3b8;">Lvl ${m.level || 1}</span> ${m.name}</span>
-                                                <button type="button" onclick="removeMonsterFromBoss(${rIndex}, ${oIndex}, ${mIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                                            <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                                <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;"><span class="text-muted" style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px;">Lvl ${m.level || 1}</span> ${m.name}</span>
+                                                <button class="text-error" type="button" onclick="removeMonsterFromBoss(${rIndex}, ${oIndex}, ${mIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                                             </div>
                                         `;
                                     }
                                 });
                             }
                             monstersHtml += `</div>
-                                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; position: relative;">
+                                <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
                                     <div class="custom-select-wrapper" id="room_door_boss_wrapper_${rIndex}_${oIndex}" style="flex: 1; z-index: ${150 - (rIndex * 10 + oIndex * 3)}; margin: 0;">
                                         <div class="custom-select-trigger" onclick="toggleDoorBossSelect(${rIndex}, ${oIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
-                                            <span class="cs-label" id="room_door_boss_label_${rIndex}_${oIndex}"><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss...</span>
+                                            <span class="cs-label" id="room_door_boss_label_${rIndex}_${oIndex}"><span class="material-symbols-outlined cs-icon text-muted">pest_control</span> Sélectionner un boss...</span>
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="room_door_boss_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
                                             ${allMonsters.map(m => `
                                                 <div class="custom-option" onclick="selectDoorBossOption(${rIndex}, ${oIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">
-                                                    ${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span>
+                                                    ${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span>
                                                 </div>
                                             `).join('')}
                                         </div>
                                         <input type="hidden" id="room_door_boss_select_${rIndex}_${oIndex}" value="">
                                     </div>
-                                    <button type="button" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addMonsterToBoss(${rIndex}, ${oIndex})">
+                                    <button class="flex-center text-sm" type="button" onclick="addMonsterToBoss(${rIndex}, ${oIndex})" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                                         <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                                     </button>
                                 </div>
@@ -1190,7 +1190,7 @@ function renderRooms() {
                             if (!outcome.globalBuffs) outcome.globalBuffs = [];
                             let buffsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">';
                             if (outcome.globalBuffs.length === 0) {
-                                buffsHtml += `<div style="font-size:0.8rem; color: #94a3b8;">Aucun buff global configuré.</div>`;
+                                buffsHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun buff global configuré.</div>`;
                             } else {
                                 outcome.globalBuffs.forEach((buff, bIndex) => {
                                     let buffLabel = '';
@@ -1202,21 +1202,21 @@ function renderRooms() {
                                     else if (buff.type === 'POISON_ON_HIT') buffLabel = `Poison au touché : ${buff.value} dgts (${buff.duration} tours)`;
 
                                     buffsHtml += `
-                                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-                                            <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;">
+                                        <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+                                            <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;">
                                                 <span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">upgrade</span>
                                                 ${buffLabel}
                                             </span>
-                                            <button type="button" onclick="removeGlobalBuffFromBoss(${rIndex}, ${oIndex}, ${bIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                                            <button class="text-error" type="button" onclick="removeGlobalBuffFromBoss(${rIndex}, ${oIndex}, ${bIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                                         </div>
                                     `;
                                 });
                             }
                             buffsHtml += `</div>
-                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: flex-end; position: relative; flex-wrap: wrap;">
+                            <div class="relative" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: flex-end; flex-wrap: wrap;">
                                 <div style="flex: 2; min-width: 120px; display: flex; flex-direction: column; gap: 0.2rem;">
-                                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Type de buff</label>
-                                    <select id="room_door_boss_buff_type_${rIndex}_${oIndex}" class="form-control" style="font-size: 0.8rem; width: 100%;">
+                                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Type de buff</label>
+                                    <select id="room_door_boss_buff_type_${rIndex}_${oIndex}" class="form-control text-xs" style="width: 100%;">
                                         <option value="HP_PCT">+ PV Max (%)</option>
                                         <option value="SHIELD_PCT">Bouclier (% PV)</option>
                                         <option value="ARMOR_FLAT">+ Armure</option>
@@ -1226,36 +1226,36 @@ function renderRooms() {
                                     </select>
                                 </div>
                                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Stat (Valeur)</label>
+                                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Stat (Valeur)</label>
                                     <input type="number" id="room_door_boss_buff_val_${rIndex}_${oIndex}" class="form-control" style="width: 100%;" value="10">
                                 </div>
                                 <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; gap: 0.2rem;">
-                                    <label style="font-size: 0.7rem; color: #94a3b8; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
+                                    <label class="text-muted" style="font-size: 0.7rem; margin: 0; padding-left: 0.2rem;">Durée (Tours)</label>
                                     <input type="number" id="room_door_boss_buff_dur_${rIndex}_${oIndex}" class="form-control" style="width: 100%;" value="4">
                                 </div>
-                                <button type="button" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addGlobalBuffToBoss(${rIndex}, ${oIndex})">
+                                <button class="flex-center text-sm" type="button" onclick="addGlobalBuffToBoss(${rIndex}, ${oIndex})" style="height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                                 </button>
                             </div>`;
 
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #ef4444;">Configuration du Boss</label>
+                                    <label class="text-xs text-error">Configuration du Boss</label>
                                     ${monstersHtml}
                                 </div>
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #3b82f6;">Buffs Globaux du Boss</label>
+                                    <label class="text-xs" style="color: #3b82f6;">Buffs Globaux du Boss</label>
                                     ${buffsHtml}
                                 </div>
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #f59e0b;">Récompenses du Boss (Fin de combat)</label>
+                                    <label class="text-xs" style="color: #f59e0b;">Récompenses du Boss (Fin de combat)</label>
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                         <div style="flex: 1;">
-                                            <label style="font-size: 0.75rem; color: #94a3b8;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #fbbf24;">monetization_on</span> Or bonus</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;"><span class="material-symbols-outlined text-sm align-middle" style="color: #fbbf24;">monetization_on</span> Or bonus</label>
                                             <input type="number" id="room_door_boss_gold_${rIndex}_${oIndex}" class="form-control" value="${outcome.bossRewardGold || 0}" min="0" onchange="updateDoorBossField(${rIndex}, ${oIndex}, 'bossRewardGold', this.value)">
                                         </div>
                                         <div style="flex: 1;">
-                                            <label style="font-size: 0.75rem; color: #94a3b8;"><span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #8b5cf6;">blur_on</span> XP Spirit. bonus</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;"><span class="material-symbols-outlined text-sm align-middle" style="color: #8b5cf6;">blur_on</span> XP Spirit. bonus</label>
                                             <input type="number" id="room_door_boss_xp_${rIndex}_${oIndex}" class="form-control" value="${outcome.bossRewardSpiritualXp || 0}" min="0" onchange="updateDoorBossField(${rIndex}, ${oIndex}, 'bossRewardSpiritualXp', this.value)">
                                         </div>
                                     </div>
@@ -1303,54 +1303,54 @@ function renderRooms() {
 
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #f97316;">Configuration du Sacrifice</label>
+                                    <label class="text-xs" style="color: #f97316;">Configuration du Sacrifice</label>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Spiritualité acceptée</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Spiritualité acceptée</label>
                                             <div class="custom-select-wrapper" id="altar_spirituality_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${152 - (rIndex * 10 + oIndex * 3)};">
                                                 <div class="custom-select-trigger" onclick="toggleAltarSpiritualitySelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                                     <span class="cs-label" id="altar_spirituality_label_${rIndex}_${oIndex}">
-                                                        ${outcome.altarSpirituality === 'ESPRIT' ? '<span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">blur_on</span> Esprit' : outcome.altarSpirituality === 'KARMA' ? '<span class="material-symbols-outlined cs-icon" style="color: #e7d198; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">all_inclusive</span> Karma' : '<span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> Ténèbres'}
+                                                        ${outcome.altarSpirituality === 'ESPRIT' ? '<span class="material-symbols-outlined cs-icon align-middle" style="color: #3b82f6; font-size: 1.1rem; margin-right: 4px;">blur_on</span> Esprit' : outcome.altarSpirituality === 'KARMA' ? '<span class="material-symbols-outlined cs-icon align-middle" style="color: #e7d198; font-size: 1.1rem; margin-right: 4px;">all_inclusive</span> Karma' : '<span class="material-symbols-outlined cs-icon align-middle" style="color: #d946ef; font-size: 1.1rem; margin-right: 4px;">dark_mode</span> Ténèbres'}
                                                     </span>
                                                     <span class="material-symbols-outlined">expand_more</span>
                                                 </div>
                                                 <div class="custom-select-options" id="altar_spirituality_options_${rIndex}_${oIndex}">
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarSpirituality', 'TENEBRES')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #d946ef; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">dark_mode</span> Ténèbres
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #d946ef; font-size: 1.1rem; margin-right: 4px;">dark_mode</span> Ténèbres
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarSpirituality', 'ESPRIT')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #3b82f6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">blur_on</span> Esprit
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #3b82f6; font-size: 1.1rem; margin-right: 4px;">blur_on</span> Esprit
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarSpirituality', 'KARMA')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #e7d198; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">all_inclusive</span> Karma
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #e7d198; font-size: 1.1rem; margin-right: 4px;">all_inclusive</span> Karma
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Type de récompense</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Type de récompense</label>
                                             <div class="custom-select-wrapper" id="altar_reward_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${151 - (rIndex * 10 + oIndex * 3)};">
                                                 <div class="custom-select-trigger" onclick="toggleAltarRewardSelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                                     <span class="cs-label" id="altar_reward_label_${rIndex}_${oIndex}">
-                                                        ${outcome.altarRewardType === 'XP' ? '<span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP Spiritualité' : outcome.altarRewardType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Équipement' : '<span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">monetization_on</span> Or (Gold)'}
+                                                        ${outcome.altarRewardType === 'XP' ? '<span class="material-symbols-outlined cs-icon align-middle" style="color: #38bdf8; font-size: 1.1rem; margin-right: 4px;">auto_awesome</span> XP Spiritualité' : outcome.altarRewardType === 'ITEM' ? '<span class="material-symbols-outlined cs-icon align-middle" style="color: #8b5cf6; font-size: 1.1rem; margin-right: 4px;">redeem</span> Équipement' : '<span class="material-symbols-outlined cs-icon align-middle" style="color: #eab308; font-size: 1.1rem; margin-right: 4px;">monetization_on</span> Or (Gold)'}
                                                     </span>
                                                     <span class="material-symbols-outlined">expand_more</span>
                                                 </div>
                                                 <div class="custom-select-options" id="altar_reward_options_${rIndex}_${oIndex}">
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardType', 'GOLD')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">monetization_on</span> Or (Gold)
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #eab308; font-size: 1.1rem; margin-right: 4px;">monetization_on</span> Or (Gold)
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardType', 'XP')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #38bdf8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">auto_awesome</span> XP Spiritualité
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #38bdf8; font-size: 1.1rem; margin-right: 4px;">auto_awesome</span> XP Spiritualité
                                                     </div>
                                                     <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardType', 'ITEM')">
-                                                        <span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Équipement
+                                                        <span class="material-symbols-outlined cs-icon align-middle" style="color: #8b5cf6; font-size: 1.1rem; margin-right: 4px;">redeem</span> Équipement
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div style="grid-column: span 2;">
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Valeur de la récompense</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Valeur de la récompense</label>
                                             ${rewardValueHtml}
                                         </div>
                                     </div>
@@ -1372,11 +1372,11 @@ function renderRooms() {
                                 else if (selAnomalie.spiritualite === 'KARMA') selAnColor = '#e7d198';
                                 selCatIcon = selAnomalie.category ? (CATEGORY_ICONS[selAnomalie.category] || 'category') : 'star';
                             }
-                            const selAnHtml = selAnomalie ? `<span class="material-symbols-outlined cs-icon" style="color: ${selAnColor}; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">${selCatIcon}</span>${selAnomalie.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${selAnomalie.level || 1})</span>` : 'Aucune anomalie disponible';
+                            const selAnHtml = selAnomalie ? `<span class="material-symbols-outlined cs-icon align-middle" style="color: ${selAnColor}; font-size: 1.1rem; margin-right: 4px;">${selCatIcon}</span>${selAnomalie.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${selAnomalie.level || 1})</span>` : 'Aucune anomalie disponible';
 
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #eab308;">Anomalie (Trésor)</label>
+                                    <label class="text-xs" style="color: #eab308;">Anomalie (Trésor)</label>
                                     <div class="custom-select-wrapper" id="altar_treasure_wrapper_${rIndex}_${oIndex}" style="margin-top: 0.2rem; z-index: ${150 - (rIndex * 10 + oIndex * 3)};">
                                         <div class="custom-select-trigger" onclick="toggleAltarTreasureSelect(${rIndex}, ${oIndex})" style="padding: 0.5rem; font-size: 0.85rem; border-radius: 8px;">
                                             <span class="cs-label" id="altar_treasure_label_${rIndex}_${oIndex}">
@@ -1392,7 +1392,7 @@ function renderRooms() {
                                 else if (an.spiritualite === 'KARMA') anColor = '#e7d198';
                                 return `
                                                 <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'treasureAnomalieId', ${an.id})">
-                                                    <span class="material-symbols-outlined cs-icon" style="color: ${anColor}; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">${an.category ? (CATEGORY_ICONS[an.category] || 'category') : 'star'}</span>${an.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${an.level || 1})</span>
+                                                    <span class="material-symbols-outlined cs-icon align-middle" style="color: ${anColor}; font-size: 1.1rem; margin-right: 4px;">${an.category ? (CATEGORY_ICONS[an.category] || 'category') : 'star'}</span>${an.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${an.level || 1})</span>
                                                 </div>
                                                 `;
                             }).join('')}
@@ -1403,43 +1403,43 @@ function renderRooms() {
                         } else if (outcome.type === 'PIEGE') {
                             extraHtml = `
                                 <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15); width: 100%;">
-                                    <label style="font-size: 0.8rem; color: #f87171;">Configuration du Piège</label>
+                                    <label class="text-xs" style="color: #f87171;">Configuration du Piège</label>
                                     
                                     <div style="margin-top: 0.5rem;">
-                                        <label style="font-size: 0.75rem; color: #94a3b8;">Texte du piège</label>
+                                        <label class="text-muted" style="font-size: 0.75rem;">Texte du piège</label>
                                         <input type="text" class="form-control" value="${outcome.trapText || ''}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapText', this.value)">
                                     </div>
                                     
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem;">
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte PV (% max)</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Perte PV (% max)</label>
                                             <input type="number" class="form-control" value="${outcome.trapDamageHpPct || 0}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapDamageHpPct', parseInt(this.value) || 0)" min="0" max="100">
                                         </div>
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte Mana (% max)</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Perte Mana (% max)</label>
                                             <input type="number" class="form-control" value="${outcome.trapDamageManaPct || 0}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapDamageManaPct', parseInt(this.value) || 0)" min="0" max="100">
                                         </div>
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte PV (Fixe)</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Perte PV (Fixe)</label>
                                             <input type="number" class="form-control" value="${outcome.trapDamageHpFixed || 0}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapDamageHpFixed', parseInt(this.value) || 0)" min="0">
                                         </div>
                                         <div>
-                                            <label style="font-size: 0.75rem; color: #94a3b8;">Perte Mana (Fixe)</label>
+                                            <label class="text-muted" style="font-size: 0.75rem;">Perte Mana (Fixe)</label>
                                             <input type="number" class="form-control" value="${outcome.trapDamageManaFixed || 0}" onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapDamageManaFixed', parseInt(this.value) || 0)" min="0">
                                         </div>
                                     </div>
                                     
-                                    <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                    <div class="flex-center" style="margin-top: 1rem; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
                                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-                                            <span style="font-size: 0.9rem; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
+                                            <span class="flex-center text-sm font-medium" style="color: #f8fafc; gap: 0.4rem;">
                                                 <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 1.1rem;">auto_fix</span> Option Corde d'évitement
                                             </span>
-                                            <span style="font-size: 0.75rem; color: #94a3b8;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
+                                            <span class="text-muted" style="font-size: 0.75rem;">Permet aux héros d'utiliser une Corde pour ignorer ce piège.</span>
                                         </div>
-                                        <label style="position: relative; display: block; width: 40px; height: 24px; margin: 0; flex-shrink: 0;">
+                                        <label class="flex-shrink-0 relative" style="display: block; width: 40px; height: 24px; margin: 0;">
                                             <input type="checkbox" style="opacity: 0; width: 0; height: 0;" ${outcome.trapHasRopeOption ? 'checked' : ''} onchange="updateAltarField(${rIndex}, ${oIndex}, 'trapHasRopeOption', this.checked); this.nextElementSibling.style.backgroundColor = this.checked ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'; this.nextElementSibling.children[0].style.transform = this.checked ? 'translateX(16px)' : 'translateX(0)';">
-                                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${outcome.trapHasRopeOption ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}; transition: .3s; border-radius: 24px;">
-                                                <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; transform: ${outcome.trapHasRopeOption ? 'translateX(16px)' : 'translateX(0)'}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                                            <span class="absolute" style="cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${outcome.trapHasRopeOption ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}; transition: .3s; border-radius: 24px;">
+                                                <span class="absolute" style="content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; transform: ${outcome.trapHasRopeOption ? 'translateX(16px)' : 'translateX(0)'}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
                                             </span>
                                         </label>
                                     </div>
@@ -1449,13 +1449,13 @@ function renderRooms() {
 
                         outcomesHtml += `
                             <div style="display: flex; flex-direction: column; background: rgba(0,0,0,0.3); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 0.4rem;">
+                                <div class="flex-between" style="align-items: center;">
+                                    <span class="flex-center" style="font-size: 0.85rem; color: #f8fafc; gap: 0.4rem;">
                                         <span class="material-symbols-outlined" style="color: ${conf.color}; font-size: 1.1rem;">${conf.icon}</span> 
                                         ${conf.text} 
                                         <span style="color:#fbbf24; font-size:0.8rem; margin-left: 0.2rem;">(${outcome.probability}%)</span>
                                     </span>
-                                    <button type="button" onclick="removeDoorOutcome(${rIndex}, ${oIndex})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
+                                    <button class="text-error" type="button" onclick="removeDoorOutcome(${rIndex}, ${oIndex})" style="background: none; border: none; cursor: pointer; padding: 0;"><span class="material-symbols-outlined" style="font-size: 1rem;">close</span></button>
                                 </div>
                                 ${extraHtml}
                             </div>
@@ -1467,34 +1467,34 @@ function renderRooms() {
                         <div class="custom-select-wrapper" id="room_door_outcome_wrapper_${rIndex}" style="flex: 2; z-index: ${50 - rIndex}; margin: 0;">
                             <div class="custom-select-trigger" onclick="toggleDoorOutcomeSelect(${rIndex})" style="padding: 0.6rem 1rem; border-radius: 8px;">
                                 <span class="cs-label" id="room_door_outcome_label_${rIndex}">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #ef4444; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">skull</span> Boss
+                                    <span class="material-symbols-outlined cs-icon text-error align-middle" style="font-size: 1.1rem; margin-right: 4px;">skull</span> Boss
                                 </span>
                                 <span class="material-symbols-outlined">expand_more</span>
                             </div>
                             <div class="custom-select-options" id="room_door_outcome_options_${rIndex}">
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'BOSS', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #ef4444; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>skull</span> Boss')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #ef4444; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">skull</span> Boss
+                                    <span class="material-symbols-outlined cs-icon text-error align-middle" style="font-size: 1.1rem; margin-right: 4px;">skull</span> Boss
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'ITEM', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>redeem</span> Item')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #8b5cf6; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">redeem</span> Item
+                                    <span class="material-symbols-outlined cs-icon align-middle" style="color: #8b5cf6; font-size: 1.1rem; margin-right: 4px;">redeem</span> Item
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'AUTEL', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #f97316; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>hand_bones</span> Autel Sacrificiel')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #f97316; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">hand_bones</span> Autel Sacrificiel
+                                    <span class="material-symbols-outlined cs-icon align-middle" style="color: #f97316; font-size: 1.1rem; margin-right: 4px;">hand_bones</span> Autel Sacrificiel
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'TRESOR', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>crown</span> Trésor')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #eab308; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">crown</span> Trésor
+                                    <span class="material-symbols-outlined cs-icon align-middle" style="color: #eab308; font-size: 1.1rem; margin-right: 4px;">crown</span> Trésor
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'PIEGE', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>bomb</span> Piège')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #f87171; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">bomb</span> Piège
+                                    <span class="material-symbols-outlined cs-icon align-middle" style="color: #f87171; font-size: 1.1rem; margin-right: 4px;">bomb</span> Piège
                                 </div>
                                 <div class="custom-option" onclick="selectDoorOutcome(${rIndex}, 'RIEN', '<span class=\\'material-symbols-outlined cs-icon\\' style=\\'color: #94a3b8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;\\'>door_front</span> Rien')">
-                                    <span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">door_front</span> Rien
+                                    <span class="material-symbols-outlined cs-icon text-muted align-middle" style="font-size: 1.1rem; margin-right: 4px;">door_front</span> Rien
                                 </div>
                             </div>
                             <input type="hidden" id="room_door_outcome_${rIndex}" value="BOSS">
                         </div>
                         <input type="number" id="room_door_prob_${rIndex}" class="form-control" style="flex: 1; min-width: 60px;" placeholder="Prob (%)" step="1" min="0" max="100">
-                        <button type="button" style="background: linear-gradient(135deg, #fbbf24, #d97706); color: white; border: none; padding: 0 1.2rem; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="addDoorOutcome(${rIndex})">
+                        <button class="flex-center text-sm" type="button" onclick="addDoorOutcome(${rIndex})" style="background: linear-gradient(135deg, #fbbf24, #d97706); color: white; border: none; padding: 0 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer; gap: 0.3rem;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">add</span>
                         </button>
                     </div>
@@ -1502,7 +1502,7 @@ function renderRooms() {
 
                 contentHtml = `
                     <div style="margin-top: 1rem;">
-                        <label style="font-size: 0.8rem; color: #94a3b8;">Texte de l'événement</label>
+                        <label class="text-xs text-muted">Texte de l'événement</label>
                         <input type="text" class="form-control" value="${room.eventText || ''}" onchange="updateRoomField(${rIndex}, 'eventText', this.value)">
                     </div>
                     ${outcomesHtml}
@@ -1511,8 +1511,8 @@ function renderRooms() {
         }
 
         div.innerHTML = `
-            <button type="button" onclick="removeRoom(${rIndex})" style="position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem;"><span class="material-symbols-outlined">delete</span></button>
-            <div style="font-family: 'Outfit'; font-weight: 600; color: ${headerColor}; display: flex; align-items: center; gap: 0.5rem;">
+            <button class="text-error absolute" type="button" onclick="removeRoom(${rIndex})" style="top: 0.5rem; right: 0.5rem; background: none; border: none; cursor: pointer; padding: 0.2rem;"><span class="material-symbols-outlined">delete</span></button>
+            <div class="flex-center" style="font-family: 'Outfit'; font-weight: 600; color: ${headerColor}; gap: 0.5rem;">
                 <span class="material-symbols-outlined" style="font-size: 1.2rem;">${headerIcon}</span>
                 Étape ${rIndex + 1} : ${headerTitle}
             </div>
@@ -1621,7 +1621,7 @@ window.selectSortOption = function (val, label, icon, color) {
     document.getElementById('monsterSort').value = val;
     let extraStyle = '';
     if (val === 'name_desc') extraStyle = 'transform: scaleY(-1);';
-    document.getElementById('mSortTrigger').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem; ${extraStyle}">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
+    document.getElementById('mSortTrigger').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color}; font-size: 1.1rem; ${extraStyle}">${icon}</span> <span style="flex:1; text-align:left;">${label}</span> <span class="material-symbols-outlined text-muted" style="font-size: 1.2rem; pointer-events: none;">expand_more</span>`;
     document.getElementById('mSortWrapper').classList.remove('open');
     window.renderMonstersList();
 };
@@ -1660,9 +1660,9 @@ window.renderMonstersList = function () {
 
         let mutationsHtml = '';
         if (m.mutations && m.mutations.length > 0) {
-            mutationsHtml = `<div style="display: flex; flex-direction: column; gap: 0.5rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.8rem; margin-left: 0.8rem; justify-content: center; flex-shrink: 0;">`;
+            mutationsHtml = `<div class="flex-shrink-0" style="display: flex; flex-direction: column; gap: 0.5rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.8rem; margin-left: 0.8rem; justify-content: center;">`;
             m.mutations.forEach(mut => {
-                mutationsHtml += `<div onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; border: 1px solid ${mut.color || '#e879f9'}; cursor: help;">
+                mutationsHtml += `<div class="flex-center" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.05); justify-content: center; border: 1px solid ${mut.color || '#e879f9'}; cursor: help;">
                     <template class="tooltip-data">
                         <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${mut.color || '#e879f9'}; border-bottom: 1px solid ${mut.color || '#e879f9'}; padding-bottom: 4px;">${mut.nom} (Lvl ${mut.level || 1})</div>
                         <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 250px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${mut.description}</div>
@@ -1675,18 +1675,18 @@ window.renderMonstersList = function () {
 
         list.innerHTML += `
             <div class="monster-card">
-                <div style="position: absolute; top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
+                <div class="absolute" style="top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
                     ${secretBadgeHtml}
-                    <div class="monster-level-badge" style="position: relative; top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
+                    <div class="monster-level-badge relative" style="top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div class="flex-between" style="align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <div class="monster-card-title" style="margin-bottom: 0;">${m.name}</div>
-                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+                    <div class="flex-shrink-0" style="display: flex; gap: 0.2rem;">
                         <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editMonster(${m.id})" title="Modifier">
                             <span class="material-symbols-outlined">edit</span>
                         </button>
-                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteMonster(${m.id})" title="Supprimer">
+                        <button class="delete-btn text-error" onclick="deleteMonster(${m.id})" title="Supprimer" style="position: static; padding: 0.2rem;">
                             <span class="material-symbols-outlined">delete</span>
                         </button>
                     </div>
@@ -1694,24 +1694,24 @@ window.renderMonstersList = function () {
 
                 <div style="display: flex; align-items: stretch;">
                     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
-                        <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${m.description || ''}</div>
+                        <div class="text-xs text-muted" style="margin-bottom: 0.5rem;">${m.description || ''}</div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span class="text-error" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
+                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
                         </div>
                         <div class="monster-card-stats">
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #38bdf8;">water_drop</span> Mana: ${m.manaMax || 0}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f472b6;">healing</span> R. PV: ${m.regenHp || 0}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #7dd3fc;">opacity</span> R. MP: ${m.regenMana || 0}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">bolt</span> Vit: ${m.speed}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ef4444;">gps_fixed</span> Crit: ${m.crit || 0}%</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f43f5e;">fitness_center</span> For: ${m.strength}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #a855f7;">auto_awesome</span> Pui: ${m.power}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">shield</span> Arm: ${m.armor}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #10b981;">shield</span> Rés: ${m.resistance}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">monetization_on</span> Or: ${m.rewardGold}</span>
-                            <span style="display: flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #fcd34d;">stars</span> XP: ${m.rewardExp}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #38bdf8;">water_drop</span> Mana: ${m.manaMax || 0}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f472b6;">healing</span> R. PV: ${m.regenHp || 0}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #7dd3fc;">opacity</span> R. MP: ${m.regenMana || 0}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">bolt</span> Vit: ${m.speed}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined text-error" style="font-size: 1rem;">gps_fixed</span> Crit: ${m.crit || 0}%</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f43f5e;">fitness_center</span> For: ${m.strength}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #a855f7;">auto_awesome</span> Pui: ${m.power}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;">shield</span> Arm: ${m.armor}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined text-success" style="font-size: 1rem;">shield</span> Rés: ${m.resistance}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;">monetization_on</span> Or: ${m.rewardGold}</span>
+                            <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #fcd34d;">stars</span> XP: ${m.rewardExp}</span>
                         </div>
                     </div>
                     ${mutationsHtml}
@@ -1805,7 +1805,7 @@ window.cancelMonsterEdit = function () {
     document.getElementById('mNativeSecret').value = '';
     const lvlTrigger = document.getElementById('mLevelTrigger');
     if (lvlTrigger) {
-        lvlTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8; font-size: 1.1rem;">star</span> <span style="flex:1; text-align:center;">1</span>`;
+        lvlTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted" style="font-size: 1.1rem;">star</span> <span style="flex:1; text-align:center;">1</span>`;
     }
     const secretTrigger = document.getElementById('mNativeSecretWrapper')?.querySelector('.cs-label');
     if (secretTrigger) {
@@ -1893,10 +1893,10 @@ window.renderDungeonsList = function () {
         }
 
         let eventDetails = '';
-        if (alterations > 0) eventDetails += `<span style="color: #8b5cf6; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">blur_on</span>${alterations}</span>`;
-        if (rencontres > 0) eventDetails += `<span style="color: #10b981; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">storefront</span>${rencontres}</span>`;
-        if (pieges > 0) eventDetails += `<span style="color: #f87171; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">warning</span>${pieges}</span>`;
-        if (portes > 0) eventDetails += `<span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">door_front</span>${portes}</span>`;
+        if (alterations > 0) eventDetails += `<span style="color: #8b5cf6; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined text-sm">blur_on</span>${alterations}</span>`;
+        if (rencontres > 0) eventDetails += `<span class="text-success" style="display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined text-sm">storefront</span>${rencontres}</span>`;
+        if (pieges > 0) eventDetails += `<span style="color: #f87171; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined text-sm">warning</span>${pieges}</span>`;
+        if (portes > 0) eventDetails += `<span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 0.2rem; margin-right: 0.5rem;"><span class="material-symbols-outlined text-sm">door_front</span>${portes}</span>`;
 
         let secretMeta = { icon: "key", color: "#f59e0b" };
         if (d.requiredSecret) {
@@ -1919,10 +1919,10 @@ window.renderDungeonsList = function () {
         list.innerHTML += `
             <div class="monster-card">
                 <div class="monster-level-badge">Lvl ${d.recommendedLevel || 1}</div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div class="flex-between" style="align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <div class="monster-card-title" style="margin-bottom: 0;">${d.name}</div>
-                    <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
-                        ${index > 0 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #10b981;" onclick="moveDungeonOrder(${d.id}, -1)" title="Monter">
+                    <div class="flex-shrink-0" style="display: flex; gap: 0.2rem;">
+                        ${index > 0 ? `<button class="delete-btn text-success" onclick="moveDungeonOrder(${d.id}, -1)" title="Monter" style="position: static; padding: 0.2rem;">
                             <span class="material-symbols-outlined">arrow_upward</span>
                         </button>` : ''}
                         ${index < filtered.length - 1 ? `<button class="delete-btn" style="position: static; padding: 0.2rem; color: #f59e0b;" onclick="moveDungeonOrder(${d.id}, 1)" title="Descendre">
@@ -1931,25 +1931,25 @@ window.renderDungeonsList = function () {
                         <button class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editDungeon(${d.id})" title="Modifier">
                             <span class="material-symbols-outlined">edit</span>
                         </button>
-                        <button class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteDungeon(${d.id})" title="Supprimer">
+                        <button class="delete-btn text-error" onclick="deleteDungeon(${d.id})" title="Supprimer" style="position: static; padding: 0.2rem;">
                             <span class="material-symbols-outlined">delete</span>
                         </button>
                     </div>
                 </div>
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">${d.description || ''}</div>
+                <div class="text-xs text-muted" style="margin-bottom: 0.5rem;">${d.description || ''}</div>
                 <div style="font-size: 0.85rem; color: #f8fafc; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; gap: 0.4rem;">
-                    ${d.requiredSecret ? `<div style="color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${secretMeta.color};">${secretMeta.icon}</span> <span><strong style="color:${secretMeta.color};">${d.requiredSecret}</strong> (Lvl ${d.requiredSecretLevel || 1})</span></div>` : ''}
+                    ${d.requiredSecret ? `<div class="flex-center text-muted" style="gap: 0.4rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${secretMeta.color};">${secretMeta.icon}</span> <span><strong style="color:${secretMeta.color};">${d.requiredSecret}</strong> (Lvl ${d.requiredSecretLevel || 1})</span></div>` : ''}
                     <div><span style="font-weight: 600;">Salles totales :</span> ${totalSalles}</div>
-                    ${combats > 0 ? `<div style="color: #ef4444; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                    ${combats > 0 ? `<div class="flex-center text-error" style="margin-left: 0.5rem; gap: 0.3rem;">
                         <span class="material-symbols-outlined" style="font-size: 1rem;">swords</span> Combats : ${combats} (avec ${totalMobs} mob${totalMobs > 1 ? 's' : ''})
                     </div>` : ''}
-                    ${bosses > 0 ? `<div style="color: #dc2626; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                    ${bosses > 0 ? `<div class="flex-center" style="color: #dc2626; margin-left: 0.5rem; gap: 0.3rem;">
                         <span class="material-symbols-outlined" style="font-size: 1rem;">skull</span> Boss : ${bosses} (avec ${totalBossMobs} mob${totalBossMobs > 1 ? 's' : ''})
                     </div>` : ''}
-                    ${treasures > 0 ? `<div style="color: #f59e0b; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                    ${treasures > 0 ? `<div class="flex-center" style="color: #f59e0b; margin-left: 0.5rem; gap: 0.3rem;">
                         <span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> Trésors : ${treasures}
                     </div>` : ''}
-                    ${eventDetails ? `<div style="margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">Événements : ${eventDetails}</div>` : ''}
+                    ${eventDetails ? `<div class="flex-center" style="margin-left: 0.5rem; gap: 0.3rem; flex-wrap: wrap;">Événements : ${eventDetails}</div>` : ''}
                 </div>
             </div>
         `;
@@ -2181,7 +2181,7 @@ window.selectMerchantSpecial = function (rIndex, value, labelStr, color = '#d946
     const label = document.getElementById(`room_merchant_special_label_${rIndex}`);
     if (label) {
         if (!value) {
-            label.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">star</span> ${labelStr}`;
+            label.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">star</span> ${labelStr}`;
         } else {
             label.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color};">star</span> ${labelStr} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${level})</span>`;
         }
@@ -2207,7 +2207,7 @@ window.selectMerchantCost = function (rIndex, value, labelStr, color = '#f472b6'
     const label = document.getElementById(`room_merchant_cost_label_${rIndex}`);
     if (label) {
         if (!value) {
-            label.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">star</span> ${labelStr}`;
+            label.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">star</span> ${labelStr}`;
         } else {
             label.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${color};">star</span> ${labelStr} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${level})</span>`;
         }
@@ -2409,7 +2409,7 @@ window.selectDoorBossOption = function (rIndex, oIndex, val, label, level) {
     const input = document.getElementById(`room_door_boss_select_${rIndex}_${oIndex}`);
     if (input) input.value = val;
     const triggerLabel = document.getElementById(`room_door_boss_label_${rIndex}_${oIndex}`);
-    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #ef4444;">pest_control</span> ${label} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${level})</span>`;
+    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${label} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${level})</span>`;
     const wrapper = document.getElementById(`room_door_boss_wrapper_${rIndex}_${oIndex}`);
     if (wrapper) wrapper.classList.remove('open');
 };
@@ -2428,7 +2428,7 @@ window.addMonsterToBoss = function (rIndex, oIndex) {
     // Clear selection
     input.value = '';
     const triggerLabel = document.getElementById(`room_door_boss_label_${rIndex}_${oIndex}`);
-    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">pest_control</span> Sélectionner un boss...`;
+    if (triggerLabel) triggerLabel.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">pest_control</span> Sélectionner un boss...`;
 
     renderRooms();
 };
@@ -2594,7 +2594,7 @@ function renderMutationsList() {
     const list = document.getElementById('mutationsList');
     if (!list) return;
     if (allMutations.length === 0) {
-        list.innerHTML = `<div style="text-align:center; padding: 2rem; color: #64748b; font-style: italic;">Aucune mutation trouvée</div>`;
+        list.innerHTML = `<div class="font-italic" style="text-align:center; padding: 2rem; color: #64748b;">Aucune mutation trouvée</div>`;
         return;
     }
 
@@ -2603,20 +2603,20 @@ function renderMutationsList() {
         const mHex = mut.color || '#e879f9';
         const mIcon = mut.icon || 'pets';
         html += `
-        <div class="list-item" style="border-left: 3px solid ${mHex}; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(15, 23, 42, 0.4); border-radius: 8px; margin-bottom: 0.5rem;">
+        <div class="list-item flex-between" style="border-left: 3px solid ${mHex}; align-items: center; padding: 0.8rem; background: rgba(15, 23, 42, 0.4); border-radius: 8px; margin-bottom: 0.5rem;">
             <div style="display: flex; flex-direction: column; gap: 0.3rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div class="flex-center" style="gap: 0.5rem;">
                     <span class="material-symbols-outlined" style="color: ${mHex};">${mIcon}</span>
                     <span style="font-weight: 600; color: #f8fafc;">${mut.nom}</span>
                     <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 0.75rem;">Lvl ${mut.level}</span>
                 </div>
                 <div style="font-size: 0.85rem; color: #cbd5e1;">${mut.description}</div>
             </div>
-            <div style="display: flex; gap: 0.2rem; flex-shrink: 0;">
+            <div class="flex-shrink-0" style="display: flex; gap: 0.2rem;">
                 <button type="button" class="delete-btn" style="position: static; padding: 0.2rem; color: #3b82f6;" onclick="editMutation(${mut.id})" title="Modifier">
                     <span class="material-symbols-outlined">edit</span>
                 </button>
-                <button type="button" class="delete-btn" style="position: static; padding: 0.2rem; color: #ef4444;" onclick="deleteMutation(${mut.id})" title="Supprimer">
+                <button type="button" class="delete-btn text-error" onclick="deleteMutation(${mut.id})" title="Supprimer" style="position: static; padding: 0.2rem;">
                     <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>
@@ -2688,7 +2688,7 @@ function renderMutationsSelector() {
     const container = document.getElementById('mMutationsContainer');
     if (!container) return;
     if (allMutations.length === 0) {
-        container.innerHTML = `<span style="color: #64748b; font-size: 0.9rem; font-style: italic;">Aucune mutation disponible. Créez-en une d'abord.</span>`;
+        container.innerHTML = `<span class="text-sm font-italic" style="color: #64748b;">Aucune mutation disponible. Créez-en une d'abord.</span>`;
         return;
     }
 

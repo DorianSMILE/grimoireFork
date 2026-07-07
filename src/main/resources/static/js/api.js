@@ -305,25 +305,25 @@ export async function loadSpells() {
 //   EFFETS ÉLÉMENTAIRES â€” ENTER
 // ================================================================
 
-// ðŸ’¨ VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
+// 💨 VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
 
-// ðŸ’§ EAU (Sûreté) : vague qui monte depuis le bas de la carte
+// 💧 EAU (Sûreté) : vague qui monte depuis le bas de la carte
 
 // â˜ ï¸ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
 
-// ðŸª¨ TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
+// 🪨 TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
 
-// ðŸŒ‹ LAVE (Conviction) : coulées de lave qui descendent depuis le haut
+// 🌋 LAVE (Conviction) : coulées de lave qui descendent depuis le haut
 
-// ðŸŒ¿ PLANTE (Création) : vrilles de vigne qui s'élancent depuis les bords
+// 🌿 PLANTE (Création) : vrilles de vigne qui s'élancent depuis les bords
 
-// ðŸ”¥ FEU (Destruction) : gerbe de flammes qui explose vers le haut
+// 🔥 FEU (Destruction) : gerbe de flammes qui explose vers le haut
 
-// ðŸ’¥ EXPLOSION (Violence) : onde de choc circulaire + éclats
+// 💥 EXPLOSION (Violence) : onde de choc circulaire + éclats
 
-// ðŸ‘» ESPRIT : orbes d'âme qui orbitent autour de la carte
+// 👻 ESPRIT : orbes d'âme qui orbitent autour de la carte
 
-// ðŸŒ‘ TÉNÈBRES : tentacules d'ombre qui surgissent des bords
+// 🌑 TÉNÈBRES : tentacules d'ombre qui surgissent des bords
 
 // âš–ï¸ KARMA : deux orbes â€” or et argent â€” qui convergent
 
@@ -332,25 +332,25 @@ export async function loadSpells() {
 //   EFFETS ÉLÉMENTAIRES â€” LEAVE
 // ================================================================
 
-// ðŸ’¨ VENT â€” le vent retombe : quelques tourbillons qui se dissipent
+// 💨 VENT â€” le vent retombe : quelques tourbillons qui se dissipent
 
-// ðŸ’§ EAU â€” gouttelettes qui tombent et éclaboussent
+// 💧 EAU â€” gouttelettes qui tombent et éclaboussent
 
 // â˜ ï¸ POISON â€” Brume toxique lourde, poisseuse et lente
 
-// ðŸª¨ TERRE â€” poussière de pierre qui retombe lourdement depuis le bas
+// 🪨 TERRE â€” poussière de pierre qui retombe lourdement depuis le bas
 
-// ðŸŒ‹ LAVE â€” braises qui refroidissent et tombent
+// 🌋 LAVE â€” braises qui refroidissent et tombent
 
-// ðŸŒ± PLANTE â€” Liane grimpante lente + nuage de pollen
+// 🌱 PLANTE â€” Liane grimpante lente + nuage de pollen
 
-// ðŸ”¥ FEU â€” cendres et fumée qui s'élèvent
+// 🔥 FEU â€” cendres et fumée qui s'élèvent
 
-// ðŸ’¥ EXPLOSION â€” retombée : éclats qui tombent + fumée
+// 💥 EXPLOSION â€” retombée : éclats qui tombent + fumée
 
-// ðŸ‘» ESPRIT â€” dissolution : la carte libère des âmes spectrales
+// 👻 ESPRIT â€” dissolution : la carte libère des âmes spectrales
 
-// ðŸŒ‘ TÉNÈBRES â€” le vide se referme : brume noire/violette qui s'absorbe
+// 🌑 TÉNÈBRES â€” le vide se referme : brume noire/violette qui s'absorbe
 
 // âš–ï¸ KARMA â€” les orbes se séparent et partent en orbites opposées
 

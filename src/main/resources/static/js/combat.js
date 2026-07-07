@@ -63,9 +63,9 @@ export function createAnomalyBadgeHtml(anomalyName, showName = false) {
     const tooltipDataHtml = `
         <div class="anomaly-tooltip-title" style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${tColor}; border-bottom: 1px solid ${tColor}; padding-bottom: 4px;">${tooltipTitle}</div>
         <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-            <span style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Lvl ${anomLevel}</span>
-            <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>${typeLabel}</span>
-            <span style="border: 1px solid ${tColor}; color: ${tColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">${anomSpiri}</span>
+            <span class="font-bold" style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">Lvl ${anomLevel}</span>
+            <span class="flex-center font-bold" style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;"><span class="material-symbols-outlined text-sm">${catIcon}</span>${typeLabel}</span>
+            <span class="font-bold" style="border: 1px solid ${tColor}; color: ${tColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase;">${anomSpiri}</span>
         </div>
         <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tooltipDesc}</div>
     `;
@@ -75,7 +75,7 @@ export function createAnomalyBadgeHtml(anomalyName, showName = false) {
 
     const nameHtml = showName ? `<span style="margin-left: 0.2rem;">${anomalyName}</span>` : '';
     const padStyle = showName ? 'padding: 0.1rem 0.4rem;' : 'padding: 0.3rem;';
-    return `<span class="anomaly-badge" ${tooltipAttrs} ${extraAttrs} style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid ${tColor}; background: linear-gradient(${tColor}25, ${tColor}25), rgba(15,23,42,0.8); color: ${tColor}; ${padStyle} border-radius: 6px; font-weight:bold; cursor: help; vertical-align: middle;"><template class="tooltip-data">${tooltipDataHtml}</template><span class="material-symbols-outlined" style="font-size: 1.2rem;">${catIcon}</span>${nameHtml}</span>`;
+    return `<span class="anomaly-badge align-middle" ${tooltipAttrs} ${extraAttrs} style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid ${tColor}; background: linear-gradient(${tColor}25, ${tColor}25), rgba(15,23,42,0.8); color: ${tColor}; ${padStyle} border-radius: 6px; font-weight:bold; cursor: help;"><template class="tooltip-data">${tooltipDataHtml}</template><span class="material-symbols-outlined" style="font-size: 1.2rem;">${catIcon}</span>${nameHtml}</span>`;
 }
 
 // Replaced by window.SLOT_LABELS
@@ -234,24 +234,24 @@ function renderAndAnimateXPCards(containerId, players, prefix) {
         let oldSpiritStats = getSpiritExpStats(oldSpiritExp);
 
         let cardsHtmlPart = `
-            <div id="${prefix}-xp-card-${p.id}" style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 180px; position: relative; overflow: hidden; transition: all 0.5s; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8); display: flex; flex-direction: column; gap: 0.3rem;">
-                <div style="color: #e2e8f0; font-weight: bold; margin-bottom: 0.3rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${p.name}</div>
+            <div class="text-center relative" id="${prefix}-xp-card-${p.id}" style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 180px; overflow: hidden; transition: all 0.5s; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8); display: flex; flex-direction: column; gap: 0.3rem;">
+                <div class="font-bold whitespace-nowrap" style="color: #e2e8f0; margin-bottom: 0.3rem; text-overflow: ellipsis; overflow: hidden;">${p.name}</div>
                 
-                <div id="${prefix}-xp-lvl-${p.id}" style="color: #38bdf8; font-size: 0.8rem; font-weight: 600; transition: color 0.3s, transform 0.3s;">Voie Niv. ${oldStats.level}</div>
+                <div class="text-xs" id="${prefix}-xp-lvl-${p.id}" style="color: #38bdf8; font-weight: 600; transition: color 0.3s, transform 0.3s;">Voie Niv. ${oldStats.level}</div>
                 <div style="width: 100%; background: #334155; border-radius: 4px; height: 6px;">
                     <div id="${prefix}-xp-fill-${p.id}" style="height: 100%; width: ${Math.min(100, oldStats.progress)}%; background: #10b981; transition: box-shadow 0.3s;"></div>
                 </div>
-                <div id="${prefix}-xp-text-${p.id}" style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">${oldExp} / ${oldStats.level === 5 ? 'MAX' : oldStats.nextLvlXp} XP</div>
+                <div class="text-muted" id="${prefix}-xp-text-${p.id}" style="font-size: 0.7rem; font-family: monospace;">${oldExp} / ${oldStats.level === 5 ? 'MAX' : oldStats.nextLvlXp} XP</div>
         `;
 
         if (oldSpiritExp > 0 || (p.spiritualiteExperience || 0) > 0 || prefix === 'treasure') {
             cardsHtmlPart += `
                 <div style="margin-top: 0.2rem;"></div>
-                <div id="${prefix}-spirit-lvl-${p.id}" style="color: #fb923c; font-size: 0.8rem; font-weight: 600; transition: color 0.3s, transform 0.3s;">Spirit Niv. ${oldSpiritStats.level}</div>
+                <div class="text-xs" id="${prefix}-spirit-lvl-${p.id}" style="color: #fb923c; font-weight: 600; transition: color 0.3s, transform 0.3s;">Spirit Niv. ${oldSpiritStats.level}</div>
                 <div style="width: 100%; background: #334155; border-radius: 4px; height: 6px;">
                     <div id="${prefix}-spirit-fill-${p.id}" style="height: 100%; width: ${Math.min(100, oldSpiritStats.progress)}%; background: #f59e0b; transition: box-shadow 0.3s;"></div>
                 </div>
-                <div id="${prefix}-spirit-text-${p.id}" style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">${oldSpiritExp} / ${oldSpiritStats.level === 3 ? 'MAX' : oldSpiritStats.nextLvlXp} XP</div>
+                <div class="text-muted" id="${prefix}-spirit-text-${p.id}" style="font-size: 0.7rem; font-family: monospace;">${oldSpiritExp} / ${oldSpiritStats.level === 3 ? 'MAX' : oldSpiritStats.nextLvlXp} XP</div>
             `;
         }
 
@@ -760,15 +760,15 @@ function initiateCombatCast(spellId) {
                 ? 'Sélectionnez un ennemi et un allié'
                 : (requiresEnemySelection ? 'Sélectionnez un ennemi' : 'Sélectionnez un allié');
             overlay.innerHTML = `
-                <span id="castPromptText" style="font-size: 0.9rem; font-weight: 600; color: #e2e8f0;">${promptText}</span>
-                <div id="castTargetStatus" style="font-size: 0.75rem; color: #94a3b8; display: ${dualTarget ? 'block' : 'none'};"></div>
-                <button type="button" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-family: 'Outfit', sans-serif;">Annuler</button>
+                <span class="text-sm" id="castPromptText" style="font-weight: 600; color: #e2e8f0;">${promptText}</span>
+                <div class="text-muted" id="castTargetStatus" style="font-size: 0.75rem; display: ${dualTarget ? 'block' : 'none'};"></div>
+                <button class="text-xs text-error" type="button" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-family: 'Outfit', sans-serif;">Annuler</button>
             `;
         } else {
             overlay.innerHTML = `
                 <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.9rem; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: bold;">Lancer</button>
-                    <button type="button" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.9rem; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: bold;">Annuler</button>
+                    <button class="text-sm font-bold text-success" type="button" onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-family: 'Outfit', sans-serif;">Lancer</button>
+                    <button class="text-sm font-bold text-error" type="button" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-family: 'Outfit', sans-serif;">Annuler</button>
                 </div>
             `;
             if (needsEnemy) enemyCards.forEach(card => card.classList.add('target-highlight'));
@@ -783,12 +783,12 @@ function initiateCombatCast(spellId) {
         // Attack button
         cardEl.dataset.originalHtml = cardEl.innerHTML;
         if (multiEnemy) {
-            cardEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:0.3rem;"><span style="font-size:0.8rem; color:#e2e8f0;">Ciblez un ennemi</span> <button onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer;">Annuler</button></div>`;
+            cardEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:0.3rem;"><span style="font-size:0.8rem; color:#e2e8f0;">Ciblez un ennemi</span> <button class="text-error" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer;">Annuler</button></div>`;
         } else {
             cardEl.innerHTML = `
                 <div style="display:flex;gap:0.5rem;">
-                    <button onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer; font-weight:bold;">Lancer</button>
-                    <button onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button>
+                    <button class="text-success" onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" style="background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer; font-weight:bold;">Lancer</button>
+                    <button class="text-error" onclick="event.stopPropagation(); cancelCombatCast()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); padding: 0.2rem 0.6rem; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button>
                 </div>
             `;
             enemyCards.forEach(card => card.classList.add('target-highlight'));
@@ -858,10 +858,10 @@ function confirmCombatCast(index, type) {
         const promptEl = document.getElementById('castPromptText');
         if (statusEl) {
             const parts = [];
-            if (hasEnemy) parts.push('âœ… Ennemi sélectionné');
-            else parts.push('â¬œ Sélectionnez un ennemi');
-            if (hasAlly) parts.push('âœ… Allié sélectionné');
-            else parts.push('â¬œ Sélectionnez un allié');
+            if (hasEnemy) parts.push('✅ Ennemi sélectionné');
+            else parts.push('⬜ Sélectionnez un ennemi');
+            if (hasAlly) parts.push('✅ Allié sélectionné');
+            else parts.push('⬜ Sélectionnez un allié');
             statusEl.innerHTML = parts.join(' &nbsp;Â·&nbsp; ');
         }
 
@@ -1229,8 +1229,8 @@ function generateEquipmentTooltipHTML(eq) {
             const isMalus = val < 0;
             const sign = val > 0 ? '+' : '';
             const suffix = s.isPercent ? '%' : '';
-            return `<div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.3rem;">
-                <div style="display: flex; align-items: center; gap: 0.3rem; color: #94a3b8;">
+            return `<div class="flex-between" style="gap: 1rem; margin-bottom: 0.3rem;">
+                <div class="flex-center text-muted" style="gap: 0.3rem;">
                     <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 1rem;">${s.icon}</span>
                     ${s.label}
                 </div>
@@ -1261,8 +1261,8 @@ function generateEquipmentTooltipHTML(eq) {
         const color = isCursed ? '#9b2d2d' : '#c084fc';
 
         effectHtml = `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: ${color}; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;">
-                <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <div class="flex-center" style="color: ${color}; justify-content: space-between; gap: 0.3rem;">
+                <div class="flex-center" style="gap: 0.3rem;">
                     <span class="material-symbols-outlined" style="font-size: 1rem;">${icon}</span>
                     ${label}
                 </div>
@@ -1271,7 +1271,7 @@ function generateEquipmentTooltipHTML(eq) {
         </div>`;
     }
 
-    if (!statsHtml && !effectHtml) return `<div style="color: #94a3b8; font-style: italic; min-width: 150px; text-align: center; padding: 0.5rem;">Aucun attribut</div>`;
+    if (!statsHtml && !effectHtml) return `<div class="font-italic text-muted text-center" style="min-width: 150px; padding: 0.5rem;">Aucun attribut</div>`;
 
     return `<div style="min-width: 150px; padding: 0.5rem;">
         ${statsHtml}
@@ -1416,7 +1416,7 @@ function updateUI(data) {
                     }
                     if (hpLabel) {
                         let labelText = `${actualHp} / ${p.healthMax}`;
-                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} ðŸ›¡ï¸)`;
+                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} 🛡️)`;
                         hpLabel.textContent = labelText;
                     }
                 }, 800);
@@ -1487,8 +1487,8 @@ function updateUI(data) {
                             }
 
                             xpContainer.innerHTML += `
-                                <div style="width: 100%; text-align: center; margin-bottom: 0.5rem; animation: popIn 0.5s ease-out forwards;">
-                                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid #f59e0b80; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; font-size: 1.2rem;">
+                                <div class="text-center" style="width: 100%; margin-bottom: 0.5rem; animation: popIn 0.5s ease-out forwards;">
+                                    <div class="font-bold" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid #f59e0b80; padding: 0.5rem 1rem; border-radius: 8px; font-size: 1.2rem;">
                                         ${baseContent}
                                     </div>
                                 </div>
@@ -1528,8 +1528,8 @@ function updateUI(data) {
 
                             // Injection dans le container (une seule fois)
                             xpContainer.innerHTML += `
-                                <div style="width: 100%; text-align: center; margin-bottom: 0.5rem; animation: popIn 0.6s ease-out forwards;">
-                                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid #e11d4880; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; font-size: 1.1rem;">
+                                <div class="text-center" style="width: 100%; margin-bottom: 0.5rem; animation: popIn 0.6s ease-out forwards;">
+                                    <div class="font-bold" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid #e11d4880; padding: 0.5rem 1rem; border-radius: 8px; font-size: 1.1rem;">
                                         ${innerContent}
                                     </div>
                                 </div>
@@ -1626,7 +1626,7 @@ function updateUI(data) {
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';
 
                                     gainedItemsHtml += `
-                                        <div ${tooltipAttrs} style="position: relative; cursor: ${tooltipDataHtml ? 'help' : 'default'}; background: rgba(0, 0, 0, 0.4); border: 1px solid ${rarityColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${rarityColor}; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
+                                        <div class="flex-center relative" ${tooltipAttrs} style="cursor: ${tooltipDataHtml ? 'help' : 'default'}; background: rgba(0, 0, 0, 0.4); border: 1px solid ${rarityColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${rarityColor}; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
                                             ${tooltipDataHtml ? `<template class="tooltip-data">${tooltipDataHtml}</template>` : ''}
                                             <span class="material-symbols-outlined${extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span> <span style="${tooltipDataHtml ? `border-bottom: 1px dashed ${rarityColor};` : ''}">${eqName}</span>
                                         </div>
@@ -1636,7 +1636,7 @@ function updateUI(data) {
 
                             if (expAmount > 0) {
                                 gainedItemsHtml = `
-                                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid #38bdf880; padding: 0.8rem 1rem; border-radius: 8px; color: #38bdf8; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8); animation-delay: 0.1s;">
+                                    <div class="flex-center" style="background: rgba(0, 0, 0, 0.4); border: 1px solid #38bdf880; padding: 0.8rem 1rem; border-radius: 8px; color: #38bdf8; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8); animation-delay: 0.1s;">
                                         <span class="material-symbols-outlined" style="color: #38bdf8;">upgrade</span> +${expAmount} XP
                                     </div>
                                 ` + gainedItemsHtml;
@@ -1644,7 +1644,7 @@ function updateUI(data) {
 
                             if (goldAmount > 0) {
                                 gainedItemsHtml = `
-                                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid #f59e0b80; padding: 0.8rem 1rem; border-radius: 8px; color: #f59e0b; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
+                                    <div class="flex-center" style="background: rgba(0, 0, 0, 0.4); border: 1px solid #f59e0b80; padding: 0.8rem 1rem; border-radius: 8px; color: #f59e0b; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
                                         <span class="material-symbols-outlined" style="color: #f59e0b;">monetization_on</span> +${goldAmount} Or
                                     </div>
                                 ` + gainedItemsHtml;
@@ -1656,7 +1656,7 @@ function updateUI(data) {
                         // If no items/gold/xp but we opened a chest, show something at least
                         if (!gainedItemsHtml && expAmount === 0) {
                             gainedItemsHtml = `
-                                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid #94a3b880; padding: 0.8rem 1rem; border-radius: 8px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
+                                <div class="flex-center text-muted" style="background: rgba(0, 0, 0, 0.4); border: 1px solid #94a3b880; padding: 0.8rem 1rem; border-radius: 8px; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
                                     Le coffre était vide...
                                 </div>
                             `;
@@ -1716,38 +1716,38 @@ function updateUI(data) {
 
                             warningHtml = '';
                             if (hp < 0) {
-                                warningHtml += `<div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">favorite</span> <strong>Coût :</strong> ${hp} PV (par héros)</div>`;
+                                warningHtml += `<div class="text-error text-center" style="font-size: 0.85rem; margin-top: 0.5rem; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">favorite</span> <strong>Coût :</strong> ${hp} PV (par héros)</div>`;
                             } else if (hp > 0) {
-                                warningHtml += `<div style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">favorite</span> <strong>Gain :</strong> +${hp} PV (par héros)</div>`;
+                                warningHtml += `<div class="text-success text-center" style="font-size: 0.85rem; margin-top: 0.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">favorite</span> <strong>Gain :</strong> +${hp} PV (par héros)</div>`;
                             }
 
                             if (xp > 0) {
-                                warningHtml += `<div style="color: #38bdf8; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Récompense :</strong> +${xp} XP de Voie (par héros)</div>`;
+                                warningHtml += `<div class="text-center" style="color: #38bdf8; font-size: 0.85rem; margin-top: 0.5rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Récompense :</strong> +${xp} XP de Voie (par héros)</div>`;
                             } else if (xp < 0) {
-                                warningHtml += `<div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Perte :</strong> ${xp} XP de Voie (par héros)</div>`;
+                                warningHtml += `<div class="text-error text-center" style="font-size: 0.85rem; margin-top: 0.5rem; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Perte :</strong> ${xp} XP de Voie (par héros)</div>`;
                             }
 
                             if (data.currentRoom.alterationRewardType === 'SPIRITUAL_XP') {
-                                specialItemHtml = `<div style="color: #c084fc; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Récompense :</strong> Vous obtiendrez +${data.currentRoom.alterationSpiritualXpReward || 0} XP Spirituel !</div>`;
+                                specialItemHtml = `<div class="text-center" style="color: #c084fc; font-size: 0.85rem; margin-top: 0.5rem; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Récompense :</strong> Vous obtiendrez +${data.currentRoom.alterationSpiritualXpReward || 0} XP Spirituel !</div>`;
                             } else if (data.currentRoom.alterationRewardType === 'SPECIAL_ITEM') {
                                 let badge = data.currentRoom.alterationSpecialItemReward ? createAnomalyBadgeHtml(data.currentRoom.alterationSpecialItemReward) : '"Item"';
-                                specialItemHtml = `<div style="color: #d946ef; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(217, 70, 239, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Récompense :</strong> Vous obtiendrez l'item spécial ${badge}</div>`;
+                                specialItemHtml = `<div class="text-center" style="color: #d946ef; font-size: 0.85rem; margin-top: 0.5rem; background: rgba(217, 70, 239, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Récompense :</strong> Vous obtiendrez l'item spécial ${badge}</div>`;
                             }
 
                             btnText = `Accepter`;
                         } else if (data.currentRoom.alterationType === 'ITEM') {
                             btnText = `Donner l'item et Toucher`;
                             let reqBadge = data.currentRoom.alterationRequiredItem ? createAnomalyBadgeHtml(data.currentRoom.alterationRequiredItem) : '"spécial"';
-                            warningHtml = `<div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">warning</span> <strong>Attention :</strong> L'item ${reqBadge} sera définitivement détruit de l'inventaire d'un de vos héros s'il accepte cette offre.</div>`;
+                            warningHtml = `<div class="text-error text-center" style="font-size: 0.85rem; margin-top: 0.5rem; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">warning</span> <strong>Attention :</strong> L'item ${reqBadge} sera définitivement détruit de l'inventaire d'un de vos héros s'il accepte cette offre.</div>`;
 
                             if (data.currentRoom.alterationRewardType === 'SPIRITUAL_XP') {
-                                specialItemHtml = `<div style="color: #38bdf8; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Récompense :</strong> Vous obtiendrez +${data.currentRoom.alterationSpiritualXpReward || 0} XP Spirituel !</div>`;
+                                specialItemHtml = `<div class="text-center" style="color: #38bdf8; font-size: 0.85rem; margin-top: 0.5rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Récompense :</strong> Vous obtiendrez +${data.currentRoom.alterationSpiritualXpReward || 0} XP Spirituel !</div>`;
                             } else if (data.currentRoom.alterationRewardType === 'SPECIAL_ITEM') {
                                 let badge = data.currentRoom.alterationSpecialItemReward ? createAnomalyBadgeHtml(data.currentRoom.alterationSpecialItemReward) : '"Item"';
-                                specialItemHtml = `<div style="color: #d946ef; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: rgba(217, 70, 239, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">star</span> <strong>Récompense :</strong> Vous obtiendrez l'item spécial ${badge}</div>`;
+                                specialItemHtml = `<div class="text-center" style="color: #d946ef; font-size: 0.85rem; margin-top: 0.5rem; background: rgba(217, 70, 239, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">star</span> <strong>Récompense :</strong> Vous obtiendrez l'item spécial ${badge}</div>`;
                             }
 
-                            specialItemHtml += `<div id="itemAlterationCheckContainer" style="margin-top: 1rem; text-align: center; width: 100%;">
+                            specialItemHtml += `<div class="text-center" id="itemAlterationCheckContainer" style="margin-top: 1rem; width: 100%;">
                                 <span class="material-symbols-outlined spin">sync</span> Vérification de votre inventaire...
                             </div>`;
                             globalFetch('/api/anomalies').then(res => {
@@ -1760,7 +1760,7 @@ function updateUI(data) {
                                 const reqItem = data.currentRoom.alterationRequiredItem;
                                 const ownsItem = anomalies.some(a => a.name === reqItem);
                                 if (!ownsItem) {
-                                    container.innerHTML = `<div style="color: #ef4444; font-weight: bold; background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Vous ne possédez pas cet item.</div>`;
+                                    container.innerHTML = `<div class="font-bold text-error" style="background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Vous ne possédez pas cet item.</div>`;
                                     const btn = document.getElementById('btnAcceptAlteration');
                                     if (btn) {
                                         btn.disabled = true;
@@ -1779,18 +1779,18 @@ function updateUI(data) {
                             }).catch(err => {
                                 console.error(err);
                                 const container = document.getElementById('itemAlterationCheckContainer');
-                                if (container) container.innerHTML = `<div style="color: #ef4444;">Erreur lors du chargement de l'inventaire.</div>`;
+                                if (container) container.innerHTML = `<div class="text-error">Erreur lors du chargement de l'inventaire.</div>`;
                             });
                         } else if (data.currentRoom.alterationType === 'AUTEL') {
                             btnText = `Sacrifier l'Objet`;
                             let spColor = data.currentRoom.altarRequiredSpirituality === 'TENEBRES' ? '#d946ef' : data.currentRoom.altarRequiredSpirituality === 'ESPRIT' ? '#3b82f6' : data.currentRoom.altarRequiredSpirituality === 'KARMA' ? '#e7d198' : '#f59e0b';
-                            warningHtml = `<div style="color: ${spColor}; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; background: ${spColor}1A; padding: 0.5rem; border-radius: 6px; border: 1px solid ${spColor}4D;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">warning</span> <strong>Offrande :</strong> Cet autel réclame le sacrifice d'un <strong>Objet Magique</strong> de spiritualité <strong>${data.currentRoom.altarRequiredSpirituality}</strong>.</div>`;
+                            warningHtml = `<div class="text-center" style="color: ${spColor}; font-size: 0.85rem; margin-top: 0.5rem; background: ${spColor}1A; padding: 0.5rem; border-radius: 6px; border: 1px solid ${spColor}4D;"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">warning</span> <strong>Offrande :</strong> Cet autel réclame le sacrifice d'un <strong>Objet Magique</strong> de spiritualité <strong>${data.currentRoom.altarRequiredSpirituality}</strong>.</div>`;
 
                             let altarRewardHtml = '';
                             if (data.currentRoom.altarRewardType === 'GOLD') {
-                                altarRewardHtml = `<div style="color: #fbbf24; font-weight: bold; margin-top: 0.5rem; text-align: center; background: rgba(251, 191, 36, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);"><span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1rem; margin-right: 0.2rem;">paid</span> <strong>Récompense :</strong> +<span id="altarDynamicRewardValue" data-type="GOLD" data-base-value="${data.currentRoom.altarRewardValue}">${data.currentRoom.altarRewardValue}</span> Or</div>`;
+                                altarRewardHtml = `<div class="font-bold text-center" style="color: #fbbf24; margin-top: 0.5rem; background: rgba(251, 191, 36, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; margin-right: 0.2rem;">paid</span> <strong>Récompense :</strong> +<span id="altarDynamicRewardValue" data-type="GOLD" data-base-value="${data.currentRoom.altarRewardValue}">${data.currentRoom.altarRewardValue}</span> Or</div>`;
                             } else if (data.currentRoom.altarRewardType === 'XP') {
-                                altarRewardHtml = `<div style="color: #38bdf8; font-weight: bold; margin-top: 0.5rem; text-align: center; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1rem; margin-right: 0.2rem;">star</span> <strong>Récompense :</strong> +<span id="altarDynamicRewardValue" data-type="XP" data-base-value="${data.currentRoom.altarRewardValue}">${data.currentRoom.altarRewardValue}</span> XP de Spiritualité (par héros)</div>`;
+                                altarRewardHtml = `<div class="font-bold text-center" style="color: #38bdf8; margin-top: 0.5rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; margin-right: 0.2rem;">star</span> <strong>Récompense :</strong> +<span id="altarDynamicRewardValue" data-type="XP" data-base-value="${data.currentRoom.altarRewardValue}">${data.currentRoom.altarRewardValue}</span> XP de Spiritualité (par héros)</div>`;
                             } else if (data.currentRoom.altarRewardType === 'ITEM') {
                                 const eq = data.currentRoom.altarRewardEquipment;
                                 if (eq) {
@@ -1798,14 +1798,14 @@ function updateUI(data) {
                                     const rarityColor = rarityColors[eq.rarity] || '#94a3b8';
                                     const tooltipDataHtml = typeof generateEquipmentTooltipHTML === 'function' ? generateEquipmentTooltipHTML(eq) : '';
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';
-                                    altarRewardHtml = `<div style="margin-top: 0.5rem; text-align: center; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span style="color: #cbd5e1; margin-right: 0.5rem;"><strong>Récompense :</strong></span> <span ${tooltipAttrs} style="color: ${rarityColor}; font-weight: bold; cursor: help; border-bottom: 1px dashed ${rarityColor}; position: relative;">${eq.name}${tooltipDataHtml ? `<template class="tooltip-data">${tooltipDataHtml}</template>` : ''}</span> <span id="altarDropChance" style="font-weight: bold; font-size: 0.9rem; margin-left: 0.5rem;"></span></div>`;
+                                    altarRewardHtml = `<div class="text-center" style="margin-top: 0.5rem; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span style="color: #cbd5e1; margin-right: 0.5rem;"><strong>Récompense :</strong></span> <span class="font-bold relative" ${tooltipAttrs} style="color: ${rarityColor}; cursor: help; border-bottom: 1px dashed ${rarityColor};">${eq.name}${tooltipDataHtml ? `<template class="tooltip-data">${tooltipDataHtml}</template>` : ''}</span> <span class="text-sm font-bold" id="altarDropChance" style="margin-left: 0.5rem;"></span></div>`;
                                 } else {
-                                    altarRewardHtml = `<div style="color: #c084fc; font-weight: bold; margin-top: 0.5rem; text-align: center; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1rem; margin-right: 0.2rem;">star</span> <strong>Récompense :</strong> Équipement mystère</div>`;
+                                    altarRewardHtml = `<div class="font-bold text-center" style="color: #c084fc; margin-top: 0.5rem; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; margin-right: 0.2rem;">star</span> <strong>Récompense :</strong> Équipement mystère</div>`;
                                 }
                             }
                             warningHtml += altarRewardHtml;
 
-                            specialItemHtml = `<div id="altarAnomalySelectContainer" style="margin-top: 1rem; text-align: center; width: 100%;">
+                            specialItemHtml = `<div class="text-center" id="altarAnomalySelectContainer" style="margin-top: 1rem; width: 100%;">
                                 <span class="material-symbols-outlined spin">sync</span> Chargement de vos objets magiques...
                             </div>`;
 
@@ -1828,7 +1828,7 @@ function updateUI(data) {
                                 if (!container) return;
 
                                 if (eligible.length === 0) {
-                                    container.innerHTML = `<div style="color: #ef4444; font-weight: bold; background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Vous ne possédez aucun objet magique de cette spiritualité.</div>`;
+                                    container.innerHTML = `<div class="font-bold text-error" style="background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Vous ne possédez aucun objet magique de cette spiritualité.</div>`;
                                     const btn = document.getElementById('btnAcceptAlteration');
                                     if (btn) {
                                         btn.disabled = true;
@@ -1902,7 +1902,7 @@ function updateUI(data) {
                                 console.error("Failed to load anomalies:", err);
                                 const container = document.getElementById('altarAnomalySelectContainer');
                                 if (container) {
-                                    container.innerHTML = `<div style="color: #ef4444; font-weight: bold; background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Erreur lors du chargement de vos objets magiques.</div>`;
+                                    container.innerHTML = `<div class="font-bold text-error" style="background: rgba(239,68,68,0.1); padding: 0.5rem; border-radius: 6px;">Erreur lors du chargement de vos objets magiques.</div>`;
                                 }
                                 const btn = document.getElementById('btnAcceptAlteration');
                                 if (btn) {
@@ -1927,7 +1927,7 @@ function updateUI(data) {
                                 ${specialItemHtml}
                                 <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center; width: 100%;">
                                     <button type="button" id="btnAcceptAlteration" class="btn" style="flex: 1; max-width: 250px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;" ${disabledState} onclick="event.preventDefault(); acceptAlteration();">${btnText}</button>
-                                    <button type="button" class="btn" style="flex: 1; max-width: 250px; background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;" onclick="event.preventDefault(); nextRoom();">Ignorer et passer</button>
+                                    <button type="button" class="btn text-muted" onclick="event.preventDefault(); nextRoom();" style="flex: 1; max-width: 250px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Ignorer et passer</button>
                                 </div>
                             </div>
                         `;
@@ -1967,7 +1967,7 @@ function updateUI(data) {
                                             }
                                         }
                                         gainedItemsHtml += `
-                                            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid ${spColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${spColor}; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
+                                            <div class="flex-center" style="background: rgba(0, 0, 0, 0.4); border: 1px solid ${spColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${spColor}; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
                                                 <span class="material-symbols-outlined" style="color: ${spColor};">${catIcon}</span> -1 ${itemName}
                                             </div>
                                         `;
@@ -1988,7 +1988,7 @@ function updateUI(data) {
                                             }
                                         }
                                         gainedItemsHtml += `
-                                            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid ${spColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${spColor}; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
+                                            <div class="flex-center" style="background: rgba(0, 0, 0, 0.4); border: 1px solid ${spColor}80; padding: 0.8rem 1rem; border-radius: 8px; color: ${spColor}; font-weight: 600; gap: 0.5rem; animation: popIn 0.5s ease-out forwards; opacity: 0; transform: scale(0.8);">
                                                 <span class="material-symbols-outlined" style="color: ${spColor};">${catIcon}</span> +1 ${itemName}
                                             </div>
                                         `;
@@ -2061,7 +2061,7 @@ function updateUI(data) {
                             const goldPrice = entry.priceGold != null ? entry.priceGold : (entry.probability || 0);
 
                             if (goldPrice > 0) {
-                                priceHtml += `<span style="color: #f59e0b; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>${goldPrice}</span>`;
+                                priceHtml += `<span class="flex-center" style="color: #f59e0b; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>${goldPrice}</span>`;
                             }
                             if (entry.priceSpecialItemName) {
                                 let priceColor = '#d946ef';
@@ -2074,11 +2074,11 @@ function updateUI(data) {
                                         priceIcon = anPrice.category ? (CATEGORY_ICONS[anPrice.category] || 'category') : 'star';
                                     }
                                 }
-                                priceHtml += `<span style="color: ${priceColor}; display: flex; align-items: center; gap: 0.3rem; margin-left: ${goldPrice > 0 ? '0.8rem' : '0'};"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${priceIcon}</span>1x ${entry.priceSpecialItemName}</span>`;
+                                priceHtml += `<span class="flex-center" style="color: ${priceColor}; gap: 0.3rem; margin-left: ${goldPrice > 0 ? '0.8rem' : '0'};"><span class="material-symbols-outlined" style="font-size: 1.1rem;">${priceIcon}</span>1x ${entry.priceSpecialItemName}</span>`;
                             }
 
                             if (priceHtml === '') {
-                                priceHtml = `<span style="color: #10b981; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">sell</span>Gratuit</span>`;
+                                priceHtml = `<span class="flex-center text-success" style="gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">sell</span>Gratuit</span>`;
                             }
 
                             let isPurchased = false;
@@ -2088,12 +2088,12 @@ function updateUI(data) {
 
                             let buttonHtml = '';
                             if (isPurchased) {
-                                buttonHtml = `<button id="btn_buy_${idx}" type="button" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; font-size: 1rem; cursor: not-allowed; display: flex; align-items: center; gap: 0.5rem; opacity: 0.7;">
+                                buttonHtml = `<button class="flex-center" id="btn_buy_${idx}" type="button" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; font-size: 1rem; cursor: not-allowed; gap: 0.5rem; opacity: 0.7;">
                                                   <span class="material-symbols-outlined" style="font-size: 1.2rem;">remove_shopping_cart</span>
                                                   Vendu
                                               </button>`;
                             } else {
-                                buttonHtml = `<button id="btn_buy_${idx}" type="button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);" onclick="openBuyModal(${idx}, \`${nameHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;')}\`, ${goldPrice})" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+                                buttonHtml = `<button class="flex-center" id="btn_buy_${idx}" type="button" onclick="openBuyModal(${idx}, \`${nameHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;')}\`, ${goldPrice})" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; font-size: 1rem; cursor: pointer; gap: 0.5rem; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
                                                   <span class="material-symbols-outlined" style="font-size: 1.2rem;">shopping_cart</span>
                                                   Acheter
                                               </button>`;
@@ -2140,9 +2140,9 @@ function updateUI(data) {
                                 tooltipDataHtml = `
                                     <div class="anomaly-tooltip-title" style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${tColor}; border-bottom: 1px solid ${tColor}; padding-bottom: 4px;">${tooltipTitle}</div>
                                     <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                        <span style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Lvl ${anomLevel}</span>
-                                        <span style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon2}</span>${typeLabel}</span>
-                                        <span style="border: 1px solid ${tColor}; color: ${tColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">${anomSpiri}</span>
+                                        <span class="font-bold" style="border: 1px solid ${lvlColor}; color: ${lvlColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">Lvl ${anomLevel}</span>
+                                        <span class="flex-center font-bold" style="border: 1px solid ${typeColor}; color: ${typeColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;"><span class="material-symbols-outlined text-sm">${catIcon2}</span>${typeLabel}</span>
+                                        <span class="font-bold" style="border: 1px solid ${tColor}; color: ${tColor}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase;">${anomSpiri}</span>
                                     </div>
                                     <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tooltipDesc}</div>
                                 `;
@@ -2152,15 +2152,15 @@ function updateUI(data) {
                             const extraAttrs = entry.specialItemName ? `data-color="${rarityColor}"` : '';
 
                             lootContainer.innerHTML += `
-                                <div ${tooltipAttrs} ${extraAttrs} style="background: rgba(15, 23, 42, 0.6); border: 1px solid ${rarityColor}50; padding: 1rem; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 48%; min-width: 350px; flex: 1 1 auto; max-width: 500px; transition: all 0.2s ease; position: relative;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                                <div class="flex-center relative" ${tooltipAttrs} ${extraAttrs} onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';" style="background: rgba(15, 23, 42, 0.6); border: 1px solid ${rarityColor}50; padding: 1rem; border-radius: 12px; justify-content: space-between; gap: 1rem; width: 48%; min-width: 350px; flex: 1 1 auto; max-width: 500px; transition: all 0.2s ease;">
                                     ${tooltipDataHtml ? `<template class="tooltip-data">${tooltipDataHtml}</template>` : ''}
-                                    <div style="display: flex; align-items: center; gap: 1rem;">
-                                        <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; border: 1px solid ${rarityColor}30;">
+                                    <div class="flex-center" style="gap: 1rem;">
+                                        <div class="flex-center" style="width: 48px; height: 48px; border-radius: 8px; background: rgba(0,0,0,0.5); justify-content: center; border: 1px solid ${rarityColor}30;">
                                             ${iconHtml}
                                         </div>
                                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                                             <span style="color: ${rarityColor}; font-weight: 700; font-size: 1.1rem; text-shadow: 0 0 10px ${rarityColor}40;">${nameHtml}</span>
-                                            <div style="display: flex; align-items: center; font-size: 0.9rem; font-weight: 600; background: rgba(0,0,0,0.3); padding: 0.2rem 0.6rem; border-radius: 4px; width: fit-content; margin-top: 0.2rem;">
+                                            <div class="flex-center text-sm" style="font-weight: 600; background: rgba(0,0,0,0.3); padding: 0.2rem 0.6rem; border-radius: 4px; width: fit-content; margin-top: 0.2rem;">
                                                 ${priceHtml}
                                             </div>
                                         </div>
@@ -2180,7 +2180,7 @@ function updateUI(data) {
                     let trapDesc = data.currentRoom.eventText || 'Un piège se déclenche !';
 
                     if (data.roomEventCompleted) {
-                        trapDesc += `<br><br><span style="color:#10b981;">ðŸª¢ Piège évité grâce à une Corde !</span>`;
+                        trapDesc += `<br><br><span style="color:#10b981;">🪢 Piège évité grâce à une Corde !</span>`;
                         desc.innerHTML = trapDesc;
                         btnOpen.style.display = 'none';
                         btnCont.style.display = 'block';
@@ -2203,7 +2203,7 @@ function updateUI(data) {
                         }
 
                         if (trapDetails.length > 0) {
-                            trapDesc += `<br><br>âš ï¸ Perte de : ` + trapDetails.join(' et ');
+                            trapDesc += `<br><br>⚠️ Perte de : ` + trapDetails.join(' et ');
                         }
 
                         desc.innerHTML = trapDesc;
@@ -2216,7 +2216,7 @@ function updateUI(data) {
                                 <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                                     <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center; width: 100%;">
                                         <button type="button" class="btn" ${!hasRope ? 'disabled title="Vous n\'avez pas de corde"' : ''} style="flex: 1; max-width: 250px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: ${hasRope ? 'pointer' : 'not-allowed'}; opacity: ${hasRope ? '1' : '0.5'}; transition: all 0.2s ease;" onclick="event.preventDefault(); ${hasRope ? 'useRope();' : ''}">Utiliser une Corde</button>
-                                        <button type="button" class="btn" style="flex: 1; max-width: 250px; background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;" onclick="event.preventDefault(); nextRoom();">Subir le piège et passer</button>
+                                        <button type="button" class="btn text-muted" onclick="event.preventDefault(); nextRoom();" style="flex: 1; max-width: 250px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Subir le piège et passer</button>
                                     </div>
                                 </div>
                             `;
@@ -2258,7 +2258,7 @@ function updateUI(data) {
                             if (outcomes.length > 0) {
                                 lootContainer.style.display = 'flex';
                                 lootContainer.innerHTML = `
-                                    <div style="color: #94a3b8; font-size: 0.85rem; text-align: center; width: 100%;">
+                                    <div class="text-muted text-center" style="font-size: 0.85rem; width: 100%;">
                                         <span style="color: #fbbf24; font-weight: 600;">Que se cache-t-il derrière ?</span><br>
                                         Le résultat sera révélé si vous passez la porte...
                                     </div>
@@ -2361,7 +2361,7 @@ function updateUI(data) {
 function generateFighterHtml(c, isHero) {
     const hpPct = c.healthMax > 0 ? Math.max(0, Math.min(100, (c.healthCurrent / c.healthMax) * 100)) : 0;
     let hpLabel = `${c.healthCurrent} / ${c.healthMax}`;
-    if (c.shieldTotal > 0) hpLabel += ` (+${c.shieldTotal} ðŸ›¡ï¸)`;
+    if (c.shieldTotal > 0) hpLabel += ` (+${c.shieldTotal} 🛡️)`;
 
     const manaPct = c.manaMax > 0 ? Math.max(0, Math.min(100, (c.manaCurrent / c.manaMax) * 100)) : 0;
     let manaHtml = `
@@ -2418,9 +2418,9 @@ function generateFighterHtml(c, isHero) {
     statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #a855f7;">auto_awesome</span>${pui} Pui</span>`;
     statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #f43f5e;">fitness_center</span>${forPhy} For</span>`;
     statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #3b82f6;">shield</span>${arm} Arm</span>`;
-    statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #10b981;">shield</span>${res} Rés</span>`;
+    statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined text-success">shield</span>${res} Rés</span>`;
     statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #f59e0b;">bolt</span>${vit} Vit</span>`;
-    statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined" style="color: #ef4444;">gps_fixed</span>${crit}% Crit</span>`;
+    statsHtml += `<span class="hero-stat-chip"><span class="material-symbols-outlined text-error">gps_fixed</span>${crit}% Crit</span>`;
 
     if (c.voie && c.voie.nom && c.voie.nom.toLowerCase().includes('destruction')) {
         let heat = 0;
@@ -2569,17 +2569,17 @@ function generateFighterHtml(c, isHero) {
         const vColor = getVoieButtonColor(c.voie);
         const vIcon = ui.getVoieIcon(c.voie.nom);
         const vFull = window.state?.metaData?.voies?.find(v => v.id == c.voie.id) || c.voie;
-        titleIconsHtml += `<span style="cursor: help; position: relative; display: inline-flex; align-items: center; justify-content: center;" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null">
+        titleIconsHtml += `<span class="relative" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; display: inline-flex; align-items: center; justify-content: center;">
             <span class="material-symbols-outlined" style="font-size: 1.2rem; color: ${vColor};">${vIcon}</span>
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${vColor};">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${vColor};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${vIcon}</span>
                     ${vFull.nom}
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
-                <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${vFull.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${vColor};">bolt</span>
-                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
+                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(vFull.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -2588,17 +2588,17 @@ function generateFighterHtml(c, isHero) {
         const sColor = getSpiritButtonColor(c.spiritualite);
         const sIcon = ui.getSpiritIcon(c.spiritualite.nom);
         const sFull = window.state?.metaData?.spiritualites?.find(s => s.id == c.spiritualite.id) || c.spiritualite;
-        titleIconsHtml += `<span style="cursor: help; position: relative; display: inline-flex; align-items: center; justify-content: center;" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null">
+        titleIconsHtml += `<span class="relative" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; display: inline-flex; align-items: center; justify-content: center;">
             <span class="material-symbols-outlined" style="font-size: 1.2rem; color: ${sColor};">${sIcon}</span>
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${sColor};">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${sColor};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${sIcon}</span>
                     ${sFull.nom}
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
-                <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sFull.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${sColor};">bolt</span>
-                    <span style="font-style: italic; white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
+                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sFull.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -2606,18 +2606,18 @@ function generateFighterHtml(c, isHero) {
 
     let channelingBadgeHtml = '';
     if (c.remainingChannelingTurns > 0) {
-        channelingBadgeHtml = `<div style="position: absolute; top: -10px; right: -10px; z-index: 10; cursor: help; display: flex; align-items: center; justify-content: center; background: #1e293b; border-radius: 50%; padding: 4px; box-shadow: 0 0 10px rgba(139, 92, 246, 0.6); border: 2px solid #8b5cf6;" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null">
+        channelingBadgeHtml = `<div class="flex-center absolute" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="top: -10px; right: -10px; z-index: 10; cursor: help; justify-content: center; background: #1e293b; border-radius: 50%; padding: 4px; box-shadow: 0 0 10px rgba(139, 92, 246, 0.6); border: 2px solid #8b5cf6;">
             <span class="material-symbols-outlined" style="font-size: 1.5rem; color: #8b5cf6;">cyclone</span>
-            <span style="position: absolute; bottom: -2px; right: -2px; background: #ef4444; color: white; font-size: 0.75rem; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid #1e293b;">${c.remainingChannelingTurns}</span>
+            <span class="flex-center font-bold absolute" style="bottom: -2px; right: -2px; background: #ef4444; color: white; font-size: 0.75rem; border-radius: 50%; width: 16px; height: 16px; justify-content: center; border: 1px solid #1e293b;">${c.remainingChannelingTurns}</span>
             <template class="tooltip-data">
-                <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: #8b5cf6;">
+                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: #8b5cf6;">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">cyclone</span>
                     Canalisation en cours
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.5rem;">Un sort est en cours de préparation. Ses effets se déclencheront à la fin du compte à rebours.</div>
-                <div style="font-size: 0.8rem; display: flex; align-items: flex-start; gap: 0.3rem; color: #e2e8f0;">
+                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">Un sort est en cours de préparation. Ses effets se déclencheront à la fin du compte à rebours.</div>
+                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
                     <span class="material-symbols-outlined" style="font-size: 0.95rem; color: #8b5cf6;">hourglass_top</span>
-                    <span style="font-style: italic;">Temps restant : ${c.remainingChannelingTurns} tour(s)</span>
+                    <span class="font-italic">Temps restant : ${c.remainingChannelingTurns} tour(s)</span>
                 </div>
             </template>
         </div>`;
@@ -2631,12 +2631,12 @@ function generateFighterHtml(c, isHero) {
             const hasArmorBuff = (c.activeBuffs || c.buffs || []).some(b => b.statAffected === 'ARMURE' && b.flatValue === c.passiveStates['BOSS_BUFF_ARMOR']);
             const hasResistBuff = (c.activeBuffs || c.buffs || []).some(b => b.statAffected === 'RESISTANCE' && b.flatValue === c.passiveStates['BOSS_BUFF_RESIST']);
 
-            if (c.passiveStates['BOSS_BUFF_HP']) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_HP']}% PV Max (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">favorite</span>+${c.passiveStates['BOSS_BUFF_HP']}% PV</span>`;
-            if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_SHIELD']}% Bouclier (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">shield</span>+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.</span>`;
-            if (c.passiveStates['BOSS_BUFF_ARMOR'] && hasArmorBuff) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_ARMOR']} Armure (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">security</span>+${c.passiveStates['BOSS_BUFF_ARMOR']} Arm.</span>`;
-            if (c.passiveStates['BOSS_BUFF_RESIST'] && hasResistBuff) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_RESIST']} Résistance (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(217, 70, 239, 0.15); color: #d946ef; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">health_and_safety</span>+${c.passiveStates['BOSS_BUFF_RESIST']} Rés.</span>`;
-            if (c.passiveStates['BOSS_BUFF_BURN']) monsterBadgesHtml += `<span title="Brûlure sur coup (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">local_fire_department</span>Brûlure</span>`;
-            if (c.passiveStates['BOSS_BUFF_POISON']) monsterBadgesHtml += `<span title="Poison sur coup (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 0.9rem;">pest_control</span>Poison</span>`;
+            if (c.passiveStates['BOSS_BUFF_HP']) monsterBadgesHtml += `<span class="text-success" title="+${c.passiveStates['BOSS_BUFF_HP']}% PV Max (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">favorite</span>+${c.passiveStates['BOSS_BUFF_HP']}% PV</span>`;
+            if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_SHIELD']}% Bouclier (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">shield</span>+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.</span>`;
+            if (c.passiveStates['BOSS_BUFF_ARMOR'] && hasArmorBuff) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_ARMOR']} Armure (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">security</span>+${c.passiveStates['BOSS_BUFF_ARMOR']} Arm.</span>`;
+            if (c.passiveStates['BOSS_BUFF_RESIST'] && hasResistBuff) monsterBadgesHtml += `<span title="+${c.passiveStates['BOSS_BUFF_RESIST']} Résistance (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(217, 70, 239, 0.15); color: #d946ef; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(217, 70, 239, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">health_and_safety</span>+${c.passiveStates['BOSS_BUFF_RESIST']} Rés.</span>`;
+            if (c.passiveStates['BOSS_BUFF_BURN']) monsterBadgesHtml += `<span class="text-error" title="Brûlure sur coup (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">local_fire_department</span>Brûlure</span>`;
+            if (c.passiveStates['BOSS_BUFF_POISON']) monsterBadgesHtml += `<span title="Poison sur coup (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">pest_control</span>Poison</span>`;
         }
 
         if (c.monsterType && c.monsterType !== 'NORMAL') {
@@ -2653,7 +2653,7 @@ function generateFighterHtml(c, isHero) {
             const tLabel = { 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[c.monsterType] || c.monsterType;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
-            monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${tLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tTitle}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${tIcon}</span>${tLabel}</span>`;
+            monsterBadgesHtml += `<span class="text-error" ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${tLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tTitle}</div></template><span class="material-symbols-outlined text-sm">${tIcon}</span>${tLabel}</span>`;
         }
         if (c.behavior && c.behavior !== 'NORMAL') {
             const behaviorTitles = {
@@ -2669,21 +2669,21 @@ function generateFighterHtml(c, isHero) {
             const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
-            monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${bLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${bTitle}</div></template><span class="material-symbols-outlined" style="font-size: 0.9rem;">${bIcon}</span>${bLabel}</span>`;
+            monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${bLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${bTitle}</div></template><span class="material-symbols-outlined text-sm">${bIcon}</span>${bLabel}</span>`;
         }
         monsterBadgesHtml += `</div>`;
     }
     let mutationsHtml = '';
     if (!isHero && c.mutations && c.mutations.length > 0) {
-        mutationsHtml = `<div style="position: absolute; right: -1rem; top: 4rem; display: flex; flex-direction: column; gap: 0.6rem; z-index: 10;">`;
+        mutationsHtml = `<div class="absolute" style="right: -1rem; top: 4rem; display: flex; flex-direction: column; gap: 0.6rem; z-index: 10;">`;
         c.mutations.forEach(mut => {
             const icon = mut.icon || 'pets';
             const color = mut.color || '#e879f9';
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
             mutationsHtml += `
-                <div ${tooltipAttrs} style="border-color: ${color}; color: ${color}; cursor: help; border-radius: 8px; border: 1px solid ${color}; background: #0f172a; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4);">
+                <div class="flex-center" ${tooltipAttrs} style="border-color: ${color}; color: ${color}; cursor: help; border-radius: 8px; border: 1px solid ${color}; background: #0f172a; width: 32px; height: 32px; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4);">
                     <template class="tooltip-data">
-                        <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${color}; border-bottom: 1px solid ${color}; padding-bottom: 4px;">${mut.nom} <span style="font-size: 0.8rem; color: #cbd5e1;">(Lvl ${mut.level || 1})</span></div>
+                        <div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:${color}; border-bottom: 1px solid ${color}; padding-bottom: 4px;">${mut.nom} <span class="text-xs" style="color: #cbd5e1;">(Lvl ${mut.level || 1})</span></div>
                         <div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${mut.description || 'Une mutation monstrueuse.'}</div>
                     </template>
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">${icon}</span>
@@ -2700,7 +2700,7 @@ function generateFighterHtml(c, isHero) {
         ${mutationsHtml}
         ${channelingBadgeHtml}
         <div class="fighter-name" style="color: ${isHero ? '#f8fafc' : '#ef4444'}; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-            ${isHero ? 'ðŸ§™â€â™‚ï¸' : 'ðŸ‘¹'} ${titleIconsHtml} ${c.name}
+            ${isHero ? '🧙‍♂️' : '👹'} ${titleIconsHtml} ${c.name}
         </div>
         ${monsterBadgesHtml}
         ${statsHtml}
@@ -2789,7 +2789,7 @@ function renderShieldsHtml(shieldList) {
 
     const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
-    return `<div class="sandbox-status-badge buff" ${tooltipAttrs} style="cursor: help; position: relative; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+    return `<div class="sandbox-status-badge buff relative" ${tooltipAttrs} style="cursor: help; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
         <span class="material-symbols-outlined" style="font-size: 0.95rem;">shield</span>
         <span>Boucliers (${totalShield})</span>
         <template class="tooltip-data">
@@ -2856,7 +2856,7 @@ function renderPoisonBurnHtml(c) {
     let html = '';
 
     if (poisonEntries.length > 0) {
-        html += `<div class="sandbox-status-badge debuff" ${tooltipAttrs} style="cursor: help; position: relative; border-color: rgba(34, 197, 94, 0.4); color: #22c55e; background: rgba(34, 197, 94, 0.1);">
+        html += `<div class="sandbox-status-badge debuff relative" ${tooltipAttrs} style="cursor: help; border-color: rgba(34, 197, 94, 0.4); color: #22c55e; background: rgba(34, 197, 94, 0.1);">
             <span class="material-symbols-outlined" style="font-size: 0.95rem;">pest_control</span>
             <span>Poison (${poisonEntries.length})</span>
             <template class="tooltip-data">
@@ -2868,7 +2868,7 @@ function renderPoisonBurnHtml(c) {
     }
 
     if (burnEntries.length > 0) {
-        html += `<div class="sandbox-status-badge debuff" ${tooltipAttrs} style="cursor: help; position: relative; border-color: rgba(239, 68, 68, 0.4); color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+        html += `<div class="sandbox-status-badge debuff text-error relative" ${tooltipAttrs} style="cursor: help; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1);">
             <span class="material-symbols-outlined" style="font-size: 0.95rem;">local_fire_department</span>
             <span>Brûlure (${burnEntries.length})</span>
             <template class="tooltip-data">
@@ -3034,7 +3034,7 @@ function renderBuffsHtml(buffList, motList, hotList) {
     const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
     if (goodBuffs.length > 0) {
-        html += `<div class="sandbox-status-badge buff" ${tooltipAttrs} style="cursor: help; position: relative;">
+        html += `<div class="sandbox-status-badge buff relative" ${tooltipAttrs} style="cursor: help;">
             <span class="material-symbols-outlined" style="font-size: 0.95rem;">trending_up</span>
             <span>Buffs (${goodBuffs.length})</span>
             <template class="tooltip-data">
@@ -3045,7 +3045,7 @@ function renderBuffsHtml(buffList, motList, hotList) {
         </div>`;
     }
     if (badBuffs.length > 0) {
-        html += `<div class="sandbox-status-badge debuff" ${tooltipAttrs} style="cursor: help; position: relative;">
+        html += `<div class="sandbox-status-badge debuff relative" ${tooltipAttrs} style="cursor: help;">
             <span class="material-symbols-outlined" style="font-size: 0.95rem;">trending_down</span>
             <span>Débuffs (${badBuffs.length})</span>
             <template class="tooltip-data">
@@ -3141,7 +3141,7 @@ function renderSpells(spells) {
     }
 
     if (filteredSpells.length === 0) {
-        container.innerHTML = '<div style="color: #94a3b8; font-style: italic; padding: 2rem; text-align: center;">Aucun sort dans cette catégorie.</div>';
+        container.innerHTML = '<div class="font-italic text-muted text-center" style="padding: 2rem;">Aucun sort dans cette catégorie.</div>';
         return;
     }
 
@@ -3216,10 +3216,10 @@ function renderSpellCard(sp) {
 
     const getSrcIcon = (src) => {
         const s = src || '';
-        if (s.includes('MANA')) return `<span class="material-symbols-outlined" style="font-size: 0.95rem; color: #38bdf8; vertical-align: middle;" title="${ui.formatSrc(s)}">water_drop</span>`;
-        if (s.includes('HEALTH') || s.includes('PV')) return `<span class="material-symbols-outlined" style="font-size: 0.95rem; color: #f43f5e; vertical-align: middle;" title="${ui.formatSrc(s)}">bloodtype</span>`;
-        if (s.includes('POWER') || s.includes('Puiss')) return `<span class="material-symbols-outlined" style="font-size: 0.95rem; color: #a855f7; vertical-align: middle;" title="${ui.formatSrc(s)}">auto_awesome</span>`;
-        if (s.includes('PHYSICAL') || s.includes('Force Phy')) return `<span class="material-symbols-outlined" style="font-size: 0.95rem; color: #f43f5e; vertical-align: middle;" title="${ui.formatSrc(s)}">fitness_center</span>`;
+        if (s.includes('MANA')) return `<span class="material-symbols-outlined align-middle" title="${ui.formatSrc(s)}" style="font-size: 0.95rem; color: #38bdf8;">water_drop</span>`;
+        if (s.includes('HEALTH') || s.includes('PV')) return `<span class="material-symbols-outlined align-middle" title="${ui.formatSrc(s)}" style="font-size: 0.95rem; color: #f43f5e;">bloodtype</span>`;
+        if (s.includes('POWER') || s.includes('Puiss')) return `<span class="material-symbols-outlined align-middle" title="${ui.formatSrc(s)}" style="font-size: 0.95rem; color: #a855f7;">auto_awesome</span>`;
+        if (s.includes('PHYSICAL') || s.includes('Force Phy')) return `<span class="material-symbols-outlined align-middle" title="${ui.formatSrc(s)}" style="font-size: 0.95rem; color: #f43f5e;">fitness_center</span>`;
         return `(${ui.formatSrc(s)})`;
     };
 
@@ -3242,7 +3242,7 @@ function renderSpellCard(sp) {
         castingTypeHtml = '<span class="material-symbols-outlined" style="font-size: 1rem; color: #8b5cf6;" title="Action Canalisée">cyclone</span>';
         castingTypeHtml += sp.allowInstantDuringChanneling ?
             '<span class="material-symbols-outlined" style="font-size: 1rem; color: #f59e0b;" title="Instantanés autorisés pendant la canalisation">bolt</span>' :
-            '<span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem;" title="Instantanés interdits pendant la canalisation"><span class="material-symbols-outlined" style="font-size: 1rem; color: #64748b;">bolt</span><span style="position: absolute; width: 100%; height: 2px; background: #ef4444; transform: rotate(-45deg);"></span></span>';
+            '<span class="relative" title="Instantanés interdits pendant la canalisation" style="display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #64748b;">bolt</span><span class="absolute" style="width: 100%; height: 2px; background: #ef4444; transform: rotate(-45deg);"></span></span>';
     } else {
         castingTypeHtml = '<span class="material-symbols-outlined" style="font-size: 1rem; color: #3b82f6;" title="Action Banale">hourglass_empty</span>';
     }
@@ -3340,7 +3340,7 @@ function renderSpellCard(sp) {
                 <div class="combat-spell-name" title="${sp.nom}" style="color: ${titleColor};">${sp.nom}</div>
                 <div class="combat-spell-level">Lvl ${sp.niveau}</div>
             </div>
-            <div class="combat-spell-icons" style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.3rem;">
+            <div class="combat-spell-icons flex-center" style="flex-wrap: wrap; gap: 0.3rem;">
                 ${castingTypeHtml}
                 ${categoryHtml}
                 ${karmaAlignHtml}
@@ -3451,7 +3451,7 @@ function renderDotsHtml(dotList) {
     const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
     return `
-        <div class="status-badge status-dot" ${tooltipAttrs} style="display:inline-flex; align-items:center; gap:0.3rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 6px; padding: 0.15rem 0.5rem; cursor: help;">
+        <div class="status-badge status-dot text-error" ${tooltipAttrs} style="display:inline-flex; align-items:center; gap:0.3rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); border-radius: 6px; padding: 0.15rem 0.5rem; cursor: help;">
             <span class="material-symbols-outlined" style="font-size:1rem;">bloodtype</span> DoT (${dotList.length})
             <template class="tooltip-data">
                 <div style="font-weight:600; margin-bottom:0.5rem; color:#f8fafc; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.3rem;">Dégâts sur la durée</div>
@@ -3530,17 +3530,17 @@ window.renderOverlayInventory = function (containerId) {
         goldAmount = currentSessionData.players[0].gold || 0;
     }
     list.innerHTML += `
-        <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.8rem; display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem;">
+        <div class="flex-center" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.8rem; gap: 0.8rem; margin-bottom: 0.5rem;">
             <span class="material-symbols-outlined" style="font-size: 1.5rem; color: #f59e0b;">monetization_on</span>
             <div style="flex: 1;">
-                <div style="color: #f8fafc; font-weight: 600; font-size: 0.9rem;">Or du compte</div>
+                <div class="text-sm" style="color: #f8fafc; font-weight: 600;">Or du compte</div>
                 <div style="color: #f59e0b; font-weight: 700; font-size: 1.1rem;">${goldAmount}</div>
             </div>
         </div>
     `;
 
     if (!currentSessionData || !currentSessionData.activeConsumables || currentSessionData.activeConsumables.length === 0) {
-        list.innerHTML += `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun objet dans l'inventaire.</div>`;
+        list.innerHTML += `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Aucun objet dans l'inventaire.</div>`;
         return;
     }
 
@@ -3552,11 +3552,11 @@ window.renderOverlayInventory = function (containerId) {
         const slotInfo = getSlotInfo(c);
 
         list.innerHTML += `
-            <div class="${hoverClass}" ${onClickAttr} style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 0.8rem; display: flex; align-items: center; gap: 0.8rem; transition: all 0.2s; ${cursorStyle}">
+            <div class="${hoverClass} flex-center" ${onClickAttr} style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 0.8rem; gap: 0.8rem; transition: all 0.2s; ${cursorStyle};">
                 <span class="material-symbols-outlined" style="font-size: 1.5rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
                 <div style="flex: 1;">
-                    <div style="color: #f8fafc; font-weight: 600; font-size: 0.9rem;">${c.name}</div>
-                    <div style="color: var(--text-muted); font-size: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 4px;">
+                    <div class="text-sm" style="color: #f8fafc; font-weight: 600;">${c.name}</div>
+                    <div class="text-xs text-muted" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 4px;">
                         ${c.bonusHealthMax ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV">+${c.bonusHealthMax}<span class="material-symbols-outlined" style="font-size:0.85rem; margin-left:2px;">favorite</span></span>` : ''}
                         ${c.bonusManaMax ? `<span style="display:inline-flex; align-items:center; color:#38bdf8;" title="Mana">+${c.bonusManaMax}<span class="material-symbols-outlined" style="font-size:0.85rem; margin-left:2px;">water_drop</span></span>` : ''}
                         ${c.consumableHpPercent ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV Max">+${c.consumableHpPercent}%<span class="material-symbols-outlined" style="font-size:0.85rem; margin-left:2px;">favorite</span></span>` : ''}
@@ -3564,7 +3564,7 @@ window.renderOverlayInventory = function (containerId) {
                         ${c.consumableMissingHpPercent ? `<span style="display:inline-flex; align-items:center; color:#f43f5e;" title="PV Manq">+${c.consumableMissingHpPercent}%<span class="material-symbols-outlined" style="font-size:0.85rem; margin-left:2px;">healing</span></span>` : ''}
                         ${c.consumableMissingManaPercent ? `<span style="display:inline-flex; align-items:center; color:#a855f7;" title="Mana Manq">+${c.consumableMissingManaPercent}%<span class="material-symbols-outlined" style="font-size:0.85rem; margin-left:2px;">cyclone</span></span>` : ''}
                     </div>
-                    ${canConsume ? '<div style="color: #0ea5e9; font-size: 0.75rem; font-weight: 500;">Cliquable pour utiliser</div>' : ''}
+                    ${canConsume ? '<div class="font-medium" style="color: #0ea5e9; font-size: 0.75rem;">Cliquable pour utiliser</div>' : ''}
                 </div>
             </div>
         `;
@@ -3580,9 +3580,9 @@ window.openConsumeModal = function (consumableId, consumableName) {
         let hpColor = p.healthCurrent <= 0 ? '#ef4444' : (p.healthCurrent < p.healthMax ? '#f59e0b' : '#10b981');
         let mpColor = p.manaCurrent < p.manaMax ? '#3b82f6' : '#60a5fa';
         btnContainer.innerHTML += `
-            <button onclick="window.confirmConsumeItem(${consumableId}, ${p.id})"
+            <button class="flex-between" onclick="window.confirmConsumeItem(${consumableId}, ${p.id})"
                 ${p.healthCurrent <= 0 ? 'disabled' : ''}
-                style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.8rem; border-radius: 8px; cursor: ${p.healthCurrent <= 0 ? 'not-allowed' : 'pointer'}; opacity: ${p.healthCurrent <= 0 ? '0.5' : '1'}; transition: all 0.2s ease;">
+                style="align-items: center; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.8rem; border-radius: 8px; cursor: ${p.healthCurrent <= 0 ? 'not-allowed' : 'pointer'}; opacity: ${p.healthCurrent <= 0 ? '0.5' : '1'}; transition: all 0.2s ease;">
                 <span style="font-weight: 600;">${p.name}</span>
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;">
                     <span style="font-size: 0.85rem; color: ${hpColor};"><b>${p.healthCurrent}</b> / ${p.healthMax} PV</span>

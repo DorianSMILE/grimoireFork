@@ -181,13 +181,13 @@ document.addEventListener('click', (e) => {
                 if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
                     (!isMaudit && currentEffect.startsWith('CURSED_'))) {
                     document.getElementById('eqSpecialEffect').value = 'NONE';
-                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                     document.getElementById('eqSpecialEffectValue').value = 0;
                 }
             } else {
                 row.style.display = 'none';
                 document.getElementById('eqSpecialEffect').value = 'NONE';
-                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                 document.getElementById('eqSpecialEffectValue').value = 0;
             }
             updateWeightUI();
@@ -231,7 +231,7 @@ async function loadEquipments() {
         filterVault();
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
-        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state" style="color: #ef4444;"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
+        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state text-error"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
 
@@ -258,7 +258,7 @@ window.deleteEquipment = function (idsStr) {
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined align-middle" style="font-size: 1rem; margin-top: -2px;">monetization_on</span>`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
@@ -416,7 +416,7 @@ function renderGrid(equipments) {
     if (equipments.length === 0) {
         container.innerHTML = `
             <div class="vault-empty-state">
-                <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5;">search_off</span>
+                <span class="material-symbols-outlined opacity-50" style="font-size: 3rem;">search_off</span>
                 Aucun objet ne correspond à votre recherche.
             </div>`;
         return;
@@ -456,33 +456,33 @@ function renderGrid(equipments) {
             }
 
             const badgeHtml = (eq.stackCount && eq.stackCount > 1)
-                ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
+                ? `<div class="font-bold absolute" style="top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
                 : '';
 
             let adminOwnerHtml = '';
             if (window.isAdmin) {
                 if (eq.isTemplate || eq.ownerUsername === 'MODELE') {
-                    adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;">[MODÈLE]</span>`;
+                    adminOwnerHtml = `<span class="flex-shrink-0 text-xxs font-bold text-error whitespace-nowrap align-middle inline-block" style="padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);">[MODÈLE]</span>`;
                 } else {
                     const displayOwner = eq._groupOwner || eq.ownerUsername;
                     if (displayOwner) {
-                        adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
+                        adminOwnerHtml = `<span class="flex-shrink-0 text-xxs whitespace-nowrap align-middle inline-block" style="padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined align-middle" style="font-size: 0.7rem; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
                     }
                 }
             }
 
             return `
-            <div class="vault-card ${rarityClass}" data-id="${eq.id}" style="position: relative; border-top: 2px solid ${spColor}; box-shadow: 0 -4px 15px ${spColor}20;">
+            <div class="vault-card ${rarityClass} relative" data-id="${eq.id}" style="border-top: 2px solid ${spColor}; box-shadow: 0 -4px 15px ${spColor}20;">
                 ${badgeHtml}
                 <div class="vault-card-header">
                     <div class="vault-card-name-group">
                         <div class="vault-card-slot">
-                            <span class="material-symbols-outlined" style="font-size: 0.9rem; color: ${spColor};">${typeIcon}</span>
+                            <span class="material-symbols-outlined text-sm" style="color: ${spColor};">${typeIcon}</span>
                             ${typeStr} <span style="opacity:0.5; margin-left:4px;">${eq.spiritualite}</span> <span style="opacity:0.5; margin-left:4px;">(Niv. ${eq.level || 1})</span>
                         </div>
-                        <div class="vault-card-name" style="color: #fdf4ff; display: flex; align-items: flex-start; gap: 0.3rem;">
-                            <span class="material-symbols-outlined" style="font-size: 1.2rem; opacity: 0.8; color: ${spColor}; flex-shrink: 0; margin-top: 2px;">${catIcon}</span>
-                            <span style="word-break: break-word;" title="${eq.name}">${eq.name}</span>
+                        <div class="vault-card-name flex-start-gap" style="color: #fdf4ff;">
+                            <span class="material-symbols-outlined flex-shrink-0 opacity-80" style="font-size: 1.2rem; color: ${spColor}; margin-top: 2px;">${catIcon}</span>
+                            <span class="word-break" title="${eq.name}">${eq.name}</span>
                         </div>
                         ${adminOwnerHtml ? `<div>${adminOwnerHtml}</div>` : ''}
                     </div>
@@ -495,13 +495,13 @@ function renderGrid(equipments) {
                         </button>` : ''}
                     </div>
                 </div>
-                <div class="vault-card-stats" style="color: ${spColor}; font-size: 0.9rem; text-align: center; font-style: italic; background: ${spColor}10; border-radius: 8px; padding: 1rem; border: 1px dashed ${spColor}30;">
+                <div class="vault-card-stats text-sm font-italic text-center" style="color: ${spColor}; background: ${spColor}10; border-radius: 8px; padding: 1rem; border: 1px dashed ${spColor}30;">
                     ${eq.description || "Une relique impie imprégnée d'une aura mystique."}
                 </div>
                 <div class="vault-card-footer">
                     <div class="vault-card-weight"></div>
                     <span class="vault-card-status status-equipped" style="background: ${spColor}20; color: ${spColor};">
-                        <span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span>
+                        <span class="material-symbols-outlined text-sm">person</span>
                         Possédé
                     </span>
                 </div>
@@ -518,7 +518,7 @@ function renderGrid(equipments) {
                 const sign = val > 0 ? '+' : '';
                 const suffix = s.isPercent ? '%' : '';
                 return `<span class="vault-stat-chip ${isMalus ? 'malus' : ''}" title="${s.label}">
-                    <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.8rem;">${s.icon}</span>
+                    <span class="material-symbols-outlined text-xs" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>
                     ${sign}${val}${suffix}
                 </span>`;
             }).join('');
@@ -547,19 +547,19 @@ function renderGrid(equipments) {
             const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
             effectHtml = `<div class="vault-card-effect" style="color: ${color}; background: ${bg}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
+                <span class="material-symbols-outlined text-sm">${icon}</span>
                 ${label} : ${eq.specialEffectValue}
             </div>`;
         }
         let statusHtml = '';
         if (eq.personnage) {
             statusHtml = `<span class="vault-card-status status-equipped">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span>
+                <span class="material-symbols-outlined text-sm">person</span>
                 ${eq.personnage.name}
             </span>`;
         } else {
             statusHtml = `<span class="vault-card-status status-available">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">check_circle</span>
+                <span class="material-symbols-outlined text-sm">check_circle</span>
                 Disponible
             </span>`;
         }
@@ -583,31 +583,31 @@ function renderGrid(equipments) {
         }
 
         const badgeHtml = (eq.stackCount && eq.stackCount > 1)
-            ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
+            ? `<div class="font-bold absolute" style="top: -10px; right: -10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; border: 2px solid #1e293b; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">x${eq.stackCount}</div>`
             : '';
 
         let adminOwnerHtml = '';
         if (window.isAdmin) {
             if (eq.isTemplate || eq.ownerUsername === 'MODELE') {
-                adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: bold; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;">[MODÈLE]</span>`;
+                adminOwnerHtml = `<span class="flex-shrink-0 text-xxs font-bold text-error whitespace-nowrap align-middle inline-block" style="padding: 0.15rem 0.4rem; background: rgba(239, 68, 68, 0.2); border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);">[MODÈLE]</span>`;
             } else {
                 const displayOwner = eq._groupOwner || eq.ownerUsername;
                 if (displayOwner) {
-                    adminOwnerHtml = `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; white-space: nowrap; vertical-align: middle; flex-shrink: 0; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
+                    adminOwnerHtml = `<span class="flex-shrink-0 text-xxs whitespace-nowrap align-middle inline-block" style="padding: 0.15rem 0.4rem; background: ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${displayOwner === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${displayOwner === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined align-middle" style="font-size: 0.7rem; margin-right: 2px;">account_circle</span>${displayOwner}</span>`;
                 }
             }
         }
 
         return `
-            <div class="vault-card ${rarityClass}" style="position: relative;">
+            <div class="vault-card ${rarityClass} relative">
                 ${badgeHtml}
                 <div class="vault-card-header">
                     <div class="vault-card-name-group">
                         <div class="vault-card-slot">
-                            <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 0.9rem; color: ${slotInfo.color};">${slotInfo.icon}</span>
+                            <span class="material-symbols-outlined ${slotInfo.extraClass || ''} text-sm" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                             ${slotInfo.label} ${eq.rarity ? `<span style="opacity:0.5; margin-left:4px;">${eq.rarity}</span>` : ''}
                         </div>
-                        <div class="vault-card-name" style="word-break: break-word;">
+                        <div class="vault-card-name word-break">
                             ${eq.name}
                         </div>
                         ${adminOwnerHtml ? `<div style="margin-top: 0.2rem;">${adminOwnerHtml}</div>` : ''}
@@ -722,14 +722,14 @@ function resetEqForm() {
     const catInput = document.getElementById('eqConsumableCategory');
     if (catInput) {
         catInput.value = 'AUTRE';
-        document.getElementById('eqConsumableCategoryLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">inventory_2</span> Autre';
+        document.getElementById('eqConsumableCategoryLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">inventory_2</span> Autre';
     }
 
     // Reset Rarity
     const rarityInput = document.getElementById('eqRarity');
     if (rarityInput) {
         rarityInput.value = 'COMMUN';
-        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon" style="color: #94a3b8; font-weight: bold;">C</span> Commun';
+        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon font-bold text-muted">C</span> Commun';
         const row = document.getElementById('eqSpecialEffectRow');
         if (row) row.style.display = 'none';
     }
@@ -738,7 +738,7 @@ function resetEqForm() {
     const effectInput = document.getElementById('eqSpecialEffect');
     if (effectInput) {
         effectInput.value = 'NONE';
-        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
         document.getElementById('eqSpecialEffectValue').value = 0;
     }
 

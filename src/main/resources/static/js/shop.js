@@ -30,7 +30,7 @@ const STAT_DEFS = [
     { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
     { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
     { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'RÃ©s', icon: 'shield', color: '#10b981' },
+    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
     { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
     { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
     { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
@@ -144,17 +144,17 @@ function generateStandHtml(eq) {
     if (eq.specialEffect && eq.specialEffect !== 'NONE') {
         const effectLabels = {
             'LIFESTEAL': 'Vol de Vie',
-            'THORNS': 'Ã‰pines',
+            'THORNS': 'Épines',
             'MANA_SHIELD': 'Bouclier de Mana',
             'CHEAT_DEATH': 'Ange Gardien',
-            'CRIT_DAMAGE': 'DÃ©gÃ¢ts Critiques',
+            'CRIT_DAMAGE': 'Dégâts Critiques',
             'CURSED_MANA_DRAIN': 'Famine (Drain Mana)',
-            'CURSED_HP_LOSS_ON_MANA': 'BrÃ¨che spirituelle (- hp % en mana Act.)',
-            'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dÃ©gÃ¢ts magique -)',
-            'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dÃ©gÃ¢ts physique -)',
-            'CURSED_VULNERABILITY': 'VulnÃ©rabilitÃ© (DÃ©gÃ¢ts subis % +)',
-            'CURSED_HEALING_REDUCTION': 'Chair putrÃ©fiÃ©e (Soins % -)',
-            'EXECUTION': 'ExÃ©cution (% Phy)',
+            'CURSED_HP_LOSS_ON_MANA': 'Brèche spirituelle (- hp % en mana Act.)',
+            'CURSED_MAGIC_DAMAGE_REDUCTION': 'Folie (% dégâts magique -)',
+            'CURSED_PHYSICAL_DAMAGE_REDUCTION': 'Faiblesse (% dégâts physique -)',
+            'CURSED_VULNERABILITY': 'Vulnérabilité (Dégâts subis % +)',
+            'CURSED_HEALING_REDUCTION': 'Chair putréfiée (Soins % -)',
+            'EXECUTION': 'Exécution (% Phy)',
             'MAGIC_OVERLOAD': 'Surcharge (% Mag mana Act)'
         };
         const label = effectLabels[eq.specialEffect] || eq.specialEffect;
@@ -242,7 +242,7 @@ function generateStandHtml(eq) {
                                         </span>
                                         <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
                                             <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
-                                            ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'MatÃ©riau'}
+                                            ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                         </span>
                                         ${aTemp && aTemp.spiritualite ?
                             `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
@@ -419,7 +419,7 @@ window.openBuyModal = function (idOrType, isConsumable = false) {
                         </span>
                         <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
                             <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
-                            ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'MatÃ©riau'}
+                            ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                         </span>
                         ${aTemp && aTemp.spiritualite ?
                     `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
@@ -463,15 +463,15 @@ document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
         const data = await res.json();
 
         if (res.ok) {
-            showNotif('Achat rÃ©ussi !');
+            showNotif('Achat réussi !');
             if (window.checkAuthStatus) {
-                window.checkAuthStatus(); // Met Ã  jour l'or affichÃ©
+                window.checkAuthStatus(); // Met à jour l'or affiché
             }
         } else {
             showNotif(data.message || 'Erreur lors de l\'achat.', true);
         }
     } catch (e) {
-        showNotif('Erreur rÃ©seau.', true);
+        showNotif('Erreur réseau.', true);
     }
 });
 

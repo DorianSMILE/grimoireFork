@@ -349,7 +349,7 @@ async function loadCharacters() {
 
 async function loadConsumables() {
     try {
-        const res = await globalFetch('/api/equipment/unassigned');
+        const res = await globalFetch('/api/equipments/unassigned');
         if (res.ok) {
             const allUnassigned = await res.json();
             availableConsumables = allUnassigned
@@ -512,7 +512,7 @@ window.selectCharacter = async function (id) {
 
     let equipments = [];
     try {
-        const res = await globalFetch(`/api/equipment/personnage/${id}`);
+        const res = await globalFetch(`/api/equipments/personnage/${id}`);
         if (res.ok) {
             equipments = await res.json();
         }

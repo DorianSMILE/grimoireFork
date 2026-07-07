@@ -19,6 +19,10 @@
     Ne jamais exposer les entités JPA directement. Le backend doit calculer toutes les données dérivées (ex: le poids total d'un item, les dégâts finaux d'un sort) et les intégrer en tant que champs natifs dans les DTOs envoyés au front.
 *   **Règle B4 - Endpoints de Simulation :** 
     Si une interface nécessite de prévisualiser le résultat d'un calcul complexe avant sauvegarde (ex: modification de stats), le backend doit fournir une route `POST /api/.../simulate` plutôt que de laisser le front deviner la formule.
+*   **Règle B5 - Conventions REST et Nommage API :**
+    - Les ressources doivent être nommées au pluriel (ex: `/api/equipments`, `/api/characters`).
+    - Les actions globales réservées aux modérateurs/admins doivent être explicites et idéalement préfixées par `/api/admin/` (ex: `/api/admin/equipments` plutôt que `/api/equipment/all`).
+    - Utiliser systématiquement les verbes HTTP appropriés (`GET` pour la lecture, `POST` pour la création ou simulation, `PUT/PATCH` pour l'édition, `DELETE` pour la suppression).
 
 ---
 

@@ -885,7 +885,7 @@ window.submitEquipment = async function () {
     // We already fetch simulated maxWeight in updateWeightUI. We can use it, or validate on backend.
     // Let's use the UI's last known max weight if available, or just skip local check and let backend fail if needed.
     // Wait, the backend doesn't fail on weight limit for templates, so we DO need local check or we can just fetch it here.
-    const res = await window.globalFetch('/api/equipment/simulate-weight', {
+    const res = await window.globalFetch('/api/equipments/simulate-weight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dto)
@@ -989,7 +989,7 @@ window.updateWeightUI = async function () {
     }
 
     try {
-        const res = await window.globalFetch('/api/equipment/simulate-weight', {
+        const res = await window.globalFetch('/api/equipments/simulate-weight', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)

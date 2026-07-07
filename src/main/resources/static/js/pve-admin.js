@@ -1567,7 +1567,7 @@ async function loadAnomalies() {
 async function loadEquipments() {
     try {
         const res1 = await globalFetch('/api/shop/templates');
-        const res2 = await globalFetch('/api/equipment/all');
+        const res2 = await globalFetch('/api/equipments/all');
 
         let templates = [];
         let instances = [];

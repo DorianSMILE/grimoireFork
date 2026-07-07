@@ -16,18 +16,19 @@ function applyRbac() {
     }
 
     // Re-render characters to apply button visibility rules
-    if (personnages.length > 0) {
+    if (pageState.personnages.length > 0) {
         updateCharsList();
     }
 }
 window.addEventListener('authLoaded', applyRbac);
-
-let voies = [];
-let spiritualites = [];
-let personnages = [];
-let editingId = null;
-let equipModalPersoId = null;
-let allEquipments = [];
+const pageState = {
+    voies: [],
+    spiritualites: [],
+    personnages: [],
+    editingId: null,
+    equipModalPersoId: null,
+    allEquipments: []
+};
 
 // Replaced by window.SLOT_LABELS and window.CONSUMABLE_CATEGORIES
 
@@ -93,7 +94,7 @@ function buildEquipmentDto() {
         baseWeight: parseFloat(document.getElementById('eqBaseWeight')?.value) || 0,
         specialEffect: specialEffect,
         specialEffectValue: specialEffectValue,
-        personnageId: typeof equipModalPersoId !== 'undefined' ? equipModalPersoId : null,
+        personnageId: typeof pageState.equipModalPersoId !== 'undefined' ? pageState.equipModalPersoId : null,
     };
 }
 
@@ -123,7 +124,7 @@ async function updateWeightUI() {
     }
 
     try {
-        const res = await globalFetch('/api/equipment/simulate-weight', {
+        const res = await globalFetch('/api/equipments/simulate-weight', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
@@ -194,8 +195,8 @@ async function fetchMeta() {
         const res = await globalFetch('/api/spells-editor/meta');
         if (res) {
             const data = await res.json();
-            voies = data.voies || [];
-            spiritualites = data.spiritualites || [];
+            pageState.voies = data.voies || [];
+            pageState.spiritualites = data.spiritualites || [];
             populateSelects();
         }
     } catch (e) {
@@ -208,7 +209,7 @@ async function loadPersonnages() {
         const url = window.isAdmin ? '/api/personnages/all' : '/api/personnages';
         const res = await globalFetch(url);
         if (res) {
-            personnages = await res.json();
+            pageState.personnages = await res.json();
             renderPersonnages();
             await updateCharLimitUI();
         }
@@ -277,14 +278,14 @@ document.getElementById('buyRosterConfirmBtn').addEventListener('click', async (
 
 async function loadAllEquipments() {
     try {
-        const url = window.isAdmin ? '/api/equipment/all' : '/api/equipment';
+        const url = window.isAdmin ? '/api/equipments/all' : '/api/equipments';
         const res = await globalFetch(url);
         if (res) {
-            allEquipments = await res.json();
+            pageState.allEquipments = await res.json();
         }
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
-        allEquipments = [];
+        pageState.allEquipments = [];
     }
 }
 
@@ -297,13 +298,13 @@ async function submitPersonnage() {
 
     const voieIdVal = document.getElementById('charVoie').value;
     const spiritIdVal = document.getElementById('charSpirit').value;
-    if (!editingId && (!voieIdVal || !spiritIdVal)) {
+    if (!pageState.editingId && (!voieIdVal || !spiritIdVal)) {
         showNotif('Une Voie et une Spiritualité sont obligatoires à la création.', true);
         return;
     }
 
     const dto = {
-        id: editingId,
+        id: pageState.editingId,
         name: name,
         healthMax: parseInt(document.getElementById('charHp').value) || 100,
         manaMax: parseInt(document.getElementById('charMana').value) || 100,
@@ -348,7 +349,7 @@ let persoToDelete = null;
 
 function deletePersonnage(id) {
     persoToDelete = id;
-    const p = personnages.find(p => p.id === id);
+    const p = pageState.personnages.find(p => p.id === id);
     if (p) {
         document.getElementById('deletePersoTargetName').textContent = p.name;
     }
@@ -369,7 +370,7 @@ document.getElementById('deletePersoConfirmBtn').addEventListener('click', async
         const res = await globalFetch(`/api/personnages/${id}`, { method: 'DELETE' });
         if (res) {
             showNotif('Personnage supprimé.');
-            if (editingId === id) resetForm();
+            if (pageState.editingId === id) resetForm();
             await loadPersonnages();
         }
     } catch (e) {
@@ -406,7 +407,7 @@ async function submitEquipment() {
     }
 
     try {
-        const res = await globalFetch('/api/equipment', {
+        const res = await globalFetch('/api/equipments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
@@ -449,7 +450,7 @@ async function submitEquipment() {
 
 async function equipItem(equipmentId, personnageId, targetSlot = null) {
     try {
-        let url = `/api/equipment/${equipmentId}/equip/${personnageId}`;
+        let url = `/api/equipments/${equipmentId}/equip/${personnageId}`;
         if (targetSlot) {
             url += `?targetSlot=${targetSlot}`;
         }
@@ -468,7 +469,7 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
 
 async function unequipItem(equipmentId) {
     try {
-        const res = await globalFetch(`/api/equipment/${equipmentId}/unequip`, { method: 'POST' });
+        const res = await globalFetch(`/api/equipments/${equipmentId}/unequip`, { method: 'POST' });
         if (res) {
             const data = await res.json();
             showNotif(data.message);
@@ -483,7 +484,7 @@ async function unequipItem(equipmentId) {
 
 async function deleteEquipment(id) {
     try {
-        const res = await globalFetch(`/api/equipment/${id}`, { method: 'DELETE' });
+        const res = await globalFetch(`/api/equipments/${id}`, { method: 'DELETE' });
         if (res) {
             showNotif('Équipement supprimé.');
             await loadAllEquipments();
@@ -540,7 +541,7 @@ function populateSelects() {
 
     if (charVoieOptions) {
         charVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —</div>`;
-        voies.forEach(v => {
+        pageState.voies.forEach(v => {
             const info = getVoieInfo(v.nom);
             charVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
         });
@@ -548,7 +549,7 @@ function populateSelects() {
 
     if (searchVoieOptions) {
         searchVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> Toutes</div>`;
-        voies.forEach(v => {
+        pageState.voies.forEach(v => {
             const info = getVoieInfo(v.nom);
             searchVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
         });
@@ -556,7 +557,7 @@ function populateSelects() {
 
     if (charSpiritOptions) {
         charSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> — Aucune —</div>`;
-        spiritualites.forEach(s => {
+        pageState.spiritualites.forEach(s => {
             const info = getSpiritInfo(s.nom);
             charSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
         });
@@ -564,7 +565,7 @@ function populateSelects() {
 
     if (searchSpiritOptions) {
         searchSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">trip_origin</span> Toutes</div>`;
-        spiritualites.forEach(s => {
+        pageState.spiritualites.forEach(s => {
             const info = getSpiritInfo(s.nom);
             searchSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
         });
@@ -611,7 +612,7 @@ function renderPersonnages() {
     const searchVoie = document.getElementById('searchVoie') ? document.getElementById('searchVoie').value : '';
     const searchSpirit = document.getElementById('searchSpirit') ? document.getElementById('searchSpirit').value : '';
 
-    let filtered = personnages.filter(p => {
+    let filtered = pageState.personnages.filter(p => {
         const matchName = !searchName || (p.name && p.name.toLowerCase().includes(searchName));
         const matchOwner = !searchOwner || (p.ownerUsername && p.ownerUsername.toLowerCase().includes(searchOwner));
         const matchVoie = !searchVoie || (p.voie && p.voie.id == searchVoie);
@@ -644,7 +645,7 @@ function renderPersonnages() {
         let badges = '';
         if (p.voie) {
             const vColor = getVoieColor(p.voie.nom);
-            const vFull = voies.find(v => v.id == p.voie.id) || p.voie;
+            const vFull = pageState.voies.find(v => v.id == p.voie.id) || p.voie;
             const info = getVoieInfo(p.voie.nom);
             badges += `<span class="char-badge" style="color: ${vColor}; border-color: ${vColor}40; background: ${vColor}15; cursor: help;" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
                 <span class="material-symbols-outlined" style="font-size: 0.8rem;">route</span>
@@ -664,7 +665,7 @@ function renderPersonnages() {
         }
         if (p.spiritualite) {
             const sColor = getSpiritColor(p.spiritualite.nom);
-            const sFull = spiritualites.find(s => s.id == p.spiritualite.id) || p.spiritualite;
+            const sFull = pageState.spiritualites.find(s => s.id == p.spiritualite.id) || p.spiritualite;
             const info = getSpiritInfo(p.spiritualite.nom);
             badges += `<span class="char-badge" style="color: ${sColor}; border-color: ${sColor}40; background: ${sColor}15; cursor: help;" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
                 <span class="material-symbols-outlined" style="font-size: 0.8rem;">psychology</span>
@@ -687,7 +688,7 @@ function renderPersonnages() {
         }
 
         // Equipment summary
-        const persoEquips = allEquipments.filter(e => e.personnage && e.personnage.id === p.id);
+        const persoEquips = pageState.allEquipments.filter(e => e.personnage && e.personnage.id === p.id);
         let equipHtml = '';
         if (persoEquips.length > 0) {
             const slotOrder = ['CASQUE', 'PLASTRON', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE'];
@@ -771,7 +772,7 @@ function renderPersonnages() {
 // ===== Equipment Modal =====
 
 async function openEquipModal(persoId) {
-    equipModalPersoId = persoId;
+    pageState.equipModalPersoId = persoId;
     await loadAllEquipments();
     const overlay = document.getElementById('equipModalOverlay');
     overlay.classList.add('active');
@@ -779,12 +780,12 @@ async function openEquipModal(persoId) {
 }
 
 function closeEquipModal() {
-    equipModalPersoId = null;
+    pageState.equipModalPersoId = null;
     document.getElementById('equipModalOverlay').classList.remove('active');
 }
 
 function renderEquipModal() {
-    const perso = personnages.find(p => p.id === equipModalPersoId);
+    const perso = pageState.personnages.find(p => p.id === pageState.equipModalPersoId);
     if (!perso) return;
 
     document.getElementById('equipModalTitle').textContent = `Équipement de ${perso.name}`;
@@ -792,7 +793,7 @@ function renderEquipModal() {
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
     const slots = Object.keys(window.SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS' && s !== 'ARME');
-    const equippedItems = allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
+    const equippedItems = pageState.allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
 
     slotsContainer.innerHTML = slots.map(slotKey => {
         const slotInfo = window.SLOT_LABELS[slotKey];
@@ -868,18 +869,18 @@ function renderEquipModal() {
                 </div>`;
         } else {
             // Available items for this slot
-            let available = allEquipments.filter(e => e.slot === slotKey && !e.personnage);
+            let available = pageState.allEquipments.filter(e => e.slot === slotKey && !e.personnage);
 
             // Special case for weapons: allow ARME_DEUX_MAINS in both weapon slots
             if (slotKey === 'ARME_GAUCHE' || slotKey === 'ARME_DROITE') {
-                available = allEquipments.filter(e =>
+                available = pageState.allEquipments.filter(e =>
                     (e.slot === slotKey || e.slot === 'ARME_DEUX_MAINS') && !e.personnage
                 );
             }
 
             // Special case for rings: allow any ring in any ring slot
             if (slotKey === 'ANNEAU_GAUCHE' || slotKey === 'ANNEAU_DROIT') {
-                available = allEquipments.filter(e =>
+                available = pageState.allEquipments.filter(e =>
                     (e.slot === 'ANNEAU_GAUCHE' || e.slot === 'ANNEAU_DROIT') && !e.personnage
                 );
             }
@@ -1004,8 +1005,8 @@ function renderEquipModal() {
 // ===== Form Helpers =====
 
 function editPersonnage(id) {
-    editingId = id;
-    const p = personnages.find(x => x.id === id);
+    pageState.editingId = id;
+    const p = pageState.personnages.find(x => x.id === id);
     if (!p) return;
 
     document.getElementById('charFormPanel').classList.add('editing-mode');
@@ -1053,7 +1054,7 @@ function editPersonnage(id) {
 }
 
 function resetForm() {
-    editingId = null;
+    pageState.editingId = null;
     document.getElementById('charFormPanel').classList.remove('editing-mode');
     document.getElementById('charName').value = '';
     document.getElementById('charHp').value = 100;
@@ -1235,7 +1236,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             const diffEl = document.getElementById('voieStatsDiff');
             if (diffEl) diffEl.innerHTML = diffHtml;
 
-            if (editingId) return; // Ne pas écraser les stats en mode édition
+            if (pageState.editingId) return; // Ne pas écraser les stats en mode édition
 
             // Mise à jour des champs
             for (const [key, value] of Object.entries(stats)) {
@@ -1253,7 +1254,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 applyVoieBaseStats(null);
                 return;
             }
-            const v = voies.find(x => x.id == vId);
+            const v = pageState.voies.find(x => x.id == vId);
             if (v && iconEl) {
                 const info = getVoieInfo(v.nom);
                 const template = iconEl.querySelector('.tooltip-data');
@@ -1291,7 +1292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 if (iconEl) iconEl.style.display = 'none';
                 return;
             }
-            const s = spiritualites.find(x => x.id == sId);
+            const s = pageState.spiritualites.find(x => x.id == sId);
             if (s && iconEl) {
                 const info = getSpiritInfo(s.nom);
                 const template = iconEl.querySelector('.tooltip-data');

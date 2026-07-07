@@ -202,7 +202,7 @@ document.addEventListener('click', (e) => {
 // ===== API =====
 async function loadEquipments() {
     try {
-        const url = window.isAdmin ? '/api/equipment/all' : '/api/equipment';
+        const url = window.isAdmin ? '/api/equipments/all' : '/api/equipments';
         const res = await globalFetch(url);
         let eqData = await res.json();
 
@@ -279,7 +279,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
         if (idsEq) {
             let success = false;
             for (let id of idsEq) {
-                const res = await globalFetch(`/api/equipment/${id}`, { method: 'DELETE' });
+                const res = await globalFetch(`/api/equipments/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     success = true;
                     showNotif('Équipement détruit.');
@@ -1059,7 +1059,7 @@ window.submitEquipment = async function () {
     };
 
     try {
-        const res = await globalFetch('/api/equipment', {
+        const res = await globalFetch('/api/equipments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)

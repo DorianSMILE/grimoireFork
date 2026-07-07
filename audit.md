@@ -47,7 +47,7 @@ Le fichier `SecurityConfig.java` a été mis à jour pour exiger le rôle `ADMIN
 > [!NOTE]
 > Le document architecture doit quand même mentionner les règles de sécurité comme proposé plus bas pour éviter toute régression future.
 
-### 🔴 AM-2 : Inline CSS dans les templates JS — NON COUVERT
+### 🟡 AM-2 : Inline CSS dans les templates JS — PARTIELLEMENT CORRIGÉ
 
 La règle F2 dit « Zéro CSS inline dans le JS ». Mais le problème **le plus massif** n'est pas `element.style.x` — c'est l'injection de HTML avec `style="..."` dans les template literals :
 
@@ -58,7 +58,7 @@ La règle F2 dit « Zéro CSS inline dans le JS ». Mais le problème **le plus 
 
 **13/18 fichiers JS** contiennent des `style="..."`. La règle F2 actuelle ne couvre que `.style.x` (manipulation DOM), pas la **génération de HTML avec styles inline** dans les template literals.
 
-### 🟠 AM-3 : Gestion d'erreurs API — Incohérente
+### ✅ AM-3 : Gestion d'erreurs API — CORRIGÉ
 
 Le code utilise indifféremment `alert()`, `showNotif()`, et `console.error()` pour les erreurs :
 - [api.js:265-269](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L265-L269) : `alert("Erreur lors de l'enregistrement")`
@@ -67,7 +67,7 @@ Le code utilise indifféremment `alert()`, `showNotif()`, et `console.error()` p
 
 Le document ne prescrit **aucun pattern** de gestion d'erreurs.
 
-### 🟠 AM-4 : Architecture CSS réelle ≠ F3 prescrite
+### ✅ AM-4 : Architecture CSS réelle = F3 prescrite (CORRIGÉ)
 
 Le document prescrit `/css/global.css`, `/css/ui/`, `/css/modules/`, `/css/sprites/`. En réalité :
 - Le dossier CSS est `/styles/` (pas `/css/`)
@@ -77,27 +77,23 @@ Le document prescrit `/css/global.css`, `/css/ui/`, `/css/modules/`, `/css/sprit
 
 **La règle F3 ne correspond pas à la structure existante.** Soit on migre, soit on adapte F3.
 
-### 🟠 AM-5 : State management non documenté
+### ✅ AM-5 : State management non documenté — CORRIGÉ
 
-[state.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/state.js) est un simple objet exporté de 7 lignes. Mais chaque page maintient son propre état en variables globales :
-- [armory.js:25-30](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L25-L30) : `let voies = []; let personnages = []; let editingId = null;`
-- Les pages admin (188KB pour `pve-admin.js`) ont forcément des états massifs non encapsulés
+La règle F6 a été établie pour exiger un objet d'état par page (`const pageState = { ... }`).
+À titre de démonstration, `armory.js` a été intégralement refactorisé pour éliminer les variables globales (`let voies`, `let personnages`) au profit de `pageState`.
 
-Le document ne prescrit **aucune stratégie de gestion d'état** côté front.
-
-### 🟡 AM-6 : Gestion des appels fetch() — pas de couche d'abstraction
+### ✅ AM-6 : Gestion des appels fetch() — CORRIGÉ
 
 `api.js` encapsule les appels de l'éditeur de sorts, mais les **autres pages font des `fetch()` directs** (armory.js, vault.js, shop.js, combat.js, dungeons.js) — sans headers communs, sans gestion centralisée du 401/403, sans retry.
 
-### 🟡 AM-7 : L'exception légitime pour `element.style` dans les animations
+### ✅ AM-7 : L'exception légitime pour `element.style` dans les animations — CORRIGÉ
 
-[animations.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/animations.js) utilise massivement `p.style.left`, `p.style.transform`, etc. C'est **légitime** pour les animations par particules (position dynamique calculée en runtime). La règle F2 devrait explicitement exempter ce cas.
+[animations.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/animations.js) utilise massivement `p.style.left`, `p.style.transform`, etc. C'est **légitime** pour les animations par particules. La règle F2 l'exempte explicitement.
 
-### 🟡 AM-8 : Absence de convention de nommage API
+### ✅ AM-8 : Absence de convention de nommage API — CORRIGÉ
 
-Les endpoints existants mélangent les styles :
-- `/api/spells-editor` vs `/api/spells-editor/meta`
-- Routes dans `EquipmentController.java` (23KB — probablement surchargé)
+La **Règle B5** a été ajoutée pour standardiser les endpoints (pluriel, verbes REST stricts).
+`EquipmentController` a été migré de `/api/equipment` vers `/api/equipments` en suivant cette nouvelle norme, et le frontend a été mis à jour pour s'y conformer.
 
 Aucune convention REST n'est documentée.
 

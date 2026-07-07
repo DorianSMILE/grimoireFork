@@ -509,7 +509,7 @@
 
             let instances = [];
             try {
-                const resE = await fetch('/api/equipment/all');
+                const resE = await fetch('/api/equipments/all');
                 if (resE.ok) instances = await resE.json();
             } catch (e) {
                 console.error("Erreur chargement équipements", e);

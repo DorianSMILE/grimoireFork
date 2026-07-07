@@ -422,10 +422,10 @@
                 const resA = await fetch('/api/anomalies');
                 if (resA.ok) userAnomalies = await resA.json();
 
-                const resEq = await fetch('/api/equipment/templates/public');
+                const resEq = await fetch('/api/equipments/templates/public');
                 if (resEq.ok) allEquipmentTemplates = await resEq.json();
 
-                const resC = await fetch('/api/equipment');
+                const resC = await fetch('/api/equipments');
                 if (resC.ok) {
                     const equips = await resC.json();
                     userConsumables = equips.filter(e => e.slot === 'CONSOMMABLE');

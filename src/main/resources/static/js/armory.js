@@ -894,7 +894,7 @@ function renderEquipModal() {
                 'LEGENDAIRE': 4,
                 'EPIQUE': 5,
                 'RELIQUE': 6,
-                'MAUDIT': -1
+                'MAUDIT': 99
             };
             available.sort((a, b) => {
                 const rA = a.rarity ? rarityOrder[a.rarity] || 0 : 0;

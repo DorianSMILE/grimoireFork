@@ -333,7 +333,8 @@ public class ShopController {
             if (oldName != null && !oldName.isEmpty()) {
                 List<Equipment> instances = equipmentRepository.findByName(oldName);
                 for (Equipment instance : instances) {
-                    if (instance.getId().equals(eq.getId())) continue;
+                    if (instance.getId().equals(eq.getId()))
+                        continue;
                     updateFromDto(instance, dto);
                     instance.setShopTemplate(false); // ensure it remains an instance
                     equipmentRepository.save(instance);
@@ -395,6 +396,12 @@ public class ShopController {
             slotMultiplier = 0.9;
         else if (eq.getSlot() == EquipmentSlot.CAPE)
             slotMultiplier = 1.2;
+        else if (eq.getSlot() == EquipmentSlot.ARME_DROITE)
+            slotMultiplier = 1.5;
+        else if (eq.getSlot() == EquipmentSlot.ARME_GAUCHE)
+            slotMultiplier = 1.4;
+        else if (eq.getSlot() == EquipmentSlot.ARME_DEUX_MAINS)
+            slotMultiplier = 1.1;
 
         return Math.ceil(weight * 2 * multiplier * slotMultiplier);
     }

@@ -994,7 +994,11 @@ function calculateEquipmentWeight() {
         const effectVal = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
 
         if (specialEffect !== 'NONE' && effectVal !== 0) {
-            w += effectVal * 1.5;
+            if (rarity === 'MAUDIT') {
+                w += effectVal * 0.2;
+            } else {
+                w += effectVal * 1.5;
+            }
         }
     }
     return w;

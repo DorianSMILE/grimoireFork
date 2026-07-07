@@ -168,7 +168,11 @@ public class Equipment {
                 this.specialEffect != generation.grimoire.enumeration.EquipmentEffectType.NONE &&
                 this.specialEffectValue != 0) {
 
-            w += this.specialEffectValue * 1.5;
+            if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.MAUDIT) {
+                w += this.specialEffectValue * 0.2;
+            } else {
+                w += this.specialEffectValue * 1.5;
+            }
         }
         return w;
     }

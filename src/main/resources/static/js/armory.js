@@ -29,35 +29,13 @@ let editingId = null;
 let equipModalPersoId = null;
 let allEquipments = [];
 
-let SLOT_LABELS = {};
-let CONSUMABLE_CATEGORIES = {};
-
-async function loadArmoryMeta() {
-    try {
-        const [slotsRes, catsRes] = await Promise.all([
-            globalFetch('/api/meta/equipment-slots'),
-            globalFetch('/api/meta/consumable-categories')
-        ]);
-        if (slotsRes) {
-            const slots = await slotsRes.json();
-            slots.forEach(s => {
-                SLOT_LABELS[s.name] = { label: s.label, icon: s.icon, color: 'var(--' + s.cssClass + ', #ef4444)' }; // Uses css variable or fallback
-            });
-        }
-        if (catsRes) {
-            const cats = await catsRes.json();
-            cats.forEach(c => {
-                CONSUMABLE_CATEGORIES[c.name] = { label: c.label, icon: c.icon, color: 'var(--' + c.cssClass + ', #854c4c)' };
-            });
-        }
-    } catch (e) { console.error("Error loading armory meta", e); }
-}
+// Replaced by window.SLOT_LABELS and window.CONSUMABLE_CATEGORIES
 
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
-    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
-        const catInfo = CONSUMABLE_CATEGORIES[eq.consumableCategory];
+    const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
+        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
         if (catInfo) {
             info.icon = catInfo.icon;
             info.color = catInfo.color;
@@ -813,11 +791,11 @@ function renderEquipModal() {
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
-    const slots = Object.keys(SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS' && s !== 'ARME');
+    const slots = Object.keys(window.SLOT_LABELS).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS' && s !== 'ARME');
     const equippedItems = allEquipments.filter(e => e.personnage && e.personnage.id === perso.id);
 
     slotsContainer.innerHTML = slots.map(slotKey => {
-        const slotInfo = SLOT_LABELS[slotKey];
+        const slotInfo = window.SLOT_LABELS[slotKey];
         let equipped = equippedItems.find(e => e.slot === slotKey);
         const twoHanded = equippedItems.find(e => e.slot === 'ARME_DEUX_MAINS');
 
@@ -1006,7 +984,7 @@ function renderEquipModal() {
     const slotOptionsContainer = document.getElementById('eqSlotOptions');
     if (slotOptionsContainer) {
         slotOptionsContainer.innerHTML = slots.map(s => {
-            const info = SLOT_LABELS[s];
+            const info = window.SLOT_LABELS[s];
             return `<div class="custom-option" data-value="${s}">
                 <span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span>
                 ${info.label}
@@ -1016,7 +994,7 @@ function renderEquipModal() {
         // Setup initial value
         if (slots.length > 0) {
             const firstSlot = slots[0];
-            const info = SLOT_LABELS[firstSlot];
+            const info = window.SLOT_LABELS[firstSlot];
             document.getElementById('eqSlot').value = firstSlot;
             document.getElementById('eqSlotLabel').innerHTML = `<span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span> ${info.label}`;
         }
@@ -1168,7 +1146,7 @@ document.addEventListener('click', (e) => {
 // ===== Init =====
 
 window.addEventListener('DOMContentLoaded', async () => {
-    await loadArmoryMeta();
+    if (window.initAppMeta) await window.initAppMeta();
 
     // Listeners for Weight Calculation
     const eqInputs = ['eqSlot', 'eqRarity', 'eqHp', 'eqMana', 'eqPower', 'eqStr', 'eqArmor', 'eqRes', 'eqSpeed', 'eqCrit', 'eqRegenHp', 'eqRegenMana', 'eqSpecialEffectValue', 'eqBaseWeight'];

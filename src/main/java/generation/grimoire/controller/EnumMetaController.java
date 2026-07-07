@@ -28,7 +28,8 @@ public class EnumMetaController {
                     m.put("name", e.name());
                     m.put("label", e.getLabel());
                     m.put("icon", e.getIcon());
-                    m.put("cssClass", e.getCssClass());
+                    m.put("color", e.getColorHex());
+                    m.put("extraClass", e.getExtraClass());
                     return m;
                 })
                 .collect(Collectors.toList());
@@ -95,7 +96,20 @@ public class EnumMetaController {
                     m.put("name", e.name());
                     m.put("label", e.getLabel());
                     m.put("icon", e.getIcon());
-                    m.put("cssClass", e.getCssClass());
+                    m.put("color", e.getColorHex());
+                    return m;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/anomalie-categories")
+    public List<Map<String, String>> getAnomalieCategories() {
+        return Arrays.stream(AnomalieCategory.values())
+                .map(e -> {
+                    Map<String, String> m = new LinkedHashMap<>();
+                    m.put("name", e.name());
+                    m.put("label", e.getLabel());
+                    m.put("icon", e.getIcon());
                     return m;
                 })
                 .collect(Collectors.toList());
@@ -112,5 +126,19 @@ public class EnumMetaController {
                     return m;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/all")
+    public Map<String, List<Map<String, String>>> getAllMeta() {
+        Map<String, List<Map<String, String>>> allMeta = new LinkedHashMap<>();
+        allMeta.put("equipmentSlots", getEquipmentSlots());
+        allMeta.put("equipmentRarities", getEquipmentRarities());
+        allMeta.put("monsterBehaviors", getMonsterBehaviors());
+        allMeta.put("monsterTypes", getMonsterTypes());
+        allMeta.put("sources", getSources());
+        allMeta.put("consumableCategories", getConsumableCategories());
+        allMeta.put("anomalieCategories", getAnomalieCategories());
+        allMeta.put("statTypes", getStatTypes());
+        return allMeta;
     }
 }

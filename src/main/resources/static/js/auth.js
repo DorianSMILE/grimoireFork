@@ -1,4 +1,8 @@
-﻿// Auth scripts for login and register pages
+// Auth scripts for login and register pages
+window.initAppMeta = async function() {
+    const { initMeta } = await import('./constants.js');
+    return initMeta();
+};
 
 window.globalFetch = async function(url, options = {}) {
     try {

@@ -10,22 +10,7 @@ function getSlotInfo(eq) {
     return info;
 }
 
-const STAT_DEFS = [
-    { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
-    { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: '#38bdf8' },
-    { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
-    { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
-    { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
-    { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
-    { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
-    { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
-    { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
-    { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
-    { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
-    { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
-    { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
-];
+
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
@@ -38,9 +23,11 @@ const RARITY_COLORS = {
     MAUDIT: '#7f1d1d'
 };
 
-let shopItems = [];
-let itemToBuy = null;
-let allAnomalies = [];
+const pageState = {
+    shopItems: [],
+    itemToBuy: null,
+    allAnomalies: []
+};
 
 function getSpiritualiteColor(sp) {
     if (!sp) return '#cbd5e1';
@@ -72,9 +59,9 @@ async function loadShop() {
             globalFetch('/api/shop/daily'),
             globalFetch('/api/anomalies/all-templates')
         ]);
-        shopItems = await resShop.json();
+        pageState.shopItems = await resShop.json();
         if (resAno.ok) {
-            allAnomalies = await resAno.json();
+            pageState.allAnomalies = await resAno.json();
         }
         renderShop();
         renderSpecials();
@@ -204,7 +191,7 @@ function generateStandHtml(eq) {
             if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
                 let anos = [];
                 for (const [n, q] of Object.entries(eq.priceAnomalies)) {
-                    let aTemp = allAnomalies.find(a => a.name === n);
+                    let aTemp = pageState.allAnomalies.find(a => a.name === n);
 
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide',
@@ -255,7 +242,7 @@ function renderShop() {
     // Force the correct class in case HTML is cached
     container.className = 'shop-showcase';
 
-    const dailyItems = shopItems.daily || [];
+    const dailyItems = pageState.shopItems.daily || [];
 
     if (dailyItems.length === 0) {
         container.innerHTML = `<div class="font-italic text-muted">La boutique est vide aujourd'hui.</div>`;
@@ -314,8 +301,8 @@ function renderSpecials() {
     const container = document.getElementById('specialsGrid');
     if (!container) return;
 
-    const discountItem = shopItems.discount;
-    const consumables = shopItems.consumables || [];
+    const discountItem = pageState.shopItems.discount;
+    const consumables = pageState.shopItems.consumables || [];
 
     let html = '';
 
@@ -361,19 +348,19 @@ window.openBuyModal = function (id, isConsumable = false) {
     let eq = null;
 
     if (isConsumable) {
-        eq = (shopItems.consumables || []).find(e => e.id === parseInt(id));
+        eq = (pageState.shopItems.consumables || []).find(e => e.id === parseInt(id));
     } else {
-        eq = (shopItems.daily || []).find(e => e.id === parseInt(id));
-        if (!eq && shopItems.discount) {
-            if (shopItems.discount.id === parseInt(id)) {
-                eq = shopItems.discount;
+        eq = (pageState.shopItems.daily || []).find(e => e.id === parseInt(id));
+        if (!eq && pageState.shopItems.discount) {
+            if (pageState.shopItems.discount.id === parseInt(id)) {
+                eq = pageState.shopItems.discount;
             }
         }
     }
 
     if (!eq) return;
 
-    itemToBuy = { id, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
+    pageState.itemToBuy = { id, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
 
     document.getElementById('buyTargetName').textContent = eq.name;
 
@@ -383,7 +370,7 @@ window.openBuyModal = function (id, isConsumable = false) {
     if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
         let anos = [];
         for (const [n, q] of Object.entries(eq.priceAnomalies)) {
-            let aTemp = allAnomalies.find(a => a.name === n);
+            let aTemp = pageState.allAnomalies.find(a => a.name === n);
             const CATEGORY_ICONS = {
                 'PIERRE': 'landslide',
                 'METAL': 'hardware',
@@ -429,13 +416,13 @@ window.openBuyModal = function (id, isConsumable = false) {
 window.closeBuyModal = function () {
     document.getElementById('buyConfirmModal').style.opacity = '0';
     document.getElementById('buyConfirmModal').style.pointerEvents = 'none';
-    itemToBuy = null;
+    pageState.itemToBuy = null;
 }
 
 document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
-    if (!itemToBuy) return;
+    if (!pageState.itemToBuy) return;
 
-    const { id } = itemToBuy;
+    const { id } = pageState.itemToBuy;
     closeBuyModal();
 
     try {

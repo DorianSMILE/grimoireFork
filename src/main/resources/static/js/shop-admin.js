@@ -1,4 +1,4 @@
-let allEquipments = [];
+const pageState = { allEquipments: [], equipmentToDelete: null, editingEquipmentId: null };
 
 // Replaced by window.SLOT_LABELS
 function getSlotInfo(eq) {
@@ -12,30 +12,7 @@ function getSlotInfo(eq) {
     return info;
 }
 
-const RARITY_ORDER = {
-    'COMMUN': 1,
-    'RARE': 2,
-    'LEGENDAIRE': 3,
-    'EPIQUE': 4,
-    'RELIQUE': 5
-};
 
-const STAT_DEFS = [
-    { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
-    { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: '#38bdf8' },
-    { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
-    { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
-    { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
-    { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
-    { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
-    { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
-    { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
-    { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
-    { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
-    { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
-    { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
-];
 
 function calculateWeight(eq) {
     let w = eq.baseWeight || 0;
@@ -195,8 +172,8 @@ async function loadEquipments() {
             }
             return;
         }
-        allEquipments = await res.json();
-        allEquipments.forEach(eq => {
+        pageState.allEquipments = await res.json();
+        pageState.allEquipments.forEach(eq => {
             eq._weight = calculateWeight(eq);
         });
         renderVault();
@@ -322,11 +299,11 @@ function addAnomalyRow(selectedName = '', qty = 1) {
     container.appendChild(row);
 }
 
-let equipmentToDelete = null;
+
 
 function deleteEquipment(id) {
-    equipmentToDelete = id;
-    const eq = allEquipments.find(e => e.id === id);
+    pageState.equipmentToDelete = id;
+    const eq = pageState.allEquipments.find(e => e.id === id);
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
@@ -337,13 +314,13 @@ function deleteEquipment(id) {
 
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.remove('show');
-    equipmentToDelete = null;
+    pageState.equipmentToDelete = null;
 }
 
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
-    if (!equipmentToDelete) return;
+    if (!pageState.equipmentToDelete) return;
 
-    const id = equipmentToDelete;
+    const id = pageState.equipmentToDelete;
     closeDeleteModal();
 
     try {
@@ -368,7 +345,7 @@ function renderVault() {
     const rarityOrder = { 'MAUDIT': -1, 'RELIQUE': 0, 'EPIQUE': 1, 'LEGENDAIRE': 2, 'MYTHIQUE': 3, 'RARE': 4, 'INHABITUEL': 5, 'COMMUN': 6 };
     const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ARME_DEUX_MAINS': 3, 'ARME_GAUCHE': 4, 'ARME_DROITE': 5, 'ANNEAU_GAUCHE': 6, 'ANNEAU_DROIT': 7, 'BOTTES': 8, 'CAPE': 9, 'CONSOMMABLE': 10 };
 
-    let sorted = [...allEquipments].sort((a, b) => {
+    let sorted = [...pageState.allEquipments].sort((a, b) => {
         const rA = rarityOrder[a.rarity || 'COMMUN'];
         const rB = rarityOrder[b.rarity || 'COMMUN'];
         if (rA !== rB) return rA - rB;
@@ -619,17 +596,17 @@ window.addEventListener('authLoaded', () => {
     }
 
     // Re-render the grid in case equipments loaded before auth
-    if (allEquipments && allEquipments.length > 0) {
+    if (pageState.allEquipments && pageState.allEquipments.length > 0) {
         renderVault();
     }
 });
 
 // ===== Equipment Creation / Edition =====
 
-let editingEquipmentId = null;
+
 
 window.openCreateEqModal = function () {
-    editingEquipmentId = null;
+    pageState.editingEquipmentId = null;
     document.getElementById('equipModalTitle').innerHTML = 'Forger un objet';
     document.getElementById('submitEquipmentBtn').innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span> Forger';
     resetEqForm();
@@ -696,8 +673,8 @@ function resetEqForm() {
 }
 
 window.editEquipment = function (id) {
-    editingEquipmentId = id;
-    const eq = allEquipments.find(e => e.id === id);
+    pageState.editingEquipmentId = id;
+    const eq = pageState.allEquipments.find(e => e.id === id);
     if (!eq) return;
 
     document.getElementById('equipModalTitle').innerHTML = 'Modifier un objet';
@@ -832,7 +809,7 @@ function getFormEquipmentData() {
     const specialEffectValue = document.getElementById('eqSpecialEffectValue') ? parseInt(document.getElementById('eqSpecialEffectValue').value) || 0 : 0;
 
     return {
-        id: editingEquipmentId,
+        id: pageState.editingEquipmentId,
         name: document.getElementById('eqName') ? document.getElementById('eqName').value.trim() : '',
         slot,
         bonusHealthMax: document.getElementById('eqHp') ? parseInt(document.getElementById('eqHp').value) || 0 : 0,
@@ -929,8 +906,8 @@ window.submitEquipment = async function () {
     try {
         let url = '/api/shop/templates';
         let method = 'POST';
-        if (editingEquipmentId) {
-            url += `/${editingEquipmentId}`;
+        if (pageState.editingEquipmentId) {
+            url += `/${pageState.editingEquipmentId}`;
             method = 'PUT';
         }
 
@@ -946,7 +923,7 @@ window.submitEquipment = async function () {
         }
 
         closeCreateEqModal();
-        showNotif(editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
+        showNotif(pageState.editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
         await loadEquipments();
     } catch (e) {
         console.error(e);

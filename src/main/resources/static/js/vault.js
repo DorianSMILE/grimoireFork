@@ -1,4 +1,4 @@
-let allEquipments = [];
+const pageState = { allEquipments: [], equipmentToDelete: null, anomalieToDelete: null, editingEquipmentId: null, editingAnomalieId: null };
 
 // Replaced by window.SLOT_LABELS
 function getSlotInfo(eq) {
@@ -12,43 +12,6 @@ function getSlotInfo(eq) {
     return info;
 }
 
-const RARITY_ORDER = {
-    'COMMUN': 1,
-    'RARE': 2,
-    'LEGENDAIRE': 3,
-    'EPIQUE': 4,
-    'RELIQUE': 5
-};
-
-const STAT_DEFS = [
-    { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
-    { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: '#38bdf8' },
-    { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
-    { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
-    { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
-    { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
-    { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
-    { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
-    { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
-    { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
-    { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
-    { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
-    { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
-];
-
-const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
-    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
-};
 
 function calculateWeight(eq) {
     if (eq.isAnomalie) return 0;
@@ -219,14 +182,14 @@ async function loadEquipments() {
             a.rarity = 'RELIQUE';
         });
 
-        allEquipments = eqData.concat(anomaliesData);
+        pageState.allEquipments = eqData.concat(anomaliesData);
 
         // Pré-calculer le poids pour le tri
-        allEquipments.forEach(eq => {
+        pageState.allEquipments.forEach(eq => {
             eq._weight = calculateWeight(eq);
         });
 
-        allEquipments = groupEquipments(allEquipments);
+        pageState.allEquipments = groupEquipments(pageState.allEquipments);
 
         filterVault();
     } catch (e) {
@@ -235,14 +198,14 @@ async function loadEquipments() {
     }
 }
 
-let equipmentToDelete = null;
-let anomalieToDelete = null;
+
+
 
 window.deleteAnomalie = function (idsStr) {
-    anomalieToDelete = String(idsStr).split(',');
-    equipmentToDelete = null;
-    const firstId = Number(anomalieToDelete[0]);
-    const eq = allEquipments.find(e => e.id === firstId && e.isAnomalie);
+    pageState.anomalieToDelete = String(idsStr).split(',');
+    pageState.equipmentToDelete = null;
+    const firstId = Number(pageState.anomalieToDelete[0]);
+    const eq = pageState.allEquipments.find(e => e.id === firstId && e.isAnomalie);
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire l'anomalie`;
@@ -251,10 +214,10 @@ window.deleteAnomalie = function (idsStr) {
 }
 
 window.deleteEquipment = function (idsStr) {
-    equipmentToDelete = String(idsStr).split(',');
-    anomalieToDelete = null;
-    const firstId = Number(equipmentToDelete[0]);
-    const eq = allEquipments.find(e => e.id === firstId && !e.isAnomalie);
+    pageState.equipmentToDelete = String(idsStr).split(',');
+    pageState.anomalieToDelete = null;
+    const firstId = Number(pageState.equipmentToDelete[0]);
+    const eq = pageState.allEquipments.find(e => e.id === firstId && !e.isAnomalie);
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
@@ -265,14 +228,14 @@ window.deleteEquipment = function (idsStr) {
 
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.remove('show');
-    equipmentToDelete = null;
+    pageState.equipmentToDelete = null;
 }
 
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
-    if (!equipmentToDelete && !anomalieToDelete) return;
+    if (!pageState.equipmentToDelete && !pageState.anomalieToDelete) return;
 
-    const idsEq = equipmentToDelete;
-    const idsAn = anomalieToDelete;
+    const idsEq = pageState.equipmentToDelete;
+    const idsAn = pageState.anomalieToDelete;
     closeDeleteModal();
 
     try {
@@ -345,7 +308,7 @@ function filterVault() {
     const filterConsommable = document.getElementById('filterConsommableOnly')?.checked;
     const filterAnomalie = document.getElementById('filterAnomalieOnly')?.checked;
 
-    let filtered = allEquipments.filter(eq => {
+    let filtered = pageState.allEquipments.filter(eq => {
         let matchMainType = false;
 
         if (filterConsommable && filterAnomalie) {
@@ -388,15 +351,17 @@ function filterVault() {
         if (sortVault === 'name_asc') return a.name.localeCompare(b.name);
         if (sortVault === 'name_desc') return b.name.localeCompare(a.name);
 
+        const getRarityIndex = r => window.GRIMOIRE_META?.equipmentRarities?.findIndex(er => er.name === r) || 0;
+
         if (sortVault === 'rarity_desc') {
-            const ra = RARITY_ORDER[a.rarity] || 0;
-            const rb = RARITY_ORDER[b.rarity] || 0;
+            const ra = getRarityIndex(a.rarity);
+            const rb = getRarityIndex(b.rarity);
             if (ra !== rb) return rb - ra;
             return b._weight - a._weight; // Tie-breaker: weight
         }
         if (sortVault === 'rarity_asc') {
-            const ra = RARITY_ORDER[a.rarity] || 0;
-            const rb = RARITY_ORDER[b.rarity] || 0;
+            const ra = getRarityIndex(a.rarity);
+            const rb = getRarityIndex(b.rarity);
             if (ra !== rb) return ra - rb;
             return a._weight - b._weight;
         }
@@ -685,10 +650,10 @@ window.addEventListener('authLoaded', async () => {
 
 // ===== Equipment Creation / Edition =====
 
-let editingEquipmentId = null;
+
 
 window.openCreateEqModal = function () {
-    editingEquipmentId = null;
+    pageState.editingEquipmentId = null;
     document.getElementById('equipModalTitle').innerHTML = 'Forger un objet';
     document.getElementById('submitEquipmentBtn').innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span> Forger';
     resetEqForm();
@@ -751,8 +716,8 @@ function resetEqForm() {
 }
 
 window.editEquipment = function (id) {
-    editingEquipmentId = id;
-    const eq = allEquipments.find(e => e.id === id);
+    pageState.editingEquipmentId = id;
+    const eq = pageState.allEquipments.find(e => e.id === id);
     if (!eq) return;
 
     document.getElementById('equipModalTitle').innerHTML = 'Modifier un objet';
@@ -871,10 +836,10 @@ window.editEquipment = function (id) {
     document.getElementById('equipCreateModal').classList.add('show');
 }
 
-let editingAnomalieId = null;
+
 
 window.openCreateAnomalieModal = function () {
-    editingAnomalieId = null;
+    pageState.editingAnomalieId = null;
     const titleEl = document.getElementById('anomalieModalTitle');
     if (titleEl) titleEl.innerText = 'Créer une anomalie';
     const btnTextEl = document.getElementById('submitAnomalieBtnText');
@@ -898,8 +863,8 @@ window.openCreateAnomalieModal = function () {
 };
 
 window.editAnomalie = function (id) {
-    editingAnomalieId = id;
-    const eq = allEquipments.find(e => e.id === id && e.isAnomalie);
+    pageState.editingAnomalieId = id;
+    const eq = pageState.allEquipments.find(e => e.id === id && e.isAnomalie);
     if (!eq) return;
 
     const titleEl = document.getElementById('anomalieModalTitle');
@@ -945,7 +910,7 @@ window.editAnomalie = function (id) {
 
 window.closeCreateAnomalieModal = function () {
     document.getElementById('anomalieCreateModal').classList.remove('show');
-    editingAnomalieId = null;
+    pageState.editingAnomalieId = null;
 };
 
 window.submitAnomalie = async function () {
@@ -962,7 +927,7 @@ window.submitAnomalie = async function () {
     }
 
     const payload = {
-        id: editingAnomalieId,
+        id: pageState.editingAnomalieId,
         name: name,
         spiritualite: spiritualite,
         category: category,
@@ -984,7 +949,7 @@ window.submitAnomalie = async function () {
             return;
         }
 
-        showNotif(editingAnomalieId ? "Anomalie modifiée avec succès !" : "Anomalie créée avec succès !");
+        showNotif(pageState.editingAnomalieId ? "Anomalie modifiée avec succès !" : "Anomalie créée avec succès !");
         closeCreateAnomalieModal();
         await loadEquipments(); // Recharger les anomalies et équipements
     } catch (e) {
@@ -1032,9 +997,40 @@ window.submitEquipment = async function () {
         }
     }
 
-    const dto = {
-        id: editingEquipmentId,
-        name,
+    const dto = getFormEquipmentData();
+    dto.id = pageState.editingEquipmentId;
+    dto.name = name;
+    dto.personnageId = null; // Keep null when forged from vault
+
+    try {
+        const res = await globalFetch('/api/equipments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showNotif(data.message || 'Erreur', true);
+            return;
+        }
+
+        closeCreateEqModal();
+        showNotif(pageState.editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
+        await loadEquipments();
+    } catch (e) {
+        console.error(e);
+        showNotif('Erreur réseau', true);
+    }
+}
+
+function getFormEquipmentData() {
+    const slot = document.getElementById('eqSlot').value;
+    const rarity = document.getElementById('eqRarity').value;
+    const specialEffect = document.getElementById('eqSpecialEffect').value;
+    const specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
+    
+    return {
+        name: document.getElementById('eqName').value,
         slot,
         bonusHealthMax: parseInt(document.getElementById('eqHp').value) || 0,
         bonusManaMax: parseInt(document.getElementById('eqMana').value) || 0,
@@ -1055,85 +1051,11 @@ window.submitEquipment = async function () {
         rarity,
         specialEffect,
         specialEffectValue,
-        personnageId: null, // Keep null when forged from vault
+        isAnomalie: false
     };
-
-    try {
-        const res = await globalFetch('/api/equipments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dto)
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            showNotif(data.message || 'Erreur', true);
-            return;
-        }
-
-        closeCreateEqModal();
-        showNotif(editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
-        await loadEquipments();
-    } catch (e) {
-        console.error(e);
-        showNotif('Erreur réseau', true);
-    }
 }
 
-function calculateEquipmentWeight() {
-    let w = 0;
-
-    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-    let mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
-
-    const slot = document.getElementById('eqSlot').value;
-    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
-        mArm = 1.5; mRes = 1.5;
-        mHp = 0.4; mMana = 0.4;
-        mStr = 1.8; mPow = 1.8;
-        mRegHp = 2.4; mRegMana = 1.2;
-    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
-        mArm = 0.8; mRes = 0.8;
-        mStr = 2.5; mPow = 2.5;
-        mSpd = 3.5;
-        mCrit = 2.0;
-    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
-        mMana = 0.1;
-        mArm = 2.0; mRes = 2.0;
-        mRegMana = 0.8;
-    } else if (slot === 'BOTTES') {
-        mSpd = 1.5;
-    } else if (slot === 'CAPE') {
-        mCrit = 1.5;
-    }
-
-    w += (parseInt(document.getElementById('eqHp').value) || 0) * mHp;
-    w += (parseInt(document.getElementById('eqMana').value) || 0) * mMana;
-    w += (parseInt(document.getElementById('eqPower').value) || 0) * mPow;
-    w += (parseInt(document.getElementById('eqStr').value) || 0) * mStr;
-    w += (parseInt(document.getElementById('eqArmor').value) || 0) * mArm;
-    w += (parseInt(document.getElementById('eqRes').value) || 0) * mRes;
-    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * mSpd;
-    w += (parseInt(document.getElementById('eqCrit').value) || 0) * mCrit;
-    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
-    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
-
-    const baseWeightEl = document.getElementById('eqBaseWeight');
-    if (baseWeightEl) w += parseFloat(baseWeightEl.value) || 0;
-
-    // Add special effect weight if Epic/Relic/Maudit
-    const rarity = document.getElementById('eqRarity').value;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
-        const specialEffect = document.getElementById('eqSpecialEffect').value;
-        const effectVal = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
-
-        if (specialEffect !== 'NONE' && effectVal !== 0) {
-            w += effectVal * 1.5;
-        }
-    }
-    return w;
-}
-
-window.updateWeightUI = function () {
+window.updateWeightUI = async function () {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;
@@ -1154,13 +1076,35 @@ window.updateWeightUI = function () {
         el.style.display = slot === 'CONSOMMABLE' ? 'block' : 'none';
     });
 
-    const w = calculateEquipmentWeight();
-
-    const limitsForSlot = WEIGHT_LIMITS[slot] || {};
-    const maxW = limitsForSlot[rarity || 'COMMUN'] || 5;
-
-    const fillEl = document.getElementById('eqWeightFill');
     const textEl = document.getElementById('eqWeightText');
+    const fillEl = document.getElementById('eqWeightFill');
+
+    const dto = getFormEquipmentData();
+    if (!dto.slot) {
+        if (textEl) {
+            textEl.innerText = "0 / 5";
+            textEl.style.color = 'var(--text-muted)';
+        }
+        return;
+    }
+
+    let w = 0;
+    let maxW = 5;
+
+    try {
+        const res = await window.globalFetch('/api/equipments/simulate-weight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto)
+        });
+        if (res) {
+            const data = await res.json();
+            w = data.weight || 0;
+            maxW = data.maxWeight || 5;
+        }
+    } catch (e) {
+        console.error("Error simulating weight:", e);
+    }
 
     if (textEl) {
         const displayW = w % 1 === 0 ? w : w.toFixed(1);

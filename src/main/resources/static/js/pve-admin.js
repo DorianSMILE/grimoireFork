@@ -1677,7 +1677,7 @@ window.renderMonstersList = function () {
             <div class="monster-card">
                 <div class="absolute" style="top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
                     ${secretBadgeHtml}
-                    <div class="monster-level-badge relative" style="top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
+                    <div class="monster-level-badge" style="position: relative; top: 0; left: 0; margin: 0;">Lvl ${m.level || 1}</div>
                 </div>
                 
                 <div class="flex-between" style="align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">

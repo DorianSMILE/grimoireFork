@@ -292,6 +292,18 @@ La **Règle B5** a été ajoutée pour standardiser les endpoints (pluriel, verb
 
 Aucune convention REST n'est documentée.
 
+### ✅ AM-9 : Conflits de Stacking Context (z-index) sur les Custom Selects — CORRIGÉ
+
+L'utilisation de `position: relative` et d'une décrémentation manuelle du `z-index` sur des éléments de liste (`.req-item`) créait des contextes d'empilement isolés. Cela empêchait la classe `.open` des menus déroulants de s'afficher au-dessus des formulaires frères (ex: Anomalies vs Consommables).
+
+**Verdict** : La contrainte de position/z-index a été retirée des conteneurs parents dans l'UI. Le `z-index: 99999` appliqué directement sur le wrapper ouvert fonctionne désormais globalement. Il faut proscrire l'usage abusif de `position: relative` pour gérer les superpositions dans des listes dynamiques.
+
+### ✅ AM-10 : Faille de Sécurité suite à la migration d'URL — CORRIGÉ
+
+Suite à la correction de l'AM-8 (`/api/equipment` vers `/api/equipments`), le fichier `SecurityConfig.java` n'avait pas été mis à jour pour refléter ce changement de chemin. Conséquence : les requêtes `POST` et `DELETE` sur `/api/equipments` n'exigeaient plus le rôle `ADMIN` mais retombaient dans la règle `authenticated()`, permettant à tout utilisateur connecté de modifier l'équipement global.
+
+**Verdict** : `SecurityConfig.java` a été corrigé pour protéger les bonnes routes (`/api/equipments` et `/api/equipments/**`).
+
 ---
 
 ## 3. Corrections proposées au document
@@ -404,3 +416,5 @@ La section "Master System Prompt" (§ dernier) doit refléter les nouvelles règ
 | Couche API centralisée | ✅ CORRIGÉ | F4 |
 | State management | ✅ CORRIGÉ | F6 |
 | Convention API REST | ✅ CORRIGÉ | B5 ajoutée |
+| Stacking Context (z-index) | ✅ CORRIGÉ | N/A (CSS Best Practice) |
+| Sécurité Migration URL | ✅ CORRIGÉ | N/A (SecurityConfig mis à jour) |

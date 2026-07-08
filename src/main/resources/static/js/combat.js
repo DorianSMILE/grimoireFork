@@ -134,7 +134,7 @@ function processNewDeathLogs(combatLogs) {
     }
     for (let i = lastCombatLogCount; i < combatLogs.length; i++) {
         const log = combatLogs[i];
-        const match = log.match(/â˜ ï¸ (.*?) succombe à ses blessures et perd (\d+) XP/);
+        const match = log.match(/&#x2620;&#xFE0F; (.*?) succombe à ses blessures et perd (\d+) XP/);
         if (match) {
             const heroName = match[1];
             const xpLost = match[2];
@@ -2816,7 +2816,7 @@ function renderPoisonBurnHtml(c) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#22c55e;">pest_control</span>
                     <span style="font-weight:600; color:#fff;">[Poison]</span>
                     <span style="color:#22c55e; font-weight:500;">${dmg} Dégâts Brut</span>
-                    <span style="color:#e2e8f0;">â³ (${b.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&#x23F3; (${b.duration} tours)</span>
                 </div>
             `);
         } else if (b.statAffected === 'BURN') {
@@ -2826,7 +2826,7 @@ function renderPoisonBurnHtml(c) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#ef4444;">local_fire_department</span>
                     <span style="font-weight:600; color:#fff;">[Brûlure]</span>
                     <span style="color:#ef4444; font-weight:500;">${dmg} Dégâts Magique</span>
-                    <span style="color:#e2e8f0;">â³ (${b.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&#x23F3; (${b.duration} tours)</span>
                 </div>
             `);
         }
@@ -2840,7 +2840,7 @@ function renderPoisonBurnHtml(c) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#22c55e;">pest_control</span>
                     <span style="font-weight:600; color:#fff;">[Poison]</span>
                     <span style="color:#22c55e; font-weight:500;">${d.fixedDamagePerTick} Dégâts Brut</span>
-                    <span style="color:#e2e8f0;">â³ (${d.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&#x23F3; (${d.duration} tours)</span>
                 </div>
             `);
         } else if (d.burn) {
@@ -2849,7 +2849,7 @@ function renderPoisonBurnHtml(c) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#ef4444;">local_fire_department</span>
                     <span style="font-weight:600; color:#fff;">[Brûlure]</span>
                     <span style="color:#ef4444; font-weight:500;">${d.fixedDamagePerTick} Dégâts Magique</span>
-                    <span style="color:#e2e8f0;">â³ (${d.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&#x23F3; (${d.duration} tours)</span>
                 </div>
             `);
         }
@@ -3443,7 +3443,7 @@ function renderDotsHtml(dotList) {
                 <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:${color};">${icon}</span>
                 <span style="font-weight:600; color:#fff;">[${nameStr}]</span>
                 <span style="color:${color}; font-weight:500;">${dmgStr} Dégâts ${dTypeStr}</span>
-                <span style="color:#e2e8f0;">â³ (${d.duration} tours)</span>
+                <span style="color:#e2e8f0;">&#x23F3; (${d.duration} tours)</span>
             </div>
         `);
     });

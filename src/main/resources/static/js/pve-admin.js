@@ -2705,7 +2705,7 @@ function renderMutationsSelector() {
         html += `
         <div onclick="toggleMutationSelection(${mut.id})" style="cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 6px; background: ${bg}; border: ${border}; opacity: ${opacity}; ${shadow} display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;" title="${mut.description}">
             <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${mHex};">${mIcon}</span>
-            <span style="font-size: 0.85rem; color: #f8fafc;">${mut.nom}</span>
+            <span style="font-size: 0.85rem; color: #f8fafc;">${mut.nom} <span style="opacity: 0.7; font-size: 0.75rem;">(Niv. ${mut.level || 1})</span></span>
         </div>`;
     });
     container.innerHTML = html;

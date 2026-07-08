@@ -1,4 +1,4 @@
-﻿import { state } from './state.js';
+import { state } from './state.js';
 import { GLOBAL_STAT_LABELS, GLOBAL_SRC_LABELS, javaClassToCode } from './constants.js';
 import * as ui from './ui.js?v=2';
 import * as forge from './forge.js';
@@ -91,19 +91,18 @@ export async function fetchMeta() {
             if (optgroupSpirits) optgroupSpirits.innerHTML += `<option value="S_${s.id}">${s.nom}</option>`;
         });
 
-        // Remplir les Mutations
         const mutationSel = document.getElementById('mutationSelect');
         if (mutationSel) {
             mutationSel.style.fontFamily = "";
             state.metaData.mutations.forEach(m => {
-                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`;
             });
         }
         const filterMutationSel = document.getElementById('filterMutation');
         if (filterMutationSel) {
             filterMutationSel.style.fontFamily = "";
             state.metaData.mutations.forEach(m => {
-                filterMutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                filterMutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`;
             });
         }
 

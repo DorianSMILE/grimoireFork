@@ -25,10 +25,13 @@ pageState.selectedMutationIds = [];
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
-        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
-        info.icon = catInfo.icon;
-        info.color = catInfo.color;
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
@@ -1608,13 +1611,15 @@ async function loadEquipments() {
         // Sort by rarity, then name
         const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
         pageState.allEquipments = Array.from(map.values()).sort((a, b) => {
-            const rA = rarityOrder[a.rarity] || 100;
-            const rB = rarityOrder[b.rarity] || 100;
+            const rNameA = typeof a.rarity === 'object' ? a.rarity?.name : a.rarity;
+            const rNameB = typeof b.rarity === 'object' ? b.rarity?.name : b.rarity;
+            const rA = rarityOrder[rNameA] ?? 100;
+            const rB = rarityOrder[rNameB] ?? 100;
             if (rA !== rB) return rA - rB;
 
-            const tA = a.slot || '';
-            const tB = b.slot || '';
-            if (tA !== tB) return tA.localeCompare(tB);
+            const tA = typeof a.slot === 'object' ? a.slot?.name : a.slot;
+            const tB = typeof b.slot === 'object' ? b.slot?.name : b.slot;
+            if (tA !== tB) return (tA || '').localeCompare(tB || '');
 
             return a.name.localeCompare(b.name);
         });

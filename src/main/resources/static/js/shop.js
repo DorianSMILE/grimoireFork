@@ -2,10 +2,13 @@
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: eq.iconId || 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
-        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
-        info.icon = catInfo.icon;
-        info.color = catInfo.color;
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }

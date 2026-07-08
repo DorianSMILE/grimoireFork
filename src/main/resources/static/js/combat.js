@@ -83,10 +83,13 @@ export function createAnomalyBadgeHtml(anomalyName, showName = false) {
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
-        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
-        info.icon = catInfo.icon;
-        info.color = catInfo.color;
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
@@ -1644,7 +1647,7 @@ function updateUI(data) {
                                         if (entry) eq = entry.equipment;
                                     }
                                     const slotInfo = eq ? (getSlotInfo(eq) || { icon: 'help', color: '#94a3b8' }) : { icon: 'swords', color: '#f59e0b' };
-                                    const rarityColor = eq ? (RARITY_COLORS[eq.rarity] || '#ef4444') : '#f59e0b';
+                                    const rarityColor = eq ? (RARITY_COLORS[typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity] || '#ef4444') : '#f59e0b';
                                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
 
                                     let tooltipDataHtml = '';
@@ -1823,7 +1826,7 @@ function updateUI(data) {
                                 const eq = data.currentRoom.altarRewardEquipment;
                                 if (eq) {
                                     const rarityColors = { 'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308', 'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252' };
-                                    const rarityColor = rarityColors[eq.rarity] || '#94a3b8';
+                                    const rarityColor = rarityColors[typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity] || '#94a3b8';
                                     const tooltipDataHtml = typeof generateEquipmentTooltipHTML === 'function' ? generateEquipmentTooltipHTML(eq) : '';
                                     const tooltipAttrs = tooltipDataHtml ? 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"' : '';
                                     altarRewardHtml = `<div class="text-center" style="margin-top: 0.5rem; background: rgba(192, 132, 252, 0.1); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(192, 132, 252, 0.3);"><span style="color: #cbd5e1; margin-right: 0.5rem;"><strong>Récompense :</strong></span> <span class="font-bold relative" ${tooltipAttrs} style="color: ${rarityColor}; cursor: help; border-bottom: 1px dashed ${rarityColor};">${eq.name}${tooltipDataHtml ? `<template class="tooltip-data">${tooltipDataHtml}</template>` : ''}</span> <span class="text-sm font-bold" id="altarDropChance" style="margin-left: 0.5rem;"></span></div>`;
@@ -2079,7 +2082,7 @@ function updateUI(data) {
                             } else if (entry.equipment) {
                                 const eq = entry.equipment;
                                 const slotInfo = getSlotInfo(eq);
-                                rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
+                                rarityColor = RARITY_COLORS[typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity] || '#ef4444';
                                 const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                                 nameHtml = eq.name;
                                 iconHtml = `<span class="material-symbols-outlined${extraClass}" style="color: ${slotInfo.color}; font-size: 1.2rem;">${slotInfo.icon}</span>`;

@@ -4,10 +4,13 @@ const pageState = { allEquipments: [], equipmentToDelete: null, editingEquipment
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
-        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
-        info.icon = catInfo.icon;
-        info.color = catInfo.color;
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
@@ -346,12 +349,16 @@ function renderVault() {
     const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ARME_DEUX_MAINS': 3, 'ARME_GAUCHE': 4, 'ARME_DROITE': 5, 'ANNEAU_GAUCHE': 6, 'ANNEAU_DROIT': 7, 'BOTTES': 8, 'CAPE': 9, 'CONSOMMABLE': 10 };
 
     let sorted = [...pageState.allEquipments].sort((a, b) => {
-        const rA = rarityOrder[a.rarity || 'COMMUN'];
-        const rB = rarityOrder[b.rarity || 'COMMUN'];
+        const rNameA = typeof a.rarity === 'object' ? a.rarity?.name : a.rarity;
+        const rNameB = typeof b.rarity === 'object' ? b.rarity?.name : b.rarity;
+        const rA = rarityOrder[rNameA || 'COMMUN'] ?? 100;
+        const rB = rarityOrder[rNameB || 'COMMUN'] ?? 100;
         if (rA !== rB) return rA - rB;
 
-        const sA = slotOrder[a.slot] || 99;
-        const sB = slotOrder[b.slot] || 99;
+        const sNameA = typeof a.slot === 'object' ? a.slot?.name : a.slot;
+        const sNameB = typeof b.slot === 'object' ? b.slot?.name : b.slot;
+        const sA = slotOrder[sNameA] || 99;
+        const sB = slotOrder[sNameB] || 99;
         if (sA !== sB) return sA - sB;
 
         return a.name.localeCompare(b.name);

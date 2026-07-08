@@ -792,6 +792,7 @@
             if (resultType === 'EQUIPMENT' || resultType === 'CONSUMABLE') {
                 const eqTemp = allEquipmentTemplates.find(e => e.name === r.rewardName);
                 if (eqTemp && eqTemp.rarity) {
+                    const rName = typeof eqTemp.rarity === 'object' ? eqTemp.rarity.name : eqTemp.rarity;
                     const rColors = { 
                         'COMMUN': '#94a3b8', 
                         'INHABITUEL': '#22c55e', 
@@ -802,7 +803,7 @@
                         'RELIQUE': '#a855f7', 
                         'MAUDIT': '#7f1d1d' 
                     };
-                    if (rColors[eqTemp.rarity]) resultColor = rColors[eqTemp.rarity];
+                    if (rColors[rName]) resultColor = rColors[rName];
                 }
             } else if (resultType === 'ANOMALY') {
                 const anomTemp = allAnomalyTemplates.find(a => a.name === r.rewardName);

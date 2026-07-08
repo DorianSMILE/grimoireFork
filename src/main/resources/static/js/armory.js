@@ -35,9 +35,10 @@ const pageState = {
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
     const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory && window.CONSUMABLE_CATEGORIES[eq.consumableCategory]) {
-        const catInfo = window.CONSUMABLE_CATEGORIES[eq.consumableCategory];
-        if (catInfo) {
+    if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
             info.icon = catInfo.icon;
             info.color = catInfo.color;
         }
@@ -678,7 +679,11 @@ function renderPersonnages() {
         if (persoEquips.length > 0) {
             const slotOrder = ['CASQUE', 'PLASTRON', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE'];
             equipHtml = `<div class="char-equip-row">` +
-                persoEquips.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot)).map(eq => {
+                persoEquips.sort((a, b) => {
+                    const sNameA = typeof a.slot === 'object' ? a.slot?.name : a.slot;
+                    const sNameB = typeof b.slot === 'object' ? b.slot?.name : b.slot;
+                    return slotOrder.indexOf(sNameA) - slotOrder.indexOf(sNameB);
+                }).map(eq => {
                     const slotInfo = getSlotInfo(eq);
                     const statsStr = STAT_DEFS
                         .filter(s => eq[s.key] && eq[s.key] !== 0)
@@ -1100,9 +1105,41 @@ document.addEventListener('click', (e) => {
         const wrapper = trigger.closest('.custom-select-wrapper');
         // Fermer les autres
         document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
-            if (w !== wrapper) w.classList.remove('open');
+            if (w !== wrapper) {
+                w.classList.remove('open');
+                const opts = w.querySelector('.custom-select-options');
+                if (opts) {
+                    opts.style.top = '';
+                    opts.style.bottom = '';
+                }
+            }
         });
-        wrapper.classList.toggle('open');
+        
+        const isOpen = wrapper.classList.toggle('open');
+        const optionsContainer = wrapper.querySelector('.custom-select-options');
+        if (optionsContainer && isOpen) {
+            // Position dropdown upwards if there is not enough space below
+            const rect = trigger.getBoundingClientRect();
+            
+            // Check against both window and modal boundary
+            const modal = trigger.closest('.equip-modal');
+            const modalBottom = modal ? modal.getBoundingClientRect().bottom : window.innerHeight;
+            const spaceBelow = modalBottom - rect.bottom;
+            
+            const dropdownHeight = 220; // matches max-height of optionsContainer
+
+            if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+                optionsContainer.style.top = 'auto';
+                optionsContainer.style.bottom = '100%';
+                optionsContainer.style.marginTop = '0';
+                optionsContainer.style.marginBottom = '4px';
+            } else {
+                optionsContainer.style.top = '100%';
+                optionsContainer.style.bottom = 'auto';
+                optionsContainer.style.marginTop = '4px';
+                optionsContainer.style.marginBottom = '0';
+            }
+        }
         return;
     }
 

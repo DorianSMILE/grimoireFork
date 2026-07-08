@@ -289,13 +289,13 @@ export function makeCustomSelect(selectIdOrElement) {
             if (t.includes('force')) return { icon: 'fitness_center', color: '#f43f5e' };
             if (t.includes('brûlure') || t.includes('brulure')) return { icon: 'whatshot', color: '#f97316' };
             if (t.includes('poison')) return { icon: 'skull', color: '#10b981' };
-            if (t.includes('soin reçu') || t.includes('soin recu') || t.includes('heal_received')) return { icon: 'health_and_safety', color: '#10b981' };
+            if (t.includes('soin reçu') || t.includes('soins reçus') || t.includes('heal_received')) return { icon: 'health_and_safety', color: '#10b981' };
             if (t.includes('bouclier reçu') || t.includes('bouclier recu') || t.includes('shield_received')) return { icon: 'security', color: '#06b6d4' };
-            if (t.includes('soin donné') || t.includes('soin donne') || t.includes('heal_given')) return { icon: 'healing', color: '#34d399' };
-            if (t.includes('bouclier donné') || t.includes('bouclier donne') || t.includes('shield_given')) return { icon: 'add_moderator', color: '#22d3ee' };
-            if (t.includes('magiques au bouclier') || t.includes('mag. au bouclier') || t.includes('magic_to_shield')) return { icon: 'gavel', color: '#d946ef' };
-            if (t.includes('physiques au bouclier') || t.includes('phys. au bouclier') || t.includes('physic_to_shield')) return { icon: 'gavel', color: '#f43f5e' };
-            if (t.includes('perce-bouclier') || t.includes('penetration')) return { icon: 'heart_broken', color: '#fb923c' };
+            if (t.includes('soin donné') || t.includes('soins prodigués') || t.includes('heal_given')) return { icon: 'healing', color: '#34d399' };
+            if (t.includes('bouclier donné') || t.includes('bouclier prodigué') || t.includes('shield_given')) return { icon: 'add_moderator', color: '#22d3ee' };
+            if (t.includes('magiques au bouclier') || t.includes('dégâts sur bouclier (magique)') || t.includes('magic_to_shield')) return { icon: 'gavel', color: '#d946ef' };
+            if (t.includes('physiques au bouclier') || t.includes('dégâts sur bouclier (physique)') || t.includes('physic_to_shield')) return { icon: 'gavel', color: '#f43f5e' };
+            if (t.includes('perce-bouclier') || t.includes('pénétration') || t.includes('penetration')) return { icon: 'heart_broken', color: '#fb923c' };
             if (t.includes('bouclier-percé') || t.includes('bouclier percé') || t.includes('pierced')) return { icon: 'heart_broken', color: '#ef4444' };
             if (t.includes('subis')) {
                 if (t.includes('magique')) return { icon: 'explosion', color: '#a855f7' };

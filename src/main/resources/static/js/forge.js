@@ -92,7 +92,7 @@ export function updateRankTitle() {
 
     if (rankName) {
         display.style.display = 'block';
-        display.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1.1rem; vertical-align: middle; color: #10b981; margin-right: 0.2rem;">workspace_premium</span>Titre : <span style="color:#fff;">"${rankName}"</span> <span style="font-size:0.75rem; color:var(--text-muted);">(${sourceNom})</span>`;
+        display.innerHTML = `<span class="material-symbols-outlined text-success align-middle" style="font-size: 1.1rem; margin-right: 0.2rem;">workspace_premium</span>Titre : <span style="color:#fff;">"${rankName}"</span> <span style="font-size:0.75rem; color:var(--text-muted);">(${sourceNom})</span>`;
     } else {
         display.style.display = 'none';
         display.innerHTML = '';
@@ -302,7 +302,8 @@ export function addEffectPanel(type) {
     else stat = 'ARMURE';
 
     if (type === 'AME_DETACHEE' && state.currentEffects.some(e => e.effectType === 'AME_DETACHEE')) {
-        alert("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.");
+        if (typeof showNotif !== 'undefined') showNotif("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.", true);
+        else ui.showNotif("L'effet Âme Détachée ne peut être ajouté qu'une seule fois par sort.", true);
         return;
     }
 
@@ -386,7 +387,7 @@ export function renderEffects() {
     container.innerHTML = '';
 
     if (state.currentEffects.length === 0) {
-        container.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Aucun effet configuré. Le sort n'aura que ses coûts.</div>`;
+        container.innerHTML = `<div class="text-muted text-center" style="font-size: 0.85rem;">Aucun effet configuré. Le sort n'aura que ses coûts.</div>`;
         return;
     }
 
@@ -669,7 +670,7 @@ export function renderEffects() {
                     `;
         } else if (eff.effectType === 'PURGE') {
             fieldsHtml = `
-                        <div style="padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px; font-size: 0.85rem; color: #10b981;">
+                        <div class="text-success" style="padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px; font-size: 0.85rem;">
                             ✨ Dissipe instantanément tous les bonus, malus et altérations d'état (DoT/HoT) actifs sur la cible.
                         </div>
                     `;
@@ -753,17 +754,17 @@ export function renderEffects() {
             typeBadgeStyle = 'background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(190, 18, 60, 0.4)); color: #fda4af; border: 1px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
         }
 
-        const deleteOrLinkedButton = `<button type="button" class="btn-danger" onclick="removeEffect('${eff.id}')">✕ Supprimer</button>`;
+        const deleteOrLinkedButton = `<button type="button" class="btn-danger" onclick="removeEffect('${eff.id}')">✖ Supprimer</button>`;
 
         const targetSelectorHtml = (isHeatEffect || eff.effectType === 'AME_DETACHEE') ? `
-                        <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.08); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25); margin-bottom: 0.5rem;">
+                        <div class="flex-center" style="gap: 0.5rem; background: rgba(239, 68, 68, 0.08); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25); margin-bottom: 0.5rem;">
                             <span class="material-symbols-outlined" style="color: #fca5a5; font-size: 1.25rem;">person</span>
                             <span style="font-size: 0.85rem; color: #fca5a5; font-weight: 600;">Cible : Lanceur (${eff.effectType === 'AME_DETACHEE' ? 'Âme Détachée' : 'Chaleur générée'})</span>
                         </div>
                 ` : `
                         <!-- Sélection de la cible de l'Effet -->
                         <div style="display: flex; flex-direction: column; gap: 0.8rem; background: rgba(0,0,0,0.25); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <label style="color: #fff; font-weight: 600; font-size: 0.9rem;">Cible de l'Effet :</label>
+                            <label class="text-sm" style="color: #fff; font-weight: 600;">Cible de l'Effet :</label>
                             <div class="target-selector" style="flex-wrap: wrap; gap: 0.5rem;">
                                 <button type="button" class="target-btn target-caster-btn ${eff.effectTarget === 'CASTER' ? 'active' : ''}" onclick="setEffectTarget('${eff.id}', 'CASTER')" title="Affecte uniquement le lanceur du sort">
                                     <span class="material-symbols-outlined">person</span> Lanceur
@@ -798,29 +799,29 @@ export function renderEffects() {
 
                             <!-- Option / Clé d'activation de la ligne d'effet -->
                             <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
-                                <label style="font-size: 0.8rem; color: #f59e0b; font-weight:600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">key</span> S'active uniquement si l'Option de sort choisie est :</label>
+                                <label class="text-xs" style="color: #f59e0b; font-weight:600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">key</span> S'active uniquement si l'Option de sort choisie est :</label>
                                 <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par défaut)" style="width: 140px; font-size: 0.85rem; padding: 0.2rem 0.4rem; background: var(--glass-bg); color: #fff; border: 1px solid var(--glass-border); border-radius: 4px;" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
+                                <span class="text-muted" style="font-size: 0.75rem;">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
                             </div>
 
                             <!-- Condition Âme Détachée -->
                             ${(isTenebres && eff.effectType !== 'AME_DETACHEE') ? `
                         <div style="margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <label style="color: #fda4af; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
+                            <div class="flex-center" style="justify-content: space-between;">
+                                <label class="flex-center" style="color: #fda4af; font-weight: 600; font-size: 0.85rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">hand_bones</span> Condition "Âme Détachée"
                                 </label>
                                 ${(() => {
                                     const r = eff.detachedSoulRequirement || 'NOT_AFFECTED';
                                     return `
                                     <div style="display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid rgba(255,255,255,0.1); width: 260px;">
-                                        <div onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'NOT_AFFECTED')" style="flex: 1; text-align: center; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; color: ${r === 'NOT_AFFECTED' ? '#fff' : 'var(--text-muted)'}; background: ${r === 'NOT_AFFECTED' ? 'rgba(255,255,255,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'NOT_AFFECTED')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'NOT_AFFECTED' ? '#fff' : 'var(--text-muted)'}; background: ${r === 'NOT_AFFECTED' ? 'rgba(255,255,255,0.15)' : 'transparent'}; transition: all 0.2s;">
                                             Normal
                                         </div>
-                                        <div onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'REQUIRED')" style="flex: 1; text-align: center; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; color: ${r === 'REQUIRED' ? '#10b981' : 'var(--text-muted)'}; background: ${r === 'REQUIRED' ? 'rgba(16,185,129,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'REQUIRED')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'REQUIRED' ? '#10b981' : 'var(--text-muted)'}; background: ${r === 'REQUIRED' ? 'rgba(16,185,129,0.15)' : 'transparent'}; transition: all 0.2s;">
                                             Requiert
                                         </div>
-                                        <div onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'FORBIDDEN')" style="flex: 1; text-align: center; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; color: ${r === 'FORBIDDEN' ? '#ef4444' : 'var(--text-muted)'}; background: ${r === 'FORBIDDEN' ? 'rgba(239,68,68,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'FORBIDDEN')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'FORBIDDEN' ? '#ef4444' : 'var(--text-muted)'}; background: ${r === 'FORBIDDEN' ? 'rgba(239,68,68,0.15)' : 'transparent'}; transition: all 0.2s;">
                                             Exclut
                                         </div>
                                     </div>
@@ -831,7 +832,7 @@ export function renderEffects() {
                             <!-- Tour(s) d'activation de l'effet dans la canalisation (uniquement si le sort est canalisé) -->
                             ${isCanalise ? `
                             <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05);">
-                                <label style="font-size: 0.8rem; color: #a78bfa; font-weight: 600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">cyclone</span> Activation par Tour de Canalisation :</label>
+                                <label class="text-xs" style="color: #a78bfa; font-weight: 600; display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:1.1rem;">cyclone</span> Activation par Tour de Canalisation :</label>
                                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
                                     ${Array.from({ length: duration }, (_, i) => i + 1).map(turn => {
             const isActive = (eff.channelingTurns || []).includes(turn);
@@ -840,12 +841,12 @@ export function renderEffects() {
             const btnBorder = isActive ? '1px solid #fff' : '1px solid var(--glass-border)';
             const btnShadow = isActive ? '0 0 8px var(--primary-glow)' : 'none';
             return `
-                                            <button type="button" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 4px; background: ${btnBg}; color: ${btnColor}; border: ${btnBorder}; box-shadow: ${btnShadow}; cursor: pointer; transition: all 0.2s;" onclick="toggleEffectChannelingTurn('${eff.id}', ${turn})">
+                                            <button class="text-xs" type="button" onclick="toggleEffectChannelingTurn('${eff.id}', ${turn})" style="padding: 0.3rem 0.6rem; border-radius: 4px; background: ${btnBg}; color: ${btnColor}; border: ${btnBorder}; box-shadow: ${btnShadow}; cursor: pointer; transition: all 0.2s;">
                                                 Tour ${turn}
                                             </button>
                                         `;
         }).join('')}
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem;">Sélectionnez les tours où cet effet se déclenche.</span>
+                                    <span class="text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">Sélectionnez les tours où cet effet se déclenche.</span>
                                 </div>
                             </div>
                             ` : ''}

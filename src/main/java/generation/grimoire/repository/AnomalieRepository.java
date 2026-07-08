@@ -6,7 +6,9 @@ import java.util.List;
 
 public interface AnomalieRepository extends JpaRepository<Anomalie, Long> {
     List<Anomalie> findByOwnerUsername(String ownerUsername);
-    Anomalie findFirstByName(String name);
+    Anomalie findFirstByNameAndIsTemplateTrueOrderByIdAsc(String name);
+    
+    List<Anomalie> findByIsTemplateTrue();
     List<Anomalie> findByName(String name);
     
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.name FROM Anomalie a WHERE a.name IS NOT NULL")

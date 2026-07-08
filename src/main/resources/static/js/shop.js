@@ -1,45 +1,19 @@
-const SLOT_LABELS = {
-    CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
-    PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
-    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
-    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
-    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
-    ANNEAU_GAUCHE: { label: 'Anneau Gauche', icon: 'diamond', color: '#f59e0b' },
-    ANNEAU_DROIT: { label: 'Anneau Droit', icon: 'diamond', color: '#f59e0b' },
-    BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
-    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
-    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
-};
-
+// Replaced by window.SLOT_LABELS
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
-    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: eq.iconId || 'help', color: '#94a3b8' });
+    const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: eq.iconId || 'help', color: '#94a3b8' });
     if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
-        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
-        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
-        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
-        info.color = catColors[eq.consumableCategory] || '#854c4c';
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
 
-const STAT_DEFS = [
-    { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
-    { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: '#38bdf8' },
-    { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
-    { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
-    { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
-    { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
-    { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
-    { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
-    { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
-    { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
-    { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
-    { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
-    { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
-];
+
 
 const RARITY_COLORS = {
     COMMUN: '#94a3b8',
@@ -52,9 +26,11 @@ const RARITY_COLORS = {
     MAUDIT: '#7f1d1d'
 };
 
-let shopItems = [];
-let itemToBuy = null;
-let allAnomalies = [];
+const pageState = {
+    shopItems: [],
+    itemToBuy: null,
+    allAnomalies: []
+};
 
 function getSpiritualiteColor(sp) {
     if (!sp) return '#cbd5e1';
@@ -83,18 +59,18 @@ function getTypeColor(isMagic) {
 async function loadShop() {
     try {
         const [resShop, resAno] = await Promise.all([
-            fetch('/api/shop/daily'),
-            fetch('/api/anomalies/all-templates')
+            globalFetch('/api/shop/daily'),
+            globalFetch('/api/anomalies/all-templates')
         ]);
-        shopItems = await resShop.json();
+        pageState.shopItems = await resShop.json();
         if (resAno.ok) {
-            allAnomalies = await resAno.json();
+            pageState.allAnomalies = await resAno.json();
         }
         renderShop();
         renderSpecials();
     } catch (e) {
         console.error('Erreur chargement boutique:', e);
-        document.getElementById('shopGrid').innerHTML = `<div style="color: #ef4444;"><span class="material-symbols-outlined">error</span> Erreur de connexion.</div>`;
+        document.getElementById('shopGrid').innerHTML = `<div class="text-error"><span class="material-symbols-outlined">error</span> Erreur de connexion.</div>`;
     }
 }
 
@@ -121,7 +97,6 @@ function generateStandHtml(eq) {
 
     if (isConsumable && eq.iconId) {
         slotInfo.icon = eq.iconId;
-        slotInfo.color = '#c084fc';
     }
 
     const statsHtml = STAT_DEFS
@@ -132,8 +107,8 @@ function generateStandHtml(eq) {
             const sign = val > 0 ? '+' : '';
             const suffix = s.isPercent ? '%' : '';
             return `<div class="shop-stand-stat ${isMalus ? 'malus' : ''}" title="${s.label}">
-                <div style="display: flex; align-items: center; gap: 0.3rem;">
-                    <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.9rem;">${s.icon}</span>
+                <div class="flex-center" style="gap: 0.3rem;">
+                    <span class="material-symbols-outlined text-sm" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>
                     ${s.label}
                 </div>
                 <span style="font-weight: 600;">${sign}${val}${suffix}</span>
@@ -164,8 +139,8 @@ function generateStandHtml(eq) {
         const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
         effectHtml = `<div class="shop-stand-stat" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
-            <div style="display: flex; align-items: center; gap: 0.3rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
+            <div class="flex-center" style="gap: 0.3rem;">
+                <span class="material-symbols-outlined text-sm">${icon}</span>
                 ${label}
             </div>
             <span style="font-weight: 600;">${eq.specialEffectValue}</span>
@@ -175,11 +150,12 @@ function generateStandHtml(eq) {
     const priceStr = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : '?';
     const oldPriceStr = eq.originalPrice !== undefined ? (eq.originalPrice % 1 === 0 ? eq.originalPrice : eq.originalPrice.toFixed(1)) : '';
 
-    const rarityColor = RARITY_COLORS[eq.rarity] || (isConsumable ? '#c084fc' : '#ef4444');
-    const promoBadge = isPromo ? `<div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: bold; transform: rotate(15deg); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">-20%</div>` : '';
-    const oldPriceHtml = isPromo ? `<span style="text-decoration: line-through; color: #ef4444; font-size: 0.8rem; opacity: 0.7;">${oldPriceStr}</span>` : '';
+    const rName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+    const rarityColor = RARITY_COLORS[rName] || (isConsumable ? '#c084fc' : '#ef4444');
+    const promoBadge = isPromo ? `<div class="text-xs font-bold absolute" style="top: -10px; right: -10px; background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 8px; transform: rotate(15deg); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">-20%</div>` : '';
+    const oldPriceHtml = isPromo ? `<span class="text-xs text-error" style="text-decoration: line-through; opacity: 0.7;">${oldPriceStr}</span>` : '';
 
-    let isHighRarity = !isConsumable && (eq.rarity !== 'COMMUN' && eq.rarity !== 'INHABITUEL');
+    let isHighRarity = !isConsumable && (rName !== 'COMMUN' && rName !== 'INHABITUEL');
 
     // Calculate RGB values for gradient
     let r = 239, g = 68, b = 68;
@@ -208,18 +184,18 @@ function generateStandHtml(eq) {
             <div class="shop-stand-name">${eq.name}</div>
             
             <div class="shop-stand-stats">
-                ${!isConsumable ? (statsHtml || '<div style="color:#64748b; font-style:italic; font-size: 0.85rem; margin-top: 0.5rem;">Aucune stat</div>') : ''}
+                ${statsHtml ? statsHtml : (!isConsumable ? '<div style="color:#64748b; font-style:italic; font-size: 0.85rem; margin-top: 0.5rem;">Aucune stat</div>' : '')}
                 ${effectHtml}
-                ${isConsumable && eq.description ? `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic; text-align: center; margin-top: 0.5rem;">${eq.description}</div>` : ''}
+                ${eq.description ? `<div class="font-italic text-muted text-center" style="font-size: 0.85rem; margin-top: 0.5rem;">${eq.description}</div>` : ''}
             </div>
             
-            <button class="shop-stand-price" onclick="openBuyModal('${isConsumable ? eq.typeId : eq.id}', ${isConsumable})" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                <div>${oldPriceHtml} ${priceStr} <span class="material-symbols-outlined" style="font-size: 1.2rem; vertical-align: middle;">monetization_on</span></div>
+            <button class="shop-stand-price" onclick="window.openBuyModal('${eq.id}', ${isConsumable})" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div>${oldPriceHtml} ${priceStr} <span class="material-symbols-outlined align-middle" style="font-size: 1.2rem;">monetization_on</span></div>
                 ${(() => {
             if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
                 let anos = [];
                 for (const [n, q] of Object.entries(eq.priceAnomalies)) {
-                    let aTemp = allAnomalies.find(a => a.name === n);
+                    let aTemp = pageState.allAnomalies.find(a => a.name === n);
 
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide',
@@ -235,24 +211,24 @@ function generateStandHtml(eq) {
 
                     const spiriColor = aTemp && aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';
                     const tooltipData = `
-                                    <div class="anomaly-tooltip-title">${aTemp ? aTemp.name : n}</div>
+                                    <div class="anomaly-tooltip-title"><span class="material-symbols-outlined" style="font-size: 1rem; margin-right: 4px;">${catIcon}</span>${aTemp ? aTemp.name : n}</div>
                                     <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                        <span style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                        <span class="font-bold" style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                                             Lvl ${aTemp ? aTemp.level || 1 : 1}
                                         </span>
-                                        <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                                        <span class="flex-center font-bold" style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                                            <span class="material-symbols-outlined text-sm">${aTemp && aTemp.magicObject ? 'star' : 'category'}</span>
                                             ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                         </span>
                                         ${aTemp && aTemp.spiritualite ?
-                            `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                            `<span class="font-bold" style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                                             ${aTemp.spiritualite}
                                         </span>` : ''}
                                     </div>
                                     <div class="anomaly-tooltip-desc">${aTemp && aTemp.description ? aTemp.description : 'Aucune description'}</div>
                             `;
                     anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: linear-gradient(${spiriColor}25, ${spiriColor}25), #1e293b; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
-                                <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${spiriColor};">${catIcon}</span> ${q}
+                                <span class="material-symbols-outlined align-middle" style="font-size: 1rem; color: ${spiriColor};">${catIcon}</span> ${q}
                             </span>`);
                 }
                 return `<div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 2px;">${anos.join('')}</div>`;
@@ -270,10 +246,10 @@ function renderShop() {
     // Force the correct class in case HTML is cached
     container.className = 'shop-showcase';
 
-    const dailyItems = shopItems.daily || [];
+    const dailyItems = pageState.shopItems.daily || [];
 
     if (dailyItems.length === 0) {
-        container.innerHTML = `<div style="color: #94a3b8; font-style: italic;">La boutique est vide aujourd'hui.</div>`;
+        container.innerHTML = `<div class="font-italic text-muted">La boutique est vide aujourd'hui.</div>`;
         return;
     }
 
@@ -289,7 +265,8 @@ function renderShop() {
     };
 
     dailyItems.forEach(eq => {
-        const rarity = eq.rarity || 'COMMUN';
+        const rarityObj = eq.rarity;
+        const rarity = (typeof rarityObj === 'object' ? rarityObj?.name : rarityObj) || 'COMMUN';
         if (groups[rarity]) groups[rarity].push(eq);
         else groups['COMMUN'].push(eq);
     });
@@ -329,8 +306,8 @@ function renderSpecials() {
     const container = document.getElementById('specialsGrid');
     if (!container) return;
 
-    const discountItem = shopItems.discount;
-    const consumables = shopItems.consumables || [];
+    const discountItem = pageState.shopItems.discount;
+    const consumables = pageState.shopItems.consumables || [];
 
     let html = '';
 
@@ -372,33 +349,33 @@ function renderSpecials() {
     container.innerHTML = html;
 }
 
-window.openBuyModal = function (idOrType, isConsumable = false) {
+window.openBuyModal = function (id, isConsumable = false) {
     let eq = null;
 
     if (isConsumable) {
-        eq = (shopItems.consumables || []).find(e => e.typeId === idOrType);
+        eq = (pageState.shopItems.consumables || []).find(e => e.id === parseInt(id));
     } else {
-        eq = (shopItems.daily || []).find(e => e.id === parseInt(idOrType));
-        if (!eq && shopItems.discount) {
-            if (shopItems.discount.id === parseInt(idOrType)) {
-                eq = shopItems.discount;
+        eq = (pageState.shopItems.daily || []).find(e => e.id === parseInt(id));
+        if (!eq && pageState.shopItems.discount) {
+            if (pageState.shopItems.discount.id === parseInt(id)) {
+                eq = pageState.shopItems.discount;
             }
         }
     }
 
     if (!eq) return;
 
-    itemToBuy = { idOrType, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
+    pageState.itemToBuy = { id, isConsumable, price: eq.shopPrice, priceAnomalies: eq.priceAnomalies };
 
     document.getElementById('buyTargetName').textContent = eq.name;
 
     const priceStr = eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1);
-    let btnHtml = `<div style="display: flex; align-items: center; gap: 6px; justify-content: center; flex-wrap: wrap;">`;
-    btnHtml += `<span>Acheter pour ${priceStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span></span>`;
+    let btnHtml = `<div class="flex-center" style="gap: 6px; justify-content: center; flex-wrap: wrap;">`;
+    btnHtml += `<span>Acheter pour ${priceStr} <span class="material-symbols-outlined align-middle" style="font-size: 1rem; margin-top: -2px;">monetization_on</span></span>`;
     if (eq.priceAnomalies && Object.keys(eq.priceAnomalies).length > 0) {
         let anos = [];
         for (const [n, q] of Object.entries(eq.priceAnomalies)) {
-            let aTemp = allAnomalies.find(a => a.name === n);
+            let aTemp = pageState.allAnomalies.find(a => a.name === n);
             const CATEGORY_ICONS = {
                 'PIERRE': 'landslide',
                 'METAL': 'hardware',
@@ -412,27 +389,27 @@ window.openBuyModal = function (idOrType, isConsumable = false) {
             const catIcon = aTemp && aTemp.category ? (CATEGORY_ICONS[aTemp.category] || 'category') : 'star';
             const spiriColor = aTemp && aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';
             const tooltipData = `
-                    <div class="anomaly-tooltip-title">${aTemp ? aTemp.name : n}</div>
+                    <div class="anomaly-tooltip-title"><span class="material-symbols-outlined" style="font-size: 1rem; margin-right: 4px;">${catIcon}</span>${aTemp ? aTemp.name : n}</div>
                     <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                        <span style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                        <span class="font-bold" style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                             Lvl ${aTemp ? aTemp.level || 1 : 1}
                         </span>
-                        <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                        <span class="flex-center font-bold" style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                            <span class="material-symbols-outlined text-sm">${aTemp && aTemp.magicObject ? 'star' : 'category'}</span>
                             ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                         </span>
                         ${aTemp && aTemp.spiritualite ?
-                    `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                    `<span class="font-bold" style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                             ${aTemp.spiritualite}
                         </span>` : ''}
                     </div>
                     <div class="anomaly-tooltip-desc">${aTemp && aTemp.description ? aTemp.description : 'Aucune description'}</div>
             `;
             anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: linear-gradient(${spiriColor}25, ${spiriColor}25), #1e293b; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
-                <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${spiriColor};">${catIcon}</span> ${q}
+                <span class="material-symbols-outlined align-middle" style="font-size: 1rem; color: ${spiriColor};">${catIcon}</span> ${q}
             </span>`);
         }
-        btnHtml += `<span style="color: #94a3b8;">+</span> ${anos.join(' ')}`;
+        btnHtml += `<span class="text-muted">+</span> ${anos.join(' ')}`;
     }
     btnHtml += `</div>`;
     document.getElementById('buyConfirmBtn').innerHTML = btnHtml;
@@ -444,22 +421,19 @@ window.openBuyModal = function (idOrType, isConsumable = false) {
 window.closeBuyModal = function () {
     document.getElementById('buyConfirmModal').style.opacity = '0';
     document.getElementById('buyConfirmModal').style.pointerEvents = 'none';
-    itemToBuy = null;
+    pageState.itemToBuy = null;
 }
 
 document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
-    if (!itemToBuy) return;
+    if (!pageState.itemToBuy) return;
 
-    const { idOrType, isConsumable } = itemToBuy;
+    const { id } = pageState.itemToBuy;
     closeBuyModal();
 
     try {
-        let url = `/api/shop/buy/${idOrType}`;
-        if (isConsumable) {
-            url = `/api/shop/buy/consumable/${idOrType}`;
-        }
+        let url = `/api/shop/buy/${id}`;
 
-        const res = await fetch(url, { method: 'POST' });
+        const res = await globalFetch(url, { method: 'POST' });
         const data = await res.json();
 
         if (res.ok) {
@@ -468,14 +442,15 @@ document.getElementById('buyConfirmBtn').addEventListener('click', async () => {
                 window.checkAuthStatus(); // Met à jour l'or affiché
             }
         } else {
-            showNotif(data.message || 'Erreur lors de l\'achat.', true);
+            showNotif(data.message || "Erreur lors de l'achat.", true);
         }
     } catch (e) {
         showNotif('Erreur réseau.', true);
     }
 });
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    if (window.initAppMeta) await window.initAppMeta();
     loadShop();
 });
 

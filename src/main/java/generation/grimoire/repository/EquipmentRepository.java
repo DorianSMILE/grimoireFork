@@ -23,7 +23,11 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
 
     List<Equipment> findByOwnerUsername(String username);
 
-    Equipment findFirstByName(String name);
+    Equipment findFirstByNameAndIsTemplateTrueOrderByIdAsc(String name);
+
+    List<Equipment> findByIsTemplateTrue();
+
+    List<Equipment> findByIsTemplateTrueAndAvailableInShopTrue();
 
     List<Equipment> findByName(String name);
 

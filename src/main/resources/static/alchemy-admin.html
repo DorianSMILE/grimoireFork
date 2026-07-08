@@ -15,10 +15,11 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
     <link rel="stylesheet" href="/styles/variables.css?v=4">
-    <link rel="stylesheet" href="/styles/layout.css?v=4">
-    <link rel="stylesheet" href="/styles/forms.css?v=4">
-    <link rel="stylesheet" href="/styles/components.css?v=4">
-    <link rel="stylesheet" href="/styles/vault.css?v=4">
+    <link rel="stylesheet" href="/styles/ui/layout.css?v=4">
+    <link rel="stylesheet" href="/styles/ui/forms.css?v=4">
+    <link rel="stylesheet" href="/styles/ui/components.css?v=4">
+    <link rel="stylesheet" href="/styles/ui/utilities.css">
+    <link rel="stylesheet" href="/styles/pages/vault.css?v=4">
     <style>
         .req-list {
             display: flex;
@@ -402,20 +403,22 @@
             INHABITUEL: '#22c55e',
             RARE: '#3b82f6',
             MYTHIQUE: '#f97316',
-            LEGENDAIRE: '#f59e0b',
-            EPIQUE: '#c084fc',
-            RELIQUE: '#ef4444',
+            LEGENDAIRE: '#eab308',
+            EPIQUE: '#ef4444',
+            RELIQUE: '#a855f7',
             MAUDIT: '#7f1d1d'
         };
 
         function getSlotInfo(eq) {
             if (!eq) return { icon: 'help', color: '#94a3b8' };
-            const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
-            if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
+            const sName = typeof eq.slot === 'object' ? eq.slot?.name : eq.slot;
+            const info = Object.assign({}, SLOT_LABELS[sName] || { label: sName, icon: 'help', color: '#94a3b8' });
+            if (sName === 'CONSOMMABLE' && eq.consumableCategory) {
+                const cName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
                 const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
                 const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
-                info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
-                info.color = catColors[eq.consumableCategory] || '#854c4c';
+                info.icon = catIcons[cName] || 'inventory_2';
+                info.color = catColors[cName] || '#854c4c';
             }
             return info;
         }
@@ -479,8 +482,8 @@
 
         async function loadItems() {
             try {
-                const resA = await fetch('/api/anomalies/all-templates');
-                if (resA.ok) {
+                const resA = await globalFetch('/api/anomalies/all-templates');
+                if (resA && resA.ok) {
                     allAnomalies = await resA.json();
                     allAnomalies.sort((a, b) => {
                         const spiA = a.spiritualite || 'ZZZ';
@@ -500,16 +503,16 @@
 
             let templates = [];
             try {
-                const resT = await fetch('/api/shop/templates');
-                if (resT.ok) templates = await resT.json();
+                const resT = await globalFetch('/api/shop/templates');
+                if (resT && resT.ok) templates = await resT.json();
             } catch (e) {
                 console.error("Erreur chargement templates boutique", e);
             }
 
             let instances = [];
             try {
-                const resE = await fetch('/api/equipment/all');
-                if (resE.ok) instances = await resE.json();
+                const resE = await globalFetch('/api/equipments/all');
+                if (resE && resE.ok) instances = await resE.json();
             } catch (e) {
                 console.error("Erreur chargement équipements", e);
             }
@@ -522,13 +525,20 @@
                 });
                 const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
                 allEquipments = Array.from(map.values()).sort((a, b) => {
-                    const rA = rarityOrder[a.rarity] || 99;
-                    const rB = rarityOrder[b.rarity] || 99;
+                    const rNameA = typeof a.rarity === 'object' ? a.rarity?.name : a.rarity;
+                    const rNameB = typeof b.rarity === 'object' ? b.rarity?.name : b.rarity;
+                    const rA = rarityOrder[rNameA] || 99;
+                    const rB = rarityOrder[rNameB] || 99;
                     if (rA !== rB) return rA - rB;
-                    if (a.slot !== b.slot) return (a.slot || '').localeCompare(b.slot || '');
+                    const sNameA = typeof a.slot === 'object' ? a.slot?.name : a.slot;
+                    const sNameB = typeof b.slot === 'object' ? b.slot?.name : b.slot;
+                    if (sNameA !== sNameB) return (sNameA || '').localeCompare(sNameB || '');
                     return a.name.localeCompare(b.name);
                 });
-                allConsumables = allEquipments.filter(e => e.slot === 'CONSOMMABLE');
+                allConsumables = allEquipments.filter(e => {
+                    const sName = typeof e.slot === 'object' ? e.slot?.name : e.slot;
+                    return sName === 'CONSOMMABLE';
+                });
             } catch (e) {
                 console.error("Erreur merge équipements", e);
             }
@@ -610,7 +620,8 @@
             } else if (type === 'GIVE_EQUIPMENT') {
                 allEquipments.forEach(eq => {
                     const slotInfo = getSlotInfo(eq);
-                    const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
+                    const rName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+                    const rarityColor = RARITY_COLORS[rName] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
                     optionsHtml += `<div class="custom-option" data-value="${eq.name}">
                                         <span class="material-symbols-outlined cs-icon${extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
@@ -675,8 +686,8 @@
                 });
 
                 try {
-                    const res = await fetch('/api/pve/dungeons');
-                    if (res.ok) {
+                    const res = await globalFetch('/api/pve/dungeons');
+                    if (res && res.ok) {
                         const dungeons = await res.json();
                         const secretDungeons = dungeons.filter(d => d.requiredSecret && d.requiredSecret.trim() !== '');
                         secretDungeons.forEach(d => {
@@ -812,17 +823,13 @@
             'AUTRE': 'category'
         };
 
-        let reqZIndexCounter = 1000;
         function addRequirement(type, selectedName = '', qty = 1) {
             const list = document.getElementById(type === 'anomalie' ? 'reqAnomaliesList' : 'reqConsumablesList');
             const div = document.createElement('div');
-            const currentZIndex = reqZIndexCounter--;
             div.className = 'req-item';
             div.style.display = 'flex';
             div.style.gap = '0.5rem';
             div.style.alignItems = 'center';
-            div.style.position = 'relative';
-            div.style.zIndex = currentZIndex;
 
             let optionsHtml = '';
             let displayLabel = 'Choisir un objet...';
@@ -893,10 +900,12 @@
 
         async function loadRecipes() {
             try {
-                const res = await fetch('/api/alchemy/recipes');
-                const data = await res.json();
-                allRecipes = data; // Store for edit
-                renderRecipesList();
+                const res = await globalFetch('/api/alchemy/recipes');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    allRecipes = data; // Store for edit
+                    renderRecipesList();
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -1000,7 +1009,8 @@
                 } else if (r.rewardType === 'GIVE_EQUIPMENT') {
                     const eqTemp = allEquipments.find(e => e.name === r.rewardName);
                     const slotInfo = getSlotInfo(eqTemp);
-                    const rColor = eqTemp ? (RARITY_COLORS[eqTemp.rarity] || '#fbbf24') : '#fbbf24';
+                    const rNameTemp = typeof eqTemp?.rarity === 'object' ? eqTemp.rarity?.name : eqTemp?.rarity;
+                    const rColor = eqTemp ? (RARITY_COLORS[rNameTemp] || '#fbbf24') : '#fbbf24';
                     rewardHtml = `<span class="anomaly-badge" style="border: 1px solid ${rColor}; background: linear-gradient(${rColor}25, ${rColor}25), #1e293b; color: ${rColor}; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: ${slotInfo.color};">${slotInfo.icon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
                 } else if (r.rewardType === 'GIVE_SPIRIT_XP') {
                     rewardHtml = `<span class="anomaly-badge" style="border: 1px solid #38bdf8; background: linear-gradient(#38bdf825, #38bdf825), #1e293b; color: #38bdf8; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; color: #38bdf8;">self_improvement</span> ${r.rewardQuantity} XP Spiritualité</span>`;
@@ -1072,12 +1082,12 @@
             }
 
             try {
-                const res = await fetch('/api/alchemy/admin/recipe', {
+                const res = await globalFetch('/api/alchemy/admin/recipe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(recipe)
                 });
-                if (res.ok) {
+                if (res && res.ok) {
                     msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !";
                     msg.style.color = "#10b981";
                     document.getElementById('recipeForm').reset();
@@ -1102,7 +1112,7 @@
         async function deleteRecipe(id) {
             if (!confirm("Supprimer cette recette ?")) return;
             try {
-                await fetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' });
+                await globalFetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' });
                 loadRecipes();
             } catch (e) {
                 alert("Erreur de suppression");

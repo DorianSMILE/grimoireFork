@@ -67,7 +67,7 @@ public class AnomalieController {
             if (name == null || name.trim().isEmpty()) continue;
             boolean hasIt = adminAnomalies.stream().anyMatch(a -> name.equals(a.getName()));
             if (!hasIt) {
-                Anomalie template = anomalieRepository.findFirstByName(name);
+                Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(name);
                 if (template != null) {
                     Anomalie newAno = new Anomalie();
                     newAno.setName(template.getName());
@@ -95,7 +95,7 @@ public class AnomalieController {
         List<Anomalie> templates = new java.util.ArrayList<>();
         for (String name : names) {
             if (name != null && !name.trim().isEmpty()) {
-                Anomalie template = anomalieRepository.findFirstByName(name);
+                Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(name);
                 if (template != null) {
                     templates.add(template);
                 }
@@ -140,8 +140,16 @@ public class AnomalieController {
             }
         }
 
-        anomalie.setOwnerUsername(username);
-        anomalie.setUser(userOpt.get());
+        boolean isAdmin = "ADMIN".equals(userOpt.get().getRole());
+        if (isAdmin) {
+            anomalie.setTemplate(true);
+            anomalie.setOwnerUsername("MODELE");
+            anomalie.setUser(null);
+        } else {
+            anomalie.setTemplate(false);
+            anomalie.setOwnerUsername(username);
+            anomalie.setUser(userOpt.get());
+        }
         
         Anomalie saved = anomalieRepository.save(anomalie);
         return ResponseEntity.ok(saved);
@@ -154,11 +162,14 @@ public class AnomalieController {
             return ResponseEntity.status(401).body("Non autorisé");
         }
         
+        Optional<AppUser> userOpt = userRepository.findByUsername(username);
+        boolean isAdmin = userOpt.isPresent() && "ADMIN".equals(userOpt.get().getRole());
+        
         Optional<Anomalie> opt = anomalieRepository.findById(java.util.Objects.requireNonNull(id));
         if (opt.isPresent()) {
             Anomalie a = opt.get();
-            if (a.getOwnerUsername().equals(username)) {
-                anomalieRepository.delete(a);
+            if (isAdmin || a.getOwnerUsername().equals(username)) {
+                anomalieRepository.deleteById(id);
                 return ResponseEntity.ok("Anomalie supprimée.");
             } else {
                 return ResponseEntity.status(403).body("Ce n'est pas votre anomalie.");

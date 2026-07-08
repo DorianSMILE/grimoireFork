@@ -43,6 +43,11 @@ public class Personnage {
 
     private String teamId;
 
+    @Transient
+    private generation.grimoire.enumeration.MonsterType monsterType;
+    @Transient
+    private String monsterName;
+
     // Statistiques de vie et de mana
     private int healthMax;
     private int healthCurrent;
@@ -294,6 +299,11 @@ public class Personnage {
         }
 
         double constant; // La constante K qui détermine la courbe.
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.REPTILE && damageType == DamageType.PHYSIC) {
+            damage = (int) Math.ceil(damage * 0.85);
+            System.out.println("🦎 " + this.getName() + " réduit les dégâts physiques subis de 15% (Reptile).");
+        }
 
         double effectiveArmor = this.armor + getStatFlatBonus(StatType.ARMURE);
         double effectiveResistance = this.resistance + getStatFlatBonus(StatType.RESISTANCE);
@@ -844,6 +854,36 @@ public class Personnage {
         return (int) Math.round(effective);
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("totalPower")
+    public int getTotalPower() {
+        return getEffectiveStat(StatType.POWER);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalStrength")
+    public int getTotalStrength() {
+        return getEffectiveStat(StatType.STRENGTH);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalArmor")
+    public int getTotalArmor() {
+        return getEffectiveStat(StatType.ARMURE);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalResistance")
+    public int getTotalResistance() {
+        return getEffectiveStat(StatType.RESISTANCE);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalCrit")
+    public int getTotalCrit() {
+        return getEffectiveStat(StatType.CRIT);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalSpeed")
+    public int getTotalSpeed() {
+        return getEffectiveStat(StatType.SPEED);
+    }
+
     public boolean isAlly(Personnage other) {
         if (other == null)
             return false;
@@ -1089,6 +1129,42 @@ public class Personnage {
     public int getManaCurrent() {
         int max = getManaMax();
         return Math.max(0, Math.min(this.manaCurrent, max));
+    }
+
+    public void dealDamage(Personnage target, int baseDamage, DamageType type) {
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.HYBRIDE && type != DamageType.BRUT) {
+            int total = (int) (baseDamage * 1.2);
+            target.takeDamage(total / 2, DamageType.PHYSIC, this);
+            target.takeDamage(total - (total / 2), DamageType.MAGIC, this);
+            baseDamage = total; 
+        } else {
+            target.takeDamage(baseDamage, type, this);
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.DEMON) {
+            int brutDmg = (int) Math.ceil(baseDamage * 0.10);
+            if (brutDmg > 0) {
+                target.takeDamage(brutDmg, DamageType.BRUT, this);
+                System.out.println("🔥 " + this.getName() + " inflige " + brutDmg + " dégâts bruts supplémentaires (Démon).");
+            }
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.VAMPIRE) {
+            int healAmount = (int) Math.ceil(baseDamage * 0.20);
+            if (healAmount > 0) {
+                this.setHealthCurrent(Math.min(this.getHealthMax(), this.getHealthCurrent() + healAmount));
+                System.out.println("🧛 " + this.getName() + " vole " + healAmount + " PV (Vampire).");
+            }
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.ECTOPLASME) {
+            generation.grimoire.entity.spell.type.effect.BuffDebuffEffect eff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+            eff.setStatAffected(generation.grimoire.enumeration.StatType.RESISTANCE);
+            eff.setFlatValue(-5);
+            eff.setDuration(3);
+            target.getActiveBuffs().add(eff);
+            System.out.println("👻 " + target.getName() + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
+        }
     }
 
 }

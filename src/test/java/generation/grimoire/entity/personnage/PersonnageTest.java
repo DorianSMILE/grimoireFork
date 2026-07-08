@@ -357,4 +357,58 @@ class PersonnageTest {
 
         assertThat(enemy.getHealthCurrent()).isEqualTo(100 - 30);
     }
+
+    @Test
+    void testMonsterType_Reptile_ReducesPhysicalDamage() {
+        // base armor 100 -> 50% reduction.
+        // raw damage = 100.
+        // REPTILE reduces raw by 15% -> 85.
+        // final damage = 85 / 2 = 42.5 -> 42.
+        enemy.setMonsterType(generation.grimoire.enumeration.MonsterType.REPTILE);
+        enemy.takeDamage(100, DamageType.PHYSIC, hero);
+        assertThat(enemy.getHealthCurrent()).isEqualTo(100 - 42);
+    }
+
+    @Test
+    void testMonsterType_Demon_ExtraBrutDamage() {
+        hero.setMonsterType(generation.grimoire.enumeration.MonsterType.DEMON);
+        // hero deals 100 damage.
+        // Enemy has 100 armor -> 50% reduction.
+        // Base damage dealt is 100.
+        // Demon adds 10% (10) as BRUT damage.
+        // Enemy takes 50 (PHYSIC) + 10 (BRUT) = 60.
+        hero.dealDamage(enemy, 100, DamageType.PHYSIC);
+        assertThat(enemy.getHealthCurrent()).isEqualTo(100 - 60);
+    }
+
+    @Test
+    void testMonsterType_Vampire_Lifesteal() {
+        hero.setMonsterType(generation.grimoire.enumeration.MonsterType.VAMPIRE);
+        hero.setHealthCurrent(50);
+        hero.dealDamage(enemy, 100, DamageType.PHYSIC);
+        // Hero dealt 100 base damage -> 20% lifesteal = 20 heal.
+        assertThat(hero.getHealthCurrent()).isEqualTo(70);
+    }
+
+    @Test
+    void testMonsterType_Ectoplasme_DebuffResistance() {
+        hero.setMonsterType(generation.grimoire.enumeration.MonsterType.ECTOPLASME);
+        hero.dealDamage(enemy, 100, DamageType.PHYSIC);
+        
+        assertThat(enemy.getActiveBuffs()).hasSize(1);
+        assertThat(enemy.getActiveBuffs().get(0).getStatAffected()).isEqualTo(generation.grimoire.enumeration.StatType.RESISTANCE);
+        assertThat(enemy.getActiveBuffs().get(0).getFlatValue()).isEqualTo(-5);
+        assertThat(enemy.getActiveBuffs().get(0).getDuration()).isEqualTo(3);
+    }
+
+    @Test
+    void testMonsterType_Hybride_SplitDamage() {
+        hero.setMonsterType(generation.grimoire.enumeration.MonsterType.HYBRIDE);
+        // Base damage 100. Hybride total = 120.
+        // Split: 60 PHYSIC, 60 MAGIC.
+        // Enemy has 100 armor (50% reduction) and 100 resistance (50% reduction).
+        // Takes 30 PHYSIC + 30 MAGIC = 60 damage.
+        hero.dealDamage(enemy, 100, DamageType.PHYSIC);
+        assertThat(enemy.getHealthCurrent()).isEqualTo(100 - 60);
+    }
 }

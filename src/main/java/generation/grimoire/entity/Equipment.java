@@ -5,9 +5,13 @@ import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = {"personnage", "user"})
+@ToString(exclude = {"personnage", "user"})
 @Entity
 @Table(name = "Equipment")
 public class Equipment {
@@ -69,8 +73,11 @@ public class Equipment {
     @Column(name = "owner_username")
     private String ownerUsername;
 
-    @Column(name = "is_shop_template", nullable = false)
-    private boolean isShopTemplate = false;
+    @Column(name = "is_template", nullable = false)
+    private boolean isTemplate = false;
+
+    @Column(name = "available_in_shop", nullable = false)
+    private boolean availableInShop = false;
 
     @ElementCollection
     @CollectionTable(name = "equipment_anomaly_prices", joinColumns = @JoinColumn(name = "equipment_id"))
@@ -108,7 +115,7 @@ public class Equipment {
         double w = this.baseWeight;
         
         double mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-        double mSpd = 3.0, mCrit = 1.5, mRegHp = 1.5, mRegMana = 1.5;
+        double mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
 
         if (this.slot != null) {
             switch (this.slot) {
@@ -118,7 +125,7 @@ public class Equipment {
                     mArm = 1.5; mRes = 1.5;
                     mHp = 0.4; mMana = 0.4;
                     mStr = 1.8; mPow = 1.8;
-                    mRegHp = 1.2; mRegMana = 1.2;
+                    mRegHp = 2.4; mRegMana = 1.2;
                     break;
                 case CASQUE:
                 case PLASTRON:
@@ -161,8 +168,51 @@ public class Equipment {
                 this.specialEffect != generation.grimoire.enumeration.EquipmentEffectType.NONE &&
                 this.specialEffectValue != 0) {
 
-            w += this.specialEffectValue * 1.5;
+            if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.MAUDIT) {
+                w += this.specialEffectValue * 0.2;
+            } else {
+                w += this.specialEffectValue * 1.5;
+            }
         }
         return w;
+    }
+
+    public double calculateShopPrice() {
+        double weight = this.calculateWeight();
+        double multiplier = 1.0;
+        if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.COMMUN)
+            multiplier = 1.0;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.INHABITUEL)
+            multiplier = 1.5;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.RARE)
+            multiplier = 2.0;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.MYTHIQUE)
+            multiplier = 2.5;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.LEGENDAIRE)
+            multiplier = 3.0;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.EPIQUE)
+            multiplier = 5.0;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.RELIQUE)
+            multiplier = 6.0;
+        else if (this.rarity == generation.grimoire.enumeration.EquipmentRarity.MAUDIT)
+            multiplier = 4.0;
+
+        double slotMultiplier = 1.0;
+        if (this.slot == generation.grimoire.enumeration.EquipmentSlot.PLASTRON)
+            slotMultiplier = 1.1;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.ANNEAU_GAUCHE || this.slot == generation.grimoire.enumeration.EquipmentSlot.ANNEAU_DROIT)
+            slotMultiplier = 1.5;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.BOTTES)
+            slotMultiplier = 0.9;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.CAPE)
+            slotMultiplier = 1.2;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE)
+            slotMultiplier = 1.5;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE)
+            slotMultiplier = 1.4;
+        else if (this.slot == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS)
+            slotMultiplier = 1.1;
+
+        return Math.ceil(weight * 2 * multiplier * slotMultiplier);
     }
 }

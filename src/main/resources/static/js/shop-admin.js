@@ -1,81 +1,34 @@
-let allEquipments = [];
+const pageState = { allEquipments: [], equipmentToDelete: null, editingEquipmentId: null };
 
-const SLOT_LABELS = {
-    CASQUE: { label: 'Casque', icon: 'masks', color: '#a855f7', extraClass: 'flip-icon' },
-    PLASTRON: { label: 'Plastron', icon: 'shield', color: '#3b82f6' },
-    ARME_DEUX_MAINS: { label: 'Arme 2M', icon: 'swords', color: '#ef4444' },
-    ARME_GAUCHE: { label: 'Arme 1M', icon: 'colorize', color: '#ef4444' },
-    ARME_DROITE: { label: 'Arme Sec.', icon: 'security', color: '#ef4444' },
-    ANNEAU_GAUCHE: { label: 'Anneau G.', icon: 'diamond', color: '#f59e0b' },
-    ANNEAU_DROIT: { label: 'Anneau D.', icon: 'diamond', color: '#f59e0b' },
-    BOTTES: { label: 'Bottes', icon: 'footprint', color: '#10b981' },
-    CAPE: { label: 'Cape', icon: 'carpenter', color: '#ec4899' },
-    CONSOMMABLE: { label: 'Consommable', icon: 'inventory_2', color: '#854c4c' },
-    ANOMALIE: { label: 'Anomalie', icon: 'auto_awesome', color: '#f59e0b' }
-};
-
+// Replaced by window.SLOT_LABELS
 function getSlotInfo(eq) {
     if (!eq) return { icon: 'help', color: '#94a3b8' };
-    const info = Object.assign({}, SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
+    const info = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8' });
     if (eq.slot === 'CONSOMMABLE' && eq.consumableCategory) {
-        const catIcons = { POTION_ROSE: 'science', POTION_BLEUE: 'science', POTION_ROUGE: 'science', POTION_VIOLETTE: 'science', CLE: 'vpn_key', CORDE: 'gesture', PARCHEMIN: 'history_edu', NOURRITURE: 'restaurant', OUTIL: 'construction', AUTRE: 'inventory_2' };
-        const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
-        info.icon = catIcons[eq.consumableCategory] || 'inventory_2';
-        info.color = catColors[eq.consumableCategory] || '#854c4c';
+        const catName = typeof eq.consumableCategory === 'object' ? eq.consumableCategory?.name : eq.consumableCategory;
+        if (catName && window.CONSUMABLE_CATEGORIES[catName]) {
+            const catInfo = window.CONSUMABLE_CATEGORIES[catName];
+            info.icon = catInfo.icon;
+            info.color = catInfo.color;
+        }
     }
     return info;
 }
 
-const RARITY_ORDER = {
-    'COMMUN': 1,
-    'RARE': 2,
-    'LEGENDAIRE': 3,
-    'EPIQUE': 4,
-    'RELIQUE': 5
-};
 
-const STAT_DEFS = [
-    { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: '#ec4899' },
-    { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: '#38bdf8' },
-    { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: '#a855f7' },
-    { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: '#f43f5e' },
-    { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: '#3b82f6' },
-    { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: '#10b981' },
-    { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: '#f59e0b' },
-    { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: '#ef4444' },
-    { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: '#10b981' },
-    { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: '#38bdf8' },
-    { key: 'consumableHpPercent', label: 'PV Max', icon: 'favorite', color: '#ec4899', isPercent: true },
-    { key: 'consumableManaPercent', label: 'Mana Max', icon: 'water_drop', color: '#38bdf8', isPercent: true },
-    { key: 'consumableMissingHpPercent', label: 'PV Manq', icon: 'healing', color: '#f43f5e', isPercent: true },
-    { key: 'consumableMissingManaPercent', label: 'Mana Manq', icon: 'cyclone', color: '#a855f7', isPercent: true }
-];
-
-const WEIGHT_LIMITS = {
-    CASQUE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    PLASTRON: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ANNEAU_GAUCHE: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    ANNEAU_DROIT: { COMMUN: 3, INHABITUEL: 4, RARE: 6, MYTHIQUE: 8, LEGENDAIRE: 10, EPIQUE: 15, RELIQUE: 17, MAUDIT: 12 },
-    BOTTES: { COMMUN: 4, INHABITUEL: 8, RARE: 12, MYTHIQUE: 15, LEGENDAIRE: 19, EPIQUE: 30, RELIQUE: 34, MAUDIT: 25 },
-    CAPE: { COMMUN: 5, INHABITUEL: 9, RARE: 14, MYTHIQUE: 18, LEGENDAIRE: 22, EPIQUE: 35, RELIQUE: 40, MAUDIT: 27 },
-    ARME_DEUX_MAINS: { COMMUN: 9, INHABITUEL: 14, RARE: 19, MYTHIQUE: 24, LEGENDAIRE: 29, EPIQUE: 40, RELIQUE: 46, MAUDIT: 35 },
-    ARME_GAUCHE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    ARME_DROITE: { COMMUN: 5, INHABITUEL: 7, RARE: 10, MYTHIQUE: 12, LEGENDAIRE: 15, EPIQUE: 20, RELIQUE: 23, MAUDIT: 18 },
-    CONSOMMABLE: { COMMUN: 5, INHABITUEL: 7, RARE: 9, MYTHIQUE: 11, LEGENDAIRE: 14, EPIQUE: 20, RELIQUE: 24, MAUDIT: 17 }
-};
 
 function calculateWeight(eq) {
     let w = eq.baseWeight || 0;
 
     let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
+    let mSpd = 3.0, mCrit = 1.5, mRegHp = 3.0, mRegMana = 1.5;
 
     const s = eq.slot;
     if (s === 'ARME_GAUCHE' || s === 'ARME_DROITE' || s === 'ARME_DEUX_MAINS') {
         mArm = 1.5; mRes = 1.5;
         mHp = 0.4; mMana = 0.4;
         mStr = 1.8; mPow = 1.8;
-        mRegHp = 1.2; mRegMana = 1.2;
+        mRegHp = 2.4; mRegMana = 1.2;
     } else if (s === 'CASQUE' || s === 'PLASTRON') {
         mArm = 0.8; mRes = 0.8;
         mStr = 2.5; mPow = 2.5;
@@ -103,12 +56,12 @@ function calculateWeight(eq) {
     w += (eq.regenManaPerTurn || 0) * mRegMana;
 
     const rarity = eq.rarity;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE') {
+    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
         const specialEffect = eq.specialEffect;
         const effectVal = eq.specialEffectValue || 0;
 
-        if (specialEffect && specialEffect !== 'NONE' && effectVal > 0) {
-            w += effectVal * 1.0;
+        if (specialEffect && specialEffect !== 'NONE' && effectVal !== 0) {
+            w += effectVal * 1.5;
         }
     }
     return w;
@@ -194,13 +147,13 @@ document.addEventListener('click', (e) => {
                 if ((isMaudit && !currentEffect.startsWith('CURSED_') && currentEffect !== 'NONE') ||
                     (!isMaudit && currentEffect.startsWith('CURSED_'))) {
                     document.getElementById('eqSpecialEffect').value = 'NONE';
-                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                    document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                     document.getElementById('eqSpecialEffectValue').value = 0;
                 }
             } else {
                 row.style.display = 'none';
                 document.getElementById('eqSpecialEffect').value = 'NONE';
-                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+                document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                 document.getElementById('eqSpecialEffectValue').value = 0;
             }
             updateWeightUI();
@@ -215,21 +168,21 @@ document.addEventListener('click', (e) => {
 // ===== API =====
 async function loadEquipments() {
     try {
-        const res = await fetch('/api/shop/templates');
+        const res = await globalFetch('/api/shop/templates');
         if (!res.ok) {
             if (res.status === 403 || res.status === 401) {
-                document.getElementById('vaultGrid').innerHTML = `<div style="color: #ef4444;"><span class="material-symbols-outlined">error</span> Accès refusé.</div>`;
+                document.getElementById('vaultGrid').innerHTML = `<div class="text-error"><span class="material-symbols-outlined">error</span> Accès refusé.</div>`;
             }
             return;
         }
-        allEquipments = await res.json();
-        allEquipments.forEach(eq => {
+        pageState.allEquipments = await res.json();
+        pageState.allEquipments.forEach(eq => {
             eq._weight = calculateWeight(eq);
         });
         renderVault();
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
-        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state" style="color: #ef4444;"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
+        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state text-error"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
 
@@ -259,7 +212,7 @@ function getTypeColor(isMagic) {
 
 async function loadAnomalies() {
     try {
-        const res = await fetch('/api/anomalies/all-templates');
+        const res = await globalFetch('/api/anomalies/all-templates');
         if (res.ok) {
             let data = await res.json();
             window.allAnomalies = data.sort((a, b) => {
@@ -324,8 +277,8 @@ function addAnomalyRow(selectedName = '', qty = 1) {
 
     row.innerHTML = `
         <div class="custom-select-wrapper" style="flex: 1;">
-            <div class="custom-select-trigger" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.6rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span class="cs-label" style="color: #cbd5e1; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">${displayLabel}</span>
+            <div class="custom-select-trigger flex-between" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.6rem; cursor: pointer; align-items: center; width: 100%;">
+                <span class="cs-label flex-center" style="color: #cbd5e1; font-size: 0.85rem; gap: 0.3rem;">${displayLabel}</span>
                 <span class="material-symbols-outlined" style="color: #64748b; font-size: 1.1rem;">expand_more</span>
             </div>
             <div class="custom-select-options custom-options" style="max-height: 150px; overflow-y: auto;">
@@ -333,8 +286,8 @@ function addAnomalyRow(selectedName = '', qty = 1) {
             </div>
             <input type="hidden" class="anomaly-select-hidden" value="${selectedName}">
         </div>
-        <div style="display: flex; align-items: center; gap: 0.3rem;">
-            <span style="color: #94a3b8; font-size: 0.8rem;">Qté:</span>
+        <div class="flex-center" style="gap: 0.3rem;">
+            <span class="text-xs text-muted">Qté:</span>
             <input type="number" class="anomaly-qty-input" value="${qty}" min="1" style="width: 60px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif;">
         </div>
         <button type="button" class="btn-remove-row" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; cursor: pointer; padding: 0.4rem; display: flex; justify-content: center; align-items: center;">
@@ -349,32 +302,32 @@ function addAnomalyRow(selectedName = '', qty = 1) {
     container.appendChild(row);
 }
 
-let equipmentToDelete = null;
+
 
 function deleteEquipment(id) {
-    equipmentToDelete = id;
-    const eq = allEquipments.find(e => e.id === id);
+    pageState.equipmentToDelete = id;
+    const eq = pageState.allEquipments.find(e => e.id === id);
     if (eq) {
         document.getElementById('deleteTargetName').textContent = eq.name;
         const weightStr = eq._weight % 1 === 0 ? eq._weight : eq._weight.toFixed(1);
-        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-top: -2px;">monetization_on</span>`;
+        document.getElementById('deleteConfirmBtn').innerHTML = `Oui, détruire pour ${weightStr} <span class="material-symbols-outlined align-middle" style="font-size: 1rem; margin-top: -2px;">monetization_on</span>`;
     }
     document.getElementById('deleteConfirmModal').classList.add('show');
 }
 
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.remove('show');
-    equipmentToDelete = null;
+    pageState.equipmentToDelete = null;
 }
 
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
-    if (!equipmentToDelete) return;
+    if (!pageState.equipmentToDelete) return;
 
-    const id = equipmentToDelete;
+    const id = pageState.equipmentToDelete;
     closeDeleteModal();
 
     try {
-        const res = await fetch(`/api/shop/templates/${id}`, { method: 'DELETE' });
+        const res = await globalFetch(`/api/shop/templates/${id}`, { method: 'DELETE' });
         if (res.ok) {
             showNotif('Équipement détruit.');
             await loadEquipments();
@@ -395,13 +348,17 @@ function renderVault() {
     const rarityOrder = { 'MAUDIT': -1, 'RELIQUE': 0, 'EPIQUE': 1, 'LEGENDAIRE': 2, 'MYTHIQUE': 3, 'RARE': 4, 'INHABITUEL': 5, 'COMMUN': 6 };
     const slotOrder = { 'CASQUE': 1, 'PLASTRON': 2, 'ARME_DEUX_MAINS': 3, 'ARME_GAUCHE': 4, 'ARME_DROITE': 5, 'ANNEAU_GAUCHE': 6, 'ANNEAU_DROIT': 7, 'BOTTES': 8, 'CAPE': 9, 'CONSOMMABLE': 10 };
 
-    let sorted = [...allEquipments].sort((a, b) => {
-        const rA = rarityOrder[a.rarity || 'COMMUN'];
-        const rB = rarityOrder[b.rarity || 'COMMUN'];
+    let sorted = [...pageState.allEquipments].sort((a, b) => {
+        const rNameA = typeof a.rarity === 'object' ? a.rarity?.name : a.rarity;
+        const rNameB = typeof b.rarity === 'object' ? b.rarity?.name : b.rarity;
+        const rA = rarityOrder[rNameA || 'COMMUN'] ?? 100;
+        const rB = rarityOrder[rNameB || 'COMMUN'] ?? 100;
         if (rA !== rB) return rA - rB;
 
-        const sA = slotOrder[a.slot] || 99;
-        const sB = slotOrder[b.slot] || 99;
+        const sNameA = typeof a.slot === 'object' ? a.slot?.name : a.slot;
+        const sNameB = typeof b.slot === 'object' ? b.slot?.name : b.slot;
+        const sA = slotOrder[sNameA] || 99;
+        const sB = slotOrder[sNameB] || 99;
         if (sA !== sB) return sA - sB;
 
         return a.name.localeCompare(b.name);
@@ -416,7 +373,7 @@ function renderGrid(equipments) {
     if (equipments.length === 0) {
         container.innerHTML = `
             <div class="vault-empty-state">
-                <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5;">search_off</span>
+                <span class="material-symbols-outlined opacity-50" style="font-size: 3rem;">search_off</span>
                 Aucun objet ne correspond à votre recherche.
             </div>`;
         return;
@@ -434,7 +391,8 @@ function renderGrid(equipments) {
     };
 
     equipments.forEach(eq => {
-        const rarity = eq.rarity || 'COMMUN';
+        const rarityObj = eq.rarity;
+        const rarity = (typeof rarityObj === 'object' ? rarityObj?.name : rarityObj) || 'COMMUN';
         if (groups[rarity]) {
             groups[rarity].push(eq);
         } else {
@@ -468,7 +426,7 @@ function renderGrid(equipments) {
         `;
 
         if (items.length === 0) {
-            html += `<div style="padding: 1rem; color: #64748b; font-style: italic; text-align: center;">Aucun article dans cette rareté</div>`;
+            html += `<div class="font-italic text-center" style="padding: 1rem; color: #64748b;">Aucun article dans cette rareté</div>`;
         } else {
             items.forEach(eq => {
                 const slotInfo = getSlotInfo(eq);
@@ -481,7 +439,7 @@ function renderGrid(equipments) {
                         const sign = val > 0 ? '+' : '';
                         const suffix = s.isPercent ? '%' : '';
                         return `<span class="stat-badge ${isMalus ? 'malus' : ''}" title="${s.label}">
-                        <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.8rem;">${s.icon}</span>
+                        <span class="material-symbols-outlined text-xs" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>
                         ${sign}${val}${suffix}
                     </span>`;
                     }).join('');
@@ -510,19 +468,19 @@ function renderGrid(equipments) {
                     const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
 
                     effectHtml = `<span class="stat-badge" style="background: ${bg}; color: ${color}; ${isCursed ? 'border: 1px solid rgba(156, 163, 175, 0.2);' : ''}">
-                    <span class="material-symbols-outlined" style="font-size: 0.8rem;">${icon}</span>
+                    <span class="material-symbols-outlined text-xs">${icon}</span>
                     ${label} : ${eq.specialEffectValue}
                 </span>`;
                 }
 
-                const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, eq.rarity || 'COMMUN', eq.slot);
+                const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, rarity || 'COMMUN', eq.slot);
 
                 html += `
                 <div class="shop-admin-row">
                     <div class="shop-admin-row-name">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''}" style="font-size: 1.4rem; color: ${slotInfo.color};" title="${slotInfo.label}">${slotInfo.icon}</span>
                         ${eq.name}
-                        ${window.isAdmin && eq.ownerUsername ? `<span style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${eq.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined" style="font-size: 0.7rem; vertical-align: middle; margin-right: 2px;">account_circle</span>${eq.ownerUsername}</span>` : ''}
+                        ${window.isAdmin && eq.ownerUsername ? `<span class="text-xxs" style="padding: 0.15rem 0.4rem; background: ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${eq.ownerUsername === window.currentUser?.username ? '#34d399' : '#cbd5e1'}; border-radius: 4px; border: 1px solid ${eq.ownerUsername === window.currentUser?.username ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'};"><span class="material-symbols-outlined align-middle" style="font-size: 0.7rem; margin-right: 2px;">account_circle</span>${eq.ownerUsername}</span>` : ''}
                     </div>
                     
                     <div class="shop-admin-row-stats">
@@ -552,22 +510,22 @@ function renderGrid(equipments) {
                                 const tooltipData = `
                                             <div class="anomaly-tooltip-title">${aTemp ? aTemp.name : n}</div>
                                             <div style="display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;">
-                                                <span style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                                <span class="font-bold" style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                                                     Lvl ${aTemp ? aTemp.level || 1 : 1}
                                                 </span>
-                                                <span style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                                    <span class="material-symbols-outlined" style="font-size: 0.9rem;">${catIcon}</span>
+                                                <span class="flex-center font-bold" style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                                                    <span class="material-symbols-outlined text-sm">${catIcon}</span>
                                                     ${aTemp && aTemp.magicObject ? 'Objet Magique' : 'Matériau'}
                                                 </span>
                                                 ${aTemp && aTemp.spiritualite ?
-                                        `<span style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: rgba(0,0,0,0.3);">
+                                        `<span class="font-bold" style="border: 1px solid ${getSpiritualiteColor(aTemp.spiritualite)}; color: ${getSpiritualiteColor(aTemp.spiritualite)}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: rgba(0,0,0,0.3);">
                                                     ${aTemp.spiritualite}
                                                 </span>` : ''}
                                             </div>
                                             <div class="anomaly-tooltip-desc">${aTemp && aTemp.description ? aTemp.description : 'Aucune description'}</div>
                                     `;
                                 anos.push(`<span class="anomaly-badge" style="border-color: ${spiriColor}; background: ${spiriColor}25; color: ${spiriColor};" onmouseenter="showTooltipFixed(this)" onmouseleave="hideTooltipFixed()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
-                                        <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: ${spiriColor};">${catIcon}</span> ${q}
+                                        <span class="material-symbols-outlined text-sm align-middle" style="color: ${spiriColor};">${catIcon}</span> ${q}
                                     </span>`);
                             }
                             priceHtml += ` <br><div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 4px;">${anos.join('')}</div>`;
@@ -599,7 +557,8 @@ function renderGrid(equipments) {
 }
 
 // Init
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    if (window.initAppMeta) await window.initAppMeta();
     loadEquipments();
     loadAnomalies();
 
@@ -624,7 +583,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (slotOptionsContainer) {
         const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
         slotOptionsContainer.innerHTML = slots.map(s => {
-            const info = SLOT_LABELS[s];
+            const info = window.SLOT_LABELS[s];
             return `<div class="custom-option" data-value="${s}">
                 <span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span>
                 ${info.label}
@@ -645,17 +604,17 @@ window.addEventListener('authLoaded', () => {
     }
 
     // Re-render the grid in case equipments loaded before auth
-    if (allEquipments && allEquipments.length > 0) {
+    if (pageState.allEquipments && pageState.allEquipments.length > 0) {
         renderVault();
     }
 });
 
 // ===== Equipment Creation / Edition =====
 
-let editingEquipmentId = null;
+
 
 window.openCreateEqModal = function () {
-    editingEquipmentId = null;
+    pageState.editingEquipmentId = null;
     document.getElementById('equipModalTitle').innerHTML = 'Forger un objet';
     document.getElementById('submitEquipmentBtn').innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span> Forger';
     resetEqForm();
@@ -687,7 +646,7 @@ function resetEqForm() {
     if (document.getElementById('eqConsumableCategory')) {
         document.getElementById('eqConsumableCategory').value = 'AUTRE';
         const label = document.getElementById('eqConsumableCategoryLabel');
-        if (label) label.innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">inventory_2</span> Autre';
+        if (label) label.innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">inventory_2</span> Autre';
     }
     if (document.getElementById('eqBaseWeight')) document.getElementById('eqBaseWeight').value = 0;
 
@@ -700,7 +659,7 @@ function resetEqForm() {
     const rarityInput = document.getElementById('eqRarity');
     if (rarityInput) {
         rarityInput.value = 'COMMUN';
-        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon" style="color: #94a3b8; font-weight: bold;">C</span> Commun';
+        document.getElementById('eqRarityLabel').innerHTML = '<span class="cs-icon font-bold text-muted">C</span> Commun';
         const row = document.getElementById('eqSpecialEffectRow');
         if (row) row.style.display = 'none';
     }
@@ -709,7 +668,7 @@ function resetEqForm() {
     const effectInput = document.getElementById('eqSpecialEffect');
     if (effectInput) {
         effectInput.value = 'NONE';
-        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon" style="color: #94a3b8;">not_interested</span> Aucun';
+        document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
         document.getElementById('eqSpecialEffectValue').value = 0;
     }
 
@@ -722,8 +681,8 @@ function resetEqForm() {
 }
 
 window.editEquipment = function (id) {
-    editingEquipmentId = id;
-    const eq = allEquipments.find(e => e.id === id);
+    pageState.editingEquipmentId = id;
+    const eq = pageState.allEquipments.find(e => e.id === id);
     if (!eq) return;
 
     document.getElementById('equipModalTitle').innerHTML = 'Modifier un objet';
@@ -776,19 +735,20 @@ window.editEquipment = function (id) {
 
     // Rarity Setup
     const rarityInput = document.getElementById('eqRarity');
-    if (rarityInput && eq.rarity) {
-        rarityInput.value = eq.rarity;
-        const option = document.querySelector(`.custom-option.rarity-${eq.rarity}`);
+    const eqRarityName = eq.rarity && typeof eq.rarity === 'object' ? eq.rarity.name : eq.rarity;
+    if (rarityInput && eqRarityName) {
+        rarityInput.value = eqRarityName;
+        const option = document.querySelector(`.custom-option.rarity-${eqRarityName}`);
         if (option) {
             document.getElementById('eqRarityLabel').innerHTML = option.innerHTML;
         }
 
         const row = document.getElementById('eqSpecialEffectRow');
-        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE' || eq.rarity === 'MAUDIT') {
+        if (eqRarityName === 'EPIQUE' || eqRarityName === 'RELIQUE' || eqRarityName === 'MAUDIT') {
             if (row) row.style.display = 'grid';
 
-            const isEpic = eq.rarity === 'EPIQUE';
-            const isMaudit = eq.rarity === 'MAUDIT';
+            const isEpic = eqRarityName === 'EPIQUE';
+            const isMaudit = eqRarityName === 'MAUDIT';
             let color = isEpic ? '#ef4444' : '#a855f7';
             let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
             let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
@@ -851,22 +811,81 @@ window.editEquipment = function (id) {
     document.getElementById('equipCreateModal').classList.add('show');
 }
 
+function getFormEquipmentData() {
+    const slot = document.getElementById('eqSlot') ? document.getElementById('eqSlot').value : null;
+    const rarity = document.getElementById('eqRarity') ? document.getElementById('eqRarity').value : 'COMMUN';
+    const specialEffect = document.getElementById('eqSpecialEffect') ? document.getElementById('eqSpecialEffect').value : 'NONE';
+    const specialEffectValue = document.getElementById('eqSpecialEffectValue') ? parseInt(document.getElementById('eqSpecialEffectValue').value) || 0 : 0;
+
+    return {
+        id: pageState.editingEquipmentId,
+        name: document.getElementById('eqName') ? document.getElementById('eqName').value.trim() : '',
+        slot,
+        bonusHealthMax: document.getElementById('eqHp') ? parseInt(document.getElementById('eqHp').value) || 0 : 0,
+        bonusManaMax: document.getElementById('eqMana') ? parseInt(document.getElementById('eqMana').value) || 0 : 0,
+        bonusPower: document.getElementById('eqPower') ? parseInt(document.getElementById('eqPower').value) || 0 : 0,
+        bonusStrength: document.getElementById('eqStr') ? parseInt(document.getElementById('eqStr').value) || 0 : 0,
+        bonusArmor: document.getElementById('eqArmor') ? parseInt(document.getElementById('eqArmor').value) || 0 : 0,
+        bonusResistance: document.getElementById('eqRes') ? parseInt(document.getElementById('eqRes').value) || 0 : 0,
+        bonusSpeed: document.getElementById('eqSpeed') ? parseInt(document.getElementById('eqSpeed').value) || 0 : 0,
+        bonusCrit: document.getElementById('eqCrit') ? parseInt(document.getElementById('eqCrit').value) || 0 : 0,
+        regenHealthPerTurn: document.getElementById('eqRegenHp') ? parseInt(document.getElementById('eqRegenHp').value) || 0 : 0,
+        regenManaPerTurn: document.getElementById('eqRegenMana') ? parseInt(document.getElementById('eqRegenMana').value) || 0 : 0,
+        consumableHpPercent: document.getElementById('eqConsumableHpPercent') ? (parseInt(document.getElementById('eqConsumableHpPercent').value) || 0) : 0,
+        consumableManaPercent: document.getElementById('eqConsumableManaPercent') ? (parseInt(document.getElementById('eqConsumableManaPercent').value) || 0) : 0,
+        consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
+        consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
+        consumableCategory: document.getElementById('eqConsumableCategory') ? document.getElementById('eqConsumableCategory').value : 'AUTRE',
+        baseWeight: document.getElementById('eqBaseWeight') ? parseFloat(document.getElementById('eqBaseWeight').value) || 0 : 0,
+        rarity,
+        specialEffect,
+        specialEffectValue,
+        personnageId: null, // Keep null when forged from vault
+        priceAnomalies: (() => {
+            const map = {};
+            const container = document.getElementById('priceAnomaliesContainer');
+            if (container) {
+                const rows = container.querySelectorAll('.anomaly-price-row');
+                rows.forEach(row => {
+                    const selectVal = row.querySelector('.anomaly-select-hidden').value;
+                    const qtyVal = parseInt(row.querySelector('.anomaly-qty-input').value) || 0;
+                    if (selectVal && qtyVal > 0) {
+                        map[selectVal] = (map[selectVal] || 0) + qtyVal;
+                    }
+                });
+            }
+            return map;
+        })(),
+    };
+}
+
 window.submitEquipment = async function () {
-    const name = document.getElementById('eqName').value.trim();
-    const slot = document.getElementById('eqSlot').value;
+    const dto = getFormEquipmentData();
+    const name = dto.name;
+    const slot = dto.slot;
     if (!name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
     if (!slot) { showNotif('Slot obligatoire.', true); return; }
 
-    const rarity = document.getElementById('eqRarity').value;
-    const maxWeight = (WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) ? WEIGHT_LIMITS[slot][rarity] : 5;
-    const currentWeight = calculateEquipmentWeight();
-    if (currentWeight > maxWeight) {
-        showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
-        return;
+    const rarity = dto.rarity;
+    
+    // We already fetch simulated maxWeight in updateWeightUI. We can use it, or validate on backend.
+    // Let's use the UI's last known max weight if available, or just skip local check and let backend fail if needed.
+    // Wait, the backend doesn't fail on weight limit for templates, so we DO need local check or we can just fetch it here.
+    const res = await window.globalFetch('/api/equipments/simulate-weight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto)
+    });
+    if (res) {
+        const data = await res.json();
+        if (data.weight > data.maxWeight && slot !== 'CONSOMMABLE') {
+            showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
+            return;
+        }
     }
 
-    let specialEffect = document.getElementById('eqSpecialEffect').value;
-    let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
+    let specialEffect = dto.specialEffect;
+    let specialEffectValue = dto.specialEffectValue;
 
     if (rarity !== 'EPIQUE' && rarity !== 'RELIQUE' && rarity !== 'MAUDIT') {
         specialEffect = 'NONE';
@@ -889,57 +908,19 @@ window.submitEquipment = async function () {
             return;
         }
     }
-
-    const dto = {
-        id: editingEquipmentId,
-        name,
-        slot,
-        bonusHealthMax: parseInt(document.getElementById('eqHp').value) || 0,
-        bonusManaMax: parseInt(document.getElementById('eqMana').value) || 0,
-        bonusPower: parseInt(document.getElementById('eqPower').value) || 0,
-        bonusStrength: parseInt(document.getElementById('eqStr').value) || 0,
-        bonusArmor: parseInt(document.getElementById('eqArmor').value) || 0,
-        bonusResistance: parseInt(document.getElementById('eqRes').value) || 0,
-        bonusSpeed: parseInt(document.getElementById('eqSpeed').value) || 0,
-        bonusCrit: parseInt(document.getElementById('eqCrit').value) || 0,
-        regenHealthPerTurn: parseInt(document.getElementById('eqRegenHp').value) || 0,
-        regenManaPerTurn: parseInt(document.getElementById('eqRegenMana').value) || 0,
-        consumableHpPercent: document.getElementById('eqConsumableHpPercent') ? (parseInt(document.getElementById('eqConsumableHpPercent').value) || 0) : 0,
-        consumableManaPercent: document.getElementById('eqConsumableManaPercent') ? (parseInt(document.getElementById('eqConsumableManaPercent').value) || 0) : 0,
-        consumableMissingHpPercent: document.getElementById('eqConsumableMissingHpPercent') ? (parseInt(document.getElementById('eqConsumableMissingHpPercent').value) || 0) : 0,
-        consumableMissingManaPercent: document.getElementById('eqConsumableMissingManaPercent') ? (parseInt(document.getElementById('eqConsumableMissingManaPercent').value) || 0) : 0,
-        consumableCategory: document.getElementById('eqConsumableCategory') ? document.getElementById('eqConsumableCategory').value : 'AUTRE',
-        baseWeight: parseFloat(document.getElementById('eqBaseWeight')?.value) || 0,
-        rarity,
-        specialEffect,
-        specialEffectValue,
-        personnageId: null, // Keep null when forged from vault
-        priceAnomalies: (() => {
-            const map = {};
-            const container = document.getElementById('priceAnomaliesContainer');
-            if (container) {
-                const rows = container.querySelectorAll('.anomaly-price-row');
-                rows.forEach(row => {
-                    const selectVal = row.querySelector('.anomaly-select-hidden').value;
-                    const qtyVal = parseInt(row.querySelector('.anomaly-qty-input').value) || 0;
-                    if (selectVal && qtyVal > 0) {
-                        map[selectVal] = (map[selectVal] || 0) + qtyVal;
-                    }
-                });
-            }
-            return map;
-        })(),
-    };
+    
+    dto.specialEffect = specialEffect;
+    dto.specialEffectValue = specialEffectValue;
 
     try {
         let url = '/api/shop/templates';
         let method = 'POST';
-        if (editingEquipmentId) {
-            url += `/${editingEquipmentId}`;
+        if (pageState.editingEquipmentId) {
+            url += `/${pageState.editingEquipmentId}`;
             method = 'PUT';
         }
 
-        const res = await fetch(url, {
+        const res = await globalFetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto)
@@ -951,7 +932,7 @@ window.submitEquipment = async function () {
         }
 
         closeCreateEqModal();
-        showNotif(editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
+        showNotif(pageState.editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
         await loadEquipments();
     } catch (e) {
         console.error(e);
@@ -959,80 +940,7 @@ window.submitEquipment = async function () {
     }
 }
 
-function calculateEquipmentWeight() {
-    let w = 0;
-
-    let mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
-    let mSpd = 2.0, mCrit = 1.0, mRegHp = 1.0, mRegMana = 1.0;
-
-    const slot = document.getElementById('eqSlot').value;
-    if (slot === 'ARME_GAUCHE' || slot === 'ARME_DROITE' || slot === 'ARME_DEUX_MAINS') {
-        mArm = 1.5; mRes = 1.5;
-        mHp = 0.4; mMana = 0.4;
-        mStr = 1.8; mPow = 1.8;
-        mRegHp = 1.2; mRegMana = 1.2;
-    } else if (slot === 'CASQUE' || slot === 'PLASTRON') {
-        mArm = 0.8; mRes = 0.8;
-        mStr = 2.5; mPow = 2.5;
-        mSpd = 3.5;
-        mCrit = 2.0;
-    } else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT' || slot === 'ANNEAU') { // handle ANNEAU case specifically for creation if it's the option value
-        mMana = 0.1;
-        mArm = 2.0; mRes = 2.0;
-        mRegMana = 0.8;
-    } else if (slot === 'BOTTES') {
-        mSpd = 1.5;
-    } else if (slot === 'CAPE') {
-        mCrit = 1.5;
-    }
-
-    w += (parseInt(document.getElementById('eqHp').value) || 0) * mHp;
-    w += (parseInt(document.getElementById('eqMana').value) || 0) * mMana;
-    w += (parseInt(document.getElementById('eqPower').value) || 0) * mPow;
-    w += (parseInt(document.getElementById('eqStr').value) || 0) * mStr;
-    w += (parseInt(document.getElementById('eqArmor').value) || 0) * mArm;
-    w += (parseInt(document.getElementById('eqRes').value) || 0) * mRes;
-    w += (parseInt(document.getElementById('eqSpeed').value) || 0) * mSpd;
-    w += (parseInt(document.getElementById('eqCrit').value) || 0) * mCrit;
-    w += (parseInt(document.getElementById('eqRegenHp').value) || 0) * mRegHp;
-    w += (parseInt(document.getElementById('eqRegenMana').value) || 0) * mRegMana;
-
-    const baseWeightEl = document.getElementById('eqBaseWeight');
-    if (baseWeightEl) w += parseFloat(baseWeightEl.value) || 0;
-
-    // Add special effect weight if Epic/Relic/Maudit
-    const rarity = document.getElementById('eqRarity').value;
-    if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
-        const specialEffect = document.getElementById('eqSpecialEffect').value;
-        const effectVal = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
-
-        if (specialEffect !== 'NONE' && effectVal !== 0) {
-            w += effectVal * 1.5;
-        }
-    }
-    return w;
-}
-function calculateShopPrice(weight, rarity, slot) {
-    let multiplier = 1;
-    if (rarity === 'COMMUN') multiplier = 1;
-    else if (rarity === 'INHABITUEL') multiplier = 1.5;
-    else if (rarity === 'RARE') multiplier = 2;
-    else if (rarity === 'MYTHIQUE') multiplier = 2.5;
-    else if (rarity === 'LEGENDAIRE') multiplier = 3;
-    else if (rarity === 'EPIQUE') multiplier = 5;
-    else if (rarity === 'RELIQUE') multiplier = 6;
-    else if (rarity === 'MAUDIT') multiplier = 0.5;
-
-    let slotMultiplier = 1.0;
-    if (slot === 'PLASTRON') slotMultiplier = 1.1;
-    else if (slot === 'ANNEAU_GAUCHE' || slot === 'ANNEAU_DROIT') slotMultiplier = 1.5;
-    else if (slot === 'BOTTES') slotMultiplier = 0.9;
-    else if (slot === 'CAPE') slotMultiplier = 1.2;
-
-    return Math.ceil(weight * 2 * multiplier * slotMultiplier);
-}
-
-window.updateWeightUI = function () {
+window.updateWeightUI = async function () {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;
@@ -1052,10 +960,35 @@ window.updateWeightUI = function () {
         row.style.display = slot === 'CONSOMMABLE' ? 'flex' : 'none';
     }
 
-    const w = calculateEquipmentWeight();
+    let w = 0;
+    let maxW = 5;
+    let price = 0;
 
-    const limitsForSlot = WEIGHT_LIMITS[slot] || {};
-    const maxW = limitsForSlot[rarity || 'COMMUN'] || 5;
+    const dto = getFormEquipmentData(); // Suppose that we refactored getFormEquipmentData earlier? No, wait. 
+    // Wait, getFormEquipmentData() is defined in shop-admin.js! I can use it.
+    if (!dto.slot) {
+        if (document.getElementById('eqWeightText')) {
+            document.getElementById('eqWeightText').innerText = "0 / 5";
+            document.getElementById('eqWeightText').style.color = 'var(--text-muted)';
+        }
+        return;
+    }
+
+    try {
+        const res = await window.globalFetch('/api/equipments/simulate-weight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto)
+        });
+        if (res) {
+            const data = await res.json();
+            w = data.weight || 0;
+            maxW = data.maxWeight || 5;
+            price = data.shopPrice || 0;
+        }
+    } catch (e) {
+        console.error("Error simulating weight:", e);
+    }
 
     const fillEl = document.getElementById('eqWeightFill');
     const textEl = document.getElementById('eqWeightText');
@@ -1091,7 +1024,6 @@ window.updateWeightUI = function () {
         if (textEl) textEl.style.color = color;
     }
 
-    const price = calculateShopPrice(w, rarity || 'COMMUN', slot);
     const priceEl = document.getElementById('eqPriceText');
     if (priceEl) {
         const displayPrice = price % 1 === 0 ? price : price.toFixed(1);

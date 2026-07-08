@@ -86,21 +86,21 @@ public class WebSpellCreationController {
 
         Map<String, String> passifsVoies = new HashMap<>();
         passifsVoies.put("Voie de la Raison",
-                "Lancer un sort de Raison confère <strong style=\"color: #facc15;\">+1 Vitesse</strong> au tour suivant (max <span style=\"color: #facc15;\">10 cumuls</span>, perdus si aucun n'est lancé).<br>De plus, le score de <strong style=\"color: #ef4444;\">Critique</strong> est augmenté d'un montant égal au <span style=\"font-weight: bold; color: #10b981;\">double de la Vitesse</span>.");
+                "Lancer un sort de Raison confère [c=warning]+1 Vitesse[/c] au tour suivant (max [c=warning]10 cumuls[/c], perdus si aucun n'est lancé).\nDe plus, le score de [c=danger]Critique[/c] est augmenté d'un montant égal au [c=success]double de la Vitesse[/c].");
         passifsVoies.put("Voie de la Sûreté",
-                "Accumule des <strong style=\"color: #3b82f6;\">points de Sûreté</strong> (10/tour et 20% du mana dépensé).<br>À <strong style=\"color: #6366f1;\">100 points</strong>, octroie <strong style=\"color: #ef4444;\">+15% de Critique</strong>, ou <strong style=\"color: #ef4444;\">+25%</strong> si le palier est atteint passivement en début de tour.");
+                "Accumule des [c=primary]points de Sûreté[/c] (10/tour et 20% du mana dépensé).\nÀ [c=indigo]100 points[/c], octroie [c=danger]+15% de Critique[/c], ou [c=danger]+25%[/c] si le palier est atteint passivement en début de tour.");
         passifsVoies.put("Voie de Trahison",
-                "Une fois par tour, vos <strong style=\"color: #ef4444;\">attaques physiques</strong> infligent des dégâts bruts bonus <strong style=\"color: #10b981;\">qui vous soignent</strong> :<ul style=\"margin-top: 4px; margin-bottom: 4px; padding-left: 20px;\"><li><strong style=\"color: #facc15;\">+10%</strong> de base</li><li><strong style=\"color: #facc15;\">+15%</strong> si la cible a moins de 50% PV</li><li><strong style=\"color: #facc15;\">+10%</strong> si elle a un malus</li></ul>");
+                "Une fois par tour, vos [c=danger]attaques physiques[/c] infligent des dégâts bruts bonus [c=success]qui vous soignent[/c] :\n[ul][li][c=warning]+10%[/c] de base[/li][li][c=warning]+15%[/c] si la cible a moins de 50% PV[/li][li][c=warning]+10%[/c] si elle a un malus[/li][/ul]");
         passifsVoies.put("Voie de la Consolidation",
-                "Octroie <strong style=\"color: #3b82f6;\">+5% d'Armure</strong> par défaut. Lancer un sort remplace ce bonus selon son niveau :<ul style=\"margin-top: 4px; margin-bottom: 4px; padding-left: 20px;\"><li>Nv1: <strong style=\"color: #facc15;\">+1 Vitesse</strong></li><li>Nv2: <strong style=\"color: #3b82f6;\">+10% Armure</strong></li><li>Nv3: <strong style=\"color: #a855f7;\">+10% Résistance Magique</strong></li><li>Nv4: Coût des sorts <strong style=\"color: #10b981;\">-20%</strong></li><li>Nv5: <strong style=\"color: #eab308;\">+8% Armure et Résistance</strong></li></ul>");
+                "Octroie [c=primary]+5% d'Armure[/c] par défaut. Lancer un sort remplace ce bonus selon son niveau :\n[ul][li]Nv1: [c=warning]+1 Vitesse[/c][/li][li]Nv2: [c=primary]+10% Armure[/c][/li][li]Nv3: [c=purple]+10% Résistance Magique[/c][/li][li]Nv4: Coût des sorts [c=success]-20%[/c][/li][li]Nv5: [c=warning]+8% Armure et Résistance[/c][/li][/ul]");
         passifsVoies.put("Voie de la Conviction",
-                "Régénère <strong style=\"color: #3b82f6;\">25 points de mana</strong> par tour (<span style=\"color: #3b82f6;\">+4</span> par niveau de Voie).<br>Augmente le <strong style=\"color: #3b82f6;\">mana maximum de 20</strong> par niveau au-delà du premier.");
+                "Régénère [c=primary]25 points de mana[/c] par tour ([c=primary]+4[/c] par niveau de Voie).\nAugmente le [c=primary]mana maximum de 20[/c] par niveau au-delà du premier.");
         passifsVoies.put("Voie de la Création",
-                "Modifie le <strong style=\"color: #facc15;\">1er sort du tour</strong> :<ul style=\"margin-top: 4px; margin-bottom: 4px; padding-left: 20px;\"><li>Un sort Instantané devient <strong style=\"color: #10b981;\">gratuit</strong></li><li>Un sort Banal devient <strong style=\"color: #facc15;\">Instantané</strong></li><li>Un sort Canalisé octroie un <strong style=\"color: #3b82f6;\">bouclier</strong> égal au mana dépensé</li></ul>");
+                "Modifie le [c=warning]1er sort du tour[/c] :\n[ul][li]Un sort Instantané devient [c=success]gratuit[/c][/li][li]Un sort Banal devient [c=warning]Instantané[/c][/li][li]Un sort Canalisé octroie un [c=primary]bouclier[/c] égal au mana dépensé[/li][/ul]");
         passifsVoies.put("Voie de la Destruction",
-                "Accumule de la <strong style=\"color: #ef4444;\">Chaleur</strong> en lançant des sorts.<br>Lorsque la chaleur atteint <strong style=\"color: #ef4444;\">100</strong>, le prochain sort lancé est entièrement <strong style=\"color: #10b981;\">gratuit</strong>.");
+                "Accumule de la [c=danger]Chaleur[/c] en lançant des sorts.\nLorsque la chaleur atteint [c=danger]100[/c], le prochain sort lancé est entièrement [c=success]gratuit[/c].");
         passifsVoies.put("Voie de la Violence",
-                "Le lancement d'un sort octroie des effets d'<strong style=\"color: #facc15;\">Inspiration</strong> ou d'<strong style=\"color: #a855f7;\">Expiration</strong> supplémentaires.");
+                "Le lancement d'un sort octroie des effets d'[c=warning]Inspiration[/c] ou d'[c=purple]Expiration[/c] supplémentaires.");
 
         String[] voies = { "Voie de la Raison", "Voie de la Sûreté", "Voie de Trahison", "Voie de la Consolidation",
                 "Voie de la Conviction", "Voie de la Création", "Voie de la Destruction", "Voie de la Violence" };
@@ -231,13 +231,13 @@ public class WebSpellCreationController {
         for (Spiritualite sp : spiritualiteRepository.findAll()) {
             if ("Esprit".equals(sp.getNom())) {
                 sp.setPassiveDescription(
-                        "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins <strong style=\"color: #10b981;\">20% de vos PV max</strong> <span style=\"font-weight: bold; color: #f59e0b;\">ET</span> <strong style=\"color: #3b82f6;\">20% de votre Mana max</strong>.");
+                        "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins [c=success]20% de vos PV max[/c] ET [c=primary]20% de votre Mana max[/c].");
             } else if ("Ténèbres".equals(sp.getNom())) {
                 sp.setPassiveDescription(
-                        "Sauf pour les sorts de <i>'base'</i>, le lancement nécessite d'avoir <strong style=\"color: #ef4444;\">80% ou moins de vos PV max</strong> <span style=\"font-weight: bold; color: #f59e0b;\">OU</span> <strong style=\"color: #3b82f6;\">80% ou moins de votre Mana max</strong>.");
+                        "Sauf pour les sorts de base, le lancement nécessite d'avoir [c=warning]80% ou moins de vos PV max[/c] OU [c=primary]80% ou moins de votre Mana max[/c].");
             } else if ("Karma".equals(sp.getNom())) {
                 sp.setPassiveDescription(
-                        "Gère une jauge affectée par l'alignement des sorts (<em>Ténèbres, Harmonie, Lumière</em>).<ul style=\"margin-top: 6px; margin-bottom: 6px; padding-left: 20px;\"><li>À <strong style=\"color: #8b5cf6;\">0 (Harmonie)</strong> : octroie des bonus sur vos sorts.</li><li>À <strong style=\"color: #ef4444;\">+4</strong> ou <strong style=\"color: #ef4444;\">-4</strong> : verrouille la magie karmique (sauf sorts d'Harmonie) pendant <strong style=\"color: #fb923c;\">6 tours</strong>, mais confère un buff massif d'<strong style=\"color: #eab308;\">Illumination</strong> (+Armure/Résist) ou de <strong style=\"color: #a855f7;\">Corruption</strong> (+Dégâts).</li></ul><span style=\"color: #94a3b8; font-size: 0.9em;\">💡 Astuce : On peut réduire ce timer en lançant des sorts d'Harmonie.</span>");
+                        "Gère une jauge affectée par l'alignement des sorts ([c=purple]Ténèbres[/c], [c=karma]Harmonie[/c], [c=warning]Lumière[/c]).\n[ul][li]À [c=warning]0[/c] ([c=karma]Harmonie[/c]) : octroie des bonus sur vos sorts.[/li][li]À [c=warning]+4 ou -4[/c] : verrouille la magie karmique (sauf sorts d'[c=karma]Harmonie[/c]) pendant [c=warning]6 tours[/c], mais confère un buff massif d'[c=success]Illumination (+Armure/Résist)[/c] ou de [c=danger]Corruption (+Dégâts)[/c].[/li][/ul]Astuce : On peut réduire ce timer en lançant des sorts d'[c=karma]Harmonie[/c].");
             }
             spiritualiteRepository.save(sp);
         }

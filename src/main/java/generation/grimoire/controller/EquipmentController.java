@@ -4,7 +4,9 @@ import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.personnage.Personnage;
 import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.repository.EquipmentRepository;
+import generation.grimoire.repository.pve.LootEntryRepository;
 import generation.grimoire.service.PersonnageService;
+import jakarta.transaction.Transactional;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,37 +16,43 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/equipment")
+@RequestMapping("/api/equipments")
 public class EquipmentController {
 
     private final EquipmentRepository equipmentRepository;
     private final PersonnageService personnageService;
     private final generation.grimoire.repository.auth.UserRepository userRepository;
+    private final LootEntryRepository lootEntryRepository;
 
     public EquipmentController(EquipmentRepository equipmentRepository,
-                               PersonnageService personnageService,
-                               generation.grimoire.repository.auth.UserRepository userRepository) {
+            PersonnageService personnageService,
+            generation.grimoire.repository.auth.UserRepository userRepository,
+            LootEntryRepository lootEntryRepository) {
         this.equipmentRepository = equipmentRepository;
         this.personnageService = personnageService;
         this.userRepository = userRepository;
+        this.lootEntryRepository = lootEntryRepository;
     }
 
     /** Liste tous les équipements du joueur */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAll(java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         List<Equipment> equipmentList = equipmentRepository.findByUser_Username(principal.getName());
-        return ResponseEntity.ok(equipmentList.stream().filter(e -> !e.isShopTemplate()).map(this::toDto).toList());
+        return ResponseEntity.ok(equipmentList.stream().filter(e -> !e.isTemplate()).map(this::toDto).toList());
     }
 
     /** Liste TOUS les équipements (réservé aux admins) */
     @GetMapping("/all")
     public ResponseEntity<List<Map<String, Object>>> getAllAdmin(java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
-        if (!isAdmin) return ResponseEntity.status(403).build();
-        
+        if (!isAdmin)
+            return ResponseEntity.status(403).build();
+
         List<Equipment> equipmentList = equipmentRepository.findAll();
         return ResponseEntity.ok(equipmentList.stream().map(this::toDto).toList());
     }
@@ -56,7 +64,7 @@ public class EquipmentController {
         List<Equipment> templates = new java.util.ArrayList<>();
         for (String name : names) {
             if (name != null && !name.trim().isEmpty()) {
-                Equipment template = equipmentRepository.findFirstByName(name);
+                Equipment template = equipmentRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(name);
                 if (template != null) {
                     templates.add(template);
                 }
@@ -67,25 +75,182 @@ public class EquipmentController {
 
     /** Liste les équipements d'un personnage */
     @GetMapping("/personnage/{personnageId}")
-    public ResponseEntity<List<Map<String, Object>>> getByPersonnage(@PathVariable Long personnageId, java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<List<Map<String, Object>>> getByPersonnage(@PathVariable Long personnageId,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
         // Optionnel : on pourrait vérifier si le personnage appartient à l'utilisateur
         return ResponseEntity.ok(
                 equipmentRepository.findByPersonnageId(personnageId).stream()
-                        .filter(e -> isAdmin || (e.getUser() != null && e.getUser().getUsername().equals(principal.getName())))
+                        .filter(e -> isAdmin
+                                || (e.getUser() != null && e.getUser().getUsername().equals(principal.getName())))
                         .map(this::toDto).toList());
     }
 
     /** Liste les équipements non-assignés (inventaire libre) */
     @GetMapping("/unassigned")
     public ResponseEntity<List<Map<String, Object>>> getUnassigned(java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         return ResponseEntity.ok(
                 equipmentRepository.findByPersonnageIsNullAndUser_Username(principal.getName()).stream()
-                        .filter(e -> !e.isShopTemplate())
+                        .filter(e -> !e.isTemplate())
                         .map(this::toDto).toList());
+    }
+
+    /**
+     * Calcule le poids d'un équipement en fonction de ses statistiques (Règle B4)
+     */
+    @PostMapping("/simulate-weight")
+    public ResponseEntity<Map<String, Double>> simulateWeight(@RequestBody EquipmentDto dto) {
+        Equipment temp = new Equipment();
+        updateEquipmentFromDto(temp, dto);
+
+        double weight = temp.calculateWeight();
+        double maxWeight = getMaxWeight(dto.getSlot(), dto.getRarity());
+        double shopPrice = temp.calculateShopPrice();
+
+        Map<String, Double> response = new HashMap<>();
+        response.put("weight", weight);
+        response.put("maxWeight", maxWeight);
+        response.put("shopPrice", shopPrice);
+        return ResponseEntity.ok(response);
+    }
+
+    @SuppressWarnings("deprecation")
+    private double getMaxWeight(EquipmentSlot slot, generation.grimoire.enumeration.EquipmentRarity rarity) {
+        if (slot == null || rarity == null)
+            return 5.0;
+        switch (slot) {
+            case CASQUE:
+            case CAPE:
+                switch (rarity) {
+                    case COMMUN:
+                        return 5;
+                    case INHABITUEL:
+                        return 9;
+                    case RARE:
+                        return 14;
+                    case MYTHIQUE:
+                        return 18;
+                    case LEGENDAIRE:
+                        return 22;
+                    case EPIQUE:
+                        return 35;
+                    case RELIQUE:
+                        return 40;
+                    case MAUDIT:
+                        return 27;
+                }
+                break;
+            case PLASTRON:
+            case ARME_DEUX_MAINS:
+                switch (rarity) {
+                    case COMMUN:
+                        return 9;
+                    case INHABITUEL:
+                        return 14;
+                    case RARE:
+                        return 19;
+                    case MYTHIQUE:
+                        return 24;
+                    case LEGENDAIRE:
+                        return 29;
+                    case EPIQUE:
+                        return 40;
+                    case RELIQUE:
+                        return 46;
+                    case MAUDIT:
+                        return 35;
+                }
+                break;
+            case ANNEAU_GAUCHE:
+            case ANNEAU_DROIT:
+                switch (rarity) {
+                    case COMMUN:
+                        return 3;
+                    case INHABITUEL:
+                        return 4;
+                    case RARE:
+                        return 6;
+                    case MYTHIQUE:
+                        return 8;
+                    case LEGENDAIRE:
+                        return 10;
+                    case EPIQUE:
+                        return 15;
+                    case RELIQUE:
+                        return 17;
+                    case MAUDIT:
+                        return 12;
+                }
+                break;
+            case BOTTES:
+                switch (rarity) {
+                    case COMMUN:
+                        return 4;
+                    case INHABITUEL:
+                        return 8;
+                    case RARE:
+                        return 12;
+                    case MYTHIQUE:
+                        return 15;
+                    case LEGENDAIRE:
+                        return 19;
+                    case EPIQUE:
+                        return 30;
+                    case RELIQUE:
+                        return 34;
+                    case MAUDIT:
+                        return 25;
+                }
+                break;
+            case ARME:
+            case ARME_GAUCHE:
+            case ARME_DROITE:
+                switch (rarity) {
+                    case COMMUN:
+                        return 5;
+                    case INHABITUEL:
+                        return 7;
+                    case RARE:
+                        return 10;
+                    case MYTHIQUE:
+                        return 12;
+                    case LEGENDAIRE:
+                        return 15;
+                    case EPIQUE:
+                        return 20;
+                    case RELIQUE:
+                        return 23;
+                    case MAUDIT:
+                        return 18;
+                }
+                break;
+            case CONSOMMABLE:
+                switch (rarity) {
+                    case COMMUN:
+                        return 5;
+                    case INHABITUEL:
+                        return 7;
+                    case RARE:
+                        return 9;
+                    case MYTHIQUE:
+                        return 11;
+                    case LEGENDAIRE:
+                        return 14;
+                    case EPIQUE:
+                        return 20;
+                    case RELIQUE:
+                        return 24;
+                    case MAUDIT:
+                        return 17;
+                }
+                break;
+        }
+        return 5.0;
     }
 
     private void updateEquipmentFromDto(Equipment equipment, EquipmentDto dto) {
@@ -120,9 +285,12 @@ public class EquipmentController {
 
     /** Créer ou mettre à jour un équipement */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createOrUpdate(@RequestBody EquipmentDto dto, java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
-        generation.grimoire.entity.auth.AppUser currentUser = userRepository.findByUsername(principal.getName()).orElse(null);
+    public ResponseEntity<Map<String, Object>> createOrUpdate(@RequestBody EquipmentDto dto,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).build();
+        generation.grimoire.entity.auth.AppUser currentUser = userRepository.findByUsername(principal.getName())
+                .orElse(null);
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
 
@@ -131,15 +299,23 @@ public class EquipmentController {
 
         if (dto.getId() != null && equipmentRepository.existsById(java.util.Objects.requireNonNull(dto.getId()))) {
             equipment = equipmentRepository.findById(java.util.Objects.requireNonNull(dto.getId())).orElseThrow();
-            if (!isAdmin && equipment.getUser() != null && !equipment.getUser().getUsername().equals(principal.getName())) {
+            if (!isAdmin && equipment.getUser() != null
+                    && !equipment.getUser().getUsername().equals(principal.getName())) {
                 return ResponseEntity.status(403).build();
             }
             isUpdate = true;
         } else {
             equipment = new Equipment();
-            equipment.setUser(currentUser);
-            if (currentUser != null) {
-                equipment.setOwnerUsername(currentUser.getUsername());
+            if (isAdmin) {
+                equipment.setTemplate(true);
+                equipment.setOwnerUsername("MODELE");
+                equipment.setUser(null);
+            } else {
+                equipment.setTemplate(false);
+                equipment.setUser(currentUser);
+                if (currentUser != null) {
+                    equipment.setOwnerUsername(currentUser.getUsername());
+                }
             }
         }
 
@@ -148,10 +324,12 @@ public class EquipmentController {
 
         // Assigner à un personnage si fourni
         if (dto.getPersonnageId() != null) {
-            Personnage personnage = personnageService.findByIdOrThrow(java.util.Objects.requireNonNull(dto.getPersonnageId()));
+            Personnage personnage = personnageService
+                    .findByIdOrThrow(java.util.Objects.requireNonNull(dto.getPersonnageId()));
 
             // Si l'admin forge pour un autre joueur, l'objet doit appartenir à ce joueur
-            if (personnage.getUser() != null && (equipment.getUser() == null || (currentUser != null && equipment.getUser().getId().equals(currentUser.getId())))) {
+            if (personnage.getUser() != null && (equipment.getUser() == null
+                    || (currentUser != null && equipment.getUser().getId().equals(currentUser.getId())))) {
                 equipment.setUser(personnage.getUser());
                 equipment.setOwnerUsername(personnage.getUser().getUsername());
             }
@@ -181,7 +359,8 @@ public class EquipmentController {
         if (isUpdate && oldName != null && !oldName.isEmpty()) {
             List<Equipment> instances = equipmentRepository.findByName(oldName);
             for (Equipment instance : instances) {
-                if (instance.getId().equals(saved.getId())) continue;
+                if (instance.getId().equals(saved.getId()))
+                    continue;
                 updateEquipmentFromDto(instance, dto);
                 equipmentRepository.save(instance);
             }
@@ -202,8 +381,9 @@ public class EquipmentController {
             @PathVariable @org.springframework.lang.NonNull Long personnageId,
             @RequestParam(required = false) generation.grimoire.enumeration.EquipmentSlot targetSlot,
             java.security.Principal principal) {
-        
-        if (principal == null) return ResponseEntity.status(401).build();
+
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
 
@@ -214,7 +394,8 @@ public class EquipmentController {
         if (!isAdmin && equipment.getUser() != null && !equipment.getUser().getUsername().equals(principal.getName())) {
             return ResponseEntity.status(403).build();
         }
-        if (!isAdmin && personnage.getUser() != null && !personnage.getUser().getUsername().equals(principal.getName())) {
+        if (!isAdmin && personnage.getUser() != null
+                && !personnage.getUser().getUsername().equals(principal.getName())) {
             return ResponseEntity.status(403).build();
         }
 
@@ -224,7 +405,8 @@ public class EquipmentController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
 
-        // Si on précise un slot cible (ex: changer un anneau de main), on met à jour l'équipement
+        // Si on précise un slot cible (ex: changer un anneau de main), on met à jour
+        // l'équipement
         generation.grimoire.enumeration.EquipmentSlot finalSlot = targetSlot != null ? targetSlot : equipment.getSlot();
 
         // Ne jamais changer la catégorie d'une arme à 2 mains
@@ -238,10 +420,11 @@ public class EquipmentController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
 
-        // Si l'admin équipe un de ses propres objets sur le personnage d'un autre joueur, on duplique l'objet
+        // Si l'admin équipe un de ses propres objets sur le personnage d'un autre
+        // joueur, on duplique l'objet
         if (isAdmin && equipment.getUser() != null && personnage.getUser() != null
                 && !equipment.getUser().getId().equals(personnage.getUser().getId())) {
-            
+
             Equipment duplicate = new Equipment();
             duplicate.setUser(personnage.getUser());
             duplicate.setName(equipment.getName());
@@ -274,7 +457,8 @@ public class EquipmentController {
             return ResponseEntity.ok(response);
         }
 
-        if (targetSlot != null && equipment.getSlot() != generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
+        if (targetSlot != null
+                && equipment.getSlot() != generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
             equipment.setSlot(targetSlot);
         }
 
@@ -294,21 +478,30 @@ public class EquipmentController {
 
     private void checkSlotConflicts(Long personnageId, generation.grimoire.enumeration.EquipmentSlot slotToEquip) {
         if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS) {
-            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE).isPresent() ||
-                equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE).isPresent()) {
-                throw new IllegalArgumentException("Impossible d'équiper une arme à 2 mains : l'emplacement est déjà occupé.");
+            if (equipmentRepository
+                    .findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE)
+                    .isPresent() ||
+                    equipmentRepository.findByPersonnageIdAndSlot(personnageId,
+                            generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE).isPresent()) {
+                throw new IllegalArgumentException(
+                        "Impossible d'équiper une arme à 2 mains : l'emplacement est déjà occupé.");
             }
-        } else if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE || slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE) {
-            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId, generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS).isPresent()) {
-                throw new IllegalArgumentException("Impossible d'équiper cette arme : une arme à 2 mains est déjà équipée.");
+        } else if (slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_GAUCHE
+                || slotToEquip == generation.grimoire.enumeration.EquipmentSlot.ARME_DROITE) {
+            if (equipmentRepository.findByPersonnageIdAndSlot(personnageId,
+                    generation.grimoire.enumeration.EquipmentSlot.ARME_DEUX_MAINS).isPresent()) {
+                throw new IllegalArgumentException(
+                        "Impossible d'équiper cette arme : une arme à 2 mains est déjà équipée.");
             }
         }
     }
 
     /** Déséquiper un objet */
     @PostMapping("/{equipmentId}/unequip")
-    public ResponseEntity<Map<String, Object>> unequip(@PathVariable @org.springframework.lang.NonNull Long equipmentId, java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<Map<String, Object>> unequip(@PathVariable @org.springframework.lang.NonNull Long equipmentId,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
         Equipment equipment = equipmentRepository.findById(equipmentId)
@@ -328,24 +521,36 @@ public class EquipmentController {
     }
 
     /** Supprimer un équipement */
+    @Transactional
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable @org.springframework.lang.NonNull Long id, java.security.Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<String> delete(@PathVariable @org.springframework.lang.NonNull Long id,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).build();
         boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
         Equipment equipment = equipmentRepository.findById(id).orElse(null);
         if (equipment != null) {
-            if (!isAdmin && equipment.getUser() != null && !equipment.getUser().getUsername().equals(principal.getName())) {
+            if (!isAdmin && equipment.getUser() != null
+                    && !equipment.getUser().getUsername().equals(principal.getName())) {
                 return ResponseEntity.status(403).build();
             }
-            
+
             if (!isAdmin && equipment.getUser() != null) {
                 generation.grimoire.entity.auth.AppUser owner = equipment.getUser();
                 owner.setMonnaie(owner.getMonnaie() + equipment.calculateWeight());
                 userRepository.save(owner);
             }
 
-            equipmentRepository.deleteById(id);
+            // Supprimer les références dans les tables de loot avant suppression
+            lootEntryRepository.deleteByEquipmentId(id);
+
+            if (equipment.getPersonnage() != null) {
+                equipment.getPersonnage().getEquipments().remove(equipment);
+                // On laisse orphanRemoval faire la suppression
+            } else {
+                equipmentRepository.deleteById(id);
+            }
             return ResponseEntity.ok("Équipement supprimé et monnaie ajoutée.");
         }
         return ResponseEntity.notFound().build();
@@ -354,7 +559,7 @@ public class EquipmentController {
     private void validateRarityLimit(Personnage personnage, Equipment newEquipment) {
         if (newEquipment.getRarity() == generation.grimoire.enumeration.EquipmentRarity.EPIQUE) {
             boolean hasEpic = equipmentRepository.findByPersonnageId(personnage.getId()).stream()
-                    .anyMatch(e -> e.getRarity() == generation.grimoire.enumeration.EquipmentRarity.EPIQUE 
+                    .anyMatch(e -> e.getRarity() == generation.grimoire.enumeration.EquipmentRarity.EPIQUE
                             && (newEquipment.getId() == null || !e.getId().equals(newEquipment.getId()))
                             && e.getSlot() != newEquipment.getSlot()); // Ignorer si c'est pour remplacer le même slot
             if (hasEpic) {
@@ -363,7 +568,7 @@ public class EquipmentController {
         }
         if (newEquipment.getRarity() == generation.grimoire.enumeration.EquipmentRarity.RELIQUE) {
             boolean hasRelic = equipmentRepository.findByPersonnageId(personnage.getId()).stream()
-                    .anyMatch(e -> e.getRarity() == generation.grimoire.enumeration.EquipmentRarity.RELIQUE 
+                    .anyMatch(e -> e.getRarity() == generation.grimoire.enumeration.EquipmentRarity.RELIQUE
                             && (newEquipment.getId() == null || !e.getId().equals(newEquipment.getId()))
                             && e.getSlot() != newEquipment.getSlot());
             if (hasRelic) {
@@ -397,6 +602,7 @@ public class EquipmentController {
         map.put("consumableMissingManaPercent", e.getConsumableMissingManaPercent());
         map.put("consumableCategory", e.getConsumableCategory() != null ? e.getConsumableCategory().name() : "AUTRE");
         map.put("weight", e.calculateWeight());
+        map.put("maxWeight", getMaxWeight(e.getSlot(), e.getRarity()));
 
         if (e.getPersonnage() != null) {
             Map<String, Object> perso = new HashMap<>();
@@ -405,9 +611,14 @@ public class EquipmentController {
             map.put("personnage", perso);
         }
 
-        if (e.getUser() != null) {
+        if (e.getOwnerUsername() != null) {
+            map.put("ownerUsername", e.getOwnerUsername());
+        } else if (e.getUser() != null) {
             map.put("ownerUsername", e.getUser().getUsername());
         }
+        
+        map.put("isTemplate", e.isTemplate());
+        map.put("availableInShop", e.isAvailableInShop());
 
         return map;
     }

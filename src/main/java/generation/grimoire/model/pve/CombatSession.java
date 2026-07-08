@@ -16,7 +16,10 @@ import java.time.Instant;
 public class CombatSession {
     private String sessionId;
     private Long dungeonId;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Donjon donjon;
+    private String donjonName;
+    private int totalRooms;
     private List<Personnage> players = new ArrayList<>();
     private List<generation.grimoire.entity.Equipment> activeConsumables = new ArrayList<>();
 
@@ -59,6 +62,8 @@ public class CombatSession {
         this.sessionId = sessionId;
         this.dungeonId = donjon.getId();
         this.donjon = donjon;
+        this.donjonName = donjon.getName();
+        this.totalRooms = donjon.getSalles() != null ? donjon.getSalles().size() : 0;
         this.players = players;
 
         loadRoom(0);

@@ -18,6 +18,8 @@ public class ActiveMonster {
     public ActiveMonster(Monstre base) {
         this.base = base;
         this.asPersonnage = new Personnage();
+        this.asPersonnage.setMonsterType(base.getMonsterType());
+        this.asPersonnage.setMonsterName(base.getName());
         this.asPersonnage.setId(nextId--);
         this.asPersonnage.setName(base.getName());
         this.asPersonnage.setHealthMax(base.getHealthMax());

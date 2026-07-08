@@ -6,31 +6,46 @@ window.switchDungeonTab = function(tabName) {
     document.getElementById(`${tabName}DungeonsSection`).classList.add('active');
 };
 
-let currentDungeonId = null;
-let selectedCharIds = [];
-let currentMaxHeroes = 1;
-let selectedConsumableIds = [];
+const pageState = {
+  currentDungeonId: null,
+  selectedCharIds: null,
+  currentMaxHeroes: null,
+  selectedConsumableIds: null,
+  userCharacters: null,
+  availableConsumables: null,
+  activeConsumableFilters: null,
+};
+pageState.currentDungeonId = null;
+pageState.selectedCharIds = [];
+pageState.currentMaxHeroes = 1;
+pageState.selectedConsumableIds = [];
+pageState.userCharacters = [];
+pageState.availableConsumables = [];
+pageState.activeConsumableFilters = { hp: false, mana: false, util: false };
+
+
+
 
 function getMaxWeight() {
-    return 10 + 5 * selectedCharIds.length;
+    return 10 + 5 * pageState.selectedCharIds.length;
 }
 
 function getCurrentWeight() {
-    return availableConsumables
-        .filter(c => selectedConsumableIds.includes(c.id))
+    return pageState.availableConsumables
+        .filter(c => pageState.selectedConsumableIds.includes(c.id))
         .reduce((sum, c) => sum + (c.weight || 0), 0);
 }
 
 function updateHeroCountDisplay() {
     const el = document.getElementById('heroCountDisplay');
     if (el) {
-        el.innerText = `(${selectedCharIds.length} / ${currentMaxHeroes})`;
-        el.style.color = selectedCharIds.length === currentMaxHeroes ? '#10b981' : '#94a3b8';
+        el.innerText = `(${pageState.selectedCharIds.length} / ${pageState.currentMaxHeroes})`;
+        el.style.color = pageState.selectedCharIds.length === pageState.currentMaxHeroes ? '#10b981' : '#94a3b8';
     }
 }
 
-let userCharacters = [];
-let availableConsumables = [];
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const checkAuth = async () => {
@@ -38,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('authWarning').style.display = 'block';
             return;
         }
+
+        if (window.initAppMeta) await window.initAppMeta();
 
         document.getElementById('dungeonsContent').style.display = 'block';
         await loadCharacters();
@@ -78,7 +95,7 @@ function showNotif(message, isError = false) {
 
 async function loadDungeons() {
     try {
-        const res = await fetch('/api/pve/dungeons');
+        const res = await globalFetch('/api/pve/dungeons');
         if (res.ok) {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
@@ -125,8 +142,8 @@ async function loadDungeons() {
                 let catId, label, icon, color;
 
                 // Check hero levels
-                if (userCharacters.length > 0) {
-                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
+                if (pageState.userCharacters.length > 0) {
+                    const hasMatchingHero = pageState.userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
                     if (!hasMatchingHero) return; // Skip if no hero has exactly this level or higher
                 }
                 
@@ -224,7 +241,7 @@ async function loadDungeons() {
                         if (userLevel < reqLevel) {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay">
-                                <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
+                                <span class="material-symbols-outlined opacity-80" style="font-size: 3.5rem; margin-bottom: 0.5rem;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.3rem;">Accès Verrouillé</div>
                                 <div style="font-size: 0.95rem; color: #fca5a5;">Secret requis : <strong style="color: #f8fafc;">${d.requiredSecret}</strong> (Niv. ${reqLevel})</div>
                             </div>`;
@@ -235,14 +252,14 @@ async function loadDungeons() {
                         if (!userDungeons.includes(d.id)) {
                             isLocked = true;
                             lockedHtml = `<div class="dungeon-lock-overlay" style="background: rgba(15, 23, 42, 0.75); color: #f59e0b;">
-                                <span class="material-symbols-outlined" style="font-size: 3.5rem; margin-bottom: 0.5rem; opacity: 0.8;">lock</span>
+                                <span class="material-symbols-outlined opacity-80" style="font-size: 3.5rem; margin-bottom: 0.5rem;">lock</span>
                                 <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">Donjon Verrouillé</div>
-                                <button class="btn btn-primary" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
+                                <button class="btn btn-primary flex-center" onclick="event.stopPropagation(); unlockDungeon(${d.id}, ${d.unlockCostGold}, event)" style="width: 80%; justify-content: center; gap: 0.4rem; padding: 0.6rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-family: 'Outfit', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><span class="material-symbols-outlined" style="font-size: 1.1rem;">lock_open</span> D\u00e9bloquer (${d.unlockCostGold} Or)</button>
                             </div>`;
                         }
                     }
 
-                    const entryCostHtml = d.entryCostGold > 0 ? `<div style="color: #f59e0b; font-weight: 600; font-size: 0.9rem; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">monetization_on</span> Co\u00fbt d'entr\u00e9e : ${d.entryCostGold} Or</div>` : '';
+                    const entryCostHtml = d.entryCostGold > 0 ? `<div class="text-sm" style="color: #f59e0b; font-weight: 600; margin-top: 0.5rem;"><span class="material-symbols-outlined align-middle" style="font-size: 1rem;">monetization_on</span> Co\u00fbt d'entr\u00e9e : ${d.entryCostGold} Or</div>` : '';
 
                     const cardHtml = `
                         <div class="dungeon-card ${isLocked ? 'locked' : ''}" ${isLocked ? '' : `onclick="openPrepInterface(${d.id}, '${d.name.replace(/'/g, "\\'")}', '${sallesData}', ${d.maxHeroes || 1}, ${d.entryCostGold || 0}, ${d.recommendedLevel || 1})"`}>
@@ -255,20 +272,20 @@ async function loadDungeons() {
                             <div class="dungeon-desc">${d.description || 'Affrontez les dangers qui r\u00f4dent.'}</div>
                             ${entryCostHtml}
                             <div style="font-size: 0.85rem; color: #f8fafc; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; gap: 0.4rem;">
-                                <div style="color: #0ea5e9; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">
+                                <div class="flex-center" style="color: #0ea5e9; font-weight: 600; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">group</span> H\u00e9ros max : ${d.maxHeroes || 1}
                                 </div>
                                 <div><span style="font-weight: 600;">Salles totales :</span> ${totalSalles}</div>
-                                ${combats > 0 ? `<div style="color: #ef4444; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${combats > 0 ? `<div class="flex-center text-error" style="margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">swords</span> Combats : ${combats} (avec ${totalMobs} mob${totalMobs > 1 ? 's' : ''})
                                 </div>` : ''}
-                                ${bosses > 0 ? `<div style="color: #dc2626; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${bosses > 0 ? `<div class="flex-center" style="color: #dc2626; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">skull</span> Boss : ${bosses} (avec ${totalBossMobs} mob${totalBossMobs > 1 ? 's' : ''})
                                 </div>` : ''}
-                                ${treasures > 0 ? `<div style="color: #f59e0b; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                ${treasures > 0 ? `<div class="flex-center" style="color: #f59e0b; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> Tr\u00e9sors : ${treasures}
                                 </div>` : ''}
-                                <div style="color: #8b5cf6; margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+                                <div class="flex-center" style="color: #8b5cf6; margin-left: 0.5rem; gap: 0.3rem;">
                                     <span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9v\u00e9nements : ${events}
                                 </div>
                             </div>
@@ -288,14 +305,14 @@ async function loadDungeons() {
 
 async function loadCharacters() {
     try {
-        const res = await fetch('/api/personnages');
+        const res = await globalFetch('/api/personnages');
         if (res.ok) {
-            userCharacters = await res.json();
+            pageState.userCharacters = await res.json();
             const list = document.getElementById('prepCharList');
             list.innerHTML = '';
 
-            if (userCharacters.length === 0) {
-                list.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem;">Vous n'avez aucun personnage. Allez dans le Grimoire pour en cr\u00e9er un.</div>`;
+            if (pageState.userCharacters.length === 0) {
+                list.innerHTML = `<div class="text-sm text-muted">Vous n'avez aucun personnage. Allez dans le Grimoire pour en cr\u00e9er un.</div>`;
                 return;
             }
 
@@ -319,7 +336,7 @@ async function loadCharacters() {
                 return { c: '#a78bfa', i: 'psychology' };
             };
 
-            userCharacters.forEach(c => {
+            pageState.userCharacters.forEach(c => {
                 let iconsHtml = '';
                 if (c.voie && c.voie.nom) {
                     const vi = getVIcon(c.voie.nom);
@@ -333,10 +350,10 @@ async function loadCharacters() {
                     <div class="char-card" id="charCard_${c.id}" onclick="selectCharacter(${c.id})">
                         <div class="char-avatar">${c.name.charAt(0).toUpperCase()}</div>
                         <div>
-                            <div style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem; display: flex; align-items: center;">
+                            <div class="flex-center" style="color: #f8fafc; font-weight: 600; font-family: 'Outfit'; font-size: 1.1rem;">
                                 ${c.name} ${iconsHtml}
                             </div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">Niv. ${c.voieLevel || 1} • ${c.healthMax} PV max</div>
+                            <div class="text-muted" style="font-size: 0.85rem;">Niv. ${c.voieLevel || 1} &bull; ${c.healthMax} PV max</div>
                         </div>
                     </div>
                 `;
@@ -349,10 +366,10 @@ async function loadCharacters() {
 
 async function loadConsumables() {
     try {
-        const res = await fetch('/api/equipment/unassigned');
+        const res = await globalFetch('/api/equipments/unassigned');
         if (res.ok) {
             const allUnassigned = await res.json();
-            availableConsumables = allUnassigned
+            pageState.availableConsumables = allUnassigned
                 .filter(eq => eq.slot === 'CONSOMMABLE')
                 .sort((a, b) => a.name.localeCompare(b.name));
         }
@@ -361,12 +378,12 @@ async function loadConsumables() {
     }
 }
 
-let activeConsumableFilters = { hp: false, mana: false, util: false };
+
 
 window.toggleConsumableFilter = function(btn, type) {
-    activeConsumableFilters[type] = !activeConsumableFilters[type];
+    pageState.activeConsumableFilters[type] = !pageState.activeConsumableFilters[type];
     
-    if (activeConsumableFilters[type]) {
+    if (pageState.activeConsumableFilters[type]) {
         btn.style.opacity = '1';
         btn.style.boxShadow = '0 0 8px currentColor';
     } else {
@@ -385,21 +402,21 @@ function renderConsumablesList() {
     const maxWeight = getMaxWeight();
     const isOverweight = curWeight > maxWeight;
 
-    const counterHtml = `<div style="text-align: center; margin-bottom: 0.8rem; font-size: 0.85rem; color: ${isOverweight ? '#ef4444' : '#94a3b8'};">
-        <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">scale</span>
+    const counterHtml = `<div class="text-center" style="margin-bottom: 0.8rem; font-size: 0.85rem; color: ${isOverweight ? '#ef4444' : '#94a3b8'};">
+        <span class="material-symbols-outlined text-sm align-middle">scale</span>
         Poids: ${curWeight % 1 === 0 ? curWeight : curWeight.toFixed(1)} / ${maxWeight}
     </div>`;
 
-    if (availableConsumables.length === 0) {
-        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Vous n'avez aucun consommable dans votre coffre.</div>`;
+    if (pageState.availableConsumables.length === 0) {
+        list.innerHTML = counterHtml + `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Vous n'avez aucun consommable dans votre coffre.</div>`;
         return;
     }
 
-    let filteredConsumables = availableConsumables;
-    const hasFilter = activeConsumableFilters.hp || activeConsumableFilters.mana || activeConsumableFilters.util;
+    let filteredConsumables = pageState.availableConsumables;
+    const hasFilter = pageState.activeConsumableFilters.hp || pageState.activeConsumableFilters.mana || pageState.activeConsumableFilters.util;
     
     if (hasFilter) {
-        filteredConsumables = availableConsumables.filter(c => {
+        filteredConsumables = pageState.availableConsumables.filter(c => {
             const isHp = (c.consumableHpPercent && c.consumableHpPercent > 0) || 
                          (c.consumableMissingHpPercent && c.consumableMissingHpPercent > 0) || 
                          (c.bonusHealthMax && c.bonusHealthMax > 0) ||
@@ -415,14 +432,14 @@ function renderConsumablesList() {
             
             const isUtil = !isHp && !isMana;
 
-            return (activeConsumableFilters.hp && isHp) || 
-                   (activeConsumableFilters.mana && isMana) || 
-                   (activeConsumableFilters.util && isUtil);
+            return (pageState.activeConsumableFilters.hp && isHp) || 
+                   (pageState.activeConsumableFilters.mana && isMana) || 
+                   (pageState.activeConsumableFilters.util && isUtil);
         });
     }
 
     if (filteredConsumables.length === 0) {
-        list.innerHTML = counterHtml + `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
+        list.innerHTML = counterHtml + `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Aucun consommable ne correspond à ces filtres.</div>`;
         return;
     }
 
@@ -432,18 +449,18 @@ function renderConsumablesList() {
         const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
         const iconName = c.consumableCategory ? (catIcons[c.consumableCategory] || 'inventory_2') : 'inventory_2';
         const iconColor = c.consumableCategory ? (catColors[c.consumableCategory] || '#854c4c') : '#854c4c';
-        const isSelected = selectedConsumableIds.includes(c.id);
-        const selIndex = selectedConsumableIds.indexOf(c.id);
-        const badgeHtml = isSelected ? `<div style="position: absolute; top: -6px; right: -6px; background: #10b981; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">${selIndex + 1}</div>` : '';
+        const isSelected = pageState.selectedConsumableIds.includes(c.id);
+        const selIndex = pageState.selectedConsumableIds.indexOf(c.id);
+        const badgeHtml = isSelected ? `<div class="flex-center text-xxs absolute" style="top: -6px; right: -6px; background: #10b981; color: white; width: 18px; height: 18px; border-radius: 50%; justify-content: center; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">${selIndex + 1}</div>` : '';
         cardsHtml += `
-            <div class="consumable-card ${isSelected ? 'selected' : ''}" onclick="selectConsumable(${c.id})" style="position: relative; overflow: visible;">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem; color: ${isSelected ? '#10b981' : iconColor}; flex-shrink: 0;">${iconName}</span>
+            <div class="consumable-card ${isSelected ? 'selected' : ''} relative" onclick="selectConsumable(${c.id})" style="overflow: visible;">
+                <span class="material-symbols-outlined flex-shrink-0" style="font-size: 1.1rem; color: ${isSelected ? '#10b981' : iconColor};">${iconName}</span>
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="color: #f8fafc; font-weight: 600; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${c.name}">${c.name}</div>
-                        <div style="color: #94a3b8; font-size: 0.65rem; font-weight: bold; background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.1rem;"><span class="material-symbols-outlined" style="font-size: 0.7rem;">scale</span>${c.weight % 1 === 0 ? c.weight : Number(c.weight).toFixed(1)}</div>
+                    <div class="flex-between" style="align-items: center;">
+                        <div class="whitespace-nowrap" title="${c.name}" style="color: #f8fafc; font-weight: 600; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
+                        <div class="text-xxs font-bold text-muted" style="background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.1rem;"><span class="material-symbols-outlined" style="font-size: 0.7rem;">scale</span>${c.weight % 1 === 0 ? c.weight : Number(c.weight).toFixed(1)}</div>
                     </div>
-                    <div style="color: var(--text-muted); font-size: 0.75rem; display: flex; gap: 0.4rem; flex-wrap: wrap; overflow: visible; align-items: center; margin-top: 2px;">
+                    <div class="text-muted" style="font-size: 0.75rem; display: flex; gap: 0.4rem; flex-wrap: wrap; overflow: visible; align-items: center; margin-top: 2px;">
                         ${c.bonusHealthMax ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV">+${c.bonusHealthMax}<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">favorite</span></span>` : ''}
                         ${c.bonusManaMax ? `<span style="display:inline-flex; align-items:center; color:#38bdf8;" title="Mana">+${c.bonusManaMax}<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">water_drop</span></span>` : ''}
                         ${c.consumableHpPercent ? `<span style="display:inline-flex; align-items:center; color:#ec4899;" title="PV Max">+${c.consumableHpPercent}%<span class="material-symbols-outlined" style="font-size:0.8rem; margin-left:1px;">favorite</span></span>` : ''}
@@ -460,48 +477,48 @@ function renderConsumablesList() {
 }
 
 window.selectConsumable = function (id) {
-    const idx = selectedConsumableIds.indexOf(id);
+    const idx = pageState.selectedConsumableIds.indexOf(id);
     if (idx !== -1) {
-        selectedConsumableIds.splice(idx, 1);
+        pageState.selectedConsumableIds.splice(idx, 1);
     } else {
-        const c = availableConsumables.find(item => item.id === id);
+        const c = pageState.availableConsumables.find(item => item.id === id);
         const itemWeight = c ? (c.weight || 0) : 0;
         if (getCurrentWeight() + itemWeight > getMaxWeight()) {
             showNotif(`Le poids maximum serait d\u00e9pass\u00e9 !`, true);
             return;
         }
-        selectedConsumableIds.push(id);
+        pageState.selectedConsumableIds.push(id);
     }
     renderConsumablesList();
 };
 
 window.selectCharacter = async function (id) {
-    if (selectedCharIds.includes(id)) {
-        selectedCharIds = selectedCharIds.filter(cid => cid !== id);
+    if (pageState.selectedCharIds.includes(id)) {
+        pageState.selectedCharIds = pageState.selectedCharIds.filter(cid => cid !== id);
         if (getCurrentWeight() > getMaxWeight()) {
-            selectedConsumableIds = [];
+            pageState.selectedConsumableIds = [];
             showNotif(`Inventaire r\u00e9initialis\u00e9 car le poids max a diminu\u00e9.`, true);
         }
     } else {
-        if (selectedCharIds.length >= currentMaxHeroes) {
-            showNotif(`Ce donjon est limit\u00e9 \u00e0 ${currentMaxHeroes} h\u00e9ros maximum.`, true);
+        if (pageState.selectedCharIds.length >= pageState.currentMaxHeroes) {
+            showNotif(`Ce donjon est limit\u00e9 \u00e0 ${pageState.currentMaxHeroes} h\u00e9ros maximum.`, true);
             return;
         }
-        selectedCharIds.push(id);
+        pageState.selectedCharIds.push(id);
     }
     
     renderConsumablesList();
     updateHeroCountDisplay();
 
     document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-    selectedCharIds.forEach(cid => {
+    pageState.selectedCharIds.forEach(cid => {
         const card = document.getElementById('charCard_' + cid);
         if (card) card.classList.add('selected');
     });
 
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
-        if (selectedCharIds.length > 0) {
+        if (pageState.selectedCharIds.length > 0) {
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'all';
         } else {
@@ -512,13 +529,13 @@ window.selectCharacter = async function (id) {
 
     let equipments = [];
     try {
-        const res = await fetch(`/api/equipment/personnage/${id}`);
+        const res = await globalFetch(`/api/equipments/personnage/${id}`);
         if (res.ok) {
             equipments = await res.json();
         }
     } catch (e) { console.error(e); }
 
-    const char = userCharacters.find(c => c.id === id);
+    const char = pageState.userCharacters.find(c => c.id === id);
     if (!char) return;
 
     let totalStats = {
@@ -559,34 +576,30 @@ window.selectCharacter = async function (id) {
         <div class="stat-item" style="color: #a855f7;"><span class="material-symbols-outlined">auto_awesome</span> ${totalStats.power} Puissance</div>
         <div class="stat-item" style="color: #f43f5e;"><span class="material-symbols-outlined">fitness_center</span> ${totalStats.strength} Force</div>
         <div class="stat-item" style="color: #3b82f6;"><span class="material-symbols-outlined">shield</span> ${totalStats.armor} Armure</div>
-        <div class="stat-item" style="color: #10b981;"><span class="material-symbols-outlined">shield</span> ${totalStats.resistance} R\u00e9sist</div>
+        <div class="stat-item text-success"><span class="material-symbols-outlined">shield</span> ${totalStats.resistance} R\u00e9sist</div>
         <div class="stat-item" style="color: #f59e0b;"><span class="material-symbols-outlined">bolt</span> ${totalStats.speed} Vitesse</div>
-        <div class="stat-item" style="color: #ef4444;"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
+        <div class="stat-item text-error"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
     `;
 
     const equipList = document.getElementById('prepEquipList');
     equipList.innerHTML = '';
     if (equipments.length === 0) {
-        equipList.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun \u00e9quipement port\u00e9.</div>`;
+        equipList.innerHTML = `<div class="text-sm text-muted">Aucun \u00e9quipement port\u00e9.</div>`;
     } else {
-        const iconMap = {
-            'CASQUE': 'masks', 'PLASTRON': 'shield', 'BOTTES': 'footprint',
-            'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter', 'ARME_GAUCHE': 'colorize', 'ARME_DROITE': 'security', 'ARME_DEUX_MAINS': 'swords'
-        };
         const colorMap = {
             'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308',
             'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252'
         };
         equipments.forEach(eq => {
-            const icon = iconMap[eq.slot] || 'help';
-            const color = colorMap[eq.rarity] || '#f8fafc';
-            const extraClass = icon === 'masks' ? 'flip-icon' : '';
+            const slotInfo = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8', extraClass: '' });
+            const rarityName = eq.rarity && typeof eq.rarity === 'object' ? eq.rarity.name : eq.rarity;
+            const rarityColor = colorMap[rarityName] || '#f8fafc';
             equipList.innerHTML += `
-                <div class="equip-slot" style="border-left: 3px solid ${color};">
-                    <div class="equip-slot-icon"><span class="material-symbols-outlined ${extraClass}">${icon}</span></div>
+                <div class="equip-slot" style="border-left: 3px solid ${rarityColor};">
+                    <div class="equip-slot-icon"><span class="material-symbols-outlined ${slotInfo.extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span></div>
                     <div>
-                        <div style="color: ${color}; font-weight: 600; font-size: 0.9rem;">${eq.name}</div>
-                        <div style="color: var(--text-muted); font-size: 0.75rem;">${eq.slot}</div>
+                        <div class="text-sm" style="color: ${rarityColor}; font-weight: 600;">${eq.name}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${eq.slot}</div>
                     </div>
                 </div>
             `;
@@ -595,16 +608,16 @@ window.selectCharacter = async function (id) {
 };
 
 window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost, reqLevel) {
-    currentDungeonId = id;
-    selectedCharIds = [];
-    selectedConsumableIds = [];
-    currentMaxHeroes = maxHeroes || 1;
+    pageState.currentDungeonId = id;
+    pageState.selectedCharIds = [];
+    pageState.selectedConsumableIds = [];
+    pageState.currentMaxHeroes = maxHeroes || 1;
     window.currentDungeonEntryCost = entryCost || 0;
     window.currentDungeonReqLevel = reqLevel || 1;
 
     updateHeroCountDisplay();
 
-    document.getElementById('prepDungeonTitle').textContent = `${name} (Max: ${currentMaxHeroes} h\u00e9ros)`;
+    document.getElementById('prepDungeonTitle').textContent = `${name} (Max: ${pageState.currentMaxHeroes} h\u00e9ros)`;
 
     const btnEnter = document.getElementById('btnEnterDungeon');
     if (window.currentDungeonEntryCost > 0) {
@@ -622,17 +635,17 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
         let html = '';
         salles.forEach((s, index) => {
             if (s.type === 'COMBAT' || s.type === 'BOSS') {
-                html += `<div style="margin-bottom: 0.5rem; color: #ef4444; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">${s.type === 'BOSS' ? 'skull' : 'swords'}</span> \u00c9tape ${index + 1} : ${s.type === 'BOSS' ? 'Boss' : 'Combat'}</div>`;
+                html += `<div class="flex-center text-error" style="margin-bottom: 0.5rem; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">${s.type === 'BOSS' ? 'skull' : 'swords'}</span> \u00c9tape ${index + 1} : ${s.type === 'BOSS' ? 'Boss' : 'Combat'}</div>`;
                 if (!s.monsters || s.monsters.length === 0) {
-                    html += `<div style="margin-left: 1.5rem; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.85rem;">Aucun ennemi d\u00e9tect\u00e9</div>`;
+                    html += `<div class="text-muted" style="margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">Aucun ennemi d\u00e9tect\u00e9</div>`;
                 } else {
                     const count = s.monsters.length;
                     html += `<div style="margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: #f8fafc;">${count} ennemi${count > 1 ? 's' : ''}</div>`;
                 }
             } else if (s.type === 'TREASURE') {
-                html += `<div style="margin-bottom: 0.5rem; color: #f59e0b; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> \u00c9tape ${index + 1} : Tr\u00e9sor</div>`;
+                html += `<div class="flex-center" style="margin-bottom: 0.5rem; color: #f59e0b; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">shopping_bag</span> \u00c9tape ${index + 1} : Tr\u00e9sor</div>`;
             } else if (s.type === 'EVENT') {
-                html += `<div style="margin-bottom: 0.5rem; color: #8b5cf6; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9tape ${index + 1} : \u00c9v\u00e9nement</div>`;
+                html += `<div class="flex-center" style="margin-bottom: 0.5rem; color: #8b5cf6; font-weight: 600; gap: 0.3rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">auto_awesome</span> \u00c9tape ${index + 1} : \u00c9v\u00e9nement</div>`;
             }
         });
         list.innerHTML = html;
@@ -646,7 +659,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     });
     
     // Grey out characters with level < window.currentDungeonReqLevel
-    userCharacters.forEach(c => {
+    pageState.userCharacters.forEach(c => {
         const charLevel = c.voieLevel || 1;
         if (charLevel < window.currentDungeonReqLevel) {
             const card = document.getElementById('charCard_' + c.id);
@@ -661,7 +674,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     document.getElementById('prepStatEmpty').style.display = 'flex';
     document.getElementById('prepStatGrid').style.display = 'none';
-    document.getElementById('prepEquipList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Aucun équipement à afficher.</div>';
+    document.getElementById('prepEquipList').innerHTML = '<div class="text-sm text-muted">Aucun équipement à afficher.</div>';
 
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
@@ -678,13 +691,13 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 window.closePrepInterface = function () {
     document.getElementById('prepInterface').style.display = 'none';
     document.getElementById('dungeonsContent').style.display = 'block';
-    currentDungeonId = null;
-    selectedCharIds = [];
-    selectedConsumableIds = [];
+    pageState.currentDungeonId = null;
+    pageState.selectedCharIds = [];
+    pageState.selectedConsumableIds = [];
 };
 
 window.startCombat = async function () {
-    if (selectedCharIds.length === 0) {
+    if (pageState.selectedCharIds.length === 0) {
         showNotif("Veuillez s\u00e9lectionner au moins un personnage.", true);
         return;
     }
@@ -698,10 +711,10 @@ window.startCombat = async function () {
         if (!confirmed) return;
     }
 
-    const charIdsStr = selectedCharIds.join(',');
-    let url = `/combat.html?dungeonId=${currentDungeonId}&characterIds=${charIdsStr}`;
-    if (selectedConsumableIds.length > 0) {
-        url += `&consumableIds=${selectedConsumableIds.join(',')}`;
+    const charIdsStr = pageState.selectedCharIds.join(',');
+    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}`;
+    if (pageState.selectedConsumableIds.length > 0) {
+        url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }
     window.location.href = url;
 };
@@ -712,14 +725,14 @@ window.unlockDungeon = async function (id, cost, event) {
     if (!confirmed) return;
 
     try {
-        const res = await fetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/dungeons/${id}/unlock`, { method: 'POST' });
         if (res.ok) {
             if (overlay) {
                 overlay.classList.add('unlocking');
                 await new Promise(r => setTimeout(r, 800));
             }
             showNotif("Donjon d\u00e9bloqu\u00e9 !");
-            const authRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
+            const authRes = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
             if (authRes.ok) window.currentUser = await authRes.json();
             loadDungeons();
         } else {

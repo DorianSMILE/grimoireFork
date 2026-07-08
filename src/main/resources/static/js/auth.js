@@ -1,19 +1,64 @@
-// Auth scripts for login and register pages
+﻿// Auth scripts for login and register pages
+window.initAppMeta = async function () {
+    const { initMeta } = await import('./constants.js');
+    return initMeta();
+};
+
+window.globalFetch = async function (url, options = {}) {
+    try {
+        const res = await fetch(url, options);
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login.html';
+            // Throw so callers' catch blocks fire instead of processing null
+            throw new Error('Session expirée');
+        }
+        if (!res.ok) {
+            let errorMsg = "Erreur serveur";
+            try {
+                const data = await res.json();
+                errorMsg = data.message || data.error || errorMsg;
+            } catch (e) {
+                try {
+                    const text = await res.text();
+                    errorMsg = text || errorMsg;
+                } catch (e2) { }
+            }
+            throw new Error(errorMsg);
+        }
+        return res;
+    } catch (error) {
+        if (typeof showNotif !== 'undefined') {
+            showNotif(error.message, true);
+        } else if (typeof alert !== 'undefined') {
+            ui.showNotif(error.message, true);
+        }
+        throw error;
+    }
+};
+
+window.formatRichText = function (text) {
+    if (!text) return '';
+    return text
+        .replace(/\[c=(.*?)\](.*?)\[\/c\]/g, '<strong class="text-$1">$2</strong>')
+        .replace(/\[ul\](.*?)\[\/ul\]/gs, '<ul class="list-disc mt-1 mb-1 pl-5">$1</ul>')
+        .replace(/\[li\](.*?)\[\/li\]/g, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
-    
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorDiv = document.getElementById('authError');
             errorDiv.style.display = 'none';
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
+
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -21,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     credentials: 'same-origin',
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
-                
+
                 if (!res.ok) {
                     errorDiv.innerText = data.message || "Erreur de connexion";
                     errorDiv.style.display = 'block';
@@ -45,17 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const successDiv = document.getElementById('authSuccess');
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (password !== confirmPassword) {
                 errorDiv.innerText = "Les mots de passe ne correspondent pas";
                 errorDiv.style.display = 'block';
                 return;
             }
-            
+
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
@@ -63,9 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     credentials: 'same-origin',
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
-                
+
                 if (!res.ok) {
                     errorDiv.innerText = data.message || "Erreur lors de l'inscription";
                     errorDiv.style.display = 'block';
@@ -100,15 +145,15 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.isAdmin = data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN');
             window.dispatchEvent(new Event('authLoaded'));
             container.innerHTML = `
-                <a href="/secrets.html" style="display: flex; align-items: center; gap: 0.3rem; color: #10b981; font-weight: 500; font-size: 0.85rem; text-decoration: none; padding: 0.2rem 0.5rem; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
+                <a class="flex-center font-medium text-success" href="/secrets.html" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'" style="gap: 0.3rem; font-size: 0.85rem; text-decoration: none; padding: 0.2rem 0.5rem; border-radius: 6px; transition: background 0.2s;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_circle</span>
                     ${data.username}
                 </a>
-                <div style="display: flex; align-items: center; gap: 0.2rem; color: #f59e0b; font-weight: 600; font-size: 0.85rem; margin-left: 0.5rem;" title="Monnaie">
+                <div class="flex-center" title="Monnaie" style="gap: 0.2rem; color: #f59e0b; font-weight: 600; font-size: 0.85rem; margin-left: 0.5rem;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">monetization_on</span>
                     ${data.monnaie !== undefined ? (data.monnaie % 1 === 0 ? data.monnaie : data.monnaie.toFixed(1)) : '0'}
                 </div>
-                <button onclick="logout()" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 6px; padding: 0.25rem 0.5rem; cursor: pointer; display: flex; align-items: center; font-family: 'Outfit'; font-size: 0.8rem; margin-left: 0.5rem; transition: all 0.2s;">
+                <button class="flex-center text-xs text-error" onclick="logout()" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.25rem 0.5rem; cursor: pointer; font-family: 'Outfit'; margin-left: 0.5rem; transition: all 0.2s;">
                     <span class="material-symbols-outlined" style="font-size: 1rem;">logout</span>
                 </button>
             `;
@@ -117,20 +162,20 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.isAdmin = false;
             window.dispatchEvent(new Event('authLoaded'));
             container.innerHTML = `
-                <a href="/login.html" style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.2s;">
+                <a class="font-medium" href="/login.html" style="color: #3b82f6; text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.2s;">
                     Se connecter
                 </a>
-                <a href="/register.html" style="color: #10b981; text-decoration: none; font-weight: 500; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                <a class="font-medium text-success" href="/register.html" style="text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.6rem; border-radius: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;">
                     S'inscrire
                 </a>
             `;
         }
     } catch (e) {
-        container.innerHTML = `<span style="font-size: 0.8rem; color: #ef4444;">Erreur auth</span>`;
+        container.innerHTML = `<span class="text-xs text-error">Erreur auth</span>`;
     }
 }
 
-window.logout = async function() {
+window.logout = async function () {
     try {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
         window.location.reload();
@@ -173,16 +218,16 @@ function applyFeatureLock(el, isUnlocked, featureName, cost, featureId, original
         el.style.opacity = '0.7';
         el.style.cursor = 'not-allowed';
         el.setAttribute('onclick', `promptUnlockFeature('${featureId}', '${featureName}', ${cost})`);
-        
+
         if (!el.querySelector('.feature-lock-icon')) {
-            el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon" style="font-size: 0.9rem; margin-left: auto; color: #ef4444;">lock</span>');
+            el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon text-sm text-error" style="margin-left: auto;">lock</span>');
         }
     }
 }
 
 function injectUnlockModal() {
     if (document.getElementById('globalUnlockOverlay')) return;
-    
+
     const style = document.createElement('style');
     style.innerHTML = `
         .global-unlock-overlay {
@@ -313,7 +358,7 @@ function injectUnlockModal() {
                 <span class="material-symbols-outlined" style="font-size: 2.2rem; color: #fbbf24;" id="globalUnlockIcon">lock_open</span>
             </div>
             <div class="global-unlock-modal-title" id="globalUnlockTitle">Débloquer ?</div>
-            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong style="color: #f8fafc;">définitif</strong> pour votre compte. Vous n’aurez plus jamais à payer ce coût.</div>
+            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong style="color: #f8fafc;">définitif</strong> pour votre compte. Vous nâ€™aurez plus jamais à payer ce coût.</div>
             <div class="global-unlock-modal-cost">
                 <span class="material-symbols-outlined" style="font-size: 1.3rem;">monetization_on</span>
                 <span id="globalUnlockCost">0</span> Or
@@ -330,18 +375,19 @@ function injectUnlockModal() {
     document.body.appendChild(overlay);
 }
 
-window.promptUnlockFeature = function(featureId, featureName, cost) {
+window.promptUnlockFeature = function (featureId, featureName, cost) {
     if (!window.currentUser) {
-        alert("Veuillez vous connecter pour débloquer cette fonctionnalité.");
+        if (typeof showNotif !== 'undefined') showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
+        else ui.showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
         return;
     }
-    
+
     injectUnlockModal();
-    
+
     const overlay = document.getElementById('globalUnlockOverlay');
     document.getElementById('globalUnlockTitle').textContent = `Débloquer ${featureName} ?`;
     document.getElementById('globalUnlockCost').textContent = cost;
-    
+
     if (featureId === 'vault') {
         document.getElementById('globalUnlockIcon').textContent = 'money_bag';
     } else if (featureId === 'alchemy') {
@@ -349,41 +395,43 @@ window.promptUnlockFeature = function(featureId, featureName, cost) {
     } else {
         document.getElementById('globalUnlockIcon').textContent = 'lock_open';
     }
-    
+
     overlay.classList.add('active');
-    
+
     const confirmBtn = document.getElementById('globalUnlockConfirm');
     const cancelBtn = document.getElementById('globalUnlockCancel');
-    
+
     const cleanup = () => {
         overlay.classList.remove('active');
         // Clean listeners by replacing
         confirmBtn.replaceWith(confirmBtn.cloneNode(true));
         cancelBtn.replaceWith(cancelBtn.cloneNode(true));
     };
-    
+
     cancelBtn.addEventListener('click', cleanup);
-    
-    document.getElementById('globalUnlockConfirm').addEventListener('click', function() {
+
+    document.getElementById('globalUnlockConfirm').addEventListener('click', function () {
         const btn = this;
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">autorenew</span>';
         btn.disabled = true;
-        
+
         fetch('/api/auth/unlock/' + featureId, {
             method: 'POST',
             credentials: 'same-origin'
-        }).then(res => res.json().then(data => ({status: res.status, data})))
-        .then(res => {
-            if (res.status === 200) {
-                window.location.reload();
-            } else {
-                alert(res.data.message || "Erreur lors de l'achat.");
+        }).then(res => res.json().then(data => ({ status: res.status, data })))
+            .then(res => {
+                if (res.status === 200) {
+                    window.location.reload();
+                } else {
+                    if (typeof showNotif !== 'undefined') showNotif(res.data.message || "Erreur lors de l'achat.", true);
+                    else ui.showNotif(res.data.message || "Erreur lors de l'achat.", true);
+                    cleanup();
+                }
+            }).catch(err => {
+                if (typeof showNotif !== 'undefined') showNotif("Erreur serveur.", true);
+                else ui.showNotif("Erreur serveur.", true);
                 cleanup();
-            }
-        }).catch(err => {
-            alert("Erreur serveur.");
-            cleanup();
-        });
+            });
     });
 };

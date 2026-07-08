@@ -46,7 +46,7 @@ public class DamagePercentageEffect extends DamageEffect {
         damage = applyEquipmentModifiers(damage, caster, target, this.getDamageType());
 
         // Appliquer les dégâts à la cible
-        target.takeDamage((int) damage, this.getDamageType(), caster);
+        caster.dealDamage(target, (int) damage, this.getDamageType());
     }
 
 }

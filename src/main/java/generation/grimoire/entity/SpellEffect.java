@@ -86,6 +86,7 @@ public abstract class SpellEffect {
 
     @Transient
     public String getEffectType() {
-        return this.getClass().getSimpleName();
+        DiscriminatorValue val = this.getClass().getAnnotation(DiscriminatorValue.class);
+        return val != null ? val.value() : this.getClass().getSimpleName();
     }
 }

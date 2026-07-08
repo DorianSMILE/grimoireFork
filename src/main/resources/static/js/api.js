@@ -11,7 +11,7 @@ let currentUser = undefined;
 export async function getCurrentUser() {
     if (currentUser !== undefined) return currentUser;
     try {
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        const res = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
         if (res.ok) {
             currentUser = await res.json();
             return currentUser;
@@ -29,19 +29,19 @@ export function isAdmin(user) {
 }
 
 export async function getMeta() {
-    const res = await fetch('/api/spells-editor/meta');
+    const res = await globalFetch('/api/spells-editor/meta');
     if (!res.ok) throw new Error("Failed to fetch meta");
     return res.json();
 }
 
 export async function getSpells() {
-    const res = await fetch('/api/spells-editor');
+    const res = await globalFetch('/api/spells-editor');
     if (!res.ok) throw new Error("Failed to fetch spells");
     return res.json();
 }
 
 export async function createSpell(spellDto) {
-    return fetch('/api/spells-editor', {
+    return globalFetch('/api/spells-editor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(spellDto)
@@ -49,7 +49,7 @@ export async function createSpell(spellDto) {
 }
 
 export async function deleteSpellAPI(id) {
-    return fetch(`/api/spells-editor/${id}`, { method: 'DELETE' });
+    return globalFetch(`/api/spells-editor/${id}`, { method: 'DELETE' });
 }
 
 
@@ -91,19 +91,18 @@ export async function fetchMeta() {
             if (optgroupSpirits) optgroupSpirits.innerHTML += `<option value="S_${s.id}">${s.nom}</option>`;
         });
 
-        // Remplir les Mutations
         const mutationSel = document.getElementById('mutationSelect');
         if (mutationSel) {
             mutationSel.style.fontFamily = "";
             state.metaData.mutations.forEach(m => {
-                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`;
             });
         }
         const filterMutationSel = document.getElementById('filterMutation');
         if (filterMutationSel) {
             filterMutationSel.style.fontFamily = "";
             state.metaData.mutations.forEach(m => {
-                filterMutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                filterMutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`;
             });
         }
 
@@ -169,7 +168,7 @@ export async function submitSpell() {
     playForgeAnimation();
     const nomInput = document.getElementById('nom');
     if (!nomInput.value.trim()) {
-        alert("Veuillez saisir un nom de sort.");
+        ui.showNotif("Veuillez saisir un nom de sort.");
         return;
     }
 
@@ -223,7 +222,7 @@ export async function submitSpell() {
     };
 
     try {
-        const res = await fetch('/api/spells-editor', {
+        const res = await globalFetch('/api/spells-editor', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -236,7 +235,7 @@ export async function submitSpell() {
             // Réinitialiser le formulaire et l'état d'édition
             state.editingSpellId = null;
             document.getElementById('spellForgePanel').classList.remove('editing-mode');
-            document.getElementById('submitSpellBtn').innerText = '✦ Forger le Sort';
+            document.getElementById('submitSpellBtn').innerText = 'âœ¦ Forger le Sort';
             nomInput.value = '';
             document.getElementById('description').value = '';
             state.currentEffects = [];
@@ -262,11 +261,11 @@ export async function submitSpell() {
             // Recharger la liste
             await loadSpells();
         } else {
-            alert("Erreur lors de l'enregistrement du sort.");
+            ui.showNotif("Erreur lors de l'enregistrement du sort.");
         }
     } catch (err) {
         console.error(err);
-        alert("Erreur de connexion au serveur.");
+        ui.showNotif("Erreur de connexion au serveur.");
     }
 }
 
@@ -278,7 +277,8 @@ export async function loadSpells() {
         renderFilteredSpells();
     } catch (err) {
         console.error(err);
-        if (container) container.innerHTML = `<div class="empty-state" style="color:var(--danger); text-align:left; padding:2rem;">Erreur de chargement des sorts.<br><br><b>${err.message}</b><br><pre>${err.stack}</pre></div>`;
+        if (container) container.innerHTML = `<div class="empty-state error-state">Erreur de chargement des sorts.</div>`;
+        ui.showNotif("Erreur de chargement des sorts.");
     }
 }
 
@@ -301,14 +301,14 @@ export async function loadSpells() {
 // ---- LEAVE (mouseleave) ----
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES — ENTER
+//   EFFETS ÉLÉMENTAIRES â€” ENTER
 // ================================================================
 
 // 💨 VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
 
 // 💧 EAU (Sûreté) : vague qui monte depuis le bas de la carte
 
-// ☠️ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
+// â˜ ï¸ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
 
 // 🪨 TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
 
@@ -324,34 +324,34 @@ export async function loadSpells() {
 
 // 🌑 TÉNÈBRES : tentacules d'ombre qui surgissent des bords
 
-// ⚖️ KARMA : deux orbes — or et argent — qui convergent
+// âš–ï¸ KARMA : deux orbes â€” or et argent â€” qui convergent
 
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES — LEAVE
+//   EFFETS ÉLÉMENTAIRES â€” LEAVE
 // ================================================================
 
-// 💨 VENT — le vent retombe : quelques tourbillons qui se dissipent
+// 💨 VENT â€” le vent retombe : quelques tourbillons qui se dissipent
 
-// 💧 EAU — gouttelettes qui tombent et éclaboussent
+// 💧 EAU â€” gouttelettes qui tombent et éclaboussent
 
-// ☠️ POISON — Brume toxique lourde, poisseuse et lente
+// â˜ ï¸ POISON â€” Brume toxique lourde, poisseuse et lente
 
-// 🪨 TERRE — poussière de pierre qui retombe lourdement depuis le bas
+// 🪨 TERRE â€” poussière de pierre qui retombe lourdement depuis le bas
 
-// 🌋 LAVE — braises qui refroidissent et tombent
+// 🌋 LAVE â€” braises qui refroidissent et tombent
 
-// 🌱 PLANTE — Liane grimpante lente + nuage de pollen
+// 🌱 PLANTE â€” Liane grimpante lente + nuage de pollen
 
-// 🔥 FEU — cendres et fumée qui s'élèvent
+// 🔥 FEU â€” cendres et fumée qui s'élèvent
 
-// 💥 EXPLOSION — retombée : éclats qui tombent + fumée
+// 💥 EXPLOSION â€” retombée : éclats qui tombent + fumée
 
-// 👻 ESPRIT — dissolution : la carte libère des âmes spectrales
+// 👻 ESPRIT â€” dissolution : la carte libère des âmes spectrales
 
-// 🌑 TÉNÈBRES — le vide se referme : brume noire/violette qui s'absorbe
+// 🌑 TÉNÈBRES â€” le vide se referme : brume noire/violette qui s'absorbe
 
-// ⚖️ KARMA — les orbes se séparent et partent en orbites opposées
+// âš–ï¸ KARMA â€” les orbes se séparent et partent en orbites opposées
 
 
 // Crée un div de base pour les particules
@@ -402,11 +402,11 @@ document.getElementById('deleteSpellConfirmBtn')?.addEventListener('click', asyn
             }
             await loadSpells();
         } else {
-            alert("Erreur lors de la suppression du sort.");
+            ui.showNotif("Erreur lors de la suppression du sort.");
         }
     } catch (err) {
         console.error(err);
-        alert("Erreur de connexion au serveur.");
+        ui.showNotif("Erreur de connexion au serveur.");
     }
 });
 

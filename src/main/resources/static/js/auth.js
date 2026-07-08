@@ -9,7 +9,8 @@ window.globalFetch = async function(url, options = {}) {
         const res = await fetch(url, options);
         if (res.status === 401 || res.status === 403) {
             window.location.href = '/login.html';
-            return null;
+            // Throw so callers' catch blocks fire instead of processing null
+            throw new Error('Session expirée');
         }
         if (!res.ok) {
             let errorMsg = "Erreur serveur";

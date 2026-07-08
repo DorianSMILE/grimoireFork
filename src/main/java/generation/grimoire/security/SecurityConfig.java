@@ -28,6 +28,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // --- Public : statiques + auth ---
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/meta/**").permitAll()
                 .requestMatchers("/js/**", "/styles/**", "/images/**", "/favicon.ico", "/favicon.svg", "/*.html", "/").permitAll()
 
                 // --- Admin uniquement : CRUD entités de jeu ---

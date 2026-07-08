@@ -6,7 +6,7 @@ export async function initMeta() {
     if (window.GRIMOIRE_META) return;
     try {
         const res = await globalFetch('/api/meta/all');
-        if (res.ok) {
+        if (res && res.ok) {
             const allMeta = await res.json();
             window.GRIMOIRE_META = allMeta;
             

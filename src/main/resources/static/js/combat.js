@@ -423,7 +423,7 @@ window.showNotif = function (message, isError = false) {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
+    try { if (window.initAppMeta) await window.initAppMeta(); } catch(e) { console.warn('Meta loading skipped:', e); }
     // Check for active combat in localStorage
     const savedCombatId = localStorage.getItem('activeCombatId');
     if (savedCombatId) {
@@ -1347,14 +1347,16 @@ function updateUI(data) {
         }
     }
 
-    document.getElementById('headerDungeonName').textContent = data.donjon.name + " - Étape " + (data.currentRoomIndex + 1);
+    if (data.donjonName) {
+        document.getElementById('headerDungeonName').textContent = data.donjonName + " - Étape " + (data.currentRoomIndex + 1);
+    }
     document.getElementById('turnCounter').textContent = data.turnNumber;
 
     // Update flee penalty text
-    const fleePenaltySpan = document.getElementById('fleePenaltyText');
-    if (fleePenaltySpan && data.players && data.donjon && data.donjon.salles) {
+    const fleePenaltySpan = document.getElementById('fleePenaltyAmount');
+    if (fleePenaltySpan && data.players) {
         const nbHeroes = Math.max(1, data.players.length);
-        const nbRooms = Math.max(1, data.donjon.salles.length);
+        const nbRooms = Math.max(1, data.totalRooms || 1);
         const totalXpLoss = 10 * nbRooms;
         const xpLossPerHero = Math.floor(totalXpLoss / nbHeroes);
         const goldLoss = 10 * nbRooms;

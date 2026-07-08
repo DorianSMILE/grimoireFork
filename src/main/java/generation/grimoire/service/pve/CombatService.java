@@ -1519,17 +1519,21 @@ public class CombatService {
                                         Personnage mutTarget = resolveMonsterTarget(m, behaviorMut, alivePlayers,
                                                 session);
 
-                                        // Choisir un allié (le moins en forme par défaut)
-                                        Personnage mutAlly = allAlliesMut.stream()
+                                        // Choisir un allié aléatoirement
+                                        Personnage mutAlly = m.getAsPersonnage();
+                                        java.util.List<Personnage> validAllies = allAlliesMut.stream()
                                                 .filter(a -> a != m.getAsPersonnage() && a.getHealthCurrent() > 0)
-                                                .min(java.util.Comparator.comparingInt(Personnage::getHealthCurrent))
-                                                .orElse(m.getAsPersonnage());
+                                                .toList();
+                                        if (!validAllies.isEmpty()) {
+                                            mutAlly = validAllies.get(new java.util.Random().nextInt(validAllies.size()));
+                                        }
 
                                         session.addLog(
                                                 "🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
+                                        final Personnage finalMutAlly = mutAlly;
                                         captureLogs(session, () -> {
                                             spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
-                                                    mutAlly, allAlliesMut, allEnemiesMut, null);
+                                                    finalMutAlly, allAlliesMut, allEnemiesMut, null);
                                         });
 
                                         if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL)

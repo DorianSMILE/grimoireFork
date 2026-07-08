@@ -835,7 +835,7 @@ function confirmCombatCast(index, type) {
         selectedAllyIndex = index;
     }
 
-    // Dual-target: need both enemy AND ally â€” wait if one is still missing
+    // Dual-target: need both enemy AND ally &mdash; wait if one is still missing
     // Skip when type is 'direct' (Lancer button click, auto-targeting handles it)
     if (pendingNeedsEnemy && pendingNeedsAlly && type !== 'direct') {
         const hasEnemy = selectedTargetIndex !== null;
@@ -866,7 +866,7 @@ function confirmCombatCast(index, type) {
         }
 
         if (!hasEnemy || !hasAlly) {
-            // Still waiting for second target â€” update prompt and return
+            // Still waiting for second target &mdash; update prompt and return
             if (promptEl) {
                 promptEl.textContent = !hasEnemy ? 'Sélectionnez un ennemi' : 'Sélectionnez un allié';
             }
@@ -2781,7 +2781,7 @@ function renderShieldsHtml(shieldList) {
                 <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#38bdf8;">security</span>
                 <span style="font-weight:600; color:#fff;">[${s.sourceName || 'Inconnu'}]</span>
                 <span style="color:#38bdf8; font-weight:500;">Bouclier</span>
-                <span style="color:#e2e8f0;">âž” ${s.amount} PV absorpt. (${s.duration} tours)</span>
+                <span style="color:#e2e8f0;">&rarr; ${s.amount} PV absorpt. (${s.duration} tours)</span>
             </div>
         `;
         shieldEntries.push(entryHtml);
@@ -2954,7 +2954,7 @@ function renderBuffsHtml(buffList, motList, hotList) {
                 ${statIconHtml}
                 <span style="font-weight:600; color:#fff;">[Cible]</span>
                 <span style="color:#38bdf8; font-weight:500;">${typeStr}</span>
-                <span style="color:#e2e8f0;">âž” ${text} (${b.duration} tours)</span>
+                <span style="color:#e2e8f0;">&rarr; ${text} (${b.duration} tours)</span>
             </div>
         `;
 
@@ -2989,7 +2989,7 @@ function renderBuffsHtml(buffList, motList, hotList) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#38bdf8; margin-left:-0.1rem;">water_drop</span>
                     <span style="font-weight:600; color:#fff;">[Cible]</span>
                     <span style="color:#38bdf8; font-weight:500;">MoT</span>
-                    <span style="color:#e2e8f0;">âž” ${text} Mana/tour (${m.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&rarr; ${text} Mana/tour (${m.duration} tours)</span>
                 </div>
             `;
             if (isBad) badBuffs.push(entryHtml);
@@ -3023,7 +3023,7 @@ function renderBuffsHtml(buffList, motList, hotList) {
                     <span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:#22c55e; margin-left:-0.1rem;">healing</span>
                     <span style="font-weight:600; color:#fff;">[Cible]</span>
                     <span style="color:#22c55e; font-weight:500;">HoT</span>
-                    <span style="color:#e2e8f0;">âž” ${text} PV/tour (${h.duration} tours)</span>
+                    <span style="color:#e2e8f0;">&rarr; ${text} PV/tour (${h.duration} tours)</span>
                 </div>
             `;
             if (isBad) badBuffs.push(entryHtml);

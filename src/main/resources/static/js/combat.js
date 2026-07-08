@@ -1353,7 +1353,7 @@ function updateUI(data) {
     document.getElementById('turnCounter').textContent = data.turnNumber;
 
     // Update flee penalty text
-    const fleePenaltySpan = document.getElementById('fleePenaltyAmount');
+    const fleePenaltySpan = document.getElementById('fleePenaltyText');
     if (fleePenaltySpan && data.players) {
         const nbHeroes = Math.max(1, data.players.length);
         const nbRooms = Math.max(1, data.totalRooms || 1);

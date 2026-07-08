@@ -68,10 +68,10 @@ export function renderFilteredSpells() {
                     return ['FIXED_DAMAGE', 'PERCENTAGE_DAMAGE', 'DOT', 'POISON', 'BURN'].includes(mappedType);
                 }
                 if (effectVal === 'GROUP_HEAL') {
-                    return ['FIXED_HEAL', 'PERCENTAGE_HEAL', 'HOT'].includes(mappedType);
+                    return ['FIXED_HEAL', 'PERCENTAGE_HEAL', 'HOT', 'HEAL_OVER_TIME'].includes(mappedType);
                 }
                 if (effectVal === 'GROUP_MANA') {
-                    return ['FIXED_MANA', 'PERCENTAGE_MANA', 'MOT'].includes(mappedType);
+                    return ['FIXED_MANA', 'PERCENTAGE_MANA', 'MOT', 'MANA_OVER_TIME'].includes(mappedType);
                 }
                 if (effectVal === 'GROUP_EFFECTS') {
                     return ['BUFF_DEBUFF', 'PURGE', 'SHIELD'].includes(mappedType);
@@ -189,7 +189,7 @@ export function getSpellEffectsSummaryHtml(sp) {
 
                 let indicatorColor = isBad ? '#f43f5e' : '#10b981'; // Red for bad, green for good
                 if (['Shield', 'SHIELD'].includes(t)) indicatorColor = '#3b82f6';
-                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT'].includes(t)) indicatorColor = '#38bdf8';
+                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) indicatorColor = '#38bdf8';
                 if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT'].includes(t)) indicatorColor = '#f97316';
 
                 let iconName = 'stars';
@@ -209,8 +209,8 @@ export function getSpellEffectsSummaryHtml(sp) {
                     }
                 }
                 if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL'].includes(t)) iconName = 'favorite';
-                if (['HealOverTime', 'HOT'].includes(t)) iconName = 'healing';
-                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT'].includes(t)) iconName = 'water_drop';
+                if (['HealOverTime', 'HOT', 'HEAL_OVER_TIME'].includes(t)) iconName = 'healing';
+                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) iconName = 'water_drop';
                 if (['Shield', 'SHIELD'].includes(t)) iconName = 'security';
                 if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT', 'BURN'].includes(t)) iconName = 'local_fire_department';
                 if (t === 'POISON') iconName = 'science';
@@ -237,8 +237,10 @@ export function getSpellEffectsSummaryHtml(sp) {
                     'DOT': 'DoT',
                     'HealOverTimeEffect': 'HoT',
                     'HOT': 'HoT',
+                    'HEAL_OVER_TIME': 'HoT',
                     'ManaOverTimeEffect': 'MoT',
                     'MOT': 'MoT',
+                    'MANA_OVER_TIME': 'MoT',
                     'PurgeEffect': 'Dissipation',
                     'PURGE': 'Dissipation',
                     'ShieldEffect': 'Bouclier',
@@ -304,7 +306,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
                     detailsStr = `➔ DoT de ${parts.join(' + ')} Dégâts ${dtHtml}/tour${durStr}`;
-                } else if (t === 'HealOverTime' || t === 'HOT') {
+                } else if (t === 'HealOverTime' || t === 'HOT' || t === 'HEAL_OVER_TIME') {
                     let parts = [];
                     const fh = e.fixedHealPerTick || e.healAmount || 0;
                     const ph = e.percentageHealPerTick || e.percentage || 0;
@@ -318,7 +320,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                 } else if (t === 'ManaPercentage' || t === 'PERCENTAGE_MANA') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     detailsStr = `➔ rend ${pct}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`;
-                } else if (t === 'ManaOverTime' || t === 'MOT') {
+                } else if (t === 'ManaOverTime' || t === 'MOT' || t === 'MANA_OVER_TIME') {
                     let parts = [];
                     const fm = e.fixedManaPerTick || e.manaAmount || 0;
                     const pm = e.percentageManaPerTick || e.percentage || 0;

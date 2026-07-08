@@ -924,7 +924,8 @@ function cancelCombatCast() {
 
     // Attack button specific disable check
     const btnAttack = document.getElementById('btnAttack');
-    if (btnAttack && currentSessionData && currentSessionData.activePlayer && currentSessionData.activePlayer.banalSpellCastThisTurn) {
+    const isPlayerChanneling = currentSessionData && currentSessionData.activePlayer && currentSessionData.activePlayer.remainingChannelingTurns > 0;
+    if (btnAttack && currentSessionData && currentSessionData.activePlayer && (currentSessionData.activePlayer.banalSpellCastThisTurn || isPlayerChanneling)) {
         btnAttack.classList.add('disabled');
         btnAttack.style.pointerEvents = 'none';
         btnAttack.style.opacity = '0.5';
@@ -2338,7 +2339,8 @@ function updateUI(data) {
         // Player turn: enable buttons
         const btnAttack = document.getElementById('btnAttack');
         if (btnAttack) {
-            const canAttack = data.activePlayer && !data.activePlayer.banalSpellCastThisTurn;
+            const isChanneling = data.activePlayer && data.activePlayer.remainingChannelingTurns > 0;
+            const canAttack = data.activePlayer && !data.activePlayer.banalSpellCastThisTurn && !isChanneling;
             btnAttack.disabled = !canAttack;
             if (!canAttack) {
                 btnAttack.classList.add('disabled');

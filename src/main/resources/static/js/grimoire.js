@@ -489,11 +489,11 @@ export function getSpellCardHtml(sp) {
         const mRgb = hexToRgb(mHex);
         const mIcon = sp.mutation.icon || 'pets';
         mutationBadge = `<span class="badge" style="cursor: help; color: ${mHex}; border-color: rgba(${mRgb}, 0.3); background: rgba(${mRgb}, 0.05); display:inline-flex; align-items:center; gap:0.2rem;" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
-            <span class="material-symbols-outlined" style="font-size:1.1em;">${mIcon}</span>${sp.mutation.nom}
+            <span class="material-symbols-outlined" style="font-size:1.1em;">${mIcon}</span>${sp.mutation.nom} (Niv. ${sp.mutation.level || 1})
             <template class="tooltip-data">
                 <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${mHex};">
                     <span class="material-symbols-outlined" style="font-size:1.1rem;">${mIcon}</span>
-                    Mutation : ${sp.mutation.nom}
+                    Mutation : ${sp.mutation.nom} (Niv. ${sp.mutation.level || 1})
                 </div>
                 <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.mutation.description || 'Description de la mutation.'}</div>
             </template>

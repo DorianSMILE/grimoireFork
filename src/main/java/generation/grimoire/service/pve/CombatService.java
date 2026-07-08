@@ -1780,7 +1780,7 @@ public class CombatService {
         }
     }
 
-    private Personnage resolveMonsterTarget(generation.grimoire.model.pve.ActiveMonster m, MonsterBehavior behavior,
+    Personnage resolveMonsterTarget(generation.grimoire.model.pve.ActiveMonster m, MonsterBehavior behavior,
             List<Personnage> alivePlayers, CombatSession session) {
         java.util.Random rnd = new java.util.Random();
 

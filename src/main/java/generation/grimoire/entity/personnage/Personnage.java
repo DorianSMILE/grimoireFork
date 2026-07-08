@@ -300,6 +300,11 @@ public class Personnage {
 
         double constant; // La constante K qui détermine la courbe.
 
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.REPTILE && damageType == DamageType.PHYSIC) {
+            damage = (int) Math.ceil(damage * 0.85);
+            System.out.println("🦎 " + this.getName() + " réduit les dégâts physiques subis de 15% (Reptile).");
+        }
+
         double effectiveArmor = this.armor + getStatFlatBonus(StatType.ARMURE);
         double effectiveResistance = this.resistance + getStatFlatBonus(StatType.RESISTANCE);
 

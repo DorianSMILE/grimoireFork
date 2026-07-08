@@ -1,4 +1,4 @@
-﻿// Auth scripts for login and register pages
+// Auth scripts for login and register pages
 window.initAppMeta = async function () {
     const { initMeta } = await import('./constants.js');
     return initMeta();
@@ -358,7 +358,7 @@ function injectUnlockModal() {
                 <span class="material-symbols-outlined" style="font-size: 2.2rem; color: #fbbf24;" id="globalUnlockIcon">lock_open</span>
             </div>
             <div class="global-unlock-modal-title" id="globalUnlockTitle">Débloquer ?</div>
-            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong style="color: #f8fafc;">définitif</strong> pour votre compte. Vous nâ€™aurez plus jamais à payer ce coût.</div>
+            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong style="color: #f8fafc;">définitif</strong> pour votre compte. Vous n'aurez plus jamais à payer ce coût.</div>
             <div class="global-unlock-modal-cost">
                 <span class="material-symbols-outlined" style="font-size: 1.3rem;">monetization_on</span>
                 <span id="globalUnlockCost">0</span> Or

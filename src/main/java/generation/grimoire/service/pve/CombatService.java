@@ -91,7 +91,8 @@ public class CombatService {
         // Check and deduct entry cost
         if (d.getEntryCostGold() > 0) {
             if (account.getMonnaie() < d.getEntryCostGold()) {
-                throw new RuntimeException("Pas assez d'or pour entrer dans ce donjon (Requis : " + d.getEntryCostGold() + " Or).");
+                throw new RuntimeException(
+                        "Pas assez d'or pour entrer dans ce donjon (Requis : " + d.getEntryCostGold() + " Or).");
             }
             account.setMonnaie(account.getMonnaie() - d.getEntryCostGold());
             userRepository.save(account);
@@ -104,7 +105,8 @@ public class CombatService {
         // Validate character level
         for (Personnage p : players) {
             if (p.getVoieLevel() < d.getRecommendedLevel()) {
-                throw new RuntimeException("Le personnage " + p.getName() + " (Niv." + p.getVoieLevel() + ") n'a pas le niveau requis (" + d.getRecommendedLevel() + ") pour ce donjon.");
+                throw new RuntimeException("Le personnage " + p.getName() + " (Niv." + p.getVoieLevel()
+                        + ") n'a pas le niveau requis (" + d.getRecommendedLevel() + ") pour ce donjon.");
             }
         }
 
@@ -133,7 +135,8 @@ public class CombatService {
                 .sum();
         double maxWeight = 10.0 + 5.0 * players.size();
         if (totalWeight > maxWeight) {
-            throw new IllegalArgumentException("Le poids total des objets d\u00e9passe la limite autoris\u00e9e (" + maxWeight + ").");
+            throw new IllegalArgumentException(
+                    "Le poids total des objets d\u00e9passe la limite autoris\u00e9e (" + maxWeight + ").");
         }
 
         handleRoomStart(session);
@@ -575,7 +578,8 @@ public class CombatService {
                 boolean success = new java.util.Random().nextInt(100) < chance;
 
                 if (success) {
-                    generation.grimoire.entity.Equipment template = equipmentRepository.findById((long) rewardValue).orElse(null);
+                    generation.grimoire.entity.Equipment template = equipmentRepository.findById((long) rewardValue)
+                            .orElse(null);
                     if (template != null) {
                         generation.grimoire.entity.Equipment clone = new generation.grimoire.entity.Equipment();
                         clone.copyStatsFrom(template);
@@ -666,11 +670,13 @@ public class CombatService {
 
             int healHp = toConsume.getBonusHealthMax();
             healHp += (int) (target.getHealthMax() * (toConsume.getConsumableHpPercent() / 100.0));
-            healHp += (int) ((target.getHealthMax() - target.getHealthCurrent()) * (toConsume.getConsumableMissingHpPercent() / 100.0));
+            healHp += (int) ((target.getHealthMax() - target.getHealthCurrent())
+                    * (toConsume.getConsumableMissingHpPercent() / 100.0));
 
             int healMana = toConsume.getBonusManaMax();
             healMana += (int) (target.getManaMax() * (toConsume.getConsumableManaPercent() / 100.0));
-            healMana += (int) ((target.getManaMax() - target.getManaCurrent()) * (toConsume.getConsumableMissingManaPercent() / 100.0));
+            healMana += (int) ((target.getManaMax() - target.getManaCurrent())
+                    * (toConsume.getConsumableMissingManaPercent() / 100.0));
 
             if (healHp > 0) {
                 target.setHealthCurrent(Math.min(target.getHealthMax(), target.getHealthCurrent() + healHp));
@@ -678,10 +684,12 @@ public class CombatService {
             }
             if (healMana > 0) {
                 target.setManaCurrent(Math.min(target.getManaMax(), target.getManaCurrent() + healMana));
-                session.addLog("🧪 " + target.getName() + " consomme " + itemName + " et récupère " + healMana + " Mana.");
+                session.addLog(
+                        "🧪 " + target.getName() + " consomme " + itemName + " et récupère " + healMana + " Mana.");
             }
             if (healHp == 0 && healMana == 0) {
-                session.addLog("🎒 " + target.getName() + " consomme " + itemName + " mais cela n'a aucun effet de soin.");
+                session.addLog(
+                        "🎒 " + target.getName() + " consomme " + itemName + " mais cela n'a aucun effet de soin.");
             }
         } else {
             throw new RuntimeException("Cet objet n'est pas un consommable.");
@@ -801,9 +809,11 @@ public class CombatService {
 
                 if (currentWeight + clone.calculateWeight() <= maxWeight) {
                     session.getActiveConsumables().add(clone);
-                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + " et l'a ajouté à l'inventaire du groupe.");
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName()
+                            + " et l'a ajouté à l'inventaire du groupe.");
                 } else {
-                    session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ", envoyé au coffre (poids max atteint).");
+                    session.addLog(acheteur.getName() + " a acheté " + clone.getName()
+                            + ", envoyé au coffre (poids max atteint).");
                 }
             } else {
                 session.addLog(acheteur.getName() + " a acheté " + clone.getName() + ".");
@@ -1180,22 +1190,24 @@ public class CombatService {
                 p.setBanalSpellCastThisTurn(true);
                 captureLogs(session, () -> {
                     int playerDmg = p.getEffectiveStat(generation.grimoire.enumeration.StatType.STRENGTH);
-                    
+
                     int totalCrit = p.getCrit() + p.getStatFlatBonus(generation.grimoire.enumeration.StatType.CRIT);
                     totalCrit = Math.max(0, Math.min(100, totalCrit));
-                    boolean isCrit = ((int)(Math.random() * 100) + 1) <= totalCrit;
-                    
+                    boolean isCrit = ((int) (Math.random() * 100) + 1) <= totalCrit;
+
                     if (isCrit) {
                         System.out.println("💥 Coup Critique déclenché par " + p.getName() + " !");
                         double critMult = 1.5;
-                        int bonus = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CRIT_DAMAGE);
+                        int bonus = p
+                                .getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CRIT_DAMAGE);
                         if (bonus > 0) {
                             critMult += (bonus / 100.0);
                         }
-                        playerDmg = (int)(playerDmg * critMult);
+                        playerDmg = (int) (playerDmg * critMult);
                     }
 
-                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " (" + (isCrit ? "Critique : " : "Force : ") + playerDmg + ") !");
+                    System.out.println(p.getName() + " attaque " + targetMonster.getBase().getName() + " ("
+                            + (isCrit ? "Critique : " : "Force : ") + playerDmg + ") !");
                     targetMonster.takeDamage(playerDmg, generation.grimoire.enumeration.DamageType.PHYSIC, p);
                 });
             }
@@ -1210,25 +1222,40 @@ public class CombatService {
     private void checkDeaths(CombatSession session) {
         // Check dead players
         for (Personnage p : session.getPlayers()) {
-            if (p.getHealthCurrent() <= 0 && p.getId() != null && !session.getPenalizedDeadPlayers().contains(p.getId())) {
+            if (p.getHealthCurrent() <= 0 && p.getId() != null
+                    && !session.getPenalizedDeadPlayers().contains(p.getId())) {
                 session.getPenalizedDeadPlayers().add(p.getId());
-                
+
                 int penalty = 0;
                 switch (p.getVoieLevel()) {
-                    case 1: penalty = 10; break;
-                    case 2: penalty = 30; break;
-                    case 3: penalty = 80; break;
-                    case 4: penalty = 125; break;
-                    case 5: penalty = 160; break;
-                    default: penalty = 10; break;
+                    case 1:
+                        penalty = 10;
+                        break;
+                    case 2:
+                        penalty = 30;
+                        break;
+                    case 3:
+                        penalty = 80;
+                        break;
+                    case 4:
+                        penalty = 125;
+                        break;
+                    case 5:
+                        penalty = 160;
+                        break;
+                    default:
+                        penalty = 10;
+                        break;
                 }
-                
-                Personnage dbPersonnage = personnageRepository.findById(java.util.Objects.requireNonNull(p.getId())).orElse(null);
+
+                Personnage dbPersonnage = personnageRepository.findById(java.util.Objects.requireNonNull(p.getId()))
+                        .orElse(null);
                 if (dbPersonnage != null) {
                     dbPersonnage.setExperience(Math.max(0, dbPersonnage.getExperience() - penalty));
                     personnageRepository.save(dbPersonnage);
                     p.setExperience(dbPersonnage.getExperience());
-                    session.addLog("☠️ " + p.getName() + " succombe à ses blessures et perd " + penalty + " XP normal...");
+                    session.addLog(
+                            "☠️ " + p.getName() + " succombe à ses blessures et perd " + penalty + " XP normal...");
                 }
             }
         }
@@ -1339,9 +1366,11 @@ public class CombatService {
                     if (channelingTarget == null && !session.getEnemies().isEmpty()) {
                         channelingTarget = session.getEnemies().get(0).getAsPersonnage();
                     }
-                    List<Personnage> allAllies = session.getPlayers().stream().filter(pl -> pl.getHealthCurrent() > 0).toList();
+                    List<Personnage> allAllies = session.getPlayers().stream().filter(pl -> pl.getHealthCurrent() > 0)
+                            .toList();
                     List<Personnage> allEnemies = session.getEnemies().stream().map(m -> m.getAsPersonnage()).toList();
-                    spellService.tickChanneling(p, channelingTarget, p.getChannelingChoiceKey(), p, allAllies, allEnemies);
+                    spellService.tickChanneling(p, channelingTarget, p.getChannelingChoiceKey(), p, allAllies,
+                            allEnemies);
                 }
             });
         }
@@ -1429,196 +1458,229 @@ public class CombatService {
                         if (cTarget == null && !session.getPlayers().isEmpty()) {
                             cTarget = session.getPlayers().get(0);
                         }
-                        List<Personnage> allAllies = session.getEnemies().stream().map(am -> am.getAsPersonnage()).toList();
-                        List<Personnage> allEnemies = session.getPlayers().stream().filter(pl -> pl.getHealthCurrent() > 0).toList();
-                        spellService.tickChanneling(mp, cTarget, mp.getChannelingChoiceKey(), mp, allAllies, allEnemies);
+                        List<Personnage> allAllies = session.getEnemies().stream().map(am -> am.getAsPersonnage())
+                                .toList();
+                        List<Personnage> allEnemies = session.getPlayers().stream()
+                                .filter(pl -> pl.getHealthCurrent() > 0).toList();
+                        spellService.tickChanneling(mp, cTarget, mp.getChannelingChoiceKey(), mp, allAllies,
+                                allEnemies);
                     } else {
                         List<Personnage> alivePlayers = session.getPlayers().stream()
                                 .filter(pl -> pl.getHealthCurrent() > 0).toList();
                         if (!alivePlayers.isEmpty()) {
                             // === MUTATIONS : Caster des sorts avant l'attaque physique ===
                             if (m.getBase().getMutations() != null && !m.getBase().getMutations().isEmpty()) {
-                                List<Personnage> allAlliesMut = session.getEnemies().stream().map(am -> am.getAsPersonnage()).toList();
+                                List<Personnage> allAlliesMut = session.getEnemies().stream()
+                                        .map(am -> am.getAsPersonnage()).toList();
                                 List<Personnage> allEnemiesMut = alivePlayers;
-                                
+
                                 // Collecter tous les sorts de toutes les mutations du monstre
                                 List<Spell> mutationSpells = new java.util.ArrayList<>();
                                 for (generation.grimoire.entity.pve.Mutation mut : m.getBase().getMutations()) {
                                     mutationSpells.addAll(spellRepository.findByMutationId(mut.getId()));
                                 }
-                                
+
                                 // Essayer de caster jusqu'à 4 sorts par tour
                                 int castCount = 0;
                                 java.util.Collections.shuffle(mutationSpells);
                                 for (Spell mutSpell : mutationSpells) {
-                                    if (castCount >= 4) break;
-                                    if (m.isDead()) break;
-                                    
+                                    if (castCount >= 4)
+                                        break;
+                                    if (m.isDead())
+                                        break;
+
                                     int totalManaCost = mutSpell.getManaCost();
                                     if (mutSpell.getPercentManaCost() > 0) {
-                                        totalManaCost += (int) Math.ceil(m.getAsPersonnage().getManaMax() * mutSpell.getPercentManaCost() / 100.0);
+                                        totalManaCost += (int) Math.ceil(m.getAsPersonnage().getManaMax()
+                                                * mutSpell.getPercentManaCost() / 100.0);
                                     }
-                                    
+
                                     if (m.getAsPersonnage().getManaCurrent() >= totalManaCost && totalManaCost > 0) {
                                         String castError = m.getAsPersonnage().canCast(mutSpell);
-                                        if (castError != null) continue;
-                                        
-                                        generation.grimoire.enumeration.SpellCastingType cType = mutSpell.getCastingType();
-                                        if (cType == null) cType = generation.grimoire.enumeration.SpellCastingType.BANAL;
-                                        
-                                        if (m.getAsPersonnage().isBanalSpellCastThisTurn() && cType != generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
-                                        if (m.getAsPersonnage().isInstantSpellCastThisTurn() && cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) continue;
+                                        if (castError != null)
+                                            continue;
+
+                                        generation.grimoire.enumeration.SpellCastingType cType = mutSpell
+                                                .getCastingType();
+                                        if (cType == null)
+                                            cType = generation.grimoire.enumeration.SpellCastingType.BANAL;
+
+                                        if (m.getAsPersonnage().isBanalSpellCastThisTurn()
+                                                && cType != generation.grimoire.enumeration.SpellCastingType.INSTANTANE)
+                                            continue;
+                                        if (m.getAsPersonnage().isInstantSpellCastThisTurn()
+                                                && cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE)
+                                            continue;
 
                                         // Choisir une cible via l'IA existante
                                         MonsterBehavior behaviorMut = m.getBase().getBehavior();
-                                        if (behaviorMut == null) behaviorMut = MonsterBehavior.NORMAL;
-                                        Personnage mutTarget = resolveMonsterTarget(m, behaviorMut, alivePlayers, session);
-                                        
-                                        session.addLog("🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
-                                        spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget, m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
-                                        
-                                        if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL) m.getAsPersonnage().setBanalSpellCastThisTurn(true);
-                                        if (cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE) m.getAsPersonnage().setInstantSpellCastThisTurn(true);
-                                        
+                                        if (behaviorMut == null)
+                                            behaviorMut = MonsterBehavior.NORMAL;
+                                        Personnage mutTarget = resolveMonsterTarget(m, behaviorMut, alivePlayers,
+                                                session);
+
+                                        session.addLog(
+                                                "🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
+                                        spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
+                                                m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
+
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL)
+                                            m.getAsPersonnage().setBanalSpellCastThisTurn(true);
+                                        if (cType == generation.grimoire.enumeration.SpellCastingType.INSTANTANE)
+                                            m.getAsPersonnage().setInstantSpellCastThisTurn(true);
+
                                         castCount++;
                                     }
                                 }
                             }
-                            
+
                             // Vérifier si les joueurs sont toujours en vie après les mutations
                             alivePlayers = session.getPlayers().stream()
                                     .filter(pl -> pl.getHealthCurrent() > 0).toList();
-                            if (alivePlayers.isEmpty() || m.isDead() || m.getAsPersonnage().isBanalSpellCastThisTurn() || m.getAsPersonnage().getRemainingChannelingTurns() > 0) {
-                                // Combat terminé, monstre mort, ou a déjà casté un sort banal/canalisé, pas d'attaque physique
+                            if (alivePlayers.isEmpty() || m.isDead() || m.getAsPersonnage().isBanalSpellCastThisTurn()
+                                    || m.getAsPersonnage().getRemainingChannelingTurns() > 0) {
+                                // Combat terminé, monstre mort, ou a déjà casté un sort banal/canalisé, pas
+                                // d'attaque physique
                             } else {
-                            // === RÉSOLUTION DU CIBLAGE (IA) ===
-                            MonsterBehavior behavior = m.getBase().getBehavior();
-                            if (behavior == null)
-                                behavior = MonsterBehavior.NORMAL;
+                                // === RÉSOLUTION DU CIBLAGE (IA) ===
+                                MonsterBehavior behavior = m.getBase().getBehavior();
+                                if (behavior == null)
+                                    behavior = MonsterBehavior.NORMAL;
 
-                            List<Personnage> targetPlayers = new java.util.ArrayList<>();
-                            if (behavior == MonsterBehavior.TRANSCENDANT) {
-                                targetPlayers.addAll(alivePlayers);
-                            } else {
-                                targetPlayers.add(resolveMonsterTarget(m, behavior, alivePlayers, session));
-                            }
-
-                            for (Personnage targetPlayer : targetPlayers) {
-
-                            // === RÉSOLUTION DES DÉGÂTS (TYPE) ===
-                            int str = m.getBase().getStrength();
-                            int pwr = m.getBase().getPower();
-                            
-                            int physDmg;
-                            int magicDmg;
-                            
-                            if (mType == MonsterType.HYBRIDE) {
-                                int total = (int) ((str + pwr) * 1.2);
-                                physDmg = total / 2;
-                                magicDmg = total - physDmg;
-                            } else {
-                                physDmg = str;
-                                magicDmg = pwr;
-                            }
-
-                            int monsterDmg = physDmg + magicDmg;
-
-                            if (behavior == MonsterBehavior.BRUTAL) {
-                                System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
-                                        + " et inflige " + monsterDmg + " dégâts bruts.");
-                                if (monsterDmg > 0) {
-                                    targetPlayer.takeDamage(monsterDmg, generation.grimoire.enumeration.DamageType.BRUT);
+                                List<Personnage> targetPlayers = new java.util.ArrayList<>();
+                                if (behavior == MonsterBehavior.TRANSCENDANT) {
+                                    targetPlayers.addAll(alivePlayers);
+                                } else {
+                                    targetPlayers.add(resolveMonsterTarget(m, behavior, alivePlayers, session));
                                 }
-                            } else {
-                                StringBuilder logMsg = new StringBuilder();
-                                if (physDmg > 0) {
-                                    logMsg.append(physDmg).append(" dégâts physiques");
-                                    targetPlayer.takeDamage(physDmg, generation.grimoire.enumeration.DamageType.PHYSIC);
-                                }
-                                if (magicDmg > 0) {
-                                    if (physDmg > 0) logMsg.append(" et ");
-                                    logMsg.append(magicDmg).append(" dégâts magiques");
-                                    targetPlayer.takeDamage(magicDmg, generation.grimoire.enumeration.DamageType.MAGIC);
-                                }
-                                if (physDmg == 0 && magicDmg == 0) {
-                                    logMsg.append("0 dégât");
-                                }
-                                System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
-                                        + " et inflige " + logMsg.toString() + ".");
-                            }
 
-                            // Check for ON_HIT passive effects (BURN, POISON)
-                            int burnDmg = m.getAsPersonnage().getPassiveState("BURN_ON_HIT", 0);
-                            if (burnDmg > 0) {
-                                int burnDur = m.getAsPersonnage().getPassiveState("BURN_ON_HIT_DURATION", 3);
-                                generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dot = new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
-                                dot.setFixedDamagePerTick(burnDmg);
-                                dot.setDuration(burnDur);
-                                dot.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
-                                dot.setBurn(true);
-                                targetPlayer.getActiveDamageOverTimeEffects().add(dot);
-                                session.addLog("🔥 " + targetPlayer.getName() + " s'embrase au contact ! (" + burnDmg
-                                        + " dégâts par tour)");
-                            }
+                                for (Personnage targetPlayer : targetPlayers) {
 
-                            int poisonDmg = m.getAsPersonnage().getPassiveState("POISON_ON_HIT", 0);
-                            if (poisonDmg > 0) {
-                                int poisonDur = m.getAsPersonnage().getPassiveState("POISON_ON_HIT_DURATION", 3);
-                                generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dot = new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
-                                dot.setFixedDamagePerTick(poisonDmg);
-                                dot.setDuration(poisonDur);
-                                dot.setDamageType(generation.grimoire.enumeration.DamageType.BRUT);
-                                dot.setPoison(true);
-                                targetPlayer.getActiveDamageOverTimeEffects().add(dot);
-                                session.addLog("🦠 " + targetPlayer.getName() + " est empoisonné au contact ! ("
-                                        + poisonDmg + " dégâts par tour)");
-                            }
+                                    // === RÉSOLUTION DES DÉGÂTS (TYPE) ===
+                                    int str = m.getBase().getStrength();
+                                    int pwr = m.getBase().getPower();
 
-                            // === COMPORTEMENT : CORRUPTEUR — Drain de mana ===
-                            if (behavior == MonsterBehavior.CORRUPTEUR) {
-                                int manaLoss = (int) Math.floor(targetPlayer.getManaCurrent() * 0.05);
-                                if (manaLoss > 0) {
-                                    targetPlayer.setManaCurrent(Math.max(0, targetPlayer.getManaCurrent() - manaLoss));
-                                    session.addLog("🦇 " + targetPlayer.getName() + " perd " + manaLoss + " points de mana ! (Corrupteur)");
-                                }
-                            }
+                                    int physDmg;
+                                    int magicDmg;
 
-                            // === PASSIF TYPE : DEMON — 10% dégâts bruts supplémentaires ===
-                            if (mType == MonsterType.DEMON) {
-                                int brutDmg = (int) Math.ceil(monsterDmg * 0.10);
-                                if (brutDmg > 0) {
-                                    targetPlayer.takeDamage(brutDmg, generation.grimoire.enumeration.DamageType.BRUT);
-                                    session.addLog("\uD83D\uDD25 " + m.getBase().getName() + " inflige " + brutDmg
-                                            + " dégâts bruts supplémentaires (Démon).");
-                                }
-                            }
+                                    if (mType == MonsterType.HYBRIDE) {
+                                        int total = (int) ((str + pwr) * 1.2);
+                                        physDmg = total / 2;
+                                        magicDmg = total - physDmg;
+                                    } else {
+                                        physDmg = str;
+                                        magicDmg = pwr;
+                                    }
 
-                            // === PASSIF TYPE : VAMPIRE — 20% vol de vie ===
-                            if (mType == MonsterType.VAMPIRE) {
-                                int healAmount = (int) Math.ceil(monsterDmg * 0.20);
-                                int newHp = Math.min(m.getBase().getHealthMax(),
-                                        m.getAsPersonnage().getHealthCurrent() + healAmount);
-                                m.getAsPersonnage().setHealthCurrent(newHp);
-                                session.addLog("\uD83E\uDDDB " + m.getBase().getName() + " vole " + healAmount
-                                        + " PV (Vampire).");
-                            }
+                                    int monsterDmg = physDmg + magicDmg;
 
-                                                        // === PASSIF TYPE : ECTOPLASME ===
-                            if (mType == MonsterType.ECTOPLASME) {
-                                generation.grimoire.entity.spell.type.effect.BuffDebuffEffect eff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
-                                eff.setStatAffected(generation.grimoire.enumeration.StatType.RESISTANCE);
-                                eff.setFlatValue(-5);
-                                eff.setDuration(3);
-                                targetPlayer.getActiveBuffs().add(eff);
-                                session.addLog("👻 " + targetPlayer.getName() + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
-                            }
+                                    if (behavior == MonsterBehavior.BRUTAL) {
+                                        System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
+                                                + " et inflige " + monsterDmg + " dégâts bruts.");
+                                        if (monsterDmg > 0) {
+                                            targetPlayer.takeDamage(monsterDmg,
+                                                    generation.grimoire.enumeration.DamageType.BRUT);
+                                        }
+                                    } else {
+                                        StringBuilder logMsg = new StringBuilder();
+                                        if (physDmg > 0) {
+                                            logMsg.append(physDmg).append(" dégâts physiques");
+                                            targetPlayer.takeDamage(physDmg,
+                                                    generation.grimoire.enumeration.DamageType.PHYSIC);
+                                        }
+                                        if (magicDmg > 0) {
+                                            if (physDmg > 0)
+                                                logMsg.append(" et ");
+                                            logMsg.append(magicDmg).append(" dégâts magiques");
+                                            targetPlayer.takeDamage(magicDmg,
+                                                    generation.grimoire.enumeration.DamageType.MAGIC);
+                                        }
+                                        if (physDmg == 0 && magicDmg == 0) {
+                                            logMsg.append("0 dégât");
+                                        }
+                                        System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
+                                                + " et inflige " + logMsg.toString() + ".");
+                                    }
 
-if (targetPlayer.getHealthCurrent() <= 0) {
-                                System.out.println(targetPlayer.getName() + " a été vaincu...");
+                                    // Check for ON_HIT passive effects (BURN, POISON)
+                                    int burnDmg = m.getAsPersonnage().getPassiveState("BURN_ON_HIT", 0);
+                                    if (burnDmg > 0) {
+                                        int burnDur = m.getAsPersonnage().getPassiveState("BURN_ON_HIT_DURATION", 3);
+                                        generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dot = new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
+                                        dot.setFixedDamagePerTick(burnDmg);
+                                        dot.setDuration(burnDur);
+                                        dot.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+                                        dot.setBurn(true);
+                                        targetPlayer.getActiveDamageOverTimeEffects().add(dot);
+                                        session.addLog(
+                                                "🔥 " + targetPlayer.getName() + " s'embrase au contact ! (" + burnDmg
+                                                        + " dégâts par tour)");
+                                    }
+
+                                    int poisonDmg = m.getAsPersonnage().getPassiveState("POISON_ON_HIT", 0);
+                                    if (poisonDmg > 0) {
+                                        int poisonDur = m.getAsPersonnage().getPassiveState("POISON_ON_HIT_DURATION",
+                                                3);
+                                        generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dot = new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
+                                        dot.setFixedDamagePerTick(poisonDmg);
+                                        dot.setDuration(poisonDur);
+                                        dot.setDamageType(generation.grimoire.enumeration.DamageType.BRUT);
+                                        dot.setPoison(true);
+                                        targetPlayer.getActiveDamageOverTimeEffects().add(dot);
+                                        session.addLog("🦠 " + targetPlayer.getName() + " est empoisonné au contact ! ("
+                                                + poisonDmg + " dégâts par tour)");
+                                    }
+
+                                    // === COMPORTEMENT : CORRUPTEUR — Drain de mana ===
+                                    if (behavior == MonsterBehavior.CORRUPTEUR) {
+                                        int manaLoss = (int) Math.floor(targetPlayer.getManaCurrent() * 0.05);
+                                        if (manaLoss > 0) {
+                                            targetPlayer.setManaCurrent(
+                                                    Math.max(0, targetPlayer.getManaCurrent() - manaLoss));
+                                            session.addLog("🦇 " + targetPlayer.getName() + " perd " + manaLoss
+                                                    + " points de mana ! (Corrupteur)");
+                                        }
+                                    }
+
+                                    // === PASSIF TYPE : DEMON — 10% dégâts bruts supplémentaires ===
+                                    if (mType == MonsterType.DEMON) {
+                                        int brutDmg = (int) Math.ceil(monsterDmg * 0.10);
+                                        if (brutDmg > 0) {
+                                            targetPlayer.takeDamage(brutDmg,
+                                                    generation.grimoire.enumeration.DamageType.BRUT);
+                                            session.addLog(
+                                                    "\uD83D\uDD25 " + m.getBase().getName() + " inflige " + brutDmg
+                                                            + " dégâts bruts supplémentaires (Démon).");
+                                        }
+                                    }
+
+                                    // === PASSIF TYPE : VAMPIRE — 20% vol de vie ===
+                                    if (mType == MonsterType.VAMPIRE) {
+                                        int healAmount = (int) Math.ceil(monsterDmg * 0.20);
+                                        int newHp = Math.min(m.getBase().getHealthMax(),
+                                                m.getAsPersonnage().getHealthCurrent() + healAmount);
+                                        m.getAsPersonnage().setHealthCurrent(newHp);
+                                        session.addLog("\uD83E\uDDDB " + m.getBase().getName() + " vole " + healAmount
+                                                + " PV (Vampire).");
+                                    }
+
+                                    // === PASSIF TYPE : ECTOPLASME ===
+                                    if (mType == MonsterType.ECTOPLASME) {
+                                        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect eff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+                                        eff.setStatAffected(generation.grimoire.enumeration.StatType.RESISTANCE);
+                                        eff.setFlatValue(-5);
+                                        eff.setDuration(3);
+                                        targetPlayer.getActiveBuffs().add(eff);
+                                        session.addLog("👻 " + targetPlayer.getName()
+                                                + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
+                                    }
+
+                                    if (targetPlayer.getHealthCurrent() <= 0) {
+                                        System.out.println(targetPlayer.getName() + " a été vaincu...");
+                                    }
+                                } // End of targetPlayer loop
                             }
-                            } // End of targetPlayer loop
                         }
-                    }
                     } // End else (alive players check after mutations)
                 } else {
                     session.addLog(m.getBase().getName() + " a succombé à ses blessures avant de pouvoir attaquer !");
@@ -1637,12 +1699,14 @@ if (targetPlayer.getHealthCurrent() <= 0) {
 
             // Defeat penalty: 8 gold per room
             int roomsCount = (session.getDonjon() != null && session.getDonjon().getSalles() != null)
-                    ? session.getDonjon().getSalles().size() : 1;
+                    ? session.getDonjon().getSalles().size()
+                    : 1;
             int goldLoss = 8 * roomsCount;
             session.setTotalGoldLostOnDefeat(goldLoss);
 
             if (!session.getPlayers().isEmpty() && session.getPlayers().get(0).getId() != null) {
-                Personnage dbP = personnageRepository.findById(java.util.Objects.requireNonNull(session.getPlayers().get(0).getId())).orElse(null);
+                Personnage dbP = personnageRepository
+                        .findById(java.util.Objects.requireNonNull(session.getPlayers().get(0).getId())).orElse(null);
                 if (dbP != null && dbP.getUser() != null) {
                     generation.grimoire.entity.auth.AppUser user = dbP.getUser();
                     user.setMonnaie(Math.max(0, user.getMonnaie() - goldLoss));
@@ -2003,7 +2067,8 @@ if (targetPlayer.getHealthCurrent() <= 0) {
                         }
                     } else if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatPercentageEffect hpe) {
                         if (hpe.getPercentage() < 0) {
-                            double srcVal = generation.grimoire.utils.StatCalculator.getSourceValue(hpe.getSource(), p, p);
+                            double srcVal = generation.grimoire.utils.StatCalculator.getSourceValue(hpe.getSource(), p,
+                                    p);
                             minRequiredHeatFromEffects += (int) (-hpe.getPercentage() * srcVal);
                         }
                     }
@@ -2100,4 +2165,3 @@ if (targetPlayer.getHealthCurrent() <= 0) {
         anomalieRepository.delete(toDestroy);
     }
 }
-

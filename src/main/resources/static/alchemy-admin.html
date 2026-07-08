@@ -21,6 +21,21 @@
     <link rel="stylesheet" href="/styles/ui/utilities.css">
     <link rel="stylesheet" href="/styles/pages/vault.css?v=4">
     <style>
+        #recipesList::-webkit-scrollbar {
+            width: 8px;
+        }
+        #recipesList::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        #recipesList::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        #recipesList::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         .req-list {
             display: flex;
             flex-direction: column;
@@ -174,7 +189,7 @@
     <main style="display: block;">
         <div class="magic-rock"></div>
         <div class="form-container"
-            style="max-width: 1200px; margin: 2rem auto; display: flex; gap: 2rem; align-items: flex-start;">
+            style="max-width: 1200px; margin: 2rem auto; display: flex; gap: 2rem; align-items: stretch;">
 
             <div class="panel" id="recipePanel" style="flex: 1; transition: all 0.3s ease;">
                 <div class="panel-title">
@@ -318,12 +333,13 @@
                 </form>
             </div>
 
-            <div class="panel" style="flex: 1;">
-                <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <span class="material-symbols-outlined" style="color: #a855f7;">auto_awesome</span>
-                        Recettes Existantes
-                    </div>
+            <div style="flex: 1; position: relative;">
+                <div class="panel" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; margin: 0;">
+                    <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="material-symbols-outlined" style="color: #a855f7;">auto_awesome</span>
+                            Recettes Existantes
+                        </div>
                 </div>
 
                 <div class="filters-container" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
@@ -374,9 +390,10 @@
                     </div>
                 </div>
 
-                <div id="recipesList" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div id="recipesList" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; padding-right: 0.5rem; flex: 1;">
                     Chargement...
                 </div>
+            </div>
             </div>
 
         </div>

@@ -6,31 +6,46 @@ window.switchDungeonTab = function(tabName) {
     document.getElementById(`${tabName}DungeonsSection`).classList.add('active');
 };
 
-let currentDungeonId = null;
-let selectedCharIds = [];
-let currentMaxHeroes = 1;
-let selectedConsumableIds = [];
+const pageState = {
+  currentDungeonId: null,
+  selectedCharIds: null,
+  currentMaxHeroes: null,
+  selectedConsumableIds: null,
+  userCharacters: null,
+  availableConsumables: null,
+  activeConsumableFilters: null,
+};
+pageState.currentDungeonId = null;
+pageState.selectedCharIds = [];
+pageState.currentMaxHeroes = 1;
+pageState.selectedConsumableIds = [];
+pageState.userCharacters = [];
+pageState.availableConsumables = [];
+pageState.activeConsumableFilters = { hp: false, mana: false, util: false };
+
+
+
 
 function getMaxWeight() {
-    return 10 + 5 * selectedCharIds.length;
+    return 10 + 5 * pageState.selectedCharIds.length;
 }
 
 function getCurrentWeight() {
-    return availableConsumables
-        .filter(c => selectedConsumableIds.includes(c.id))
+    return pageState.availableConsumables
+        .filter(c => pageState.selectedConsumableIds.includes(c.id))
         .reduce((sum, c) => sum + (c.weight || 0), 0);
 }
 
 function updateHeroCountDisplay() {
     const el = document.getElementById('heroCountDisplay');
     if (el) {
-        el.innerText = `(${selectedCharIds.length} / ${currentMaxHeroes})`;
-        el.style.color = selectedCharIds.length === currentMaxHeroes ? '#10b981' : '#94a3b8';
+        el.innerText = `(${pageState.selectedCharIds.length} / ${pageState.currentMaxHeroes})`;
+        el.style.color = pageState.selectedCharIds.length === pageState.currentMaxHeroes ? '#10b981' : '#94a3b8';
     }
 }
 
-let userCharacters = [];
-let availableConsumables = [];
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const checkAuth = async () => {
@@ -38,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('authWarning').style.display = 'block';
             return;
         }
+
+        if (window.initAppMeta) await window.initAppMeta();
 
         document.getElementById('dungeonsContent').style.display = 'block';
         await loadCharacters();
@@ -125,8 +142,8 @@ async function loadDungeons() {
                 let catId, label, icon, color;
 
                 // Check hero levels
-                if (userCharacters.length > 0) {
-                    const hasMatchingHero = userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
+                if (pageState.userCharacters.length > 0) {
+                    const hasMatchingHero = pageState.userCharacters.some(c => (c.voieLevel || 1) >= (d.recommendedLevel || 1));
                     if (!hasMatchingHero) return; // Skip if no hero has exactly this level or higher
                 }
                 
@@ -290,11 +307,11 @@ async function loadCharacters() {
     try {
         const res = await globalFetch('/api/personnages');
         if (res.ok) {
-            userCharacters = await res.json();
+            pageState.userCharacters = await res.json();
             const list = document.getElementById('prepCharList');
             list.innerHTML = '';
 
-            if (userCharacters.length === 0) {
+            if (pageState.userCharacters.length === 0) {
                 list.innerHTML = `<div class="text-sm text-muted">Vous n'avez aucun personnage. Allez dans le Grimoire pour en cr\u00e9er un.</div>`;
                 return;
             }
@@ -319,7 +336,7 @@ async function loadCharacters() {
                 return { c: '#a78bfa', i: 'psychology' };
             };
 
-            userCharacters.forEach(c => {
+            pageState.userCharacters.forEach(c => {
                 let iconsHtml = '';
                 if (c.voie && c.voie.nom) {
                     const vi = getVIcon(c.voie.nom);
@@ -352,7 +369,7 @@ async function loadConsumables() {
         const res = await globalFetch('/api/equipments/unassigned');
         if (res.ok) {
             const allUnassigned = await res.json();
-            availableConsumables = allUnassigned
+            pageState.availableConsumables = allUnassigned
                 .filter(eq => eq.slot === 'CONSOMMABLE')
                 .sort((a, b) => a.name.localeCompare(b.name));
         }
@@ -361,12 +378,12 @@ async function loadConsumables() {
     }
 }
 
-let activeConsumableFilters = { hp: false, mana: false, util: false };
+
 
 window.toggleConsumableFilter = function(btn, type) {
-    activeConsumableFilters[type] = !activeConsumableFilters[type];
+    pageState.activeConsumableFilters[type] = !pageState.activeConsumableFilters[type];
     
-    if (activeConsumableFilters[type]) {
+    if (pageState.activeConsumableFilters[type]) {
         btn.style.opacity = '1';
         btn.style.boxShadow = '0 0 8px currentColor';
     } else {
@@ -390,16 +407,16 @@ function renderConsumablesList() {
         Poids: ${curWeight % 1 === 0 ? curWeight : curWeight.toFixed(1)} / ${maxWeight}
     </div>`;
 
-    if (availableConsumables.length === 0) {
+    if (pageState.availableConsumables.length === 0) {
         list.innerHTML = counterHtml + `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Vous n'avez aucun consommable dans votre coffre.</div>`;
         return;
     }
 
-    let filteredConsumables = availableConsumables;
-    const hasFilter = activeConsumableFilters.hp || activeConsumableFilters.mana || activeConsumableFilters.util;
+    let filteredConsumables = pageState.availableConsumables;
+    const hasFilter = pageState.activeConsumableFilters.hp || pageState.activeConsumableFilters.mana || pageState.activeConsumableFilters.util;
     
     if (hasFilter) {
-        filteredConsumables = availableConsumables.filter(c => {
+        filteredConsumables = pageState.availableConsumables.filter(c => {
             const isHp = (c.consumableHpPercent && c.consumableHpPercent > 0) || 
                          (c.consumableMissingHpPercent && c.consumableMissingHpPercent > 0) || 
                          (c.bonusHealthMax && c.bonusHealthMax > 0) ||
@@ -415,9 +432,9 @@ function renderConsumablesList() {
             
             const isUtil = !isHp && !isMana;
 
-            return (activeConsumableFilters.hp && isHp) || 
-                   (activeConsumableFilters.mana && isMana) || 
-                   (activeConsumableFilters.util && isUtil);
+            return (pageState.activeConsumableFilters.hp && isHp) || 
+                   (pageState.activeConsumableFilters.mana && isMana) || 
+                   (pageState.activeConsumableFilters.util && isUtil);
         });
     }
 
@@ -432,8 +449,8 @@ function renderConsumablesList() {
         const catColors = { POTION_ROSE: '#ec4899', POTION_BLEUE: '#0ea5e9', POTION_ROUGE: '#ef4444', POTION_VIOLETTE: '#a855f7', CLE: '#eab308', CORDE: '#8b4513', PARCHEMIN: '#f59e0b', NOURRITURE: '#f43f5e', OUTIL: '#64748b', AUTRE: '#94a3b8' };
         const iconName = c.consumableCategory ? (catIcons[c.consumableCategory] || 'inventory_2') : 'inventory_2';
         const iconColor = c.consumableCategory ? (catColors[c.consumableCategory] || '#854c4c') : '#854c4c';
-        const isSelected = selectedConsumableIds.includes(c.id);
-        const selIndex = selectedConsumableIds.indexOf(c.id);
+        const isSelected = pageState.selectedConsumableIds.includes(c.id);
+        const selIndex = pageState.selectedConsumableIds.indexOf(c.id);
         const badgeHtml = isSelected ? `<div class="flex-center text-xxs absolute" style="top: -6px; right: -6px; background: #10b981; color: white; width: 18px; height: 18px; border-radius: 50%; justify-content: center; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">${selIndex + 1}</div>` : '';
         cardsHtml += `
             <div class="consumable-card ${isSelected ? 'selected' : ''} relative" onclick="selectConsumable(${c.id})" style="overflow: visible;">
@@ -460,48 +477,48 @@ function renderConsumablesList() {
 }
 
 window.selectConsumable = function (id) {
-    const idx = selectedConsumableIds.indexOf(id);
+    const idx = pageState.selectedConsumableIds.indexOf(id);
     if (idx !== -1) {
-        selectedConsumableIds.splice(idx, 1);
+        pageState.selectedConsumableIds.splice(idx, 1);
     } else {
-        const c = availableConsumables.find(item => item.id === id);
+        const c = pageState.availableConsumables.find(item => item.id === id);
         const itemWeight = c ? (c.weight || 0) : 0;
         if (getCurrentWeight() + itemWeight > getMaxWeight()) {
             showNotif(`Le poids maximum serait d\u00e9pass\u00e9 !`, true);
             return;
         }
-        selectedConsumableIds.push(id);
+        pageState.selectedConsumableIds.push(id);
     }
     renderConsumablesList();
 };
 
 window.selectCharacter = async function (id) {
-    if (selectedCharIds.includes(id)) {
-        selectedCharIds = selectedCharIds.filter(cid => cid !== id);
+    if (pageState.selectedCharIds.includes(id)) {
+        pageState.selectedCharIds = pageState.selectedCharIds.filter(cid => cid !== id);
         if (getCurrentWeight() > getMaxWeight()) {
-            selectedConsumableIds = [];
+            pageState.selectedConsumableIds = [];
             showNotif(`Inventaire r\u00e9initialis\u00e9 car le poids max a diminu\u00e9.`, true);
         }
     } else {
-        if (selectedCharIds.length >= currentMaxHeroes) {
-            showNotif(`Ce donjon est limit\u00e9 \u00e0 ${currentMaxHeroes} h\u00e9ros maximum.`, true);
+        if (pageState.selectedCharIds.length >= pageState.currentMaxHeroes) {
+            showNotif(`Ce donjon est limit\u00e9 \u00e0 ${pageState.currentMaxHeroes} h\u00e9ros maximum.`, true);
             return;
         }
-        selectedCharIds.push(id);
+        pageState.selectedCharIds.push(id);
     }
     
     renderConsumablesList();
     updateHeroCountDisplay();
 
     document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-    selectedCharIds.forEach(cid => {
+    pageState.selectedCharIds.forEach(cid => {
         const card = document.getElementById('charCard_' + cid);
         if (card) card.classList.add('selected');
     });
 
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
-        if (selectedCharIds.length > 0) {
+        if (pageState.selectedCharIds.length > 0) {
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'all';
         } else {
@@ -518,7 +535,7 @@ window.selectCharacter = async function (id) {
         }
     } catch (e) { console.error(e); }
 
-    const char = userCharacters.find(c => c.id === id);
+    const char = pageState.userCharacters.find(c => c.id === id);
     if (!char) return;
 
     let totalStats = {
@@ -569,23 +586,19 @@ window.selectCharacter = async function (id) {
     if (equipments.length === 0) {
         equipList.innerHTML = `<div class="text-sm text-muted">Aucun \u00e9quipement port\u00e9.</div>`;
     } else {
-        const iconMap = {
-            'CASQUE': 'masks', 'PLASTRON': 'shield', 'BOTTES': 'footprint',
-            'ANNEAU_GAUCHE': 'diamond', 'ANNEAU_DROIT': 'diamond', 'CAPE': 'carpenter', 'ARME_GAUCHE': 'colorize', 'ARME_DROITE': 'security', 'ARME_DEUX_MAINS': 'swords'
-        };
         const colorMap = {
             'COMMUN': '#94a3b8', 'INHABITUEL': '#22c55e', 'RARE': '#3b82f6', 'MYTHIQUE': '#f97316', 'LEGENDAIRE': '#eab308',
             'EPIQUE': '#ef4444', 'RELIQUE': '#a855f7', 'MAUDIT': '#6b5252'
         };
         equipments.forEach(eq => {
-            const icon = iconMap[eq.slot] || 'help';
-            const color = colorMap[eq.rarity] || '#f8fafc';
-            const extraClass = icon === 'masks' ? 'flip-icon' : '';
+            const slotInfo = Object.assign({}, window.SLOT_LABELS[eq.slot] || { label: eq.slot, icon: 'help', color: '#94a3b8', extraClass: '' });
+            const rarityName = eq.rarity && typeof eq.rarity === 'object' ? eq.rarity.name : eq.rarity;
+            const rarityColor = colorMap[rarityName] || '#f8fafc';
             equipList.innerHTML += `
-                <div class="equip-slot" style="border-left: 3px solid ${color};">
-                    <div class="equip-slot-icon"><span class="material-symbols-outlined ${extraClass}">${icon}</span></div>
+                <div class="equip-slot" style="border-left: 3px solid ${rarityColor};">
+                    <div class="equip-slot-icon"><span class="material-symbols-outlined ${slotInfo.extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span></div>
                     <div>
-                        <div class="text-sm" style="color: ${color}; font-weight: 600;">${eq.name}</div>
+                        <div class="text-sm" style="color: ${rarityColor}; font-weight: 600;">${eq.name}</div>
                         <div class="text-muted" style="font-size: 0.75rem;">${eq.slot}</div>
                     </div>
                 </div>
@@ -595,16 +608,16 @@ window.selectCharacter = async function (id) {
 };
 
 window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost, reqLevel) {
-    currentDungeonId = id;
-    selectedCharIds = [];
-    selectedConsumableIds = [];
-    currentMaxHeroes = maxHeroes || 1;
+    pageState.currentDungeonId = id;
+    pageState.selectedCharIds = [];
+    pageState.selectedConsumableIds = [];
+    pageState.currentMaxHeroes = maxHeroes || 1;
     window.currentDungeonEntryCost = entryCost || 0;
     window.currentDungeonReqLevel = reqLevel || 1;
 
     updateHeroCountDisplay();
 
-    document.getElementById('prepDungeonTitle').textContent = `${name} (Max: ${currentMaxHeroes} h\u00e9ros)`;
+    document.getElementById('prepDungeonTitle').textContent = `${name} (Max: ${pageState.currentMaxHeroes} h\u00e9ros)`;
 
     const btnEnter = document.getElementById('btnEnterDungeon');
     if (window.currentDungeonEntryCost > 0) {
@@ -646,7 +659,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     });
     
     // Grey out characters with level < window.currentDungeonReqLevel
-    userCharacters.forEach(c => {
+    pageState.userCharacters.forEach(c => {
         const charLevel = c.voieLevel || 1;
         if (charLevel < window.currentDungeonReqLevel) {
             const card = document.getElementById('charCard_' + c.id);
@@ -678,13 +691,13 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 window.closePrepInterface = function () {
     document.getElementById('prepInterface').style.display = 'none';
     document.getElementById('dungeonsContent').style.display = 'block';
-    currentDungeonId = null;
-    selectedCharIds = [];
-    selectedConsumableIds = [];
+    pageState.currentDungeonId = null;
+    pageState.selectedCharIds = [];
+    pageState.selectedConsumableIds = [];
 };
 
 window.startCombat = async function () {
-    if (selectedCharIds.length === 0) {
+    if (pageState.selectedCharIds.length === 0) {
         showNotif("Veuillez s\u00e9lectionner au moins un personnage.", true);
         return;
     }
@@ -698,10 +711,10 @@ window.startCombat = async function () {
         if (!confirmed) return;
     }
 
-    const charIdsStr = selectedCharIds.join(',');
-    let url = `/combat.html?dungeonId=${currentDungeonId}&characterIds=${charIdsStr}`;
-    if (selectedConsumableIds.length > 0) {
-        url += `&consumableIds=${selectedConsumableIds.join(',')}`;
+    const charIdsStr = pageState.selectedCharIds.join(',');
+    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}`;
+    if (pageState.selectedConsumableIds.length > 0) {
+        url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }
     window.location.href = url;
 };

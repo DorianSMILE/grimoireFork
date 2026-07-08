@@ -416,17 +416,17 @@
 
         async function fetchUserInventory() {
             try {
-                const resT = await fetch('/api/anomalies/all-templates');
-                if (resT.ok) allAnomalyTemplates = await resT.json();
+                const resT = await globalFetch('/api/anomalies/all-templates');
+                if (resT && resT.ok) allAnomalyTemplates = await resT.json();
 
-                const resA = await fetch('/api/anomalies');
-                if (resA.ok) userAnomalies = await resA.json();
+                const resA = await globalFetch('/api/anomalies');
+                if (resA && resA.ok) userAnomalies = await resA.json();
 
-                const resEq = await fetch('/api/equipments/templates/public');
-                if (resEq.ok) allEquipmentTemplates = await resEq.json();
+                const resEq = await globalFetch('/api/equipments/templates/public');
+                if (resEq && resEq.ok) allEquipmentTemplates = await resEq.json();
 
-                const resC = await fetch('/api/equipments');
-                if (resC.ok) {
+                const resC = await globalFetch('/api/equipments');
+                if (resC && resC.ok) {
                     const equips = await resC.json();
                     userConsumables = equips.filter(e => e.slot === 'CONSOMMABLE');
                 }
@@ -437,9 +437,11 @@
 
         async function loadPlayerRecipes() {
             try {
-                const res = await fetch('/api/alchemy/recipes');
-                allRecipes = await res.json();
-                renderRecipesList();
+                const res = await globalFetch('/api/alchemy/recipes');
+                if (res && res.ok) {
+                    allRecipes = await res.json();
+                    renderRecipesList();
+                }
             } catch (e) {
                 console.error("Erreur chargement recettes:", e);
             }
@@ -975,8 +977,8 @@
 
         async function fetchUserCharacters() {
             try {
-                const res = await fetch('/api/personnages');
-                if (res.ok) {
+                const res = await globalFetch('/api/personnages');
+                if (res && res.ok) {
                     const chars = await res.json();
                     userCharacters = chars;
                     const container = document.getElementById('crafterSelectContainer');
@@ -1090,7 +1092,7 @@
             }
 
             try {
-                const res = await fetch(`/api/alchemy/craft/${selectedRecipe.id}`, {
+                const res = await globalFetch(`/api/alchemy/craft/${selectedRecipe.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)

@@ -1,5 +1,10 @@
 package generation.grimoire.enumeration;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.databind.JsonNode;
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum EquipmentRarity {
     COMMUN("Commun", "rarity-commun"),
     INHABITUEL("Inhabituel", "rarity-inhabituel"),
@@ -21,5 +26,13 @@ public enum EquipmentRarity {
     public String getName() { return name(); }
     public String getLabel() { return label; }
     public String getCssClass() { return cssClass; }
+
+    @JsonCreator
+    public static EquipmentRarity fromNode(JsonNode node) {
+        if (node.isObject()) {
+            return EquipmentRarity.valueOf(node.get("name").asText());
+        }
+        return EquipmentRarity.valueOf(node.asText());
+    }
 }
 

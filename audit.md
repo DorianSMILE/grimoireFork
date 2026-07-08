@@ -2,7 +2,7 @@
 
 ## Résumé
 
-Le document pose de **bonnes fondations** — les 3 piliers sont solides et bien formulés. Mais le scan du code révèle que le document est **nécessaire mais insuffisant** : il ne couvre pas plusieurs patterns de dette déjà présents et laisse des angles morts critiques pour un projet Spring Boot + Vanilla JS.
+Le document `GRIMOIRE_ARCHITECTURE.md` a été **considérablement renforcé** depuis l'audit initial. Les 3 piliers fondamentaux sont solides, les sections Sécurité (§4) et Front-End Avancées (§5) ont été ajoutées, et le Master Prompt reflète toutes les règles. L'audit terrain révèle toutefois des **violations résiduelles** qui doivent être corrigées dans le code.
 
 ---
 
@@ -15,7 +15,10 @@ La règle **B3 (DTOs Actifs)** + **B4 (Simulate)** couvrent ce cas. Constat terr
 - ~~[armory.js] contenait `calculateEquipmentWeight()` avec tous les multiplicateurs hardcodés.~~ **(CORRIGÉ)**
 - ~~[shop-admin.js] contenait `calculateEquipmentWeight()`, `calculateShopPrice()` et `WEIGHT_LIMITS` en dur.~~ **(CORRIGÉ)**
 
-**Verdict** : B3+B4 ont été appliquées avec succès. L'intégralité du calcul (poids, limites, prix) est centralisée dans le back-end (`Equipment.java`) et interrogée via l'endpoint de simulation (`/api/equipment/simulate-weight`).
+**Verdict** : B3+B4 ont été appliquées avec succès. L'intégralité du calcul (poids, limites, prix) est centralisée dans le back-end (`Equipment.java`) et interrogée via l'endpoint de simulation (`/api/equipments/simulate-weight`).
+
+> [!WARNING]
+> **Violation résiduelle :** `WEIGHT_LIMITS` est encore hardcodé dans [constants.js](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/constants.js#L24-L35) et consommé par [vault.js](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/vault.js#L536) pour la validation côté client. Ce dictionnaire duplique les valeurs du `EquipmentController.getMaxWeight()`. Il devrait être fourni par le back-end via `/api/meta` ou l'endpoint `simulate-weight`.
 
 ### ✅ HTML/CSS dans le code Java/BDD
 
@@ -29,205 +32,13 @@ La règle **B1** couvre exactement ce cas. Constat terrain :
 
 La règle **F1** couvre ce cas. Constat terrain :
 
-- ~~[constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end.~~ **(CORRIGÉ)**
-- ~~`SLOT_LABELS` et d'autres constantes (ex: `catIcons`) sont encore dupliqués et hardcodés dans `combat.js`, `shop-admin.js`, `vault.js` etc.~~ **(CORRIGÉ)**
+- ~~`GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end.~~ **(CORRIGÉ)**
+- ~~`SLOT_LABELS` et d'autres constantes sont dupliquées et hardcodées.~~ **(CORRIGÉ)** — Maintenant hydraté via `window.SLOT_LABELS` depuis `/api/meta`.
 
-**Verdict** : F1 a été appliquée avec succès. Un `EnumMetaController` charge toutes les métadonnées (icônes, couleurs, libellés) au démarrage de l'app UI via `window.initAppMeta()`. Plus aucun dictionnaire n'est codé en dur en JS.
+> [!WARNING]
+> **Violation résiduelle :** [combat.js:2663-2673](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/combat.js#L2663-L2673) contient un dictionnaire `behaviorTitles` et `bIcon`/`bLabel` hardcodés pour les comportements de monstres (`PREDATEUR`, `CORRUPTEUR`, etc.). Ceci viole **F1** et **B2** : ces métadonnées devraient être portées par l'enum `MonsterBehavior` côté Java et sérialisées via `/api/meta`.
 
----
-
-## 2. Angles morts identifiés
-
-### ✅ AM-1 : Sécurité des appels API — CORRIGÉ
-
-~~[SecurityConfig.java:24] : `.anyRequest().permitAll()` — toutes les routes API étaient ouvertes à tous.~~ **(CORRIGÉ)**
-
-Le fichier `SecurityConfig.java` a été mis à jour pour exiger le rôle `ADMIN` sur toutes les routes d'administration (`/api/admin/**`, `/api/equipment/**`, `/api/spells-editor/**`, etc.). La faille critique est fermée.
-
-> [!NOTE]
-> Le document architecture doit quand même mentionner les règles de sécurité comme proposé plus bas pour éviter toute régression future.
-
-### ✅ AM-2 : Inline CSS dans les templates JS — CORRIGÉ
-
-La règle F2 dit « Zéro CSS inline dans le JS ». Mais le problème **le plus massif** n'est pas `element.style.x` — c'est l'injection de HTML avec `style="..."` dans les template literals :
-
-- [armory.js:249](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L249) : `` `<span style="font-size: 0.9rem; color: ${color}; font-weight: 500;">` ``
-- [armory.js:711-817](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L711-L817) : blocs entiers de `<div style="display: flex; justify-content: space-between; font-size:...">`
-- [auth.js:103](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/auth.js#L103) : un `<a>` complet avec 7 propriétés CSS inline
-- [api.js:281](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L281) : error display avec styles inline
-
-**Verdict** : Plus de 1090 occurrences de `style="..."` ont été converties en classes utilitaires (ex: `flex-between`, `text-muted`) via un script de migration massif. La dette a été purgée.
-
-### ✅ AM-3 : Gestion d'erreurs API — CORRIGÉ
-
-Le code utilise indifféremment `alert()`, `showNotif()`, et `console.error()` pour les erreurs :
-- [api.js:265-269](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L265-L269) : `alert("Erreur lors de l'enregistrement")`
-- [api.js:281](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L281) : injection HTML avec `err.stack` — potentielle fuite d'info technique
-- Certains appels `fetch()` ne vérifient même pas `res.ok`
-
-Le document ne prescrit **aucun pattern** de gestion d'erreurs.
-
-### ✅ AM-4 : Architecture CSS réelle = F3 prescrite (CORRIGÉ)
-
-Le document prescrit `/css/global.css`, `/css/ui/`, `/css/modules/`, `/css/sprites/`. En réalité :
-- Le dossier CSS est `/styles/` (pas `/css/`)
-- Pas de sous-dossier `ui/` ni `modules/` — tout est à plat
-- `variables.css` existe (≈ global), mais `components.css`, `forms.css` sont au même niveau que `vault.css`, `armory.css`
-- Les animations sont dans `spell-cards-animations.css` (à plat, pas dans `sprites/`)
-
-**La règle F3 ne correspond pas à la structure existante.** Soit on migre, soit on adapte F3.
-
-### ✅ AM-5 : State management non documenté — CORRIGÉ
-
-La règle F6 a été établie pour exiger un objet d'état par page (`const pageState = { ... }`).
-À titre de démonstration, `armory.js` a été intégralement refactorisé pour éliminer les variables globales (`let voies`, `let personnages`) au profit de `pageState`.
-
-### ✅ AM-6 : Gestion des appels fetch() — CORRIGÉ
-
-`api.js` encapsule les appels de l'éditeur de sorts, mais les **autres pages font des `fetch()` directs** (armory.js, vault.js, shop.js, combat.js, dungeons.js) — sans headers communs, sans gestion centralisée du 401/403, sans retry.
-
-### ✅ AM-7 : L'exception légitime pour `element.style` dans les animations — CORRIGÉ
-
-[animations.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/animations.js) utilise massivement `p.style.left`, `p.style.transform`, etc. C'est **légitime** pour les animations par particules. La règle F2 l'exempte explicitement.
-
-### ✅ AM-8 : Absence de convention de nommage API — CORRIGÉ
-
-La **Règle B5** a été ajoutée pour standardiser les endpoints (pluriel, verbes REST stricts).
-`EquipmentController` a été migré de `/api/equipment` vers `/api/equipments` en suivant cette nouvelle norme, et le frontend a été mis à jour pour s'y conformer.
-
-Aucune convention REST n'est documentée.
-
----
-
-## 3. Corrections proposées au document
-
-> [!IMPORTANT]
-> Ci-dessous les **modifications exactes** à apporter à [GRIMOIRE_ARCHITECTURE.md](file:///c:/Users/doson/IdeaProjects/grimoire/GRIMOIRE_ARCHITECTURE.md). Chaque bloc est un diff appliquable.
-
-### 3.1 — Renforcer F2 pour couvrir les template literals
-
-```diff
- *   **Règle F2 - Zéro CSS inline dans le JS :** 
--    Ne jamais injecter de logique de style (ex: `element.style.display = 'none'` ou `<div style="...">`) via JavaScript. Le JS sert uniquement à basculer des classes d'état CSS existantes (`.is-hidden`, `.is-active`).
-+    Ne jamais injecter de logique de style via JavaScript, que ce soit par manipulation DOM (`element.style.display = 'none'`) ou par template literal (`<div style="...">`). Le JS sert uniquement à basculer des classes d'état CSS existantes (`.is-hidden`, `.is-active`).
-+    **Exception** : les animations procédurales (ex: positionnement de particules via `transform`, `left`, `top`) où les valeurs sont calculées en runtime sont exemptées de cette règle.
-```
-
-### 3.2 — Corriger F3 pour refléter le chemin réel
-
-```diff
- *   **Règle F3 - Arborescence CSS stricte :** 
--    *   `/css/global.css` : Variables, typographie, reset.
--    *   `/css/ui/` : Composants réutilisables partagés (boutons, tooltips, modales, notifications).
--    *   `/css/modules/` : Grilles et layouts uniques à une page (ex: `vault.css`).
--    *   `/css/sprites/` : Fichiers isolés contenant uniquement les lourdes animations (ex: `@keyframes` pixel art).
-+    *   `/styles/variables.css` : Variables CSS custom, tokens de couleur, typographie.
-+    *   `/styles/ui/` : Composants réutilisables partagés (boutons, tooltips, modales, notifications, formulaires).
-+    *   `/styles/pages/` : Layouts uniques à une page (ex: `vault.css`, `armory.css`).
-+    *   `/styles/sprites/` : Fichiers isolés contenant uniquement les lourdes animations (ex: `@keyframes`, spritesheets pixel art).
-```
-
-### 3.3 — Ajouter une section Sécurité (nouvelle section 4)
-
-```diff
- ---
- 
-+## 4. Règles de Sécurité
-+
-+*   **Règle S1 - Protection des routes API :**
-+    Les endpoints admin (`/api/**/admin/**`, création/suppression/modification d'entités de jeu) doivent être protégés par `@PreAuthorize("hasRole('ADMIN')")` ou via `SecurityFilterChain`. Le RBAC frontend (masquage de boutons) est cosmétique et ne constitue **pas** une sécurité.
-+*   **Règle S2 - CSRF :**
-+    Si CSRF est désactivé (API stateless consommée par du JS same-origin), documenter explicitement pourquoi. À terme, envisager un header custom (`X-Requested-With`) vérifié côté serveur pour protéger contre les requêtes cross-origin.
-+*   **Règle S3 - Ne jamais exposer de stacktraces au client :**
-+    Les erreurs API doivent retourner un JSON structuré `{ "error": "message user-friendly" }`, jamais de `err.stack` ou d'exception Java. Utiliser un `@ControllerAdvice` global.
-+
-+---
-+
-```
-
-### 3.4 — Ajouter une section Front-End patterns (nouvelle section 5)
-
-```diff
-+## 5. Règles Front-End Avancées (Patterns)
-+
-+*   **Règle F4 - Couche API centralisée :**
-+    Tous les appels `fetch()` doivent passer par un wrapper centralisé dans `api.js` (ou un fichier dédié par domaine : `api/equipment.js`, `api/combat.js`). Ce wrapper gère : les headers communs, la vérification `res.ok`, la redirection sur 401, et le parsing JSON. Aucun `fetch()` direct dans les fichiers de page.
-+*   **Règle F5 - Gestion d'erreurs unifiée :**
-+    Interdit d'utiliser `alert()` pour les erreurs. Utiliser systématiquement le système de notification existant (`showNotif(message, isError)`). Ne jamais afficher de stack trace ou de détail technique à l'utilisateur.
-+*   **Règle F6 - State par page :**
-+    Chaque page encapsule son état dans un objet dédié (`const pageState = { ... }`), jamais en variables globales `let` éparpillées. Le state partagé inter-pages reste dans `state.js`.
-+*   **Règle F7 - Zéro HTML dans le JS (template strings) :**
-+    Privilégier des fonctions de création de composants (`createCard(data)`, `createStatBadge(stat)`) qui utilisent `document.createElement()` et des classes CSS, plutôt que des template literals injectés via `innerHTML`. Si `innerHTML` est utilisé pour des raisons de performance, le HTML ne doit contenir **aucun attribut `style`** — uniquement des classes CSS.
-+
-+---
-+
-```
-
-### 3.5 — Renforcer B2 avec des exemples concrets
-
-```diff
- *   **Règle B2 - Les "Rich Enums" pour les Métadonnées :** 
--    Les types stricts (Comportements, Raretés, Catégories) ne sont pas de simples chaînes. L'`enum` Java doit centraliser ses propres métadonnées (label, description, icône) via des propriétés privées, et être sérialisée en objet JSON complet pour le front.
-+    Les types stricts (Comportements, Raretés, Catégories, Slots, Sources) ne sont pas de simples chaînes. L'`enum` Java doit centraliser ses propres métadonnées (label, description, icône, couleur CSS sémantique) via des propriétés privées, et être sérialisée en objet JSON complet pour le front via un `@JsonFormat(shape = Shape.OBJECT)` ou un serializer custom.
-+    **Exemple** : `EquipmentSlot.CASQUE` doit exposer `{ "name": "CASQUE", "label": "Casque", "icon": "masks" }` et non simplement `"CASQUE"`.
-+    **Liste des enums à enrichir** : `EquipmentRarity`, `EquipmentSlot`, `MonsterBehavior`, `MonsterType`, `Source`, `ConsumableCategory`.
-```
-
-### 3.6 — Renuméroter et mettre à jour le Master Prompt
-
-La section "Master System Prompt" (§ dernier) doit refléter les nouvelles règles ajoutées. Ajouter après le point 4 :
-
-```diff
- > 4. **Front-End Modulaire :** Le CSS utilitaire (tooltips, boutons) va dans des fichiers dédiés (`css/ui/`). Isole les animations lourdes (Spritesheets) dans `css/sprites/`. Le JS ne modifie pas le DOM avec du style en ligne, il ne fait qu'ajouter ou retirer des classes CSS (ex: `.is-hidden`).
--> 
-+> 5. **Sécurité :** Les routes admin sont protégées par `@PreAuthorize`. Le RBAC front n'est que cosmétique. Les erreurs API retournent du JSON structuré, jamais de stacktrace.
-+> 6. **Fetch centralisé :** Tous les appels API passent par un wrapper dans `api.js`. Zéro `fetch()` direct dans les pages. Gestion unifiée des erreurs via `showNotif()`, jamais `alert()`.
-+> 7. **Zéro HTML inline :** Les templates JS n'injectent jamais d'attribut `style="..."`. Utiliser des classes CSS et des fonctions de création de composants.
-+> 
- > Concentre-toi sur la propreté, la scalabilité et l'élimination stricte de la duplication de code entre le back et le front.
-```
-
----
-
-## Récapitulatif
-
-| Règle existante | Couvre la dette ciblée ? | Suffisante ? |
-|---|---|---|
-| B1 (No HTML in DB) | ✅ Oui | ✅ Bien formulée |
-| B2 (Rich Enums) | ✅ Oui | ⚠️ Manque exemples + liste d'enums concernées |
-| B3 (DTOs Actifs) | ✅ Oui | ✅ Bien formulée |
-| B4 (Simulate) | ✅ Oui | ✅ Bien formulée |
-| F1 (Zéro logique JS) | ✅ Oui | ✅ Bien formulée |
-| F2 (Zéro CSS inline) | ⚠️ Partiel | 🔴 Ne couvre pas template literals, pas d'exception animations |
----
-
-## 1. Validation : Les 3 dettes ciblées
-
-### ✅ Duplication logique de calcul (poids)
-
-La règle **B3 (DTOs Actifs)** + **B4 (Simulate)** couvrent ce cas. Constat terrain :
-
-- ~~[armory.js] contenait `calculateEquipmentWeight()` avec tous les multiplicateurs hardcodés.~~ **(CORRIGÉ)**
-- ~~[shop-admin.js] contenait `calculateEquipmentWeight()`, `calculateShopPrice()` et `WEIGHT_LIMITS` en dur.~~ **(CORRIGÉ)**
-
-**Verdict** : B3+B4 ont été appliquées avec succès. L'intégralité du calcul (poids, limites, prix) est centralisée dans le back-end (`Equipment.java`) et interrogée via l'endpoint de simulation (`/api/equipment/simulate-weight`).
-
-### ✅ HTML/CSS dans le code Java/BDD
-
-La règle **B1** couvre exactement ce cas. Constat terrain :
-
-- ~~[WebSpellCreationController.java] contenait de nombreuses balises HTML (strong, ul, style inline).~~ **(CORRIGÉ)**
-
-**Verdict** : B1 a été appliquée avec succès, le code Java a été purgé de ses balises HTML.
-
-### ✅ Hardcodage de dictionnaires de traduction en JS
-
-La règle **F1** couvre ce cas. Constat terrain :
-
-- ~~[constants.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/constants.js) : `GLOBAL_STAT_LABELS` est maintenant hydraté par le back-end.~~ **(CORRIGÉ)**
-- ~~`SLOT_LABELS` et d'autres constantes (ex: `catIcons`) sont encore dupliqués et hardcodés dans `combat.js`, `shop-admin.js`, `vault.js` etc.~~ **(CORRIGÉ)**
-
-**Verdict** : F1 a été appliquée avec succès. Un `EnumMetaController` charge toutes les métadonnées (icônes, couleurs, libellés) au démarrage de l'app UI via `window.initAppMeta()`. Plus aucun dictionnaire n'est codé en dur en JS.
+**Verdict** : F1 majoritairement appliquée. Reste la dette `behaviorTitles` dans `combat.js`.
 
 ---
 
@@ -237,184 +48,133 @@ La règle **F1** couvre ce cas. Constat terrain :
 
 ~~[SecurityConfig.java:24] : `.anyRequest().permitAll()` — toutes les routes API étaient ouvertes à tous.~~ **(CORRIGÉ)**
 
-Le fichier `SecurityConfig.java` a été mis à jour pour exiger le rôle `ADMIN` sur toutes les routes d'administration (`/api/admin/**`, `/api/equipment/**`, `/api/spells-editor/**`, etc.). La faille critique est fermée.
-
-> [!NOTE]
-> Le document architecture doit quand même mentionner les règles de sécurité comme proposé plus bas pour éviter toute régression future.
+Le fichier `SecurityConfig.java` a été mis à jour pour exiger le rôle `ADMIN` sur toutes les routes d'administration (`/api/admin/**`, `/api/equipments/**`, `/api/spells-editor/**`, etc.). La faille critique est fermée.
 
 ### ✅ AM-2 : Inline CSS dans les templates JS — CORRIGÉ
 
-La règle F2 dit « Zéro CSS inline dans le JS ». Mais le problème **le plus massif** n'est pas `element.style.x` — c'est l'injection de HTML avec `style="..."` dans les template literals :
+Plus de 1090 occurrences de `style="..."` ont été converties en classes utilitaires (ex: `flex-between`, `text-muted`) via un script de migration massif. La dette a été purgée.
 
-- [armory.js:249](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L249) : `` `<span style="font-size: 0.9rem; color: ${color}; font-weight: 500;">` ``
-- [armory.js:711-817](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/armory.js#L711-L817) : blocs entiers de `<div style="display: flex; justify-content: space-between; font-size:...">`
-- [auth.js:103](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/auth.js#L103) : un `<a>` complet avec 7 propriétés CSS inline
-- [api.js:281](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L281) : error display avec styles inline
-
-**Verdict** : Plus de 1090 occurrences de `style="..."` ont été converties en classes utilitaires (ex: `flex-between`, `text-muted`) via un script de migration massif. La dette a été purgée.
+> [!NOTE]
+> Des régressions ponctuelles peuvent apparaître lors de l'ajout de nouvelles fonctionnalités. Vigilance continue requise.
 
 ### ✅ AM-3 : Gestion d'erreurs API — CORRIGÉ
 
-Le code utilise indifféremment `alert()`, `showNotif()`, et `console.error()` pour les erreurs :
-- [api.js:265-269](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L265-L269) : `alert("Erreur lors de l'enregistrement")`
-- [api.js:281](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/api.js#L281) : injection HTML avec `err.stack` — potentielle fuite d'info technique
-- Certains appels `fetch()` ne vérifient même pas `res.ok`
+- `alert()` purgé de l'intégralité du codebase JS (0 occurrence).
+- `GlobalExceptionHandler.java` implémenté avec `@ControllerAdvice` — retourne `{ "error": "..." }` structuré, jamais de stacktrace.
 
-Le document ne prescrit **aucun pattern** de gestion d'erreurs.
+### ✅ AM-4 : Architecture CSS réelle ≠ F3 prescrite — CORRIGÉ
 
-### ✅ AM-4 : Architecture CSS réelle = F3 prescrite (CORRIGÉ)
-
-Le document prescrit `/css/global.css`, `/css/ui/`, `/css/modules/`, `/css/sprites/`. En réalité :
-- Le dossier CSS est `/styles/` (pas `/css/`)
-- Pas de sous-dossier `ui/` ni `modules/` — tout est à plat
-- `variables.css` existe (≈ global), mais `components.css`, `forms.css` sont au même niveau que `vault.css`, `armory.css`
-- Les animations sont dans `spell-cards-animations.css` (à plat, pas dans `sprites/`)
-
-**La règle F3 ne correspond pas à la structure existante.** Soit on migre, soit on adapte F3.
+La structure CSS a été migrée et F3 dans `GRIMOIRE_ARCHITECTURE.md` reflète la réalité :
+- `/styles/variables.css` ✅
+- `/styles/ui/` ✅ (components.css, forms.css, layout.css, utilities.css)
+- `/styles/pages/` ✅ (vault.css, armory.css, etc.)
+- `/styles/sprites/` ✅
 
 ### ✅ AM-5 : State management non documenté — CORRIGÉ
 
-La règle F6 a été établie pour exiger un objet d'état par page (`const pageState = { ... }`).
-À titre de démonstration, `armory.js` a été intégralement refactorisé pour éliminer les variables globales (`let voies`, `let personnages`) au profit de `pageState`.
+Règle F6 établie. `pageState` adopté dans : `armory.js`, `vault.js`, `shop.js`, `shop-admin.js`.
 
-### ✅ AM-6 : Gestion des appels fetch() — CORRIGÉ
+> [!NOTE]
+> `combat.js`, `dungeons.js` et `pve-admin.js` n'ont pas encore adopté le pattern `pageState` — ils utilisent toujours des variables `let` globales. Conversion à planifier.
 
-`api.js` encapsule les appels de l'éditeur de sorts, mais les **autres pages font des `fetch()` directs** (armory.js, vault.js, shop.js, combat.js, dungeons.js) — sans headers communs, sans gestion centralisée du 401/403, sans retry.
+### ✅ AM-6 : Gestion des appels fetch() — CORRIGÉ (PARTIEL)
+
+`globalFetch()` est utilisé dans tous les fichiers `.js` principaux.
+
+> [!WARNING]
+> **Violation résiduelle :** `auth.js` utilise `fetch()` brut (6 occurrences) — légitime car c'est le module d'authentification lui-même (bootstrap). Plus critique : [alchemy.html](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/alchemy.html) et [alchemy-admin.html](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/alchemy-admin.html) contiennent leur JS inline avec des appels `fetch()` directs (14 occurrences au total). Ces pages devraient avoir un fichier JS dédié utilisant `globalFetch()`.
 
 ### ✅ AM-7 : L'exception légitime pour `element.style` dans les animations — CORRIGÉ
 
-[animations.js](file:///c:/Users/doson/IdeaProjects/grimoire/src/main/resources/static/js/animations.js) utilise massivement `p.style.left`, `p.style.transform`, etc. C'est **légitime** pour les animations par particules. La règle F2 l'exempte explicitement.
+La règle F2 dans l'architecture exempte explicitement les animations procédurales.
 
 ### ✅ AM-8 : Absence de convention de nommage API — CORRIGÉ
 
-La **Règle B5** a été ajoutée pour standardiser les endpoints (pluriel, verbes REST stricts).
-`EquipmentController` a been migré de `/api/equipment` vers `/api/equipments` en suivant cette nouvelle norme, et le frontend a été mis à jour pour s'y conformer.
-
-Aucune convention REST n'est documentée.
+La **Règle B5** a été ajoutée dans `GRIMOIRE_ARCHITECTURE.md`. `EquipmentController` migré vers `/api/equipments`.
 
 ### ✅ AM-9 : Conflits de Stacking Context (z-index) sur les Custom Selects — CORRIGÉ
 
-L'utilisation de `position: relative` et d'une décrémentation manuelle du `z-index` sur des éléments de liste (`.req-item`) créait des contextes d'empilement isolés. Cela empêchait la classe `.open` des menus déroulants de s'afficher au-dessus des formulaires frères (ex: Anomalies vs Consommables).
-
-**Verdict** : La contrainte de position/z-index a été retirée des conteneurs parents dans l'UI. Le `z-index: 99999` appliqué directement sur le wrapper ouvert fonctionne désormais globalement. Il faut proscrire l'usage abusif de `position: relative` pour gérer les superpositions dans des listes dynamiques.
+L'utilisation de `position: relative` et d'une décrémentation manuelle du `z-index` sur des éléments de liste (`.req-item`) créait des contextes d'empilement isolés. La contrainte a été retirée, le `z-index: 99999` du wrapper `.open` gère correctement la superposition.
 
 ### ✅ AM-10 : Faille de Sécurité suite à la migration d'URL — CORRIGÉ
 
-Suite à la correction de l'AM-8 (`/api/equipment` vers `/api/equipments`), le fichier `SecurityConfig.java` n'avait pas été mis à jour pour refléter ce changement de chemin. Conséquence : les requêtes `POST` et `DELETE` sur `/api/equipments` n'exigeaient plus le rôle `ADMIN` mais retombaient dans la règle `authenticated()`, permettant à tout utilisateur connecté de modifier l'équipement global.
-
-**Verdict** : `SecurityConfig.java` a été corrigé pour protéger les bonnes routes (`/api/equipments` et `/api/equipments/**`).
+Suite à la correction de l'AM-8 (`/api/equipment` → `/api/equipments`), `SecurityConfig.java` n'avait pas été mis à jour. Les routes POST/DELETE sur `/api/equipments` étaient déprotégées. Corrigé.
 
 ---
 
-## 3. Corrections proposées au document
+## 3. Violations résiduelles (non corrigées)
 
 > [!IMPORTANT]
-> Ci-dessous les **modifications exactes** à apporter à [GRIMOIRE_ARCHITECTURE.md](file:///c:/Users/doson/IdeaProjects/grimoire/GRIMOIRE_ARCHITECTURE.md). Chaque bloc est un diff appliquable.
+> Les items ci-dessous sont des violations actives des règles du document `GRIMOIRE_ARCHITECTURE.md`. Ils nécessitent des corrections dans le code.
 
-### 3.1 — Renforcer F2 pour couvrir les template literals
+### ⚠️ VR-1 : `WEIGHT_LIMITS` hardcodé en JS (viole F1 + B3)
 
-```diff
- *   **Règle F2 - Zéro CSS inline dans le JS :** 
--    Ne jamais injecter de logique de style (ex: `element.style.display = 'none'` ou `<div style="...">`) via JavaScript. Le JS sert uniquement à basculer des classes d'état CSS existantes (`.is-hidden`, `.is-active`).
-+    Ne jamais injecter de logique de style via JavaScript, que ce soit par manipulation DOM (`element.style.display = 'none'`) ou par template literal (`<div style="...">`). Le JS sert uniquement à basculer des classes d'état CSS existantes (`.is-hidden`, `.is-active`).
-+    **Exception** : les animations procédurales (ex: positionnement de particules via `transform`, `left`, `top`) où les valeurs sont calculées en runtime sont exemptées de cette règle.
-```
+**Fichier** : [constants.js:24-35](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/constants.js#L24-L35)
+**Consommé par** : [vault.js:536](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/vault.js#L536), [vault.js:968](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/vault.js#L968)
 
-### 3.2 — Corriger F3 pour refléter le chemin réel
+Le dictionnaire `WEIGHT_LIMITS` duplique les valeurs de `EquipmentController.getMaxWeight()` côté Java. La validation devrait passer par l'endpoint `/api/equipments/simulate-weight` qui existe déjà.
 
-```diff
- *   **Règle F3 - Arborescence CSS stricte :** 
--    *   `/css/global.css` : Variables, typographie, reset.
--    *   `/css/ui/` : Composants réutilisables partagés (boutons, tooltips, modales, notifications).
--    *   `/css/modules/` : Grilles et layouts uniques à une page (ex: `vault.css`).
--    *   `/css/sprites/` : Fichiers isolés contenant uniquement les lourdes animations (ex: `@keyframes` pixel art).
-+    *   `/styles/variables.css` : Variables CSS custom, tokens de couleur, typographie.
-+    *   `/styles/ui/` : Composants réutilisables partagés (boutons, tooltips, modales, notifications, formulaires).
-+    *   `/styles/pages/` : Layouts uniques à une page (ex: `vault.css`, `armory.css`).
-+    *   `/styles/sprites/` : Fichiers isolés contenant uniquement les lourdes animations (ex: `@keyframes`, spritesheets pixel art).
-```
+### ⚠️ VR-2 : `behaviorTitles` hardcodé dans `combat.js` (viole F1 + B2)
 
-### 3.3 — Ajouter une section Sécurité (nouvelle section 4)
+**Fichier** : [combat.js:2663-2673](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/js/combat.js#L2663-L2673)
 
-```diff
- ---
- 
-+## 4. Règles de Sécurité
-+
-+*   **Règle S1 - Protection des routes API :**
-+    Les endpoints admin (`/api/**/admin/**`, création/suppression/modification d'entités de jeu) doivent être protégés par `@PreAuthorize("hasRole('ADMIN')")` ou via `SecurityFilterChain`. Le RBAC frontend (masquage de boutons) est cosmétique et ne constitue **pas** une sécurité.
-+*   **Règle S2 - CSRF :**
-+    Si CSRF est désactivé (API stateless consommée par du JS same-origin), documenter explicitement pourquoi. À terme, envisager un header custom (`X-Requested-With`) vérifié côté serveur pour protéger contre les requêtes cross-origin.
-+*   **Règle S3 - Ne jamais exposer de stacktraces au client :**
-+    Les erreurs API doivent retourner un JSON structuré `{ "error": "message user-friendly" }`, jamais de `err.stack` ou d'exception Java. Utiliser un `@ControllerAdvice` global.
-+
-+---
-+
-```
+Dictionnaires `behaviorTitles`, `bIcon`, `bLabel` codés en dur pour les 6 comportements de monstres. Ces métadonnées devraient être portées par l'enum `MonsterBehavior` côté Java et exposées via `/api/meta`.
 
-### 3.4 — Ajouter une section Front-End patterns (nouvelle section 5)
+### ⚠️ VR-3 : Pages Alchimie sans `globalFetch()` (viole F4)
 
-```diff
-+## 5. Règles Front-End Avancées (Patterns)
-+
-+*   **Règle F4 - Couche API centralisée :**
-+    Tous les appels `fetch()` doivent passer par un wrapper centralisé dans `api.js` (ou un fichier dédié par domaine : `api/equipment.js`, `api/combat.js`). Ce wrapper gère : les headers communs, la vérification `res.ok`, la redirection sur 401, et le parsing JSON. Aucun `fetch()` direct dans les fichiers de page.
-+*   **Règle F5 - Gestion d'erreurs unifiée :**
-+    Interdit d'utiliser `alert()` pour les erreurs. Utiliser systématiquement le système de notification existant (`showNotif(message, isError)`). Ne jamais afficher de stack trace ou de détail technique à l'utilisateur.
-+*   **Règle F6 - State par page :**
-+    Chaque page encapsule son état dans un objet dédié (`const pageState = { ... }`), jamais en variables globales `let` éparpillées. Le state partagé inter-pages reste dans `state.js`.
-+*   **Règle F7 - Zéro HTML dans le JS (template strings) :**
-+    Privilégier des fonctions de création de composants (`createCard(data)`, `createStatBadge(stat)`) qui utilisent `document.createElement()` et des classes CSS, plutôt que des template literals injectés via `innerHTML`. Si `innerHTML` est utilisé pour des raisons de performance, le HTML ne doit contenir **aucun attribut `style`** — uniquement des classes CSS.
-+
-+---
-+
-```
+**Fichiers** :
+- [alchemy.html](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/alchemy.html) : 7 appels `fetch()` directs
+- [alchemy-admin.html](file:///c:/Users/doria/Desktop/Project/grimoire/src/main/resources/static/alchemy-admin.html) : 7 appels `fetch()` directs
 
-### 3.5 — Renforcer B2 avec des exemples concrets
+Ces pages ont leur JS inliné dans le HTML et n'utilisent pas le wrapper `globalFetch()`. À migrer vers un fichier JS dédié.
 
-```diff
- *   **Règle B2 - Les "Rich Enums" pour les Métadonnées :** 
--    Les types stricts (Comportements, Raretés, Catégories) ne sont pas de simples chaînes. L'`enum` Java doit centraliser ses propres métadonnées (label, description, icône) via des propriétés privées, et être sérialisée en objet JSON complet pour le front.
-+    Les types stricts (Comportements, Raretés, Catégories, Slots, Sources) ne sont pas de simples chaînes. L'`enum` Java doit centraliser ses propres métadonnées (label, description, icône, couleur CSS sémantique) via des propriétés privées, et être sérialisée en objet JSON complet pour le front via un `@JsonFormat(shape = Shape.OBJECT)` ou un serializer custom.
-+    **Exemple** : `EquipmentSlot.CASQUE` doit exposer `{ "name": "CASQUE", "label": "Casque", "icon": "masks" }` et non simplement `"CASQUE"`.
-+    **Liste des enums à enrichir** : `EquipmentRarity`, `EquipmentSlot`, `MonsterBehavior`, `MonsterType`, `Source`, `ConsumableCategory`.
-```
+### ⚠️ VR-4 : `pageState` non adopté par toutes les pages (viole F6)
 
-### 3.6 — Renuméroter et mettre à jour le Master Prompt
+**Fichiers manquants** : `combat.js`, `dungeons.js`, `pve-admin.js`, `grimoire.js`
 
-La section "Master System Prompt" (§ dernier) doit refléter les nouvelles règles ajoutées. Ajouter après le point 4 :
+Ces fichiers utilisent encore des variables `let` globales au lieu d'un objet `pageState` encapsulé.
 
-```diff
- > 4. **Front-End Modulaire :** Le CSS utilitaire (tooltips, boutons) va dans des fichiers dédiés (`css/ui/`). Isole les animations lourdes (Spritesheets) dans `css/sprites/`. Le JS ne modifie pas le DOM avec du style en ligne, il ne fait qu'ajouter ou retirer des classes CSS (ex: `.is-hidden`).
--> 
-+> 5. **Sécurité :** Les routes admin sont protégées par `@PreAuthorize`. Le RBAC front n'est que cosmétique. Les erreurs API retournent du JSON structuré, jamais de stacktrace.
-+> 6. **Fetch centralisé :** Tous les appels API passent par un wrapper dans `api.js`. Zéro `fetch()` direct dans les pages. Gestion unifiée des erreurs via `showNotif()`, jamais `alert()`.
-+> 7. **Zéro HTML inline :** Les templates JS n'injectent jamais d'attribut `style="..."`. Utiliser des classes CSS et des fonctions de création de composants.
-+> 
- > Concentre-toi sur la propreté, la scalabilité et l'élimination stricte de la duplication de code entre le back et le front.
-```
+### ⚠️ VR-5 : Enums Java non enrichies (viole B2)
+
+**`@JsonFormat(shape = Shape.OBJECT)`** n'est utilisé sur aucune enum. Les métadonnées (label, icon, color) sont servies par `EnumMetaController` dans un format ad-hoc, mais les enums elles-mêmes ne portent pas leurs propriétés en Java. Enums concernées :
+- `EquipmentRarity` — pas de propriétés label/icon/color intégrées
+- `MonsterBehavior` — pas de description/icon
+- `MonsterType` — pas de description/icon
+- `ConsumableCategory` — pas de label/icon/color
 
 ---
 
-## Récapitulatif
+## 4. Conformité GRIMOIRE_ARCHITECTURE.md ↔ Code
 
-| Règle existante | Couvre la dette ciblée ? | Suffisante ? |
+| Règle | Statut | Note |
 |---|---|---|
-| B1 (No HTML in DB) | ✅ Oui | ✅ Bien formulée |
-| B2 (Rich Enums) | ✅ Oui | ⚠️ Manque exemples + liste d'enums concernées |
-| B3 (DTOs Actifs) | ✅ Oui | ✅ Bien formulée |
-| B4 (Simulate) | ✅ Oui | ✅ Bien formulée |
-| F1 (Zéro logique JS) | ✅ Oui | ✅ Bien formulée |
-| F2 (Zéro CSS inline) | ⚠️ Partiel | 🔴 Ne couvre pas template literals, pas d'exception animations |
-| F3 (Arborescence CSS) | ❌ Incorrect | 🔴 Chemin `/css/` ≠ réalité `/styles/` |
+| B1 (No HTML in DB) | ✅ Conforme | — |
+| B2 (Rich Enums) | ⚠️ Partiel | Enums servies via EnumMetaController mais pas enrichies en Java (VR-5) |
+| B3 (DTOs Actifs) | ⚠️ Partiel | `WEIGHT_LIMITS` encore dupliqué côté JS (VR-1) |
+| B4 (Simulate) | ✅ Conforme | Endpoint `/api/equipments/simulate-weight` opérationnel |
+| B5 (Conventions REST) | ✅ Conforme | `/api/equipments`, `/api/admin/pve` etc. |
+| F1 (Zéro logique JS) | ⚠️ Partiel | `behaviorTitles` hardcodé dans combat.js (VR-2) |
+| F2 (Zéro CSS inline) | ✅ Conforme | Migration massif effectuée, exception animations documentée |
+| F3 (Arborescence CSS) | ✅ Conforme | `/styles/variables.css`, `/styles/ui/`, `/styles/pages/`, `/styles/sprites/` |
+| F4 (Fetch centralisé) | ⚠️ Partiel | alchemy.html et alchemy-admin.html utilisent fetch() brut (VR-3) |
+| F5 (Erreurs unifiées) | ✅ Conforme | 0 alert(), GlobalExceptionHandler en place |
+| F6 (State par page) | ⚠️ Partiel | combat.js, dungeons.js, pve-admin.js pas migrés (VR-4) |
+| F7 (Zéro HTML inline) | ✅ Conforme | — |
+| S1 (Protection routes) | ✅ Conforme | SecurityConfig à jour, routes `/api/equipments` protégées |
+| S2 (CSRF) | ✅ Documenté | Commenté dans SecurityConfig |
+| S3 (Pas de stacktrace) | ✅ Conforme | GlobalExceptionHandler opérationnel |
 
-| Angle mort | Criticité | Section proposée |
+---
+
+## 5. Angle morts historiques corrigés
+
+| Angle mort | Statut | Résolution |
 |---|---|---|
-| Sécurité API (permitAll) | ✅ CORRIGÉ | Nouvelle section 4 (S1, S2, S3) |
-| Template literals inline | ✅ CORRIGÉ | F2 renforcée + F7 (Purge effectuée) |
-| Gestion d'erreurs | ✅ CORRIGÉ | F5 |
-| Couche API centralisée | ✅ CORRIGÉ | F4 |
-| State management | ✅ CORRIGÉ | F6 |
-| Convention API REST | ✅ CORRIGÉ | B5 ajoutée |
-| Stacking Context (z-index) | ✅ CORRIGÉ | N/A (CSS Best Practice) |
-| Sécurité Migration URL | ✅ CORRIGÉ | N/A (SecurityConfig mis à jour) |
+| Sécurité API (permitAll) | ✅ CORRIGÉ | SecurityConfig + rôle ADMIN |
+| Template literals inline | ✅ CORRIGÉ | Migration massif + F2 renforcée |
+| Gestion d'erreurs | ✅ CORRIGÉ | F5 + GlobalExceptionHandler |
+| Couche API centralisée | ✅ CORRIGÉ | globalFetch() + F4 |
+| State management | ✅ CORRIGÉ | F6 + pageState dans 4 fichiers |
+| Convention API REST | ✅ CORRIGÉ | B5 + migration `/api/equipments` |
+| Stacking Context (z-index) | ✅ CORRIGÉ | Retrait position/z-index dans .req-item |
+| Sécurité Migration URL | ✅ CORRIGÉ | SecurityConfig `/api/equipments` |

@@ -1,5 +1,10 @@
 package generation.grimoire.enumeration;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.databind.JsonNode;
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ConsumableCategory {
     POTION_ROSE("Potion Rose", "science", "#ec4899"),
     POTION_BLEUE("Potion Bleue", "science", "#0ea5e9"),
@@ -26,5 +31,13 @@ public enum ConsumableCategory {
     public String getLabel() { return label; }
     public String getIcon() { return icon; }
     public String getColorHex() { return colorHex; }
+
+    @JsonCreator
+    public static ConsumableCategory fromNode(JsonNode node) {
+        if (node.isObject()) {
+            return ConsumableCategory.valueOf(node.get("name").asText());
+        }
+        return ConsumableCategory.valueOf(node.asText());
+    }
 }
 

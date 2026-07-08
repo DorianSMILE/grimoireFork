@@ -602,6 +602,7 @@ public class EquipmentController {
         map.put("consumableMissingManaPercent", e.getConsumableMissingManaPercent());
         map.put("consumableCategory", e.getConsumableCategory() != null ? e.getConsumableCategory().name() : "AUTRE");
         map.put("weight", e.calculateWeight());
+        map.put("maxWeight", getMaxWeight(e.getSlot(), e.getRarity()));
 
         if (e.getPersonnage() != null) {
             Map<String, Object> perso = new HashMap<>();

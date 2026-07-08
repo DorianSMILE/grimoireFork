@@ -102,7 +102,32 @@ const RARITY_COLORS = {
     MAUDIT: '#7f1d1d'
 };
 
-let lastCombatLogCount = 0;
+export const pageState = {
+  lastCombatLogCount: null,
+  sessionId: null,
+  currentSessionData: null,
+  isProcessing: null,
+  selectedTargetIndex: null,
+  selectedAllyIndex: null,
+  previousPlayerXP: null,
+  previousPlayerSpiritXP: null,
+  isFleeing: null,
+  currentSpellFilter: null,
+  hasAnimatedOpening: null,
+  pendingCastSpellId: null,
+  pendingNeedsEnemy: null,
+  pendingNeedsAlly: null,
+};
+pageState.lastCombatLogCount = 0;
+pageState.previousPlayerXP = {};
+pageState.previousPlayerSpiritXP = {};
+pageState.isProcessing = false;
+pageState.isFleeing = false;
+pageState.hasAnimatedOpening = false;
+pageState.currentSpellFilter = 'ALL';
+pageState.selectedAllyIndex = -1;
+pageState.pendingNeedsEnemy = false;
+pageState.pendingNeedsAlly = false;
 
 function showFloatingTextOnElement(el, text, color) {
     const wrapper = document.createElement('div');
@@ -129,10 +154,10 @@ function showFloatingTextOnElement(el, text, color) {
 
 function processNewDeathLogs(combatLogs) {
     if (!combatLogs) return;
-    if (combatLogs.length < lastCombatLogCount) {
-        lastCombatLogCount = 0; // Combat was reset
+    if (combatLogs.length < pageState.lastCombatLogCount) {
+        pageState.lastCombatLogCount = 0; // Combat was reset
     }
-    for (let i = lastCombatLogCount; i < combatLogs.length; i++) {
+    for (let i = pageState.lastCombatLogCount; i < combatLogs.length; i++) {
         const log = combatLogs[i];
         const match = log.match(/&#x2620;&#xFE0F; (.*?) succombe à ses blessures et perd (\d+) XP/);
         if (match) {
@@ -146,7 +171,7 @@ function processNewDeathLogs(combatLogs) {
             });
         }
     }
-    lastCombatLogCount = combatLogs.length;
+    pageState.lastCombatLogCount = combatLogs.length;
 }
 
 function getSpellColor(sp) {
@@ -160,9 +185,9 @@ function getSpellColor(sp) {
 }
 
 
-let sessionId = null;
-let currentSessionData = null;
-let isProcessing = false;
+
+
+
 
 function setButtonsProcessing(isProc) {
     const buttons = document.querySelectorAll('.action-btn, .btn');
@@ -178,10 +203,10 @@ function setButtonsProcessing(isProc) {
     });
 }
 
-let selectedTargetIndex = null;
-let selectedAllyIndex = -1;
-let previousPlayerXP = {};
-let previousPlayerSpiritXP = {};
+
+
+
+
 
 function getExpStats(exp) {
     let level = 1;
@@ -228,9 +253,9 @@ function renderAndAnimateXPCards(containerId, players, prefix) {
 
     let cardsHtml = '';
     players.forEach(p => {
-        let oldExp = previousPlayerXP[p.id] !== undefined ? previousPlayerXP[p.id] : p.experience;
+        let oldExp = pageState.previousPlayerXP[p.id] !== undefined ? pageState.previousPlayerXP[p.id] : p.experience;
         let oldStats = getExpStats(oldExp);
-        let oldSpiritExp = previousPlayerSpiritXP[p.id] !== undefined ? previousPlayerSpiritXP[p.id] : (p.spiritualiteExperience || 0);
+        let oldSpiritExp = pageState.previousPlayerSpiritXP[p.id] !== undefined ? pageState.previousPlayerSpiritXP[p.id] : (p.spiritualiteExperience || 0);
         let oldSpiritStats = getSpiritExpStats(oldSpiritExp);
 
         let cardsHtmlPart = `
@@ -262,9 +287,9 @@ function renderAndAnimateXPCards(containerId, players, prefix) {
     container.innerHTML += cardsHtml;
 
     players.forEach(p => {
-        let oldExp = previousPlayerXP[p.id] !== undefined ? previousPlayerXP[p.id] : p.experience;
+        let oldExp = pageState.previousPlayerXP[p.id] !== undefined ? pageState.previousPlayerXP[p.id] : p.experience;
         let endExp = p.experience;
-        let oldSpiritExp = previousPlayerSpiritXP[p.id] !== undefined ? previousPlayerSpiritXP[p.id] : (p.spiritualiteExperience || 0);
+        let oldSpiritExp = pageState.previousPlayerSpiritXP[p.id] !== undefined ? pageState.previousPlayerSpiritXP[p.id] : (p.spiritualiteExperience || 0);
         let endSpiritExp = p.spiritualiteExperience || 0;
 
         setTimeout(() => {
@@ -346,8 +371,8 @@ function renderAndAnimateXPCards(containerId, players, prefix) {
     }
 
     players.forEach(p => {
-        previousPlayerXP[p.id] = p.experience;
-        previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
+        pageState.previousPlayerXP[p.id] = p.experience;
+        pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
     });
 }
 
@@ -364,19 +389,19 @@ window.closeBuyModal = closeBuyModal;
 window.showGlobalTooltip = ui.showGlobalTooltip;
 window.hideGlobalTooltip = ui.hideGlobalTooltip;
 
-let isFleeing = false;
+
 
 window.fleeCombatAction = async function () {
     try {
-        isFleeing = true;
+        pageState.isFleeing = true;
         const btn = document.querySelector('#fleeConfirmModal button:last-child');
         if (btn) {
             btn.disabled = true;
             btn.textContent = "Fuite...";
         }
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/flee`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/flee`, { method: 'POST' });
         if (!res.ok) {
-            isFleeing = false;
+            pageState.isFleeing = false;
             const err = await res.text();
             if (typeof showNotif !== 'undefined') showNotif("Erreur lors de la fuite : " + err, true);
             else ui.showNotif("Erreur lors de la fuite : " + err, true);
@@ -399,15 +424,15 @@ window.initiateCombatCast = initiateCombatCast;
 window.confirmCombatCast = confirmCombatCast;
 window.cancelCombatCast = cancelCombatCast;
 
-let currentSpellFilter = 'ALL';
+
 window.filterSpells = function (filter) {
-    currentSpellFilter = filter;
-    if (currentSessionData) {
-        renderSpells(currentSessionData.availableSpells);
+    pageState.currentSpellFilter = filter;
+    if (pageState.currentSessionData) {
+        renderSpells(pageState.currentSessionData.availableSpells);
     }
 };
 
-let hasAnimatedOpening = false;
+
 
 window.showNotif = function (message, isError = false) {
     const notif = document.getElementById('combatNotif');
@@ -448,7 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Anti-Ragequit: Warn user if trying to leave while in combat
 window.addEventListener('beforeunload', function (e) {
-    if (!isFleeing && sessionId && currentSessionData && !currentSessionData.finished) {
+    if (!pageState.isFleeing && pageState.sessionId && pageState.currentSessionData && !pageState.currentSessionData.finished) {
         e.preventDefault();
         e.returnValue = "Vous êtes en combat ! Quitter maintenant comptera comme une défaite ou un abandon pénalisé.";
         return e.returnValue;
@@ -466,11 +491,11 @@ async function resumeCombat(savedSessionId) {
             return;
         }
         const data = await res.json();
-        sessionId = data.sessionId;
+        pageState.sessionId = data.sessionId;
 
         data.players.forEach(p => {
-            previousPlayerXP[p.id] = p.experience;
-            previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
+            pageState.previousPlayerXP[p.id] = p.experience;
+            pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
         updateUI(data);
@@ -500,13 +525,13 @@ async function startCombat(characterIds, dungeonId, consumableIds) {
         }
 
         const data = await res.json();
-        sessionId = data.sessionId;
-        localStorage.setItem('activeCombatId', sessionId);
+        pageState.sessionId = data.sessionId;
+        localStorage.setItem('activeCombatId', pageState.sessionId);
 
         // Initialize previous XP for the first room
         data.players.forEach(p => {
-            previousPlayerXP[p.id] = p.experience;
-            previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
+            pageState.previousPlayerXP[p.id] = p.experience;
+            pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
         updateUI(data);
@@ -521,16 +546,16 @@ async function startCombat(characterIds, dungeonId, consumableIds) {
 
 // Ally target selection is now handled entirely within the combat prompt mode
 // ===== Target Selection for Cast =====
-let pendingCastSpellId = null;
-let pendingNeedsEnemy = false;
-let pendingNeedsAlly = false;
+
+
+
 
 window.updateSpellCardState = function (spellId) {
-    if (!currentSessionData) return;
-    const sp = currentSessionData.availableSpells.find(s => s.id === spellId);
+    if (!pageState.currentSessionData) return;
+    const sp = pageState.currentSessionData.availableSpells.find(s => s.id === spellId);
     if (!sp) return;
 
-    const availabilityList = currentSessionData.spellAvailability || [];
+    const availabilityList = pageState.currentSessionData.spellAvailability || [];
     const avail = availabilityList.find(a => a.spellId === sp.id);
     let isCastable = !avail || avail.castable;
     let dynamicReason = null;
@@ -558,21 +583,21 @@ window.updateSpellCardState = function (spellId) {
                 if ((e.percentage || 0) < 0) {
                     const src = e.source || 'TARGET_HEALTH_MAX';
                     let srcVal = 1; // Default
-                    if (currentSessionData && currentSessionData.activePlayer) {
-                        if (src === 'CASTER_HEALTH_MAX') srcVal = currentSessionData.activePlayer.hpMax || 1;
-                        if (src === 'CASTER_MANA_MAX') srcVal = currentSessionData.activePlayer.manaMax || 1;
-                        if (src === 'CASTER_POWER') srcVal = currentSessionData.activePlayer.power || 1;
-                        if (src === 'CASTER_STRENGTH') srcVal = currentSessionData.activePlayer.strength || 1;
-                        if (src === 'CASTER_ARMOR') srcVal = currentSessionData.activePlayer.armor || 1;
-                        if (src === 'CASTER_RESISTANCE') srcVal = currentSessionData.activePlayer.resistance || 1;
-                        if (src === 'CASTER_SPEED') srcVal = currentSessionData.activePlayer.speed || 1;
+                    if (pageState.currentSessionData && pageState.currentSessionData.activePlayer) {
+                        if (src === 'CASTER_HEALTH_MAX') srcVal = pageState.currentSessionData.activePlayer.hpMax || 1;
+                        if (src === 'CASTER_MANA_MAX') srcVal = pageState.currentSessionData.activePlayer.manaMax || 1;
+                        if (src === 'CASTER_POWER') srcVal = pageState.currentSessionData.activePlayer.power || 1;
+                        if (src === 'CASTER_STRENGTH') srcVal = pageState.currentSessionData.activePlayer.strength || 1;
+                        if (src === 'CASTER_ARMOR') srcVal = pageState.currentSessionData.activePlayer.armor || 1;
+                        if (src === 'CASTER_RESISTANCE') srcVal = pageState.currentSessionData.activePlayer.resistance || 1;
+                        if (src === 'CASTER_SPEED') srcVal = pageState.currentSessionData.activePlayer.speed || 1;
                     }
                     requiredHeatFromEffects += Math.floor(Math.abs(e.percentage) * srcVal);
                 }
             }
         });
 
-        const playerHeat = currentSessionData.activePlayer.passiveStates ? (currentSessionData.activePlayer.passiveStates['destruction_heat'] || 0) : 0;
+        const playerHeat = pageState.currentSessionData.activePlayer.passiveStates ? (pageState.currentSessionData.activePlayer.passiveStates['destruction_heat'] || 0) : 0;
         const totalHeatCost = (sp.heatCost || 0) + requiredHeatFromEffects;
 
         if (playerHeat < totalHeatCost) {
@@ -587,7 +612,7 @@ window.updateSpellCardState = function (spellId) {
         });
 
         if (targetsOnlyAlly && isCastable) {
-            const hasOtherAlly = currentSessionData.players && currentSessionData.players.some(p => p.healthCurrent > 0 && p.id !== currentSessionData.activePlayer.id);
+            const hasOtherAlly = pageState.currentSessionData.players && pageState.currentSessionData.players.some(p => p.healthCurrent > 0 && p.id !== pageState.currentSessionData.activePlayer.id);
             if (!hasOtherAlly) {
                 isCastable = false;
                 dynamicReason = 'NO_OTHER_ALLY';
@@ -631,7 +656,7 @@ window.updateSpellCardState = function (spellId) {
 
 
 function initiateCombatCast(spellId) {
-    if (!currentSessionData) return;
+    if (!pageState.currentSessionData) return;
 
     let needsEnemy = false;
     let needsAlly = false;
@@ -648,7 +673,7 @@ function initiateCombatCast(spellId) {
     let hasCaster = false;
 
     if (spellId) {
-        const sp = currentSessionData.availableSpells.find(s => s.id === spellId);
+        const sp = pageState.currentSessionData.availableSpells.find(s => s.id === spellId);
         if (!sp) return;
 
         const choiceSelect = document.getElementById(`choice-select-${spellId}`);
@@ -672,21 +697,21 @@ function initiateCombatCast(spellId) {
                 if ((e.percentage || 0) < 0) {
                     const src = e.source || 'TARGET_HEALTH_MAX';
                     let srcVal = 1;
-                    if (currentSessionData && currentSessionData.activePlayer) {
-                        if (src === 'CASTER_HEALTH_MAX') srcVal = currentSessionData.activePlayer.hpMax || 1;
-                        if (src === 'CASTER_MANA_MAX') srcVal = currentSessionData.activePlayer.manaMax || 1;
-                        if (src === 'CASTER_POWER') srcVal = currentSessionData.activePlayer.power || 1;
-                        if (src === 'CASTER_STRENGTH') srcVal = currentSessionData.activePlayer.strength || 1;
-                        if (src === 'CASTER_ARMOR') srcVal = currentSessionData.activePlayer.armor || 1;
-                        if (src === 'CASTER_RESISTANCE') srcVal = currentSessionData.activePlayer.resistance || 1;
-                        if (src === 'CASTER_SPEED') srcVal = currentSessionData.activePlayer.speed || 1;
+                    if (pageState.currentSessionData && pageState.currentSessionData.activePlayer) {
+                        if (src === 'CASTER_HEALTH_MAX') srcVal = pageState.currentSessionData.activePlayer.hpMax || 1;
+                        if (src === 'CASTER_MANA_MAX') srcVal = pageState.currentSessionData.activePlayer.manaMax || 1;
+                        if (src === 'CASTER_POWER') srcVal = pageState.currentSessionData.activePlayer.power || 1;
+                        if (src === 'CASTER_STRENGTH') srcVal = pageState.currentSessionData.activePlayer.strength || 1;
+                        if (src === 'CASTER_ARMOR') srcVal = pageState.currentSessionData.activePlayer.armor || 1;
+                        if (src === 'CASTER_RESISTANCE') srcVal = pageState.currentSessionData.activePlayer.resistance || 1;
+                        if (src === 'CASTER_SPEED') srcVal = pageState.currentSessionData.activePlayer.speed || 1;
                     }
                     requiredHeatFromEffects += Math.floor(Math.abs(e.percentage) * srcVal);
                 }
             }
         });
 
-        const playerHeat = currentSessionData.activePlayer.passiveStates ? (currentSessionData.activePlayer.passiveStates['destruction_heat'] || 0) : 0;
+        const playerHeat = pageState.currentSessionData.activePlayer.passiveStates ? (pageState.currentSessionData.activePlayer.passiveStates['destruction_heat'] || 0) : 0;
         const totalHeatCost = (sp.heatCost || 0) + requiredHeatFromEffects;
 
         if (playerHeat < totalHeatCost) {
@@ -721,14 +746,14 @@ function initiateCombatCast(spellId) {
     const multiAlly = requiresAllySelection;
 
     cancelCombatCast(); // Clean previous state
-    pendingCastSpellId = spellId;
-    pendingNeedsEnemy = needsEnemy;
-    pendingNeedsAlly = needsAlly;
+    pageState.pendingCastSpellId = spellId;
+    pageState.pendingNeedsEnemy = needsEnemy;
+    pageState.pendingNeedsAlly = needsAlly;
 
     // Reset target selections for dual-target spells to avoid stale values
     if (needsEnemy && needsAlly) {
-        selectedTargetIndex = null;
-        selectedAllyIndex = -1;
+        pageState.selectedTargetIndex = null;
+        pageState.selectedAllyIndex = -1;
     }
 
     const cardEl = spellId ? document.getElementById(`spell-card-${spellId}`) : document.getElementById('btnAttack');
@@ -830,16 +855,16 @@ function initiateCombatCast(spellId) {
 
 function confirmCombatCast(index, type) {
     if (type === 'enemy') {
-        selectedTargetIndex = index;
+        pageState.selectedTargetIndex = index;
     } else if (type === 'ally') {
-        selectedAllyIndex = index;
+        pageState.selectedAllyIndex = index;
     }
 
     // Dual-target: need both enemy AND ally &mdash; wait if one is still missing
     // Skip when type is 'direct' (Lancer button click, auto-targeting handles it)
-    if (pendingNeedsEnemy && pendingNeedsAlly && type !== 'direct') {
-        const hasEnemy = selectedTargetIndex !== null;
-        const hasAlly = selectedAllyIndex !== -1;
+    if (pageState.pendingNeedsEnemy && pageState.pendingNeedsAlly && type !== 'direct') {
+        const hasEnemy = pageState.selectedTargetIndex !== null;
+        const hasAlly = pageState.selectedAllyIndex !== -1;
 
         // Update visual feedback on selected cards
         if (type === 'enemy' && index !== null) {
@@ -874,7 +899,7 @@ function confirmCombatCast(index, type) {
         }
     }
 
-    const spellId = pendingCastSpellId;
+    const spellId = pageState.pendingCastSpellId;
     cancelCombatCast();
     doAction(spellId);
 }
@@ -924,28 +949,28 @@ function cancelCombatCast() {
 
     // Attack button specific disable check
     const btnAttack = document.getElementById('btnAttack');
-    const isPlayerChanneling = currentSessionData && currentSessionData.activePlayer && currentSessionData.activePlayer.remainingChannelingTurns > 0;
-    if (btnAttack && currentSessionData && currentSessionData.activePlayer && (currentSessionData.activePlayer.banalSpellCastThisTurn || isPlayerChanneling)) {
+    const isPlayerChanneling = pageState.currentSessionData && pageState.currentSessionData.activePlayer && pageState.currentSessionData.activePlayer.remainingChannelingTurns > 0;
+    if (btnAttack && pageState.currentSessionData && pageState.currentSessionData.activePlayer && (pageState.currentSessionData.activePlayer.banalSpellCastThisTurn || isPlayerChanneling)) {
         btnAttack.classList.add('disabled');
         btnAttack.style.pointerEvents = 'none';
         btnAttack.style.opacity = '0.5';
     }
 
-    pendingCastSpellId = null;
-    pendingNeedsEnemy = false;
-    pendingNeedsAlly = false;
+    pageState.pendingCastSpellId = null;
+    pageState.pendingNeedsEnemy = false;
+    pageState.pendingNeedsAlly = false;
 }
 
 async function doAction(spellId = null) {
-    if (!sessionId || !currentSessionData || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || !pageState.currentSessionData || pageState.isProcessing) return;
+    pageState.isProcessing = true;
 
     // Ensure we have a valid target
-    if (currentSessionData.enemies.length > 0 && (selectedTargetIndex === null || currentSessionData.enemies[selectedTargetIndex].dead)) {
+    if (pageState.currentSessionData.enemies.length > 0 && (pageState.selectedTargetIndex === null || pageState.currentSessionData.enemies[pageState.selectedTargetIndex].dead)) {
         // Auto select first alive target
-        selectedTargetIndex = currentSessionData.enemies.findIndex(e => !e.dead);
-        if (selectedTargetIndex === -1) {
-            isProcessing = false;
+        pageState.selectedTargetIndex = pageState.currentSessionData.enemies.findIndex(e => !e.dead);
+        if (pageState.selectedTargetIndex === -1) {
+            pageState.isProcessing = false;
             return; // All dead
         }
     }
@@ -968,8 +993,8 @@ async function doAction(spellId = null) {
     }
 
     try {
-        let url = `/api/pve/combat/${sessionId}/action?targetIndex=${selectedTargetIndex}`;
-        if (selectedAllyIndex !== -1) url += `&allyTargetIndex=${selectedAllyIndex}`;
+        let url = `/api/pve/combat/${pageState.sessionId}/action?targetIndex=${pageState.selectedTargetIndex}`;
+        if (pageState.selectedAllyIndex !== -1) url += `&allyTargetIndex=${pageState.selectedAllyIndex}`;
         if (spellId) url += `&spellId=${spellId}`;
         if (choiceKey !== null) url += `&choiceKey=${choiceKey}`;
 
@@ -978,7 +1003,7 @@ async function doAction(spellId = null) {
             const errText = await res.text();
             console.error('Server error:', errText);
             showNotif(errText || "Erreur serveur", true);
-            isProcessing = false;
+            pageState.isProcessing = false;
             setButtonsProcessing(false);
             return;
         }
@@ -986,47 +1011,47 @@ async function doAction(spellId = null) {
 
         // Let user read log by adding a small delay before full UI update
         setTimeout(() => {
-            selectedAllyIndex = -1; // Reset after action completes
+            pageState.selectedAllyIndex = -1; // Reset after action completes
             updateUI(data);
-            isProcessing = false;
+            pageState.isProcessing = false;
             setButtonsProcessing(false);
         }, 600);
 
     } catch (e) {
         console.error(e);
         showNotif("Erreur de connexion", true);
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function endTurn() {
-    if (!sessionId || !currentSessionData || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || !pageState.currentSessionData || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
 
     try {
-        let url = `/api/pve/combat/${sessionId}/end-turn`;
+        let url = `/api/pve/combat/${pageState.sessionId}/end-turn`;
         const res = await globalFetch(url, { method: 'POST' });
         const data = await res.json();
 
         setTimeout(() => {
             updateUI(data);
-            isProcessing = false;
+            pageState.isProcessing = false;
             setButtonsProcessing(false);
         }, 600);
 
     } catch (e) {
         console.error(e);
         showNotif("Erreur de connexion", true);
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function nextRoom() {
-    if (!sessionId || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
 
     document.getElementById('eventOverlay').classList.remove('show');
@@ -1034,13 +1059,13 @@ async function nextRoom() {
     if (vicOverlay) vicOverlay.classList.remove('show');
 
     try {
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/next-room`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/next-room`, { method: 'POST' });
         const data = await res.json();
 
         // Track the current XP so animations in new rooms start from this baseline
         data.players.forEach(p => {
-            previousPlayerXP[p.id] = p.experience;
-            previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
+            pageState.previousPlayerXP[p.id] = p.experience;
+            pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
         updateUI(data);
@@ -1048,14 +1073,14 @@ async function nextRoom() {
         console.error(e);
         showNotif("Erreur lors du passage à la salle suivante", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function openStrangeDoor() {
-    if (!sessionId || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
 
     document.getElementById('eventOverlay').classList.remove('show');
@@ -1063,11 +1088,11 @@ async function openStrangeDoor() {
     if (vicOverlay) vicOverlay.classList.remove('show');
 
     try {
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/open-strange-door`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/open-strange-door`, { method: 'POST' });
         if (!res.ok) {
             const errText = await res.text();
             showNotif(errText || "Erreur lors de l'ouverture de la porte", true);
-            isProcessing = false;
+            pageState.isProcessing = false;
             setButtonsProcessing(false);
             return;
         }
@@ -1075,8 +1100,8 @@ async function openStrangeDoor() {
 
         // Track the current XP so animations in new rooms start from this baseline
         data.players.forEach(p => {
-            previousPlayerXP[p.id] = p.experience;
-            previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
+            pageState.previousPlayerXP[p.id] = p.experience;
+            pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
         updateUI(data);
@@ -1084,17 +1109,17 @@ async function openStrangeDoor() {
         console.error(e);
         showNotif("Erreur lors de l'ouverture de la porte", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function acceptAlteration() {
-    if (!sessionId || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
     try {
-        let url = `/api/pve/combat/${sessionId}/alteration-accept`;
+        let url = `/api/pve/combat/${pageState.sessionId}/alteration-accept`;
         const select = document.getElementById('altarAnomalySelect');
         if (select) {
             url += `?anomalyId=${select.value}`;
@@ -1105,7 +1130,7 @@ async function acceptAlteration() {
         if (!res.ok) {
             const err = await res.text();
             showNotif(err || "Action impossible", true);
-            isProcessing = false;
+            pageState.isProcessing = false;
             setButtonsProcessing(false);
             return;
         }
@@ -1115,23 +1140,23 @@ async function acceptAlteration() {
         console.error(e);
         showNotif("Erreur lors de l'altération", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function useRope() {
-    if (!sessionId || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
     try {
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/use-rope`, {
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/use-rope`, {
             method: 'POST'
         });
         if (!res.ok) {
             const err = await res.text();
             showNotif(err || "Action impossible", true);
-            isProcessing = false;
+            pageState.isProcessing = false;
             return;
         }
         const data = await res.json();
@@ -1140,22 +1165,22 @@ async function useRope() {
         console.error(e);
         showNotif("Erreur lors de l'utilisation de la corde", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 async function buyMerchantItem(lootIndex) {
-    if (!sessionId || !currentSessionData || !currentSessionData.players || currentSessionData.players.length === 0 || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || !pageState.currentSessionData || !pageState.currentSessionData.players || pageState.currentSessionData.players.length === 0 || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
-    const charId = currentSessionData.players[0].id;
+    const charId = pageState.currentSessionData.players[0].id;
 
     try {
         const btn = document.getElementById(`btn_buy_${lootIndex}`);
         if (btn) btn.innerHTML = '<span class="material-symbols-outlined spin">sync</span>';
 
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/merchant-buy?lootIndex=${lootIndex}&characterId=${charId}`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/merchant-buy?lootIndex=${lootIndex}&characterId=${charId}`, { method: 'POST' });
         if (!res.ok) {
             const errorText = await res.text();
             showNotif(errorText || "Vous n'avez pas les ressources nécessaires.", true);
@@ -1168,14 +1193,14 @@ async function buyMerchantItem(lootIndex) {
         console.error(e);
         showNotif("Erreur lors de l'achat.", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 function openBuyModal(idx, itemName, goldPrice = 0) {
     if (goldPrice > 0) {
-        const playerGold = currentSessionData?.players?.[0]?.gold || 0;
+        const playerGold = pageState.currentSessionData?.players?.[0]?.gold || 0;
         if (playerGold < goldPrice) {
             showNotif("Vous n'avez pas assez d'or pour acheter cet objet !", true);
             return;
@@ -1281,8 +1306,8 @@ function generateEquipmentTooltipHTML(eq) {
 }
 
 async function openChest(useKey = false) {
-    if (!sessionId || isProcessing) return;
-    isProcessing = true;
+    if (!pageState.sessionId || pageState.isProcessing) return;
+    pageState.isProcessing = true;
     setButtonsProcessing(true);
     try {
         const btn = document.getElementById('btnOpenChest');
@@ -1296,12 +1321,12 @@ async function openChest(useKey = false) {
             btn.innerHTML = `<span class="material-symbols-outlined spin">sync</span> Ouverture...`;
         }
 
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/open-chest?useKey=${useKey}`, { method: 'POST' });
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/open-chest?useKey=${useKey}`, { method: 'POST' });
         if (!res.ok) {
             const err = await res.text();
             if (typeof showNotif !== 'undefined') showNotif("Erreur : " + err, true);
             else ui.showNotif("Erreur : " + err, true);
-            isProcessing = false;
+            pageState.isProcessing = false;
             return;
         }
 
@@ -1325,13 +1350,13 @@ async function openChest(useKey = false) {
         if (typeof showNotif !== 'undefined') showNotif("Erreur lors de l'ouverture du coffre.", true);
         else ui.showNotif("Erreur lors de l'ouverture du coffre.", true);
     } finally {
-        isProcessing = false;
+        pageState.isProcessing = false;
         setButtonsProcessing(false);
     }
 }
 
 function updateUI(data) {
-    currentSessionData = data;
+    pageState.currentSessionData = data;
 
     if (data.finished) {
         localStorage.removeItem('activeCombatId');
@@ -1386,7 +1411,7 @@ function updateUI(data) {
             }
 
             const isDead = p.healthCurrent <= 0;
-            const isAllySelected = index === selectedAllyIndex;
+            const isAllySelected = index === pageState.selectedAllyIndex;
 
             const div = document.createElement('div');
             div.className = `fighter fighter-player ${isActive ? 'active' : ''} ${isAllySelected ? 'selected-ally' : ''} ${isDead ? 'dead' : ''}`;
@@ -1433,10 +1458,10 @@ function updateUI(data) {
     }
 
     // Auto-select first alive target if current is dead
-    if (data.enemies && data.enemies.length > 0 && selectedTargetIndex !== null) {
-        if (!data.enemies[selectedTargetIndex] || data.enemies[selectedTargetIndex].dead) {
-            selectedTargetIndex = data.enemies.findIndex(e => !e.dead);
-            if (selectedTargetIndex === -1) selectedTargetIndex = null;
+    if (data.enemies && data.enemies.length > 0 && pageState.selectedTargetIndex !== null) {
+        if (!data.enemies[pageState.selectedTargetIndex] || data.enemies[pageState.selectedTargetIndex].dead) {
+            pageState.selectedTargetIndex = data.enemies.findIndex(e => !e.dead);
+            if (pageState.selectedTargetIndex === -1) pageState.selectedTargetIndex = null;
         }
     }
 
@@ -1551,7 +1576,7 @@ function updateUI(data) {
 
                 // Track previous XP to animate next time
                 data.players.forEach(p => {
-                    previousPlayerXP[p.id] = p.experience;
+                    pageState.previousPlayerXP[p.id] = p.experience;
                 });
             }
         } else {
@@ -2327,7 +2352,7 @@ function updateUI(data) {
 
             setTimeout(async () => {
                 try {
-                    const res = await globalFetch(`/api/pve/combat/${sessionId}/auto-turn`, { method: 'POST' });
+                    const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/auto-turn`, { method: 'POST' });
                     const newData = await res.json();
                     updateUI(newData);
                 } catch (e) {
@@ -2377,13 +2402,15 @@ function generateFighterHtml(c, isHero) {
     const getEffectiveStat = (statName) => {
         let base = 0;
         switch (statName) {
-            case 'POWER': base = c.power || 0; break;
-            case 'STRENGTH': base = c.strength || 0; break;
-            case 'ARMURE': base = c.armor || 0; break;
-            case 'RESISTANCE': base = c.resistance || 0; break;
-            case 'SPEED': base = c.speed || 0; break;
+            case 'POWER': base = c.totalPower !== undefined ? c.totalPower : (c.power || 0); break;
+            case 'STRENGTH': base = c.totalStrength !== undefined ? c.totalStrength : (c.strength || 0); break;
+            case 'ARMURE': base = c.totalArmor !== undefined ? c.totalArmor : (c.armor || 0); break;
+            case 'RESISTANCE': base = c.totalResistance !== undefined ? c.totalResistance : (c.resistance || 0); break;
+            case 'SPEED': base = c.totalSpeed !== undefined ? c.totalSpeed : (c.speed || 0); break;
             case 'CRIT':
-                if (c.critDerived !== null && c.critDerived !== undefined) {
+                if (c.totalCrit !== undefined) {
+                    base = c.totalCrit;
+                } else if (c.critDerived !== null && c.critDerived !== undefined) {
                     base = c.critDerived;
                 } else if (c.voie && c.voie.nom && c.voie.nom.toLowerCase().includes('raison')) {
                     base = getEffectiveStat('SPEED') * 2;
@@ -2643,34 +2670,20 @@ function generateFighterHtml(c, isHero) {
             if (c.passiveStates['BOSS_BUFF_POISON']) monsterBadgesHtml += `<span title="Poison sur coup (Boss Buff)" style="cursor: help; font-size: 0.75rem; background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><span class="material-symbols-outlined text-sm">pest_control</span>Poison</span>`;
         }
 
-        if (c.monsterType && c.monsterType !== 'NORMAL') {
-            const typeTitles = {
-                'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.',
-                'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.',
-                'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.',
-                'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.',
-                'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.',
-                'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).'
-            };
-            const tTitle = typeTitles[c.monsterType] || '';
-            const tIcon = { 'DEMON': 'local_fire_department', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[c.monsterType] || 'check_box_outline_blank';
-            const tLabel = { 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[c.monsterType] || c.monsterType;
+        let typeName = typeof c.monsterType === 'object' ? c.monsterType?.name : c.monsterType;
+        if (typeName && typeName !== 'NORMAL') {
+            const tTitle = typeof c.monsterType === 'object' ? c.monsterType.description : '';
+            const tIcon = typeof c.monsterType === 'object' ? c.monsterType.icon : 'check_box_outline_blank';
+            const tLabel = typeof c.monsterType === 'object' ? c.monsterType.label : typeName;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
             monsterBadgesHtml += `<span class="text-error" ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${tLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${tTitle}</div></template><span class="material-symbols-outlined text-sm">${tIcon}</span>${tLabel}</span>`;
         }
-        if (c.behavior && c.behavior !== 'NORMAL') {
-            const behaviorTitles = {
-                'PREDATEUR': "Prédateur : Verrouille une cible et l'attaque jusqu'à sa mort.",
-                'CORRUPTEUR': "Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.",
-                'LEADER': "Leader : Ordonne à tous les autres monstres d'attaquer sa cible.",
-                'ASSASSIN': "Assassin : Vise systématiquement le joueur avec le moins de Résistance.",
-                'BRUTAL': "Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l'armure).",
-                'TRANSCENDANT': "Transcendant : Il attaque toutes les cibles adverse à la fois."
-            };
-            const bTitle = behaviorTitles[c.behavior] || '';
-            const bIcon = { 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[c.behavior] || 'check_box_outline_blank';
-            const bLabel = { 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[c.behavior] || c.behavior;
+        let behaviorName = typeof c.behavior === 'object' ? c.behavior?.name : c.behavior;
+        if (behaviorName && behaviorName !== 'NORMAL') {
+            const bTitle = typeof c.behavior === 'object' ? c.behavior.description : '';
+            const bIcon = typeof c.behavior === 'object' ? c.behavior.icon : 'check_box_outline_blank';
+            const bLabel = typeof c.behavior === 'object' ? c.behavior.label : behaviorName;
             const tooltipAttrs = 'onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null"';
 
             monsterBadgesHtml += `<span ${tooltipAttrs} style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${bLabel}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${bTitle}</div></template><span class="material-symbols-outlined text-sm">${bIcon}</span>${bLabel}</span>`;
@@ -2733,8 +2746,8 @@ function renderEnemies(enemies) {
         const pMonster = activeMonster.asPersonnage || activeMonster; // Fallback just in case
 
         let isActive = false;
-        if (currentSessionData && currentSessionData.turnOrder && currentSessionData.turnOrder.length > currentSessionData.currentTurnIndex && !currentSessionData.finished) {
-            const currentTurn = currentSessionData.turnOrder[currentSessionData.currentTurnIndex];
+        if (pageState.currentSessionData && pageState.currentSessionData.turnOrder && pageState.currentSessionData.turnOrder.length > pageState.currentSessionData.currentTurnIndex && !pageState.currentSessionData.finished) {
+            const currentTurn = pageState.currentSessionData.turnOrder[pageState.currentSessionData.currentTurnIndex];
             if (!currentTurn.player && currentTurn.index === index) {
                 isActive = true;
             }
@@ -3079,8 +3092,8 @@ window.switchSpellTab = function (tab) {
     if (levelAll) levelAll.checked = true;
 
     // Re-render
-    if (currentSessionData && currentSessionData.availableSpells) {
-        renderSpells(currentSessionData.availableSpells);
+    if (pageState.currentSessionData && pageState.currentSessionData.availableSpells) {
+        renderSpells(pageState.currentSessionData.availableSpells);
     }
 }
 
@@ -3103,8 +3116,8 @@ window.applySpellFilters = function (clickedEl) {
         }
     }
 
-    if (currentSessionData && currentSessionData.availableSpells) {
-        renderSpells(currentSessionData.availableSpells);
+    if (pageState.currentSessionData && pageState.currentSessionData.availableSpells) {
+        renderSpells(pageState.currentSessionData.availableSpells);
     }
 }
 
@@ -3296,7 +3309,7 @@ function renderSpellCard(sp) {
     const tooltipAttrs = effectsSummary ? 'onmouseenter="window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip()"' : '';
 
     // Check spell availability
-    const availabilityList = currentSessionData.spellAvailability || [];
+    const availabilityList = pageState.currentSessionData.spellAvailability || [];
     const avail = availabilityList.find(a => a.spellId === sp.id);
     const isCastable = !avail || avail.castable;
     const disabledClass = isCastable ? '' : ' spell-disabled';
@@ -3530,8 +3543,8 @@ window.renderOverlayInventory = function (containerId) {
 
     // Add Gold reminder
     let goldAmount = 0;
-    if (currentSessionData && currentSessionData.players && currentSessionData.players.length > 0) {
-        goldAmount = currentSessionData.players[0].gold || 0;
+    if (pageState.currentSessionData && pageState.currentSessionData.players && pageState.currentSessionData.players.length > 0) {
+        goldAmount = pageState.currentSessionData.players[0].gold || 0;
     }
     list.innerHTML += `
         <div class="flex-center" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.8rem; gap: 0.8rem; margin-bottom: 0.5rem;">
@@ -3543,12 +3556,12 @@ window.renderOverlayInventory = function (containerId) {
         </div>
     `;
 
-    if (!currentSessionData || !currentSessionData.activeConsumables || currentSessionData.activeConsumables.length === 0) {
+    if (!pageState.currentSessionData || !pageState.currentSessionData.activeConsumables || pageState.currentSessionData.activeConsumables.length === 0) {
         list.innerHTML += `<div class="text-muted text-center" style="font-size: 0.85rem; padding: 1rem;">Aucun objet dans l'inventaire.</div>`;
         return;
     }
 
-    currentSessionData.activeConsumables.forEach(c => {
+    pageState.currentSessionData.activeConsumables.forEach(c => {
         const canConsume = true;
         const onClickAttr = canConsume ? `onclick="window.openConsumeModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')"` : '';
         const cursorStyle = canConsume ? 'cursor: pointer;' : '';
@@ -3580,7 +3593,7 @@ window.openConsumeModal = function (consumableId, consumableName) {
     const btnContainer = document.getElementById('consumeTargetButtons');
     btnContainer.innerHTML = '';
 
-    currentSessionData.players.forEach(p => {
+    pageState.currentSessionData.players.forEach(p => {
         let hpColor = p.healthCurrent <= 0 ? '#ef4444' : (p.healthCurrent < p.healthMax ? '#f59e0b' : '#10b981');
         let mpColor = p.manaCurrent < p.manaMax ? '#3b82f6' : '#60a5fa';
         btnContainer.innerHTML += `
@@ -3604,16 +3617,16 @@ window.closeConsumeModal = function () {
 };
 
 window.confirmConsumeItem = async function (consumableId, characterId) {
-    if (!sessionId) return;
+    if (!pageState.sessionId) return;
     try {
-        const res = await globalFetch(`/api/pve/combat/${sessionId}/consume/${consumableId}/target/${characterId}`, {
+        const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/consume/${consumableId}/target/${characterId}`, {
             method: 'POST'
         });
         if (res.ok) {
-            currentSessionData = await res.json();
+            pageState.currentSessionData = await res.json();
             window.closeConsumeModal();
             window.showNotif("Objet consommé avec succès !");
-            updateUI(currentSessionData);
+            updateUI(pageState.currentSessionData);
         } else {
             const err = await res.text();
             window.showNotif("Erreur: " + err, true);

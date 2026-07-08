@@ -1,4 +1,25 @@
-let editingMonsterId = null;
+const pageState = {
+  editingMonsterId: null,
+  editingDungeonId: null,
+  editingMutationId: null,
+  allMonsters: null,
+  allEquipments: null,
+  allAnomalies: null,
+  allDungeons: null,
+  allMutations: null,
+  selectedRooms: null,
+  selectedMutationIds: null,
+};
+pageState.editingMonsterId = null;
+pageState.editingDungeonId = null;
+pageState.editingMutationId = null;
+pageState.allMonsters = [];
+pageState.allEquipments = [];
+pageState.allAnomalies = [];
+pageState.allDungeons = [];
+pageState.allMutations = [];
+pageState.selectedRooms = [];
+pageState.selectedMutationIds = [];
 // Replaced by window.SLOT_LABELS
 
 function getSlotInfo(eq) {
@@ -23,15 +44,15 @@ const RARITY_COLORS = {
     MAUDIT: '#7f1d1d'
 };
 
-let editingDungeonId = null;
-let editingMutationId = null;
-let allMonsters = [];
-let allEquipments = [];
-let allAnomalies = [];
-let allDungeons = [];
-let allMutations = [];
-let selectedRooms = [];
-let selectedMutationIds = [];
+
+
+
+
+
+
+
+
+
 
 const SECRETS_META = [
     { name: "Secret du Chaos", icon: "local_fire_department", color: "#ef4444" },
@@ -122,15 +143,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             monsterType: document.getElementById('mType').value,
             behavior: document.getElementById('mBehavior').value,
             nativeSecret: document.getElementById('mNativeSecret').value || null,
-            mutations: selectedMutationIds.map(id => ({ id: id }))
+            mutations: pageState.selectedMutationIds.map(id => ({ id: id }))
         };
 
         try {
             let url = '/api/admin/pve/monsters';
             let method = 'POST';
 
-            if (editingMonsterId) {
-                url = `/api/admin/pve/monsters/${editingMonsterId}`;
+            if (pageState.editingMonsterId) {
+                url = `/api/admin/pve/monsters/${pageState.editingMonsterId}`;
                 method = 'PUT';
             }
 
@@ -140,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify(monstre)
             });
             if (res.ok) {
-                showNotif(editingMonsterId ? 'Monstre modifié avec succès' : 'Monstre créé avec succès');
+                showNotif(pageState.editingMonsterId ? 'Monstre modifié avec succès' : 'Monstre créé avec succès');
                 window.cancelMonsterEdit();
                 loadMonsters();
             } else {
@@ -154,13 +175,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('dungeonForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (selectedRooms.length === 0) {
+        if (pageState.selectedRooms.length === 0) {
             showNotif("Veuillez ajouter au moins une salle au donjon.", true);
             return;
         }
 
-        for (let i = 0; i < selectedRooms.length; i++) {
-            const r = selectedRooms[i];
+        for (let i = 0; i < pageState.selectedRooms.length; i++) {
+            const r = pageState.selectedRooms[i];
             if (r.type === 'EVENT' && r.eventSubType === 'PORTE_ETRANGE') {
                 const total = (r.doorOutcomes || []).reduce((sum, o) => sum + o.probability, 0);
                 if (total > 100) {
@@ -179,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             entryCostGold: parseFloat(document.getElementById('dEntryCost').value) || 0,
             requiredSecret: document.getElementById('dRequiredSecret').value || null,
             requiredSecretLevel: parseInt(document.getElementById('dRequiredSecretLevel').value) || 1,
-            salles: selectedRooms.map(r => {
+            salles: pageState.selectedRooms.map(r => {
                 const s = { type: r.type };
                 if (r.type === 'COMBAT') {
                     s.monsters = r.monsters.map(mId => ({ id: mId }));
@@ -225,8 +246,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             let url = '/api/admin/pve/dungeons';
             let method = 'POST';
 
-            if (editingDungeonId) {
-                url = `/api/admin/pve/dungeons/${editingDungeonId}`;
+            if (pageState.editingDungeonId) {
+                url = `/api/admin/pve/dungeons/${pageState.editingDungeonId}`;
                 method = 'PUT';
             }
 
@@ -236,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify(donjon)
             });
             if (res.ok) {
-                showNotif(editingDungeonId ? 'Donjon modifié avec succès' : 'Donjon créé avec succès');
+                showNotif(pageState.editingDungeonId ? 'Donjon modifié avec succès' : 'Donjon créé avec succès');
                 window.cancelDungeonEdit();
                 loadDungeons();
             } else {
@@ -250,9 +271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 window.addRoom = function (type) {
     if (type === 'COMBAT') {
-        selectedRooms.push({ type: 'COMBAT', monsters: [] });
+        pageState.selectedRooms.push({ type: 'COMBAT', monsters: [] });
     } else if (type === 'BOSS') {
-        selectedRooms.push({
+        pageState.selectedRooms.push({
             type: 'BOSS',
             monsters: [],
             globalBuffs: [],
@@ -260,34 +281,34 @@ window.addRoom = function (type) {
             bossRewardGold: 0
         });
     } else if (type === 'TREASURE') {
-        selectedRooms.push({ type: 'TREASURE', treasureGold: 50, treasureExp: 10 });
+        pageState.selectedRooms.push({ type: 'TREASURE', treasureGold: 50, treasureExp: 10 });
     } else if (type === 'ALTERATION') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'ALTERATION', eventText: 'Une aura mystérieuse émane des murs...', alterationType: 'VIE_XP', alterationHpAmount: 0, alterationExpAmount: 0, alterationRewardType: 'SPIRITUAL_XP', alterationSpiritualXpReward: 0, alterationSpecialItemReward: null, alterationRequiredItem: null });
+        pageState.selectedRooms.push({ type: 'EVENT', eventSubType: 'ALTERATION', eventText: 'Une aura mystérieuse émane des murs...', alterationType: 'VIE_XP', alterationHpAmount: 0, alterationExpAmount: 0, alterationRewardType: 'SPIRITUAL_XP', alterationSpiritualXpReward: 0, alterationSpecialItemReward: null, alterationRequiredItem: null });
     } else if (type === 'RENCONTRE') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'RENCONTRE', eventText: 'Un marchand ambulant vous interpelle...', lootTable: [] });
+        pageState.selectedRooms.push({ type: 'EVENT', eventSubType: 'RENCONTRE', eventText: 'Un marchand ambulant vous interpelle...', lootTable: [] });
     } else if (type === 'PIEGE') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'PIEGE', eventText: 'Un piège se déclenche !', trapType: 'PV', trapAmount: 10, trapHasRopeOption: false });
+        pageState.selectedRooms.push({ type: 'EVENT', eventSubType: 'PIEGE', eventText: 'Un piège se déclenche !', trapType: 'PV', trapAmount: 10, trapHasRopeOption: false });
     } else if (type === 'PORTE_ETRANGE') {
-        selectedRooms.push({ type: 'EVENT', eventSubType: 'PORTE_ETRANGE', eventText: 'Une porte étrange se dresse devant vous...', doorOutcomes: [] });
+        pageState.selectedRooms.push({ type: 'EVENT', eventSubType: 'PORTE_ETRANGE', eventText: 'Une porte étrange se dresse devant vous...', doorOutcomes: [] });
     }
     renderRooms();
 };
 
 window.removeRoom = function (index) {
-    selectedRooms.splice(index, 1);
+    pageState.selectedRooms.splice(index, 1);
     renderRooms();
 };
 
 window.addMonsterToRoom = function (roomIndex) {
     const select = document.getElementById(`room_monster_select_${roomIndex}`);
     if (select && select.value) {
-        selectedRooms[roomIndex].monsters.push(parseInt(select.value));
+        pageState.selectedRooms[roomIndex].monsters.push(parseInt(select.value));
         renderRooms();
     }
 };
 
 window.removeMonsterFromRoom = function (roomIndex, monsterIndex) {
-    selectedRooms[roomIndex].monsters.splice(monsterIndex, 1);
+    pageState.selectedRooms[roomIndex].monsters.splice(monsterIndex, 1);
     renderRooms();
 };
 
@@ -421,7 +442,7 @@ window.selectSortOption = function (val, label, icon, color) {
 };
 
 window.updateRoomField = function (roomIndex, field, value) {
-    selectedRooms[roomIndex][field] = value;
+    pageState.selectedRooms[roomIndex][field] = value;
 };
 
 function renderRooms() {
@@ -434,15 +455,15 @@ function renderRooms() {
     const elements = container.querySelectorAll('.room-card');
     elements.forEach(c => c.remove());
 
-    if (selectedRooms.length === 0) {
+    if (pageState.selectedRooms.length === 0) {
         emptyMsg.style.display = 'block';
         return;
     }
     emptyMsg.style.display = 'none';
 
-    selectedRooms.forEach((room, rIndex) => {
+    pageState.selectedRooms.forEach((room, rIndex) => {
         let optionsHtml = '';
-        allMonsters.forEach(m => {
+        pageState.allMonsters.forEach(m => {
             optionsHtml += `<div class="custom-option" data-value="${m.id}" onclick="selectMonsterOption(${rIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span></div>`;
         });
 
@@ -464,7 +485,7 @@ function renderRooms() {
                 monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun monstre dans cette salle.</div>`;
             } else {
                 room.monsters.forEach((mId, mIndex) => {
-                    const m = allMonsters.find(x => x.id === mId);
+                    const m = pageState.allMonsters.find(x => x.id === mId);
                     if (m) {
                         monstersHtml += `
                             <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
@@ -503,7 +524,7 @@ function renderRooms() {
                 monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun monstre configuré pour le boss.</div>`;
             } else {
                 room.monsters.forEach((mId, mIndex) => {
-                    const m = allMonsters.find(x => x.id === mId);
+                    const m = pageState.allMonsters.find(x => x.id === mId);
                     if (m) {
                         monstersHtml += `
                             <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
@@ -624,7 +645,7 @@ function renderRooms() {
                 lootHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun loot configuré.</div>`;
             } else {
                 room.lootTable.forEach((loot, lIndex) => {
-                    const eq = allEquipments.find(x => x.id === loot.equipmentId);
+                    const eq = pageState.allEquipments.find(x => x.id === loot.equipmentId);
                     if (eq) {
                         const slotInfo = getSlotInfo(eq);
                         const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
@@ -647,7 +668,7 @@ function renderRooms() {
                         </div>
                         <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
             `;
-            allEquipments.forEach(eq => {
+            pageState.allEquipments.forEach(eq => {
                 const slotInfo = getSlotInfo(eq);
                 const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                 const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
@@ -748,7 +769,7 @@ function renderRooms() {
                                 'ORBE': 'lens', 'CRISTAL': 'diamond', 'PLUME': 'history_edu',
                                 'ECAILLE': 'waves', 'AUTRE': 'category'
                             };
-                            const selAnomalie = allAnomalies.find(a => a.name === room.alterationSpecialItemReward);
+                            const selAnomalie = pageState.allAnomalies.find(a => a.name === room.alterationSpecialItemReward);
                             let selHtml = '<span class="material-symbols-outlined cs-icon text-muted">star</span> Choisir une anomalie...';
                             if (selAnomalie) {
                                 let color = '#a855f7';
@@ -764,7 +785,7 @@ function renderRooms() {
                                         <span class="material-symbols-outlined">expand_more</span>
                                     </div>
                                     <div class="custom-select-options" style="max-height: 200px; overflow-y: auto;">
-                                        ${allAnomalies.map(a => {
+                                        ${pageState.allAnomalies.map(a => {
                                 let color = '#a855f7';
                                 if (a.spiritualite === 'ESPRIT') color = '#38bdf8';
                                 else if (a.spiritualite === 'KARMA') color = '#e7d198';
@@ -788,7 +809,7 @@ function renderRooms() {
                                 'ORBE': 'lens', 'CRISTAL': 'diamond', 'PLUME': 'history_edu',
                                 'ECAILLE': 'waves', 'AUTRE': 'category'
                             };
-                            const selAnomalie = allAnomalies.find(a => a.name === room.alterationRequiredItem);
+                            const selAnomalie = pageState.allAnomalies.find(a => a.name === room.alterationRequiredItem);
                             let selHtml = '<span class="material-symbols-outlined cs-icon text-muted">star</span> Choisir une anomalie...';
                             if (selAnomalie) {
                                 let color = '#a855f7';
@@ -804,7 +825,7 @@ function renderRooms() {
                                     <span class="material-symbols-outlined">expand_more</span>
                                 </div>
                                 <div class="custom-select-options" style="max-height: 200px; overflow-y: auto;">
-                                    ${allAnomalies.map(a => {
+                                    ${pageState.allAnomalies.map(a => {
                                 let color = '#a855f7';
                                 if (a.spiritualite === 'ESPRIT') color = '#38bdf8';
                                 else if (a.spiritualite === 'KARMA') color = '#e7d198';
@@ -843,7 +864,7 @@ function renderRooms() {
                             let color = '#d946ef';
                             let icon = 'star';
                             let tooltipDesc = 'Cet objet aura un effet unique !';
-                            const an = allAnomalies.find(a => a.name === loot.specialItemName);
+                            const an = pageState.allAnomalies.find(a => a.name === loot.specialItemName);
                             if (an) {
                                 if (an.spiritualite === 'ESPRIT') color = '#38bdf8';
                                 else if (an.spiritualite === 'KARMA') color = '#e7d198';
@@ -873,7 +894,7 @@ function renderRooms() {
                                 <span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; color: ${color};">${icon}</span>
                             </span>`;
                         } else {
-                            const eq = allEquipments.find(x => x.id === loot.equipmentId);
+                            const eq = pageState.allEquipments.find(x => x.id === loot.equipmentId);
                             if (eq) {
                                 const slotInfo = getSlotInfo(eq);
                                 const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
@@ -891,7 +912,7 @@ function renderRooms() {
                             let priceColor = '#d946ef';
                             let priceIcon = 'star';
                             let tooltipDesc = 'Cet objet aura un effet unique !';
-                            const anPrice = allAnomalies.find(a => a.name === loot.priceSpecialItemName);
+                            const anPrice = pageState.allAnomalies.find(a => a.name === loot.priceSpecialItemName);
                             if (anPrice) {
                                 if (anPrice.spiritualite === 'ESPRIT') priceColor = '#38bdf8';
                                 else if (anPrice.spiritualite === 'KARMA') priceColor = '#e7d198';
@@ -960,7 +981,7 @@ function renderRooms() {
                                 </div>
                                 <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                 `;
-                allEquipments.forEach(eq => {
+                pageState.allEquipments.forEach(eq => {
                     const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
@@ -979,7 +1000,7 @@ function renderRooms() {
                                 </div>
                                 <div class="custom-select-options" id="room_merchant_special_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                                     <div class="custom-option" onclick="selectMerchantSpecial(${rIndex}, '', 'Choisir un item spécial...')"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Choisir un item spécial...</div>
-                                    ${allAnomalies.map(a => {
+                                    ${pageState.allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
                         'ORBE': 'lens', 'CRISTAL': 'diamond', 'PLUME': 'history_edu',
@@ -1009,7 +1030,7 @@ function renderRooms() {
                                     </div>
                                     <div class="custom-select-options" id="room_merchant_cost_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                                         <div class="custom-option" onclick="selectMerchantCost(${rIndex}, '', 'Sélectionner (Optionnel)')"><span class="material-symbols-outlined cs-icon text-muted">diamond</span> Sélectionner (Optionnel)</div>
-                                        ${allAnomalies.map(a => {
+                                        ${pageState.allAnomalies.map(a => {
                     const CATEGORY_ICONS = {
                         'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
                         'ORBE': 'lens', 'CRISTAL': 'diamond', 'PLUME': 'history_edu',
@@ -1092,7 +1113,7 @@ function renderRooms() {
                     doorLootHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun loot configuré.</div>`;
                 } else {
                     room.lootTable.forEach((loot, lIndex) => {
-                        const eq = allEquipments.find(x => x.id === loot.equipmentId);
+                        const eq = pageState.allEquipments.find(x => x.id === loot.equipmentId);
                         if (eq) {
                             const slotInfo = getSlotInfo(eq);
                             const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
@@ -1115,7 +1136,7 @@ function renderRooms() {
                             </div>
                             <div class="custom-select-options" id="room_loot_options_${rIndex}" style="max-height: 200px; overflow-y: auto;">
                 `;
-                allEquipments.forEach(eq => {
+                pageState.allEquipments.forEach(eq => {
                     const slotInfo = getSlotInfo(eq);
                     const rarityColor = RARITY_COLORS[eq.rarity] || '#ef4444';
                     const extraClass = slotInfo.extraClass ? ` ${slotInfo.extraClass}` : '';
@@ -1155,7 +1176,7 @@ function renderRooms() {
                                 monstersHtml += `<div class="text-muted" style="font-size:0.8rem;">Aucun boss configuré.</div>`;
                             } else {
                                 outcome.monsters.forEach((mId, mIndex) => {
-                                    const m = allMonsters.find(x => x.id === mId);
+                                    const m = pageState.allMonsters.find(x => x.id === mId);
                                     if (m) {
                                         monstersHtml += `
                                             <div class="flex-between" style="align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
@@ -1174,7 +1195,7 @@ function renderRooms() {
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="room_door_boss_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
-                                            ${allMonsters.map(m => `
+                                            ${pageState.allMonsters.map(m => `
                                                 <div class="custom-option" onclick="selectDoorBossOption(${rIndex}, ${oIndex}, ${m.id}, '${m.name.replace(/'/g, "\\'")}', ${m.level || 1})">
                                                     ${getSecretIconOnlyHtml(m)}<span class="material-symbols-outlined cs-icon text-error">pest_control</span> ${m.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${m.level || 1})</span>
                                                 </div>
@@ -1270,7 +1291,7 @@ function renderRooms() {
 
                             let rewardValueHtml = '';
                             if (outcome.altarRewardType === 'ITEM') {
-                                const selEq = allEquipments.find(e => e.id == outcome.altarRewardValue) || allEquipments[0];
+                                const selEq = pageState.allEquipments.find(e => e.id == outcome.altarRewardValue) || pageState.allEquipments[0];
 
                                 const getEqHtml = (eq) => {
                                     if (!eq) return 'Choisir un objet';
@@ -1289,7 +1310,7 @@ function renderRooms() {
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="altar_rewardval_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
-                                            ${allEquipments.map(eq => `
+                                            ${pageState.allEquipments.map(eq => `
                                                 <div class="custom-option" onclick="updateAltarField(${rIndex}, ${oIndex}, 'altarRewardValue', ${eq.id})">
                                                     ${getEqHtml(eq)}
                                                 </div>
@@ -1357,8 +1378,8 @@ function renderRooms() {
                                 </div>
                             `;
                         } else if (outcome.type === 'TRESOR') {
-                            if (!outcome.treasureAnomalieId) outcome.treasureAnomalieId = allAnomalies.length > 0 ? allAnomalies[0].id : '';
-                            const selAnomalie = allAnomalies.find(a => a.id == outcome.treasureAnomalieId) || allAnomalies[0];
+                            if (!outcome.treasureAnomalieId) outcome.treasureAnomalieId = pageState.allAnomalies.length > 0 ? pageState.allAnomalies[0].id : '';
+                            const selAnomalie = pageState.allAnomalies.find(a => a.id == outcome.treasureAnomalieId) || pageState.allAnomalies[0];
                             const CATEGORY_ICONS = {
                                 'PIERRE': 'landslide', 'METAL': 'hardware', 'COEUR': 'favorite',
                                 'ORBE': 'lens', 'CRISTAL': 'diamond', 'PLUME': 'history_edu',
@@ -1385,7 +1406,7 @@ function renderRooms() {
                                             <span class="material-symbols-outlined">expand_more</span>
                                         </div>
                                         <div class="custom-select-options" id="altar_treasure_options_${rIndex}_${oIndex}" style="max-height: 200px; overflow-y: auto;">
-                                            ${allAnomalies.map(an => {
+                                            ${pageState.allAnomalies.map(an => {
                                 let anColor = '#94a3b8';
                                 if (an.spiritualite === 'TENEBRES') anColor = '#a855f7';
                                 else if (an.spiritualite === 'ESPRIT') anColor = '#38bdf8';
@@ -1530,7 +1551,7 @@ async function loadMonsters() {
         const res = await globalFetch('/api/admin/pve/monsters');
         if (res.ok) {
             const monsters = await res.json();
-            allMonsters = sortMonstersBySecret(monsters);
+            pageState.allMonsters = sortMonstersBySecret(monsters);
             renderMonstersList();
         }
     } catch (e) {
@@ -1544,7 +1565,7 @@ async function loadAnomalies() {
         if (res.ok) {
             let data = await res.json();
             const uniqueNames = new Set();
-            allAnomalies = data.filter(a => {
+            pageState.allAnomalies = data.filter(a => {
                 if (uniqueNames.has(a.name)) return false;
                 uniqueNames.add(a.name);
                 return true;
@@ -1586,7 +1607,7 @@ async function loadEquipments() {
 
         // Sort by rarity, then name
         const rarityOrder = { 'MAUDIT': 1, 'RELIQUE': 2, 'EPIQUE': 3, 'LEGENDAIRE': 4, 'MYTHIQUE': 5, 'RARE': 6, 'INHABITUEL': 7, 'COMMUN': 8 };
-        allEquipments = Array.from(map.values()).sort((a, b) => {
+        pageState.allEquipments = Array.from(map.values()).sort((a, b) => {
             const rA = rarityOrder[a.rarity] || 100;
             const rB = rarityOrder[b.rarity] || 100;
             if (rA !== rB) return rA - rB;
@@ -1729,7 +1750,7 @@ async function editMonster(id) {
             const m = monsters.find(x => x.id === id);
             if (!m) return;
 
-            editingMonsterId = id;
+            pageState.editingMonsterId = id;
             document.getElementById('mName').value = m.name;
             document.getElementById('mDesc').value = m.description || '';
             const lvl = m.level || 1;
@@ -1757,7 +1778,7 @@ async function editMonster(id) {
             document.getElementById('mGold').value = m.rewardGold;
             document.getElementById('mXp').value = m.rewardExp;
             document.getElementById('mNativeSecret').value = m.nativeSecret || '';
-            selectedMutationIds = m.mutations ? m.mutations.map(mu => mu.id) : [];
+            pageState.selectedMutationIds = m.mutations ? m.mutations.map(mu => mu.id) : [];
             renderMutationsSelector();
 
             const mt = m.monsterType || 'NORMAL';
@@ -1799,7 +1820,7 @@ async function editMonster(id) {
 }
 
 window.cancelMonsterEdit = function () {
-    editingMonsterId = null;
+    pageState.editingMonsterId = null;
     document.getElementById('monsterForm').reset();
     document.getElementById('mLevel').value = 1;
     document.getElementById('mNativeSecret').value = '';
@@ -1811,7 +1832,7 @@ window.cancelMonsterEdit = function () {
     if (secretTrigger) {
         secretTrigger.innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: #64748b; font-size: 1.1rem;">close</span>Aucun (Optionnel)`;
     }
-    selectedMutationIds = [];
+    pageState.selectedMutationIds = [];
     renderMutationsSelector();
     document.getElementById('btnSubmitMonster').textContent = "Créer le monstre";
     document.getElementById('btnCancelMonster').style.display = 'none';
@@ -1837,7 +1858,7 @@ async function loadDungeons() {
     try {
         const res = await globalFetch('/api/admin/pve/dungeons');
         if (res.ok) {
-            allDungeons = await res.json();
+            pageState.allDungeons = await res.json();
             window.renderDungeonsList();
         }
     } catch (e) {
@@ -1853,7 +1874,7 @@ window.renderDungeonsList = function () {
     const filterSelect = document.getElementById('dungeonSecretFilter');
     const filterVal = filterSelect ? filterSelect.value : '';
 
-    let filtered = allDungeons;
+    let filtered = pageState.allDungeons;
     if (filterVal) {
         if (filterVal === 'Aucun') {
             filtered = filtered.filter(d => !d.requiredSecret);
@@ -1957,16 +1978,16 @@ window.renderDungeonsList = function () {
 }
 
 async function moveDungeonOrder(id, direction) {
-    const index = allDungeons.findIndex(d => d.id === id);
+    const index = pageState.allDungeons.findIndex(d => d.id === id);
     if (index === -1) return;
-    if (index + direction < 0 || index + direction >= allDungeons.length) return;
+    if (index + direction < 0 || index + direction >= pageState.allDungeons.length) return;
 
     // Swap in array
-    const temp = allDungeons[index];
-    allDungeons[index] = allDungeons[index + direction];
-    allDungeons[index + direction] = temp;
+    const temp = pageState.allDungeons[index];
+    pageState.allDungeons[index] = pageState.allDungeons[index + direction];
+    pageState.allDungeons[index + direction] = temp;
 
-    const orderedIds = allDungeons.map(d => d.id);
+    const orderedIds = pageState.allDungeons.map(d => d.id);
 
     try {
         const res = await globalFetch('/api/admin/pve/dungeons/reorder', {
@@ -1994,7 +2015,7 @@ async function editDungeon(id) {
             const d = dungeons.find(x => x.id === id);
             if (!d) return;
 
-            editingDungeonId = id;
+            pageState.editingDungeonId = id;
             document.getElementById('dName').value = d.name;
             document.getElementById('dDesc').value = d.description || '';
             document.getElementById('dLevel').value = d.recommendedLevel;
@@ -2004,7 +2025,7 @@ async function editDungeon(id) {
             document.getElementById('dRequiredSecret').value = d.requiredSecret || '';
             document.getElementById('dRequiredSecretLevel').value = d.requiredSecretLevel || 1;
 
-            selectedRooms = d.salles.map(s => {
+            pageState.selectedRooms = d.salles.map(s => {
                 const room = { type: s.type };
                 if (s.type === 'COMBAT') {
                     room.monsters = s.monsters.map(m => m.id);
@@ -2093,9 +2114,9 @@ async function editDungeon(id) {
 }
 
 window.cancelDungeonEdit = function () {
-    editingDungeonId = null;
+    pageState.editingDungeonId = null;
     document.getElementById('dungeonForm').reset();
-    selectedRooms = [];
+    pageState.selectedRooms = [];
     renderRooms();
     document.getElementById('btnSubmitDungeon').textContent = "Créer le donjon";
     document.getElementById('btnCancelDungeon').style.display = 'none';
@@ -2221,7 +2242,7 @@ window.addMerchantItemToRoom = function (rIndex) {
     const goldCost = parseInt(document.getElementById('room_merchant_gold_' + rIndex).value) || 0;
     const itemCost = document.getElementById('room_merchant_cost_item_' + rIndex).value.trim();
 
-    if (!selectedRooms[rIndex].lootTable) selectedRooms[rIndex].lootTable = [];
+    if (!pageState.selectedRooms[rIndex].lootTable) pageState.selectedRooms[rIndex].lootTable = [];
 
     let newItem = {
         probability: 0,
@@ -2245,7 +2266,7 @@ window.addMerchantItemToRoom = function (rIndex) {
         newItem.specialItemName = specName;
     }
 
-    selectedRooms[rIndex].lootTable.push(newItem);
+    pageState.selectedRooms[rIndex].lootTable.push(newItem);
     renderRooms();
 };
 
@@ -2256,13 +2277,13 @@ window.addLootToRoom = function (rIndex) {
         showNotif('Veuillez sélectionner un équipement et une probabilité (0-100).', true);
         return;
     }
-    if (!selectedRooms[rIndex].lootTable) selectedRooms[rIndex].lootTable = [];
-    selectedRooms[rIndex].lootTable.push({ equipmentId: parseInt(eqId), probability: prob });
+    if (!pageState.selectedRooms[rIndex].lootTable) pageState.selectedRooms[rIndex].lootTable = [];
+    pageState.selectedRooms[rIndex].lootTable.push({ equipmentId: parseInt(eqId), probability: prob });
     renderRooms();
 };
 
 window.removeLootFromRoom = function (rIndex, lIndex) {
-    selectedRooms[rIndex].lootTable.splice(lIndex, 1);
+    pageState.selectedRooms[rIndex].lootTable.splice(lIndex, 1);
     renderRooms();
 };
 
@@ -2275,28 +2296,28 @@ window.addDoorOutcome = function (rIndex) {
         showNotif('Veuillez sélectionner un type et une probabilité (1-100).', true);
         return;
     }
-    if (!selectedRooms[rIndex].doorOutcomes) selectedRooms[rIndex].doorOutcomes = [];
+    if (!pageState.selectedRooms[rIndex].doorOutcomes) pageState.selectedRooms[rIndex].doorOutcomes = [];
 
-    const currentTotal = selectedRooms[rIndex].doorOutcomes.reduce((sum, o) => sum + o.probability, 0);
+    const currentTotal = pageState.selectedRooms[rIndex].doorOutcomes.reduce((sum, o) => sum + o.probability, 0);
     if (currentTotal + prob > 100) {
         showNotif(`Impossible : le total dépasse 100% (actuel: ${currentTotal}%). Reste disponible : ${100 - currentTotal}%`, true);
         return;
     }
 
-    selectedRooms[rIndex].doorOutcomes.push({ type, probability: prob });
+    pageState.selectedRooms[rIndex].doorOutcomes.push({ type, probability: prob });
     renderRooms();
 };
 
 window.removeDoorOutcome = function (rIndex, oIndex) {
-    selectedRooms[rIndex].doorOutcomes.splice(oIndex, 1);
+    pageState.selectedRooms[rIndex].doorOutcomes.splice(oIndex, 1);
     renderRooms();
 };
 
 window.updateAltarField = function (rIndex, oIndex, field, value) {
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (field === 'altarRewardType') {
         outcome.altarRewardType = value;
-        outcome.altarRewardValue = value === 'ITEM' ? (allEquipments.length > 0 ? allEquipments[0].id : '') : 100;
+        outcome.altarRewardValue = value === 'ITEM' ? (pageState.allEquipments.length > 0 ? pageState.allEquipments[0].id : '') : 100;
     } else {
         if (field === 'altarRewardValue' && outcome.altarRewardType !== 'ITEM') {
             value = parseInt(value) || 0;
@@ -2421,7 +2442,7 @@ window.addMonsterToBoss = function (rIndex, oIndex) {
         return;
     }
     const mId = parseInt(input.value);
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (!outcome.monsters) outcome.monsters = [];
     outcome.monsters.push(mId);
 
@@ -2434,7 +2455,7 @@ window.addMonsterToBoss = function (rIndex, oIndex) {
 };
 
 window.removeMonsterFromBoss = function (rIndex, oIndex, mIndex) {
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (outcome && outcome.monsters) {
         outcome.monsters.splice(mIndex, 1);
         renderRooms();
@@ -2457,7 +2478,7 @@ window.addGlobalBuffToRoomBoss = function (rIndex) {
         return;
     }
 
-    const room = selectedRooms[rIndex];
+    const room = pageState.selectedRooms[rIndex];
     if (!room.globalBuffs) room.globalBuffs = [];
     room.globalBuffs.push({ type: type, value: val, duration: dur });
 
@@ -2465,7 +2486,7 @@ window.addGlobalBuffToRoomBoss = function (rIndex) {
 };
 
 window.removeGlobalBuffFromRoomBoss = function (rIndex, bIndex) {
-    const room = selectedRooms[rIndex];
+    const room = pageState.selectedRooms[rIndex];
     if (room && room.globalBuffs) {
         room.globalBuffs.splice(bIndex, 1);
         renderRooms();
@@ -2488,7 +2509,7 @@ window.addGlobalBuffToBoss = function (rIndex, oIndex) {
         return;
     }
 
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (!outcome.globalBuffs) outcome.globalBuffs = [];
     outcome.globalBuffs.push({ type: type, value: val, duration: dur });
 
@@ -2499,7 +2520,7 @@ window.addGlobalBuffToBoss = function (rIndex, oIndex) {
 };
 
 window.removeGlobalBuffFromBoss = function (rIndex, oIndex, bIndex) {
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (outcome && outcome.globalBuffs) {
         outcome.globalBuffs.splice(bIndex, 1);
         renderRooms();
@@ -2507,7 +2528,7 @@ window.removeGlobalBuffFromBoss = function (rIndex, oIndex, bIndex) {
 };
 
 window.updateDoorBossField = function (rIndex, oIndex, fieldName, value) {
-    const outcome = selectedRooms[rIndex].doorOutcomes[oIndex];
+    const outcome = pageState.selectedRooms[rIndex].doorOutcomes[oIndex];
     if (outcome) {
         outcome[fieldName] = parseInt(value) || 0;
     }
@@ -2583,7 +2604,7 @@ async function loadMutations() {
     try {
         const res = await globalFetch('/api/admin/pve/mutations');
         if (res.ok) {
-            allMutations = await res.json();
+            pageState.allMutations = await res.json();
             renderMutationsList();
             renderMutationsSelector();
         }
@@ -2593,13 +2614,13 @@ async function loadMutations() {
 function renderMutationsList() {
     const list = document.getElementById('mutationsList');
     if (!list) return;
-    if (allMutations.length === 0) {
+    if (pageState.allMutations.length === 0) {
         list.innerHTML = `<div class="font-italic" style="text-align:center; padding: 2rem; color: #64748b;">Aucune mutation trouvée</div>`;
         return;
     }
 
     let html = '';
-    allMutations.forEach(mut => {
+    pageState.allMutations.forEach(mut => {
         const mHex = mut.color || '#e879f9';
         const mIcon = mut.icon || 'pets';
         html += `
@@ -2626,9 +2647,9 @@ function renderMutationsList() {
 }
 
 window.editMutation = (id) => {
-    const mut = allMutations.find(m => m.id === id);
+    const mut = pageState.allMutations.find(m => m.id === id);
     if (!mut) return;
-    editingMutationId = id;
+    pageState.editingMutationId = id;
     document.getElementById('mutName').value = mut.nom;
     document.getElementById('mutDesc').value = mut.description;
     document.getElementById('mutLevel').value = mut.level;
@@ -2646,14 +2667,14 @@ window.deleteMutation = async (id) => {
         const res = await globalFetch(`/api/admin/pve/mutations/${id}`, { method: 'DELETE' });
         if (res.ok) {
             showNotif('Mutation supprimée');
-            if (editingMutationId === id) window.cancelMutationEdit();
+            if (pageState.editingMutationId === id) window.cancelMutationEdit();
             loadMutations();
         } else showNotif('Erreur lors de la suppression', true);
     } catch (e) { showNotif("Erreur: " + e.message, true); }
 };
 
 window.cancelMutationEdit = () => {
-    editingMutationId = null;
+    pageState.editingMutationId = null;
     document.getElementById('mutationForm').reset();
     document.getElementById('btnSubmitMutation').textContent = 'Créer la mutation';
     document.getElementById('btnCancelMutation').style.display = 'none';
@@ -2672,12 +2693,12 @@ document.getElementById('mutationForm')?.addEventListener('submit', async (e) =>
     try {
         let url = '/api/admin/pve/mutations';
         let method = 'POST';
-        if (editingMutationId) { url = `/api/admin/pve/mutations/${editingMutationId}`; method = 'PUT'; }
+        if (pageState.editingMutationId) { url = `/api/admin/pve/mutations/${pageState.editingMutationId}`; method = 'PUT'; }
         const res = await globalFetch(url, {
             method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mut)
         });
         if (res.ok) {
-            showNotif(editingMutationId ? 'Mutation modifiée' : 'Mutation créée');
+            showNotif(pageState.editingMutationId ? 'Mutation modifiée' : 'Mutation créée');
             window.cancelMutationEdit();
             loadMutations();
         } else { showNotif("Erreur lors de l'enregistrement", true); }
@@ -2687,14 +2708,14 @@ document.getElementById('mutationForm')?.addEventListener('submit', async (e) =>
 function renderMutationsSelector() {
     const container = document.getElementById('mMutationsContainer');
     if (!container) return;
-    if (allMutations.length === 0) {
+    if (pageState.allMutations.length === 0) {
         container.innerHTML = `<span class="text-sm font-italic" style="color: #64748b;">Aucune mutation disponible. Créez-en une d'abord.</span>`;
         return;
     }
 
     let html = '';
-    allMutations.forEach(mut => {
-        const isSelected = selectedMutationIds.includes(mut.id);
+    pageState.allMutations.forEach(mut => {
+        const isSelected = pageState.selectedMutationIds.includes(mut.id);
         const mHex = mut.color || '#e879f9';
         const mIcon = mut.icon || 'pets';
         const bg = isSelected ? `rgba(232, 121, 249, 0.2)` : 'rgba(15, 23, 42, 0.6)';
@@ -2712,14 +2733,14 @@ function renderMutationsSelector() {
 }
 
 window.toggleMutationSelection = (id) => {
-    if (selectedMutationIds.includes(id)) {
-        selectedMutationIds = selectedMutationIds.filter(x => x !== id);
+    if (pageState.selectedMutationIds.includes(id)) {
+        pageState.selectedMutationIds = pageState.selectedMutationIds.filter(x => x !== id);
     } else {
-        if (selectedMutationIds.length >= 4) {
+        if (pageState.selectedMutationIds.length >= 4) {
             showNotif("Un monstre ne peut avoir que 4 mutations maximum", true);
             return;
         }
-        selectedMutationIds.push(id);
+        pageState.selectedMutationIds.push(id);
     }
     renderMutationsSelector();
 };

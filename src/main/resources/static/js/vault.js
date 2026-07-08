@@ -52,7 +52,7 @@ function calculateWeight(eq) {
     w += (eq.regenHealthPerTurn || 0) * mRegHp;
     w += (eq.regenManaPerTurn || 0) * mRegMana;
 
-    const rarity = eq.rarity;
+    const rarity = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
     if (rarity === 'EPIQUE' || rarity === 'RELIQUE' || rarity === 'MAUDIT') {
         const specialEffect = eq.specialEffect;
         const effectVal = eq.specialEffectValue || 0;
@@ -337,7 +337,8 @@ function filterVault() {
             }
         }
 
-        const matchRarity = !filterRarity || eq.rarity === filterRarity;
+        const rarityName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+        const matchRarity = !filterRarity || rarityName === filterRarity;
 
         let matchStatus = true;
         if (filterStatus === 'EQUIPPED') matchStatus = eq.personnage != null;
@@ -354,14 +355,14 @@ function filterVault() {
         const getRarityIndex = r => window.GRIMOIRE_META?.equipmentRarities?.findIndex(er => er.name === r) || 0;
 
         if (sortVault === 'rarity_desc') {
-            const ra = getRarityIndex(a.rarity);
-            const rb = getRarityIndex(b.rarity);
+            const ra = getRarityIndex(typeof a.rarity === 'object' ? a.rarity?.name : a.rarity);
+            const rb = getRarityIndex(typeof b.rarity === 'object' ? b.rarity?.name : b.rarity);
             if (ra !== rb) return rb - ra;
             return b._weight - a._weight; // Tie-breaker: weight
         }
         if (sortVault === 'rarity_asc') {
-            const ra = getRarityIndex(a.rarity);
-            const rb = getRarityIndex(b.rarity);
+            const ra = getRarityIndex(typeof a.rarity === 'object' ? a.rarity?.name : a.rarity);
+            const rb = getRarityIndex(typeof b.rarity === 'object' ? b.rarity?.name : b.rarity);
             if (ra !== rb) return ra - rb;
             return a._weight - b._weight;
         }
@@ -388,7 +389,8 @@ function renderGrid(equipments) {
     }
 
     container.innerHTML = equipments.map(eq => {
-        const rarityClass = eq.rarity ? `rarity-${eq.rarity}` : 'rarity-COMMUN';
+        const rarityName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+        const rarityClass = rarityName ? `rarity-${rarityName}` : 'rarity-COMMUN';
 
         if (eq.isAnomalie) {
             const spColors = {
@@ -533,8 +535,7 @@ function renderGrid(equipments) {
 
         // Optimization Color Logic
         let weightColor = '#94a3b8';
-        const limitsForSlot = WEIGHT_LIMITS[eq.slot] || {};
-        const maxWeight = limitsForSlot[eq.rarity || 'COMMUN'] || 5;
+        const maxWeight = eq.maxWeight || 5;
 
         if (eq._weight <= 0) {
             weightColor = '#ef4444'; // Red
@@ -570,7 +571,7 @@ function renderGrid(equipments) {
                     <div class="vault-card-name-group">
                         <div class="vault-card-slot">
                             <span class="material-symbols-outlined ${slotInfo.extraClass || ''} text-sm" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
-                            ${slotInfo.label} ${eq.rarity ? `<span style="opacity:0.5; margin-left:4px;">${eq.rarity}</span>` : ''}
+                            ${slotInfo.label} ${eq.rarity ? `<span style="opacity:0.5; margin-left:4px;">${typeof eq.rarity === 'object' ? eq.rarity.label : eq.rarity}</span>` : ''}
                         </div>
                         <div class="vault-card-name word-break">
                             ${eq.name}
@@ -759,21 +760,23 @@ window.editEquipment = function (id) {
         }
     }
 
-    // Rarity Setup
     const rarityInput = document.getElementById('eqRarity');
-    if (rarityInput && eq.rarity) {
-        rarityInput.value = eq.rarity;
-        const option = document.querySelector(`.custom-option.rarity-${eq.rarity}`);
+    const eqRarityName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+    if (rarityInput && eqRarityName) {
+        rarityInput.value = eqRarityName;
+        const option = document.querySelector(`.custom-option.rarity-${eqRarityName}`);
         if (option) {
             document.getElementById('eqRarityLabel').innerHTML = option.innerHTML;
         }
 
+        // Si l'équipement est épique ou plus, afficher la valeur
         const row = document.getElementById('eqSpecialEffectRow');
-        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE' || eq.rarity === 'MAUDIT') {
+        if (eqRarityName === 'EPIQUE' || eqRarityName === 'RELIQUE' || eqRarityName === 'MAUDIT') {
             if (row) row.style.display = 'grid';
-
-            const isEpic = eq.rarity === 'EPIQUE';
-            const isMaudit = eq.rarity === 'MAUDIT';
+            if (document.getElementById('eqSpecialEffectBlock')) document.getElementById('eqSpecialEffectBlock').style.display = 'block';
+            if (document.getElementById('eqSpecialEffectValueBlock')) document.getElementById('eqSpecialEffectValueBlock').style.display = 'block';
+            const isEpic = eqRarityName === 'EPIQUE';
+            const isMaudit = eqRarityName === 'MAUDIT';
             let color = isEpic ? '#ef4444' : '#a855f7';
             let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
             let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';
@@ -965,12 +968,6 @@ window.submitEquipment = async function () {
     if (!slot) { showNotif('Slot obligatoire.', true); return; }
 
     const rarity = document.getElementById('eqRarity').value;
-    const maxWeight = (WEIGHT_LIMITS[slot] && WEIGHT_LIMITS[slot][rarity]) ? WEIGHT_LIMITS[slot][rarity] : 5;
-    const currentWeight = calculateEquipmentWeight();
-    if (currentWeight > maxWeight) {
-        showNotif('Le poids de cet équipement dépasse la limite autorisée !', true);
-        return;
-    }
 
     let specialEffect = document.getElementById('eqSpecialEffect').value;
     let specialEffectValue = parseInt(document.getElementById('eqSpecialEffectValue').value) || 0;
@@ -1001,6 +998,23 @@ window.submitEquipment = async function () {
     dto.id = pageState.editingEquipmentId;
     dto.name = name;
     dto.personnageId = null; // Keep null when forged from vault
+
+    try {
+        const resSim = await globalFetch('/api/equipments/simulate-weight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto)
+        });
+        if (resSim && resSim.ok) {
+            const simData = await resSim.json();
+            if (simData.weight > simData.maxWeight) {
+                showNotif(`Le poids (${simData.weight.toFixed(1)}) dépasse la limite (${simData.maxWeight}) !`, true);
+                return;
+            }
+        }
+    } catch(e) {
+        console.error("Simulation error", e);
+    }
 
     try {
         const res = await globalFetch('/api/equipments', {

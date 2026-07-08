@@ -854,6 +854,36 @@ public class Personnage {
         return (int) Math.round(effective);
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("totalPower")
+    public int getTotalPower() {
+        return getEffectiveStat(StatType.POWER);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalStrength")
+    public int getTotalStrength() {
+        return getEffectiveStat(StatType.STRENGTH);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalArmor")
+    public int getTotalArmor() {
+        return getEffectiveStat(StatType.ARMURE);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalResistance")
+    public int getTotalResistance() {
+        return getEffectiveStat(StatType.RESISTANCE);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalCrit")
+    public int getTotalCrit() {
+        return getEffectiveStat(StatType.CRIT);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("totalSpeed")
+    public int getTotalSpeed() {
+        return getEffectiveStat(StatType.SPEED);
+    }
+
     public boolean isAlly(Personnage other) {
         if (other == null)
             return false;

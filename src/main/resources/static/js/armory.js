@@ -684,7 +684,8 @@ function renderPersonnages() {
                         .filter(s => eq[s.key] && eq[s.key] !== 0)
                         .map(s => `${eq[s.key] > 0 ? '+' : ''}${eq[s.key]}${s.isPercent ? '%' : ''} ${s.label}`)
                         .join(', ');
-                    const rarityClass = eq.rarity ? `rarity-${eq.rarity}` : '';
+                    const rarityName = typeof eq.rarity === 'object' ? eq.rarity?.name : eq.rarity;
+                    const rarityClass = rarityName ? `rarity-${rarityName}` : '';
                     let effectStar = '';
                     if (eq.specialEffect && eq.specialEffect !== 'NONE') {
                         effectStar = `<span class="material-symbols-outlined text-xs" style="color: #c084fc; margin-left: 0.2rem;">auto_awesome</span>`;
@@ -804,7 +805,8 @@ function renderEquipModal() {
                     return `<span class="eq-stat-mini ${isMalus ? 'malus' : ''}" title="${s.label}"><span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size:0.75rem;">${s.icon}</span>${sign}${val}${suffix}</span>`;
                 })
                 .join('');
-            const rarityClass = equipped.rarity ? `rarity-${equipped.rarity}` : '';
+            const rarityName = typeof equipped.rarity === 'object' ? equipped.rarity?.name : equipped.rarity;
+            const rarityClass = rarityName ? `rarity-${rarityName}` : '';
 
             let specialEffectHtml = '';
             if (equipped.specialEffect && equipped.specialEffect !== 'NONE') {
@@ -882,8 +884,8 @@ function renderEquipModal() {
                 'MAUDIT': 99
             };
             available.sort((a, b) => {
-                const rA = a.rarity ? rarityOrder[a.rarity] || 0 : 0;
-                const rB = b.rarity ? rarityOrder[b.rarity] || 0 : 0;
+                const rA = a.rarity ? rarityOrder[typeof a.rarity === 'object' ? a.rarity.name : a.rarity] || 0 : 0;
+                const rB = b.rarity ? rarityOrder[typeof b.rarity === 'object' ? b.rarity.name : b.rarity] || 0 : 0;
                 if (rA !== rB) return rB - rA;
                 return a.name.localeCompare(b.name);
             });
@@ -926,9 +928,12 @@ function renderEquipModal() {
                                 </div>`;
                     }
 
+                    const aRarityName = typeof a.rarity === 'object' ? a.rarity?.name : a.rarity;
+                    const aRarityLabel = typeof a.rarity === 'object' ? a.rarity?.label : a.rarity;
+
                     const tooltipHtml = `
                                 <div class="tooltip-data" style="display:none;">
-                                    <div class="${a.rarity ? 'rarity-' + a.rarity : ''} font-bold" style="margin-bottom: 0.3rem; font-size: 1rem;">${a.name} ${a.rarity ? '(' + a.rarity + ')' : ''}</div>
+                                    <div class="${aRarityName ? 'rarity-' + aRarityName : ''} font-bold" style="margin-bottom: 0.3rem; font-size: 1rem;">${a.name} ${aRarityLabel ? '(' + aRarityLabel + ')' : ''}</div>
                                     <div class="equip-slot-stats" style="flex-wrap: wrap;">
                                         ${aStatsChips || '<span style="opacity:0.4;">Aucun bonus</span>'}
                                         ${aSpecialEffectHtml}
@@ -938,8 +943,8 @@ function renderEquipModal() {
 
                     return `
                                 <div class="custom-option" data-value="${a.id}" onmouseenter="showEqTooltip(this)" onmouseleave="hideEqTooltip()">
-                                    <span class="${a.rarity ? 'rarity-' + a.rarity : ''}">${a.name}</span>
-                                    ${a.rarity ? '<span class="opacity-50" style="font-size: 0.7rem; margin-left: 0.3rem;">(' + a.rarity + ')</span>' : ''}
+                                    <span class="${aRarityName ? 'rarity-' + aRarityName : ''}">${a.name}</span>
+                                    ${aRarityLabel ? '<span class="opacity-50" style="font-size: 0.7rem; margin-left: 0.3rem;">(' + aRarityLabel + ')</span>' : ''}
                                     ${a.slot === 'ARME_DEUX_MAINS' ? '<span class="font-bold text-error" style="font-size: 0.7rem; margin-left: 0.3rem;">[2 Mains]</span>' : ''}
                                     ${tooltipHtml}
                                 </div>

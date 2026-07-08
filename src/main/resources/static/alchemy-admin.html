@@ -480,8 +480,8 @@
 
         async function loadItems() {
             try {
-                const resA = await fetch('/api/anomalies/all-templates');
-                if (resA.ok) {
+                const resA = await globalFetch('/api/anomalies/all-templates');
+                if (resA && resA.ok) {
                     allAnomalies = await resA.json();
                     allAnomalies.sort((a, b) => {
                         const spiA = a.spiritualite || 'ZZZ';
@@ -501,16 +501,16 @@
 
             let templates = [];
             try {
-                const resT = await fetch('/api/shop/templates');
-                if (resT.ok) templates = await resT.json();
+                const resT = await globalFetch('/api/shop/templates');
+                if (resT && resT.ok) templates = await resT.json();
             } catch (e) {
                 console.error("Erreur chargement templates boutique", e);
             }
 
             let instances = [];
             try {
-                const resE = await fetch('/api/equipments/all');
-                if (resE.ok) instances = await resE.json();
+                const resE = await globalFetch('/api/equipments/all');
+                if (resE && resE.ok) instances = await resE.json();
             } catch (e) {
                 console.error("Erreur chargement équipements", e);
             }
@@ -676,8 +676,8 @@
                 });
 
                 try {
-                    const res = await fetch('/api/pve/dungeons');
-                    if (res.ok) {
+                    const res = await globalFetch('/api/pve/dungeons');
+                    if (res && res.ok) {
                         const dungeons = await res.json();
                         const secretDungeons = dungeons.filter(d => d.requiredSecret && d.requiredSecret.trim() !== '');
                         secretDungeons.forEach(d => {
@@ -890,10 +890,12 @@
 
         async function loadRecipes() {
             try {
-                const res = await fetch('/api/alchemy/recipes');
-                const data = await res.json();
-                allRecipes = data; // Store for edit
-                renderRecipesList();
+                const res = await globalFetch('/api/alchemy/recipes');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    allRecipes = data; // Store for edit
+                    renderRecipesList();
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -1069,12 +1071,12 @@
             }
 
             try {
-                const res = await fetch('/api/alchemy/admin/recipe', {
+                const res = await globalFetch('/api/alchemy/admin/recipe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(recipe)
                 });
-                if (res.ok) {
+                if (res && res.ok) {
                     msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !";
                     msg.style.color = "#10b981";
                     document.getElementById('recipeForm').reset();
@@ -1099,7 +1101,7 @@
         async function deleteRecipe(id) {
             if (!confirm("Supprimer cette recette ?")) return;
             try {
-                await fetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' });
+                await globalFetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' });
                 loadRecipes();
             } catch (e) {
                 alert("Erreur de suppression");

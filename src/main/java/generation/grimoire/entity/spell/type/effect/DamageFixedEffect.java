@@ -24,6 +24,6 @@ public class DamageFixedEffect extends DamageEffect {
         
         finalDamage = applyEquipmentModifiers(finalDamage, caster, target, this.getDamageType());
 
-        target.takeDamage((int) finalDamage, this.getDamageType(), caster);
+        caster.dealDamage(target, (int) finalDamage, this.getDamageType());
     }
 }

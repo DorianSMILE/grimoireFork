@@ -43,6 +43,11 @@ public class Personnage {
 
     private String teamId;
 
+    @Transient
+    private generation.grimoire.enumeration.MonsterType monsterType;
+    @Transient
+    private String monsterName;
+
     // Statistiques de vie et de mana
     private int healthMax;
     private int healthCurrent;
@@ -1089,6 +1094,42 @@ public class Personnage {
     public int getManaCurrent() {
         int max = getManaMax();
         return Math.max(0, Math.min(this.manaCurrent, max));
+    }
+
+    public void dealDamage(Personnage target, int baseDamage, DamageType type) {
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.HYBRIDE && type != DamageType.BRUT) {
+            int total = (int) (baseDamage * 1.2);
+            target.takeDamage(total / 2, DamageType.PHYSIC, this);
+            target.takeDamage(total - (total / 2), DamageType.MAGIC, this);
+            baseDamage = total; 
+        } else {
+            target.takeDamage(baseDamage, type, this);
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.DEMON) {
+            int brutDmg = (int) Math.ceil(baseDamage * 0.10);
+            if (brutDmg > 0) {
+                target.takeDamage(brutDmg, DamageType.BRUT, this);
+                System.out.println("🔥 " + this.getName() + " inflige " + brutDmg + " dégâts bruts supplémentaires (Démon).");
+            }
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.VAMPIRE) {
+            int healAmount = (int) Math.ceil(baseDamage * 0.20);
+            if (healAmount > 0) {
+                this.setHealthCurrent(Math.min(this.getHealthMax(), this.getHealthCurrent() + healAmount));
+                System.out.println("🧛 " + this.getName() + " vole " + healAmount + " PV (Vampire).");
+            }
+        }
+
+        if (this.monsterType == generation.grimoire.enumeration.MonsterType.ECTOPLASME) {
+            generation.grimoire.entity.spell.type.effect.BuffDebuffEffect eff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+            eff.setStatAffected(generation.grimoire.enumeration.StatType.RESISTANCE);
+            eff.setFlatValue(-5);
+            eff.setDuration(3);
+            target.getActiveBuffs().add(eff);
+            System.out.println("👻 " + target.getName() + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
+        }
     }
 
 }

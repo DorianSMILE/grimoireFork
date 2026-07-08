@@ -1521,8 +1521,10 @@ public class CombatService {
 
                                         session.addLog(
                                                 "🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
-                                        spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
-                                                m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
+                                        captureLogs(session, () -> {
+                                            spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
+                                                    m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
+                                        });
 
                                         if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL)
                                             m.getAsPersonnage().setBanalSpellCastThisTurn(true);
@@ -1560,44 +1562,25 @@ public class CombatService {
                                     int str = m.getBase().getStrength();
                                     int pwr = m.getBase().getPower();
 
-                                    int physDmg;
-                                    int magicDmg;
-
-                                    if (mType == MonsterType.HYBRIDE) {
-                                        int total = (int) ((str + pwr) * 1.2);
-                                        physDmg = total / 2;
-                                        magicDmg = total - physDmg;
-                                    } else {
-                                        physDmg = str;
-                                        magicDmg = pwr;
-                                    }
-
-                                    int monsterDmg = physDmg + magicDmg;
-
                                     if (behavior == MonsterBehavior.BRUTAL) {
+                                        int monsterDmg = str + pwr;
                                         System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
                                                 + " et inflige " + monsterDmg + " dégâts bruts.");
                                         if (monsterDmg > 0) {
-                                            targetPlayer.takeDamage(monsterDmg,
-                                                    generation.grimoire.enumeration.DamageType.BRUT);
+                                            m.getAsPersonnage().dealDamage(targetPlayer, monsterDmg, generation.grimoire.enumeration.DamageType.BRUT);
                                         }
                                     } else {
+                                        if (str > 0) m.getAsPersonnage().dealDamage(targetPlayer, str, generation.grimoire.enumeration.DamageType.PHYSIC);
+                                        if (pwr > 0) m.getAsPersonnage().dealDamage(targetPlayer, pwr, generation.grimoire.enumeration.DamageType.MAGIC);
+                                        
                                         StringBuilder logMsg = new StringBuilder();
-                                        if (physDmg > 0) {
-                                            logMsg.append(physDmg).append(" dégâts physiques");
-                                            targetPlayer.takeDamage(physDmg,
-                                                    generation.grimoire.enumeration.DamageType.PHYSIC);
+                                        if (str > 0) logMsg.append(str).append(" dégâts physiques");
+                                        if (pwr > 0) {
+                                            if (str > 0) logMsg.append(" et ");
+                                            logMsg.append(pwr).append(" dégâts magiques");
                                         }
-                                        if (magicDmg > 0) {
-                                            if (physDmg > 0)
-                                                logMsg.append(" et ");
-                                            logMsg.append(magicDmg).append(" dégâts magiques");
-                                            targetPlayer.takeDamage(magicDmg,
-                                                    generation.grimoire.enumeration.DamageType.MAGIC);
-                                        }
-                                        if (physDmg == 0 && magicDmg == 0) {
-                                            logMsg.append("0 dégât");
-                                        }
+                                        if (str == 0 && pwr == 0) logMsg.append("0 dégât");
+                                        
                                         System.out.println(m.getBase().getName() + " attaque " + targetPlayer.getName()
                                                 + " et inflige " + logMsg.toString() + ".");
                                     }
@@ -1640,39 +1623,6 @@ public class CombatService {
                                             session.addLog("🦇 " + targetPlayer.getName() + " perd " + manaLoss
                                                     + " points de mana ! (Corrupteur)");
                                         }
-                                    }
-
-                                    // === PASSIF TYPE : DEMON — 10% dégâts bruts supplémentaires ===
-                                    if (mType == MonsterType.DEMON) {
-                                        int brutDmg = (int) Math.ceil(monsterDmg * 0.10);
-                                        if (brutDmg > 0) {
-                                            targetPlayer.takeDamage(brutDmg,
-                                                    generation.grimoire.enumeration.DamageType.BRUT);
-                                            session.addLog(
-                                                    "\uD83D\uDD25 " + m.getBase().getName() + " inflige " + brutDmg
-                                                            + " dégâts bruts supplémentaires (Démon).");
-                                        }
-                                    }
-
-                                    // === PASSIF TYPE : VAMPIRE — 20% vol de vie ===
-                                    if (mType == MonsterType.VAMPIRE) {
-                                        int healAmount = (int) Math.ceil(monsterDmg * 0.20);
-                                        int newHp = Math.min(m.getBase().getHealthMax(),
-                                                m.getAsPersonnage().getHealthCurrent() + healAmount);
-                                        m.getAsPersonnage().setHealthCurrent(newHp);
-                                        session.addLog("\uD83E\uDDDB " + m.getBase().getName() + " vole " + healAmount
-                                                + " PV (Vampire).");
-                                    }
-
-                                    // === PASSIF TYPE : ECTOPLASME ===
-                                    if (mType == MonsterType.ECTOPLASME) {
-                                        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect eff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
-                                        eff.setStatAffected(generation.grimoire.enumeration.StatType.RESISTANCE);
-                                        eff.setFlatValue(-5);
-                                        eff.setDuration(3);
-                                        targetPlayer.getActiveBuffs().add(eff);
-                                        session.addLog("👻 " + targetPlayer.getName()
-                                                + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
                                     }
 
                                     if (targetPlayer.getHealthCurrent() <= 0) {

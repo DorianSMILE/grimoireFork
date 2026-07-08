@@ -126,20 +126,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: document.getElementById('mName').value,
             description: document.getElementById('mDesc').value,
             level: parseInt(document.getElementById('mLevel').value) || 1,
-            healthMax: parseInt(document.getElementById('mHp').value),
+            healthMax: parseInt(document.getElementById('mHp').value) || 0,
             regenHp: parseInt(document.getElementById('mRegenHp').value) || 0,
-            startHpPct: parseInt(document.getElementById('mStartHpPct').value),
-            manaMax: parseInt(document.getElementById('mMana').value),
+            startHpPct: parseInt(document.getElementById('mStartHpPct').value) || 0,
+            manaMax: parseInt(document.getElementById('mMana').value) || 0,
             regenMana: parseInt(document.getElementById('mRegenMana').value) || 0,
-            startManaPct: parseInt(document.getElementById('mStartManaPct').value),
-            speed: parseInt(document.getElementById('mSpeed').value),
-            crit: parseInt(document.getElementById('mCrit').value),
-            strength: parseInt(document.getElementById('mStrength').value),
-            power: parseInt(document.getElementById('mPower').value),
-            armor: parseInt(document.getElementById('mArmor').value),
-            resistance: parseInt(document.getElementById('mResist').value),
-            rewardGold: parseInt(document.getElementById('mGold').value),
-            rewardExp: parseInt(document.getElementById('mXp').value),
+            startManaPct: parseInt(document.getElementById('mStartManaPct').value) || 0,
+            speed: parseInt(document.getElementById('mSpeed').value) || 0,
+            crit: parseInt(document.getElementById('mCrit').value) || 0,
+            strength: parseInt(document.getElementById('mStrength').value) || 0,
+            power: parseInt(document.getElementById('mPower').value) || 0,
+            armor: parseInt(document.getElementById('mArmor').value) || 0,
+            resistance: parseInt(document.getElementById('mResist').value) || 0,
+            rewardGold: parseInt(document.getElementById('mGold').value) || 0,
+            rewardExp: parseInt(document.getElementById('mXp').value) || 0,
             monsterType: document.getElementById('mType').value,
             behavior: document.getElementById('mBehavior').value,
             nativeSecret: document.getElementById('mNativeSecret').value || null,
@@ -1651,7 +1651,7 @@ window.renderMonstersList = function () {
     const list = document.getElementById('monstersList');
     if (!list) return;
 
-    let filtered = [...allMonsters];
+    let filtered = [...pageState.allMonsters];
     const search = document.getElementById('monsterSearch');
     if (search && search.value) {
         const q = search.value.toLowerCase();
@@ -1694,6 +1694,9 @@ window.renderMonstersList = function () {
             mutationsHtml += `</div>`;
         }
 
+        let mTypeName = m.monsterType && typeof m.monsterType === 'object' ? m.monsterType.name : m.monsterType;
+        let mBehaviorName = m.behavior && typeof m.behavior === 'object' ? m.behavior.name : m.behavior;
+
         list.innerHTML += `
             <div class="monster-card">
                 <div class="absolute" style="top: -0.8rem; left: -0.8rem; display: flex; gap: 0.4rem; z-index: 10;">
@@ -1717,8 +1720,8 @@ window.renderMonstersList = function () {
                     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
                         <div class="text-xs text-muted" style="margin-bottom: 0.5rem;">${m.description || ''}</div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                            ${m.monsterType && m.monsterType !== 'NORMAL' ? `<span class="text-error" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[m.monsterType] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[m.monsterType] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[m.monsterType] || m.monsterType}</span>` : ''}
-                            ${m.behavior && m.behavior !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[m.behavior] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[m.behavior] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[m.behavior] || m.behavior}</span>` : ''}
+                            ${mTypeName && mTypeName !== 'NORMAL' ? `<span class="text-error" onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#ef4444; border-bottom: 1px solid #ef4444; padding-bottom: 4px;">${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[mTypeName] || mTypeName}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'DEMON': 'Démon : 10% des dégâts infligés le sont en dégâts bruts supplémentaires.', 'REPTILE': 'Reptile : Réduit les dégâts physiques subis de 15%.', 'MORT_VIVANT': 'Mort-vivant : Régénère 5% de ses PV max au début de son tour.', 'HYBRIDE': 'Hybride : Ses dégâts valent (Force + Puissance) * 1.2, répartis en 50% Physique et 50% Magique.', 'VAMPIRE': 'Vampire : Se soigne de 20% des dégâts infligés.', 'ECTOPLASME': 'Ectoplasme : Ces attaques appliquent un débuff de résistance magique (-5 res pendant 3 tours).' }[mTypeName] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'DEMON': 'rib_cage', 'REPTILE': 'grass', 'MORT_VIVANT': 'skull', 'HYBRIDE': 'network_node', 'VAMPIRE': 'bloodtype', 'ECTOPLASME': 'candle' }[mTypeName] || 'check_box_outline_blank'}</span>${{ 'DEMON': 'Démon', 'REPTILE': 'Reptile', 'MORT_VIVANT': 'Mort-vivant', 'HYBRIDE': 'Hybride', 'VAMPIRE': 'Vampire', 'ECTOPLASME': 'Ectoplasme' }[mTypeName] || mTypeName}</span>` : ''}
+                            ${mBehaviorName && mBehaviorName !== 'NORMAL' ? `<span onmouseenter="window.showGlobalTooltip ? window.showGlobalTooltip(this) : null" onmouseleave="window.hideGlobalTooltip ? window.hideGlobalTooltip() : null" style="cursor: help; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;"><template class="tooltip-data"><div style="font-weight:bold; font-size:1rem; margin-bottom:6px; color:#8b5cf6; border-bottom: 1px solid #8b5cf6; padding-bottom: 4px;">${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[mBehaviorName] || mBehaviorName}</div><div style="font-style:italic; color:#cbd5e1; margin-top:8px; max-width: 350px; line-height: 1.4; white-space: normal !important; word-wrap: break-word;">${{ 'PREDATEUR': 'Prédateur : Verrouille une cible et l&apos;attaque jusqu&apos;à sa mort.', 'CORRUPTEUR': 'Corrupteur : Cible toujours le joueur avec le plus de Mana et lui retire 5% Mana Act.', 'LEADER': 'Leader : Ordonne à tous les autres monstres d&apos;attaquer sa cible.', 'ASSASSIN': 'Assassin : Vise systématiquement le joueur avec le moins de Résistance.', 'BRUTAL': 'Brutal : Vise le joueur avec le moins de PV Max et inflige des dégâts bruts (ignore l&apos;armure).', 'TRANSCENDANT': 'Transcendant : Il attaque toutes les cibles adverse à la fois.' }[mBehaviorName] || ''}</div></template><span class="material-symbols-outlined text-sm">${{ 'PREDATEUR': 'track_changes', 'CORRUPTEUR': 'allergy', 'LEADER': 'crown', 'ASSASSIN': 'gps_fixed', 'BRUTAL': 'shield', 'TRANSCENDANT': 'grid_view' }[mBehaviorName] || 'check_box_outline_blank'}</span>${{ 'PREDATEUR': 'Prédateur', 'CORRUPTEUR': 'Corrupteur', 'LEADER': 'Leader', 'ASSASSIN': 'Assassin', 'BRUTAL': 'Brutal', 'TRANSCENDANT': 'Transcendant' }[mBehaviorName] || mBehaviorName}</span>` : ''}
                         </div>
                         <div class="monster-card-stats">
                             <span class="flex-center" style="gap: 0.2rem;"><span class="material-symbols-outlined" style="font-size: 1rem; color: #ec4899;">favorite</span> PV: ${m.healthMax}</span>
@@ -1781,8 +1784,10 @@ async function editMonster(id) {
             pageState.selectedMutationIds = m.mutations ? m.mutations.map(mu => mu.id) : [];
             renderMutationsSelector();
 
-            const mt = m.monsterType || 'NORMAL';
-            const mb = m.behavior || 'NORMAL';
+            const mtObj = m.monsterType || 'NORMAL';
+            const mt = typeof mtObj === 'object' ? mtObj.name : mtObj;
+            const mbObj = m.behavior || 'NORMAL';
+            const mb = typeof mbObj === 'object' ? mbObj.name : mbObj;
 
             const tMap = {
                 'NORMAL': { l: 'Normal', i: 'check_box_outline_blank', c: '#94a3b8' },

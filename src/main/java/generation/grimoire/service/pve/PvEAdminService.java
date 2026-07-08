@@ -31,6 +31,10 @@ public class PvEAdminService {
                 .orElseThrow(() -> new NoSuchElementException("Monstre introuvable avec l'id : " + id));
     }
 
+    public boolean monsterExists(@NonNull Long id) {
+        return monstreRepository.existsById(id);
+    }
+
     @Transactional
     public Monstre createOrUpdateMonster(@NonNull Monstre monstre) {
         if (monstre.getMutations() != null) {
@@ -60,6 +64,10 @@ public class PvEAdminService {
     public Mutation getMutationById(@NonNull Long id) {
         return mutationRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Mutation introuvable avec l'id : " + id));
+    }
+
+    public boolean mutationExists(@NonNull Long id) {
+        return mutationRepository.existsById(id);
     }
 
     @Transactional

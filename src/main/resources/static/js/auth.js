@@ -1,10 +1,10 @@
-// Auth scripts for login and register pages
-window.initAppMeta = async function() {
+﻿// Auth scripts for login and register pages
+window.initAppMeta = async function () {
     const { initMeta } = await import('./constants.js');
     return initMeta();
 };
 
-window.globalFetch = async function(url, options = {}) {
+window.globalFetch = async function (url, options = {}) {
     try {
         const res = await fetch(url, options);
         if (res.status === 401 || res.status === 403) {
@@ -21,7 +21,7 @@ window.globalFetch = async function(url, options = {}) {
                 try {
                     const text = await res.text();
                     errorMsg = text || errorMsg;
-                } catch(e2){}
+                } catch (e2) { }
             }
             throw new Error(errorMsg);
         }
@@ -36,7 +36,7 @@ window.globalFetch = async function(url, options = {}) {
     }
 };
 
-window.formatRichText = function(text) {
+window.formatRichText = function (text) {
     if (!text) return '';
     return text
         .replace(/\[c=(.*?)\](.*?)\[\/c\]/g, '<strong class="text-$1">$2</strong>')
@@ -46,19 +46,19 @@ window.formatRichText = function(text) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
-    
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorDiv = document.getElementById('authError');
             errorDiv.style.display = 'none';
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
+
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -66,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     credentials: 'same-origin',
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
-                
+
                 if (!res.ok) {
                     errorDiv.innerText = data.message || "Erreur de connexion";
                     errorDiv.style.display = 'block';
@@ -90,17 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const successDiv = document.getElementById('authSuccess');
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (password !== confirmPassword) {
                 errorDiv.innerText = "Les mots de passe ne correspondent pas";
                 errorDiv.style.display = 'block';
                 return;
             }
-            
+
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
@@ -108,9 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     credentials: 'same-origin',
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
-                
+
                 if (!res.ok) {
                     errorDiv.innerText = data.message || "Erreur lors de l'inscription";
                     errorDiv.style.display = 'block';
@@ -175,7 +175,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
     }
 }
 
-window.logout = async function() {
+window.logout = async function () {
     try {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
         window.location.reload();
@@ -218,7 +218,7 @@ function applyFeatureLock(el, isUnlocked, featureName, cost, featureId, original
         el.style.opacity = '0.7';
         el.style.cursor = 'not-allowed';
         el.setAttribute('onclick', `promptUnlockFeature('${featureId}', '${featureName}', ${cost})`);
-        
+
         if (!el.querySelector('.feature-lock-icon')) {
             el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon text-sm text-error" style="margin-left: auto;">lock</span>');
         }
@@ -227,7 +227,7 @@ function applyFeatureLock(el, isUnlocked, featureName, cost, featureId, original
 
 function injectUnlockModal() {
     if (document.getElementById('globalUnlockOverlay')) return;
-    
+
     const style = document.createElement('style');
     style.innerHTML = `
         .global-unlock-overlay {
@@ -375,19 +375,19 @@ function injectUnlockModal() {
     document.body.appendChild(overlay);
 }
 
-window.promptUnlockFeature = function(featureId, featureName, cost) {
+window.promptUnlockFeature = function (featureId, featureName, cost) {
     if (!window.currentUser) {
         if (typeof showNotif !== 'undefined') showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
         else ui.showNotif("Veuillez vous connecter pour débloquer cette fonctionnalité.", true);
         return;
     }
-    
+
     injectUnlockModal();
-    
+
     const overlay = document.getElementById('globalUnlockOverlay');
     document.getElementById('globalUnlockTitle').textContent = `Débloquer ${featureName} ?`;
     document.getElementById('globalUnlockCost').textContent = cost;
-    
+
     if (featureId === 'vault') {
         document.getElementById('globalUnlockIcon').textContent = 'money_bag';
     } else if (featureId === 'alchemy') {
@@ -395,43 +395,43 @@ window.promptUnlockFeature = function(featureId, featureName, cost) {
     } else {
         document.getElementById('globalUnlockIcon').textContent = 'lock_open';
     }
-    
+
     overlay.classList.add('active');
-    
+
     const confirmBtn = document.getElementById('globalUnlockConfirm');
     const cancelBtn = document.getElementById('globalUnlockCancel');
-    
+
     const cleanup = () => {
         overlay.classList.remove('active');
         // Clean listeners by replacing
         confirmBtn.replaceWith(confirmBtn.cloneNode(true));
         cancelBtn.replaceWith(cancelBtn.cloneNode(true));
     };
-    
+
     cancelBtn.addEventListener('click', cleanup);
-    
-    document.getElementById('globalUnlockConfirm').addEventListener('click', function() {
+
+    document.getElementById('globalUnlockConfirm').addEventListener('click', function () {
         const btn = this;
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">autorenew</span>';
         btn.disabled = true;
-        
+
         fetch('/api/auth/unlock/' + featureId, {
             method: 'POST',
             credentials: 'same-origin'
-        }).then(res => res.json().then(data => ({status: res.status, data})))
-        .then(res => {
-            if (res.status === 200) {
-                window.location.reload();
-            } else {
-                if (typeof showNotif !== 'undefined') showNotif(res.data.message || "Erreur lors de l'achat.", true);
-                else ui.showNotif(res.data.message || "Erreur lors de l'achat.", true);
+        }).then(res => res.json().then(data => ({ status: res.status, data })))
+            .then(res => {
+                if (res.status === 200) {
+                    window.location.reload();
+                } else {
+                    if (typeof showNotif !== 'undefined') showNotif(res.data.message || "Erreur lors de l'achat.", true);
+                    else ui.showNotif(res.data.message || "Erreur lors de l'achat.", true);
+                    cleanup();
+                }
+            }).catch(err => {
+                if (typeof showNotif !== 'undefined') showNotif("Erreur serveur.", true);
+                else ui.showNotif("Erreur serveur.", true);
                 cleanup();
-            }
-        }).catch(err => {
-            if (typeof showNotif !== 'undefined') showNotif("Erreur serveur.", true);
-            else ui.showNotif("Erreur serveur.", true);
-            cleanup();
-        });
+            });
     });
 };

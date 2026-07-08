@@ -34,9 +34,7 @@ public class PvEAdminController {
 
     @PutMapping("/monsters/{id}")
     public ResponseEntity<Monstre> updateMonster(@PathVariable @NonNull Long id, @RequestBody @NonNull Monstre monstreDetails) {
-        try {
-            pvEAdminService.getMonsterById(id);
-        } catch (java.util.NoSuchElementException e) {
+        if (!pvEAdminService.monsterExists(id)) {
             return ResponseEntity.notFound().build();
         }
         monstreDetails.setId(id);
@@ -63,9 +61,7 @@ public class PvEAdminController {
 
     @PutMapping("/mutations/{id}")
     public ResponseEntity<Mutation> updateMutation(@PathVariable @NonNull Long id, @RequestBody @NonNull Mutation mutation) {
-        try {
-            pvEAdminService.getMutationById(id);
-        } catch (java.util.NoSuchElementException e) {
+        if (!pvEAdminService.mutationExists(id)) {
             return ResponseEntity.notFound().build();
         }
         mutation.setId(id);

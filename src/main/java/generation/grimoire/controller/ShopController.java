@@ -114,9 +114,14 @@ public class ShopController {
         List<Equipment> allTemplates = equipmentRepository.findAll().stream()
                 .filter(e -> e != null && e.isTemplate())
                 .toList();
-        List<Equipment> commons = allTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.COMMUN).toList();
-        List<Equipment> rares = allTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.RARE).toList();
-        List<Equipment> legendaries = allTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.LEGENDAIRE)
+        
+        List<Equipment> equipmentTemplates = allTemplates.stream()
+                .filter(e -> e.getSlot() != EquipmentSlot.CONSOMMABLE)
+                .toList();
+
+        List<Equipment> commons = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.COMMUN).toList();
+        List<Equipment> rares = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.RARE).toList();
+        List<Equipment> legendaries = equipmentTemplates.stream().filter(e -> e.getRarity() == EquipmentRarity.LEGENDAIRE)
                 .toList();
 
         List<Equipment> dailySelection = new ArrayList<>();
@@ -124,7 +129,7 @@ public class ShopController {
         dailySelection.addAll(pickRandom(rares, 1, random));
         dailySelection.addAll(pickRandom(legendaries, 1, random));
 
-        List<Equipment> remainingTemplates = new ArrayList<>(allTemplates);
+        List<Equipment> remainingTemplates = new ArrayList<>(equipmentTemplates);
         remainingTemplates.removeAll(dailySelection);
         Equipment promoItem = null;
         if (!remainingTemplates.isEmpty()) {

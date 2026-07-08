@@ -813,17 +813,13 @@
             'AUTRE': 'category'
         };
 
-        let reqZIndexCounter = 1000;
         function addRequirement(type, selectedName = '', qty = 1) {
             const list = document.getElementById(type === 'anomalie' ? 'reqAnomaliesList' : 'reqConsumablesList');
             const div = document.createElement('div');
-            const currentZIndex = reqZIndexCounter--;
             div.className = 'req-item';
             div.style.display = 'flex';
             div.style.gap = '0.5rem';
             div.style.alignItems = 'center';
-            div.style.position = 'relative';
-            div.style.zIndex = currentZIndex;
 
             let optionsHtml = '';
             let displayLabel = 'Choisir un objet...';

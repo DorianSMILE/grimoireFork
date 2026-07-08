@@ -727,19 +727,20 @@ window.editEquipment = function (id) {
 
     // Rarity Setup
     const rarityInput = document.getElementById('eqRarity');
-    if (rarityInput && eq.rarity) {
-        rarityInput.value = eq.rarity;
-        const option = document.querySelector(`.custom-option.rarity-${eq.rarity}`);
+    const eqRarityName = eq.rarity && typeof eq.rarity === 'object' ? eq.rarity.name : eq.rarity;
+    if (rarityInput && eqRarityName) {
+        rarityInput.value = eqRarityName;
+        const option = document.querySelector(`.custom-option.rarity-${eqRarityName}`);
         if (option) {
             document.getElementById('eqRarityLabel').innerHTML = option.innerHTML;
         }
 
         const row = document.getElementById('eqSpecialEffectRow');
-        if (eq.rarity === 'EPIQUE' || eq.rarity === 'RELIQUE' || eq.rarity === 'MAUDIT') {
+        if (eqRarityName === 'EPIQUE' || eqRarityName === 'RELIQUE' || eqRarityName === 'MAUDIT') {
             if (row) row.style.display = 'grid';
 
-            const isEpic = eq.rarity === 'EPIQUE';
-            const isMaudit = eq.rarity === 'MAUDIT';
+            const isEpic = eqRarityName === 'EPIQUE';
+            const isMaudit = eqRarityName === 'MAUDIT';
             let color = isEpic ? '#ef4444' : '#a855f7';
             let bg = isEpic ? 'rgba(239, 68, 68, 0.05)' : 'rgba(168, 85, 247, 0.05)';
             let border = isEpic ? '1px dashed rgba(239, 68, 68, 0.3)' : '1px dashed rgba(168, 85, 247, 0.3)';

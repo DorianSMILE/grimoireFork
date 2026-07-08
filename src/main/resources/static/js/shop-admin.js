@@ -384,7 +384,8 @@ function renderGrid(equipments) {
     };
 
     equipments.forEach(eq => {
-        const rarity = eq.rarity || 'COMMUN';
+        const rarityObj = eq.rarity;
+        const rarity = (typeof rarityObj === 'object' ? rarityObj?.name : rarityObj) || 'COMMUN';
         if (groups[rarity]) {
             groups[rarity].push(eq);
         } else {
@@ -465,7 +466,7 @@ function renderGrid(equipments) {
                 </span>`;
                 }
 
-                const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, eq.rarity || 'COMMUN', eq.slot);
+                const displayPrice = eq.shopPrice !== undefined ? (eq.shopPrice % 1 === 0 ? eq.shopPrice : eq.shopPrice.toFixed(1)) : calculateShopPrice(eq._weight || 0, rarity || 'COMMUN', eq.slot);
 
                 html += `
                 <div class="shop-admin-row">

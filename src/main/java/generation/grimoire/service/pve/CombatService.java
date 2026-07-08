@@ -1519,11 +1519,17 @@ public class CombatService {
                                         Personnage mutTarget = resolveMonsterTarget(m, behaviorMut, alivePlayers,
                                                 session);
 
+                                        // Choisir un allié (le moins en forme par défaut)
+                                        Personnage mutAlly = allAlliesMut.stream()
+                                                .filter(a -> a != m.getAsPersonnage() && a.getHealthCurrent() > 0)
+                                                .min(java.util.Comparator.comparingInt(Personnage::getHealthCurrent))
+                                                .orElse(m.getAsPersonnage());
+
                                         session.addLog(
                                                 "🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
                                         captureLogs(session, () -> {
                                             spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
-                                                    m.getAsPersonnage(), allAlliesMut, allEnemiesMut, null);
+                                                    mutAlly, allAlliesMut, allEnemiesMut, null);
                                         });
 
                                         if (cType == generation.grimoire.enumeration.SpellCastingType.BANAL)

@@ -38,8 +38,13 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:latest
 
-      - name: Déployer la nouvelle image sur AWS Lambda
+      - name: Déployer la nouvelle image sur AWS Lambda et attendre
         run: |
           aws lambda update-function-code \
             --function-name rpg-coldrestart \
-            --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+            --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+          echo "Attente de la mise à jour effective de la fonction..."
+          aws lambda wait function-updated \
+            --function-name rpg-coldrestart
+          echo "Déploiement terminé, la nouvelle version est active !"

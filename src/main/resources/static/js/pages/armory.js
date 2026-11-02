@@ -1159,6 +1159,14 @@ window.addEventListener('authLoaded', async () => {
     }
     await loadAllEquipments();
     await loadPersonnages();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
+    if (!isNaN(openEquipCharId)) {
+        setTimeout(() => {
+            openEquipModal(openEquipCharId);
+        }, 100);
+    }
 });
 
 ;

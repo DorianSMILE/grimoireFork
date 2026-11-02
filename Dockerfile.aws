@@ -1,0 +1,17 @@
+# 1. Build de l'application Java avec Maven
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+# 2. Lancement de l'application pour AWS Lambda
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+# Utilisation de l'image officielle AWS
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+ENV PORT=8080
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

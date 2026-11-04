@@ -144,6 +144,7 @@ public class EnumMetaController {
                 .collect(Collectors.toList());
     }
 
+    @org.springframework.cache.annotation.Cacheable("enumMetaAll")
     @GetMapping("/all")
     public Map<String, List<Map<String, String>>> getAllMeta() {
         Map<String, List<Map<String, String>>> allMeta = new LinkedHashMap<>();

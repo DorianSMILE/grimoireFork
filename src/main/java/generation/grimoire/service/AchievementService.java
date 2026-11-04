@@ -31,6 +31,8 @@ import java.util.*;
 @Service
 public class AchievementService {
 
+    private static final com.fasterxml.jackson.databind.ObjectMapper OBJECT_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+
     private final UserAchievementRepository userAchievementRepository;
     private final UserStatisticsRepository userStatisticsRepository;
     private final UserRepository userRepository;
@@ -392,7 +394,7 @@ public class AchievementService {
         record CustomAchieveMeta(String title, String description, String icon, String rewardTitle) {}
         Map<String, CustomAchieveMeta> configuredCustoms = new LinkedHashMap<>();
 
-        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.ObjectMapper mapper = OBJECT_MAPPER;
         for (Donjon d : allDonjons) {
             if (d.getSalles() == null) continue;
             for (Salle s : d.getSalles()) {

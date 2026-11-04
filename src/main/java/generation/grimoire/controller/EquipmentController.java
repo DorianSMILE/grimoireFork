@@ -363,14 +363,14 @@ public class EquipmentController {
         Equipment saved = equipmentRepository.save(java.util.Objects.requireNonNull(equipment));
 
         if (isUpdate && oldName != null && !oldName.isEmpty()) {
-            List<Equipment> instances = equipmentRepository.findByName(oldName);
+            List<Equipment> instances = equipmentRepository.findByName(oldName); java.util.List<Equipment> toSave = new java.util.ArrayList<>();
             for (Equipment instance : instances) {
                 if (instance.getId().equals(saved.getId()))
                     continue;
                 equipmentMapper.updateEntity(dto, instance);
-                equipmentRepository.save(instance);
+                toSave.add(instance);
             }
-            renameCascadeService.cascadeEquipmentRename(oldName, saved.getName());
+            if (!toSave.isEmpty()) equipmentRepository.saveAll(toSave); renameCascadeService.cascadeEquipmentRename(oldName, saved.getName());
         }
 
         Map<String, Object> response = new HashMap<>();

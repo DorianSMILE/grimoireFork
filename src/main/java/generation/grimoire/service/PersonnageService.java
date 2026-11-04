@@ -89,7 +89,9 @@ public class PersonnageService {
             java.util.List<generation.grimoire.entity.Equipment> equips = equipmentRepository.findByPersonnageId(id);
             for (generation.grimoire.entity.Equipment eq : equips) {
                 eq.setPersonnage(null);
-                equipmentRepository.save(eq);
+            }
+            if (!equips.isEmpty()) {
+                equipmentRepository.saveAll(equips);
             }
             persoRepo.delete(p);
         }

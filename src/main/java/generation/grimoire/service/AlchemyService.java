@@ -247,10 +247,16 @@ public class AlchemyService {
                 }
 
                 // Trier pour s'assurer que les objets utilisés dans les donjons (LootEntry) ne sont pas supprimés en premier
+                java.util.Set<Long> lootEquipmentIds = new java.util.HashSet<>();
+                for (Equipment eqCheck : matchingProvided) {
+                    if (!lootEntryRepository.findByEquipmentId(eqCheck.getId()).isEmpty()) {
+                        lootEquipmentIds.add(eqCheck.getId());
+                    }
+                }
                 List<Equipment> sortedProvided = new ArrayList<>(matchingProvided);
                 sortedProvided.sort((e1, e2) -> {
-                    boolean e1IsLoot = !lootEntryRepository.findByEquipmentId(e1.getId()).isEmpty();
-                    boolean e2IsLoot = !lootEntryRepository.findByEquipmentId(e2.getId()).isEmpty();
+                    boolean e1IsLoot = lootEquipmentIds.contains(e1.getId());
+                    boolean e2IsLoot = lootEquipmentIds.contains(e2.getId());
                     return Boolean.compare(e1IsLoot, e2IsLoot); // false (0) vient avant true (1)
                 });
 
@@ -258,7 +264,7 @@ public class AlchemyService {
                     Equipment e = sortedProvided.get(i);
                     
                     // Protection stricte : ne JAMAIS supprimer un template LootEntry, même s'il est sélectionné.
-                    if (!lootEntryRepository.findByEquipmentId(e.getId()).isEmpty()) {
+                    if (lootEquipmentIds.contains(e.getId())) {
                         continue;
                     }
 

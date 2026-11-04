@@ -41,6 +41,7 @@ public class PersonnageController {
     }
 
     @GetMapping
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<PersonnageResponseDTO>> getAllPersonnages(java.security.Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
@@ -66,11 +67,12 @@ public class PersonnageController {
             userMax = 2;
         int max = isAdmin ? 999 : userMax;
 
-        int current = personnageRepository.findByUser_Username(principal.getName()).size();
+        int current = (int) personnageRepository.countByUser_Username(principal.getName());
 
         return ResponseEntity.ok(Map.of("maxCharacters", max, "currentCharacters", current));
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/all")
     public ResponseEntity<List<PersonnageResponseDTO>> getAllAdmin(java.security.Principal principal) {
         if (principal == null)
@@ -118,7 +120,7 @@ public class PersonnageController {
                     userMax = 2;
                 int max = isAdmin ? 999 : userMax;
 
-                int current = personnageRepository.findByUser_Username(principal.getName()).size();
+                int current = (int) personnageRepository.countByUser_Username(principal.getName());
                 if (current >= max) {
                     Map<String, Object> errorResp = new HashMap<>();
                     errorResp.put("message", "Limite de personnages atteinte (" + max + ").");

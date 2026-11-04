@@ -23,10 +23,12 @@ public class PvEAdminService {
     private final MutationRepository mutationRepository;
     private final generation.grimoire.repository.pve.HuntingQuestRepository huntingQuestRepository;
 
+    @Transactional(readOnly = true)
     public List<Monstre> getAllMonsters() {
         return monstreRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Monstre getMonsterById(@NonNull Long id) {
         return monstreRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Monstre introuvable avec l'id : " + id));
@@ -37,7 +39,7 @@ public class PvEAdminService {
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"monstres", "monstreById"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"monstres", "monstreById", "donjons"}, allEntries = true)
     public Monstre createOrUpdateMonster(@NonNull Monstre monstre) {
         if (monstre.getMutations() != null) {
             java.util.List<Mutation> hydratedMutations = new java.util.ArrayList<>();
@@ -53,17 +55,19 @@ public class PvEAdminService {
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"monstres", "monstreById"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"monstres", "monstreById", "donjons"}, allEntries = true)
     public void deleteMonster(@NonNull Long id) {
         monstreRepository.deleteById(id);
     }
 
     // === Mutations ===
 
+    @Transactional(readOnly = true)
     public List<Mutation> getAllMutations() {
         return mutationRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Mutation getMutationById(@NonNull Long id) {
         return mutationRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Mutation introuvable avec l'id : " + id));
@@ -74,23 +78,25 @@ public class PvEAdminService {
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"mutations", "mutationById"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"mutations", "mutationById", "monstres", "donjons"}, allEntries = true)
     public Mutation createOrUpdateMutation(@NonNull Mutation mutation) {
         return mutationRepository.save(mutation);
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"mutations", "mutationById"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"mutations", "mutationById", "monstres", "donjons"}, allEntries = true)
     public void deleteMutation(@NonNull Long id) {
         mutationRepository.deleteById(id);
     }
 
     // === Donjons ===
 
+    @Transactional(readOnly = true)
     public List<Donjon> getAllDungeons() {
         return donjonRepository.findAllByOrderByDisplayOrderAsc();
     }
 
+    @Transactional(readOnly = true)
     public List<generation.grimoire.dto.pve.DonjonSummaryDTO> getDungeonSummaries() {
         Long activeDailyDungeonId = null;
         Long activeWeeklyDungeonId = null;
@@ -139,24 +145,26 @@ public class PvEAdminService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
     public Donjon getDungeonById(@NonNull Long id) {
         return donjonRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Donjon introuvable avec l'id : " + id));
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"donjons", "donjonsLight", "salles", "equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
     public Donjon createOrUpdateDungeon(@NonNull Donjon donjon) {
         return donjonRepository.save(donjon);
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = {"equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"donjons", "donjonsLight", "salles", "equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
     public void deleteDungeon(@NonNull Long id) {
         donjonRepository.deleteById(id);
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"donjons", "donjonsLight"}, allEntries = true)
     public void updateDungeonsOrder(List<Long> orderedIds) {
         if (orderedIds == null || orderedIds.isEmpty()) {
             return;

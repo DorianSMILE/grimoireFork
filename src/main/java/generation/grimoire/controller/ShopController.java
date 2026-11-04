@@ -56,6 +56,7 @@ public class ShopController {
 
     // --- DAILY SHOP ---
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/level")
     public ResponseEntity<?> getShopLevel(Principal principal) {
         if (principal == null) return ResponseEntity.status(401).build();
@@ -133,6 +134,7 @@ public class ShopController {
         return ResponseEntity.ok(Map.of("message", "Boutique améliorée au niveau " + nextLevel + " !", "newLevel", nextLevel));
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/daily")
     public ResponseEntity<Map<String, Object>> getDailyShop(Principal principal) {
         AppUser user = null;
@@ -513,6 +515,7 @@ public class ShopController {
 
     // --- ADMIN TEMPLATES CRUD ---
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/templates")
     public ResponseEntity<?> getTemplates(Principal principal) {
         if (principal == null || !isAdmin(principal))
@@ -554,12 +557,16 @@ public class ShopController {
 
             if (oldName != null && !oldName.isEmpty()) {
                 List<Equipment> instances = equipmentRepository.findByName(oldName);
+                List<Equipment> toUpdate = new ArrayList<>();
                 for (Equipment instance : instances) {
                     if (instance.getId().equals(eq.getId()))
                         continue;
                     equipmentMapper.updateEntity(dto, instance);
                     instance.setTemplate(false);
-                    equipmentRepository.save(instance);
+                    toUpdate.add(instance);
+                }
+                if (!toUpdate.isEmpty()) {
+                    equipmentRepository.saveAll(toUpdate);
                 }
                 renameCascadeService.cascadeEquipmentRename(oldName, eq.getName());
             }
@@ -588,12 +595,14 @@ public class ShopController {
     // ADMIN — CRUD paliers d'amélioration boutique
     // ============================================================
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/admin/upgrades")
     public ResponseEntity<?> getUpgradeConfigs(Principal principal) {
         if (principal == null || !isAdmin(principal)) return ResponseEntity.status(403).build();
         return ResponseEntity.ok(shopUpgradeConfigRepository.findAll());
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = {"shopUpgradeConfigByLevel", "shopUpgradeConfigs"}, allEntries = true)
     @PostMapping("/admin/upgrades")
     public ResponseEntity<?> createUpgradeConfig(
             @RequestBody generation.grimoire.entity.ShopUpgradeConfig dto, Principal principal) {
@@ -605,6 +614,7 @@ public class ShopController {
         return ResponseEntity.ok(shopUpgradeConfigRepository.save(dto));
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = {"shopUpgradeConfigByLevel", "shopUpgradeConfigs"}, allEntries = true)
     @PutMapping("/admin/upgrades/{id}")
     public ResponseEntity<?> updateUpgradeConfig(
             @PathVariable @org.springframework.lang.NonNull Long id,
@@ -630,6 +640,7 @@ public class ShopController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = {"shopUpgradeConfigByLevel", "shopUpgradeConfigs"}, allEntries = true)
     @DeleteMapping("/admin/upgrades/{id}")
     public ResponseEntity<?> deleteUpgradeConfig(
             @PathVariable @org.springframework.lang.NonNull Long id, Principal principal) {

@@ -91,7 +91,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {

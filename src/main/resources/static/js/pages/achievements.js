@@ -101,8 +101,9 @@ function renderTitleCustomSelect() {
         <span>${selectedText}</span>
     `;
 
-    // Populate options
+    // Populate options via DocumentFragment
     optionsContainer.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     // 1. None option
     const noneItem = document.createElement('div');
@@ -134,7 +135,7 @@ function renderTitleCustomSelect() {
         wrapper.classList.remove('open');
         if (card) card.classList.remove('has-dropdown-open');
     });
-    optionsContainer.appendChild(noneItem);
+    fragment.appendChild(noneItem);
 
     // 2. Unlocked titles
     const sortedTitles = [...pageState.unlockedTitles].sort();
@@ -177,8 +178,9 @@ function renderTitleCustomSelect() {
             if (card) card.classList.remove('has-dropdown-open');
         });
 
-        optionsContainer.appendChild(item);
+        fragment.appendChild(item);
     });
+    optionsContainer.appendChild(fragment);
 }
 
 function renderHeader() {
@@ -195,7 +197,7 @@ function renderHeader() {
         ? Math.round((pageState.totalUnlocked / pageState.totalCount) * 100)
         : 0;
 
-    if (progressBar) progressBar.style.setProperty('width', `${percent}%`);
+    if (progressBar) progressBar.className = `kpi-progress-fill w-pct-${percent}`;
     if (pctLabel) pctLabel.textContent = `${percent}% complété`;
 
     // 2. Active Title & Selector
@@ -222,6 +224,7 @@ function renderFilters() {
     ];
 
     container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     categories.forEach(cat => {
         const count = cat.key === 'ALL'
             ? pageState.achievements.length
@@ -239,8 +242,9 @@ function renderFilters() {
             renderFilters();
             renderGrid();
         });
-        container.appendChild(chip);
+        fragment.appendChild(chip);
     });
+    container.appendChild(fragment);
 }
 
 function renderGrid() {
@@ -259,6 +263,7 @@ function renderGrid() {
         return;
     }
 
+    const fragment = document.createDocumentFragment();
     list.forEach(a => {
         const card = document.createElement('div');
         const isHiddenLocked = a.hidden && !a.unlocked;
@@ -328,8 +333,7 @@ function renderGrid() {
         const trackDiv = document.createElement('div');
         trackDiv.className = 'card-progress-bar';
         const fillDiv = document.createElement('div');
-        fillDiv.className = 'card-progress-fill';
-        fillDiv.style.setProperty('width', `${progressPercent}%`);
+        fillDiv.className = `card-progress-fill w-pct-${progressPercent}`;
         trackDiv.appendChild(fillDiv);
 
         progDiv.appendChild(labelsDiv);
@@ -364,8 +368,9 @@ function renderGrid() {
         card.appendChild(progDiv);
         card.appendChild(footer);
 
-        grid.appendChild(card);
+        fragment.appendChild(card);
     });
+    grid.appendChild(fragment);
 }
 
 // Equip selected title
@@ -396,8 +401,6 @@ async function handleEquipTitle() {
     } catch (err) {
         if (typeof showNotif === 'function') {
             showNotif(err.message, true);
-        } else {
-            alert(err.message);
         }
     }
 }

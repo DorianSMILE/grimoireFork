@@ -10,7 +10,10 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "dungeon_run_stat")
+@Table(name = "dungeon_run_stat", indexes = {
+    @Index(name = "idx_run_stat_account", columnList = "accountName"),
+    @Index(name = "idx_run_stat_dungeon", columnList = "dungeonId")
+})
 public class DungeonRunStat {
 
     @Id

@@ -44,6 +44,7 @@ public class WebSpellCreationController {
         this.spellMapper = spellMapper;
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/meta")
     public ResponseEntity<Map<String, Object>> getCreationMeta() {
         Map<String, Object> meta = new HashMap<>();
@@ -74,12 +75,15 @@ public class WebSpellCreationController {
         return ResponseEntity.ok(meta);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @org.springframework.cache.annotation.Cacheable("allSpells")
     @GetMapping
     public ResponseEntity<List<Spell>> getAllCreatedSpells() {
         return ResponseEntity.ok(spellRepository.findAll());
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable("spellsByVoie")
     @GetMapping("/voie/{voieId}")
     public ResponseEntity<List<Spell>> getSpellsByVoie(@PathVariable Long voieId) {
         return ResponseEntity.ok(spellRepository.findByVoieId(voieId));
@@ -89,7 +93,8 @@ public class WebSpellCreationController {
             @org.springframework.cache.annotation.CacheEvict(value = "allSpells", allEntries = true),
             @org.springframework.cache.annotation.CacheEvict(value = "spells", allEntries = true),
             @org.springframework.cache.annotation.CacheEvict(value = "spellById", allEntries = true),
-            @org.springframework.cache.annotation.CacheEvict(value = "spellsByMutation", allEntries = true)
+            @org.springframework.cache.annotation.CacheEvict(value = "spellsByMutation", allEntries = true),
+            @org.springframework.cache.annotation.CacheEvict(value = "spellsByVoie", allEntries = true)
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteSpell(@PathVariable @org.springframework.lang.NonNull Long id) {
@@ -104,7 +109,8 @@ public class WebSpellCreationController {
             @org.springframework.cache.annotation.CacheEvict(value = "allSpells", allEntries = true),
             @org.springframework.cache.annotation.CacheEvict(value = "spells", allEntries = true),
             @org.springframework.cache.annotation.CacheEvict(value = "spellById", allEntries = true),
-            @org.springframework.cache.annotation.CacheEvict(value = "spellsByMutation", allEntries = true)
+            @org.springframework.cache.annotation.CacheEvict(value = "spellsByMutation", allEntries = true),
+            @org.springframework.cache.annotation.CacheEvict(value = "spellsByVoie", allEntries = true)
     })
     @PostMapping
     @org.springframework.transaction.annotation.Transactional

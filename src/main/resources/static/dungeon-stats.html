@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/styles/ui/utilities.css?v=1786180000010">
     <script src="/js/components/navbar.js?v=1786180000010"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         .stats-grid {
@@ -177,7 +177,7 @@
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
         }
     </style>
-    <script src="/js/components/navbar.js"></script>
+
 </head>
 <body>
     <app-navbar active-page="dungeon-stats"></app-navbar>
@@ -201,7 +201,7 @@
 
         <app-loader id="statsLoader" message="Analyse des archives..."></app-loader>
 
-        <div id="statsContent" style="display: none;">
+        <div id="statsContent" class="is-hidden">
             <!-- KPIs -->
             <div class="kpi-grid">
                 <div class="kpi-card">

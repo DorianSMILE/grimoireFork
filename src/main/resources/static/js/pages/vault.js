@@ -696,7 +696,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     eqInputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('input', updateWeightUI);
+            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(updateWeightUI, 150); });
             el.addEventListener('change', updateWeightUI);
         }
     });

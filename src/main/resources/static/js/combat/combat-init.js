@@ -23,28 +23,40 @@ export async function fetchCombatEquipments(sessionId) {
 
 
 export async function loadAnomaliesCombat() {
-    if (!window.allAnomaliesCombat || !Array.isArray(window.allAnomaliesCombat) || window.allAnomaliesCombat.length === 0) {
-        try {
-            const res = await globalFetch('/api/anomalies/all-templates', { silent: true });
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data)) window.allAnomaliesCombat = data;
-            }
-        } catch (e) {
-            console.error("Failed to load anomalies templates:", e);
-            window.allAnomaliesCombat = [];
-        }
+    const needTemplates = !window.allAnomaliesCombat || !Array.isArray(window.allAnomaliesCombat) || window.allAnomaliesCombat.length === 0;
+    const tasks = [];
+
+    if (needTemplates) {
+        tasks.push(
+            globalFetch('/api/anomalies/all-templates', { silent: true })
+                .then(async res => {
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data)) window.allAnomaliesCombat = data;
+                    }
+                })
+                .catch(e => {
+                    console.error("Failed to load anomalies templates:", e);
+                    window.allAnomaliesCombat = [];
+                })
+        );
     }
-    try {
-        const resUser = await globalFetch('/api/anomalies', { silent: true });
-        if (resUser.ok) {
-            const dataUser = await resUser.json();
-            if (Array.isArray(dataUser)) window.myGlobalAnomalies = dataUser;
-        }
-    } catch (e) {
-        console.error("Failed to load user anomalies:", e);
-        window.myGlobalAnomalies = [];
-    }
+
+    tasks.push(
+        globalFetch('/api/anomalies', { silent: true })
+            .then(async resUser => {
+                if (resUser.ok) {
+                    const dataUser = await resUser.json();
+                    if (Array.isArray(dataUser)) window.myGlobalAnomalies = dataUser;
+                }
+            })
+            .catch(e => {
+                console.error("Failed to load user anomalies:", e);
+                window.myGlobalAnomalies = [];
+            })
+    );
+
+    await Promise.all(tasks);
 }
 
 export async function resumeCombat(savedSessionId) {

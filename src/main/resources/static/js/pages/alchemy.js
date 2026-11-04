@@ -40,7 +40,7 @@ window.addEventListener('authLoaded', async () => {
         Promise.all([
             fetchUserInventory(),
             fetchUserCharacters(),
-            globalFetch('/api/alchemy/recipes').then(res => res.json()).then(data => pageState.allRecipes = data)
+            (window.GRIMOIRE_ALCHEMY_RECIPES && window.GRIMOIRE_ALCHEMY_RECIPES.length > 0 ? Promise.resolve(window.GRIMOIRE_ALCHEMY_RECIPES) : globalFetch('/api/alchemy/recipes').then(res => res.json())).then(data => pageState.allRecipes = data)
         ]).then(() => {
             setDefaultFilter();
             renderRecipesList();
@@ -500,7 +500,7 @@ function renderCauldron(r, preserveInput = false) {
                         </div>
                     </div>
                 `;
-        fetchUserCharacters();
+        fetchUserCharacters(false);
     }
 
     let resultLabel = "Résultat Attendu";
@@ -672,7 +672,7 @@ function buildCustomSelect(containerDiv, options, hiddenInputClass, hiddenInputI
 
 // Global custom-select logic is handled by window.initGlobalCustomSelect() in ui.js
 
-async function fetchUserCharacters() {
+async function fetchUserCharacters(forceRefresh = true) { if (!forceRefresh && pageState.userCharacters && pageState.userCharacters.length > 0) { const container = document.getElementById('crafterSelectContainer'); if (container) { let options = [{ value: '', html: '-- Choisir un personnage --', selected: true }]; pageState.userCharacters.forEach(c => { options.push({ value: c.id, html: `<div class="flex justify-between items-center w-full"><span class="text-sky-400 font-medium">${c.name}</span> <span class="text-slate-400 text-xs bg-black/30 px-2 py-1 rounded border border-white/5">XP Spirit : <strong class="text-amber-500">${c.spiritualiteExperience || 0}</strong></span></div>`, selected: false }); }); buildCustomSelect(container, options, '', 'crafterSelect'); } return; }
     try {
         const res = await globalFetch('/api/personnages');
         if (res && res.ok) {

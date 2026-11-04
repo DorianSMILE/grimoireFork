@@ -145,11 +145,13 @@ public class PvEAdminService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
     public Donjon createOrUpdateDungeon(@NonNull Donjon donjon) {
         return donjonRepository.save(donjon);
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"equipmentDungeonSources", "anomalieDungeonSources"}, allEntries = true)
     public void deleteDungeon(@NonNull Long id) {
         donjonRepository.deleteById(id);
     }

@@ -1,7 +1,15 @@
 package generation.grimoire.controller.auth;
 
 import generation.grimoire.entity.auth.AppUser;
+import generation.grimoire.model.pve.CombatSession;
+import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
+import generation.grimoire.repository.pve.DonjonRepository;
+import generation.grimoire.repository.pve.HuntingQuestEntryRepository;
+import generation.grimoire.security.JwtService;
+import generation.grimoire.security.RefreshTokenService;
+import generation.grimoire.service.AlchemyService;
+import generation.grimoire.service.pve.CombatService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
@@ -9,17 +17,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import generation.grimoire.repository.pve.HuntingQuestEntryRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import generation.grimoire.security.JwtService;
-import generation.grimoire.security.RefreshTokenService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,16 +38,18 @@ public class AuthController {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final HuntingQuestEntryRepository huntingQuestEntryRepository;
-    private final generation.grimoire.repository.pve.DonjonRepository donjonRepository;
-    private final generation.grimoire.service.AlchemyService alchemyService;
-    private final generation.grimoire.repository.PersonnageRepository personnageRepository;
+    private final DonjonRepository donjonRepository;
+    private final AlchemyService alchemyService;
+    private final PersonnageRepository personnageRepository;
+    private final CombatService combatService;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService,
             HuntingQuestEntryRepository huntingQuestEntryRepository,
-            generation.grimoire.repository.pve.DonjonRepository donjonRepository,
-            generation.grimoire.service.AlchemyService alchemyService,
-            generation.grimoire.repository.PersonnageRepository personnageRepository) {
+            DonjonRepository donjonRepository,
+            AlchemyService alchemyService,
+            PersonnageRepository personnageRepository,
+            CombatService combatService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,6 +59,7 @@ public class AuthController {
         this.donjonRepository = donjonRepository;
         this.alchemyService = alchemyService;
         this.personnageRepository = personnageRepository;
+        this.combatService = combatService;
     }
 
     @PostMapping("/register")
@@ -81,6 +91,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @Transactional
     public ResponseEntity<?> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
@@ -88,15 +99,18 @@ public class AuthController {
         }
 
         Map<String, Object> res = new HashMap<>();
-        res.put("username", auth.getName());
+        String username = auth.getName();
+        res.put("username", username);
         res.put("roles", auth.getAuthorities());
 
-        userRepository.findByUsername(auth.getName()).ifPresent(u -> {
+        userRepository.findByUsername(username).ifPresent(u -> {
+            List<DonjonRepository.DonjonLightProjection> allDungeons = donjonRepository.findAllLightProjections();
+
             res.put("id", u.getId());
             res.put("monnaie", u.getMonnaie());
             res.put("unlockedSecrets", u.getUnlockedSecrets());
             res.put("claimedSecretRewards", u.getClaimedSecretRewards());
-            java.util.List<String> claimable = getClaimableSecretRewards(u);
+            List<String> claimable = getClaimableSecretRewards(u, allDungeons);
             res.put("claimableSecretRewards", claimable);
             res.put("claimableSecretRewardsCount", claimable.size());
             res.put("unlockedDungeons", u.getUnlockedDungeons());
@@ -104,9 +118,10 @@ public class AuthController {
             res.put("unlockedAlchemy", u.isUnlockedAlchemy());
             res.put("unlockedShop", u.isUnlockedShop());
             int huntingClaimableCount = 0;
+            java.time.LocalDate todayParis = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris"));
             for (generation.grimoire.entity.pve.HuntingQuestEntry e : huntingQuestEntryRepository.findByAccountName(u.getUsername())) {
                 if ("DAILY".equals(e.getQuest().getType())) {
-                    boolean isExpired = !e.getQuest().isActive() && e.getQuest().getEndDate().isBefore(java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris")));
+                    boolean isExpired = !e.getQuest().isActive() && e.getQuest().getEndDate().isBefore(todayParis);
                     if (!isExpired) {
                         if (e.getCompletionCount() > 0 && !e.isRewardBronzeClaimed()) huntingClaimableCount++;
                         if ((e.isChallenge1Completed() || e.isChallenge2Completed()) && !e.isRewardSilverClaimed()) huntingClaimableCount++;
@@ -114,9 +129,9 @@ public class AuthController {
                     }
 
                 } else if ("WEEKLY".equals(e.getQuest().getType()) && !e.getQuest().isActive() && !e.isRewardClaimed()) {
-                    if (e.getQuest().getEndDate().plusWeeks(1).isAfter(java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris")))) {
+                    if (e.getQuest().getEndDate().plusWeeks(1).isAfter(todayParis)) {
                         if (e.getRank() >= 1) {
-                            long totalParticipants = huntingQuestEntryRepository.findByQuestIdOrderByBestTurnCountAsc(e.getQuest().getId()).size();
+                            long totalParticipants = huntingQuestEntryRepository.countCompletedByQuestId(e.getQuest().getId());
                             int threshold = (int) Math.ceil(totalParticipants * 0.2);
                             if (e.getRank() <= threshold) huntingClaimableCount++;
                         }
@@ -141,8 +156,48 @@ public class AuthController {
             int userMax = u.getMaxCharacters();
             if (userMax < 2) userMax = 2;
             int maxChars = isAdmin ? 999 : userMax;
-            int currentChars = personnageRepository.findByUser_Username(u.getUsername()).size();
+            int currentChars = (int) personnageRepository.countByUser_Username(u.getUsername());
             res.put("availableCharacterSlots", Math.max(0, maxChars - currentChars));
+
+            // Calcul SSOT des donjons nouvellement débloqués non vus (évite de télécharger /api/pve/dungeons + /api/personnages sur chaque page)
+            int maxLevel = currentChars > 0 ? personnageRepository.findMaxVoieLevelByUsername(u.getUsername()) : 0;
+            int unseenDungeonsCount = 0;
+            for (DonjonRepository.DonjonLightProjection d : allDungeons) {
+                int recLevel = d.recommendedLevel() > 0 ? d.recommendedLevel() : 1;
+                if (maxLevel >= recLevel) {
+                    boolean isUnlocked = false;
+                    if (d.requiredSecret() != null && !d.requiredSecret().trim().isEmpty()) {
+                        int userSecretLvl = u.getUnlockedSecrets().getOrDefault(d.requiredSecret(), 0);
+                        int reqSecretLvl = d.requiredSecretLevel() > 0 ? d.requiredSecretLevel() : 1;
+                        if (userSecretLvl >= reqSecretLvl) {
+                            isUnlocked = true;
+                        }
+                    } else {
+                        isUnlocked = true;
+                    }
+                    if (isUnlocked && !u.getSeenDungeons().contains(d.id())) {
+                        unseenDungeonsCount++;
+                    }
+                }
+            }
+            res.put("unseenDungeonsCount", unseenDungeonsCount);
+
+            // Session de combat active en mémoire (évite un appel HTTP dédié /api/pve/combat/current sur chaque page)
+            String activeCombatSessionId = null;
+            for (Map.Entry<String, CombatSession> entry : combatService.getActiveSessions().entrySet()) {
+                CombatSession session = entry.getValue();
+                if (session.isFinished()) {
+                    combatService.getActiveSessions().remove(entry.getKey());
+                    continue;
+                }
+                boolean inCombat = session.getPlayers().stream()
+                        .anyMatch(p -> p.getUser() != null && u.getUsername().equals(p.getUser().getUsername()) && p.getHealthCurrent() > 0);
+                if (inCombat) {
+                    activeCombatSessionId = session.getSessionId();
+                    break;
+                }
+            }
+            res.put("activeCombatSessionId", activeCombatSessionId);
             
             res.put("unlockedVoieLevels", u.getUnlockedVoieLevels());
             res.put("unlockedSpiritualiteLevels", u.getUnlockedSpiritualiteLevels());
@@ -155,9 +210,8 @@ public class AuthController {
             .body(res);
     }
 
-    private java.util.List<String> getClaimableSecretRewards(AppUser u) {
-        java.util.List<String> claimable = new java.util.ArrayList<>();
-        java.util.List<generation.grimoire.entity.pve.Donjon> allDungeons = donjonRepository.findAll();
+    private List<String> getClaimableSecretRewards(AppUser u, List<DonjonRepository.DonjonLightProjection> allDungeons) {
+        List<String> claimable = new java.util.ArrayList<>();
         
         for (Map.Entry<String, Integer> entry : u.getUnlockedSecrets().entrySet()) {
             String secretName = entry.getKey();
@@ -167,14 +221,14 @@ public class AuthController {
                 String key = secretName + ":" + lvl;
                 if (!u.getClaimedSecretRewards().contains(key)) {
                     final int currentLvl = lvl;
-                    java.util.List<generation.grimoire.entity.pve.Donjon> dungeonsForLevel = allDungeons.stream()
-                        .filter(d -> secretName.equalsIgnoreCase(d.getRequiredSecret()) && d.getRequiredSecretLevel() == currentLvl)
+                    List<DonjonRepository.DonjonLightProjection> dungeonsForLevel = allDungeons.stream()
+                        .filter(d -> secretName.equalsIgnoreCase(d.requiredSecret()) && d.requiredSecretLevel() == currentLvl)
                         .toList();
                         
                     if (!dungeonsForLevel.isEmpty()) {
                         boolean allCompleted = true;
-                        for (generation.grimoire.entity.pve.Donjon d : dungeonsForLevel) {
-                            if (!u.getCompletedDungeons().contains(d.getId())) {
+                        for (DonjonRepository.DonjonLightProjection d : dungeonsForLevel) {
+                            if (!u.getCompletedDungeons().contains(d.id())) {
                                 allCompleted = false;
                                 break;
                             }

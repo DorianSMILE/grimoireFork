@@ -47,7 +47,7 @@ public class AchievementService {
                               ShopUpgradeConfigRepository shopUpgradeConfigRepository,
                               EquipmentRepository equipmentRepository,
                               DonjonRepository donjonRepository,
-                              generation.grimoire.repository.UserCustomAchievementRepository userCustomAchievementRepository) {
+                              UserCustomAchievementRepository userCustomAchievementRepository) {
         this.userAchievementRepository = userAchievementRepository;
         this.userStatisticsRepository = userStatisticsRepository;
         this.userRepository = userRepository;
@@ -70,10 +70,26 @@ public class AchievementService {
                 .orElseGet(() -> userAchievementRepository.save(new UserAchievement(user, type)));
     }
 
+    private UserAchievement getOrCreateAchievementCached(AppUser user, AchievementType type, Map<AchievementType, UserAchievement> cache) {
+        if (cache != null) {
+            UserAchievement ua = cache.get(type);
+            if (ua == null) {
+                ua = userAchievementRepository.save(new UserAchievement(user, type));
+                cache.put(type, ua);
+            }
+            return ua;
+        }
+        return getOrCreateAchievement(user, type);
+    }
+
     @Transactional
     public boolean unlock(AppUser user, AchievementType type) {
+        return unlockInternal(user, type, null);
+    }
+
+    private boolean unlockInternal(AppUser user, AchievementType type, Map<AchievementType, UserAchievement> cache) {
         if (user == null || type == null) return false;
-        UserAchievement ua = getOrCreateAchievement(user, type);
+        UserAchievement ua = getOrCreateAchievementCached(user, type, cache);
         if (ua.isUnlocked()) return false;
 
         ua.setUnlocked(true);
@@ -101,11 +117,19 @@ public class AchievementService {
 
     @Transactional
     public void setProgress(AppUser user, AchievementType type, int progress, int goal) {
+        setProgressInternal(user, type, progress, goal, null);
+    }
+
+    private void setProgressInternal(AppUser user, AchievementType type, int progress, int goal, Map<AchievementType, UserAchievement> cache) {
         if (user == null || type == null) return;
-        UserAchievement ua = getOrCreateAchievement(user, type);
+        UserAchievement ua = getOrCreateAchievementCached(user, type, cache);
+        boolean shouldUnlock = progress >= goal && goal > 0 && !ua.isUnlocked();
+        if (ua.getCurrentProgress() == progress && !shouldUnlock) {
+            return;
+        }
         ua.setCurrentProgress(progress);
-        if (progress >= goal && goal > 0 && !ua.isUnlocked()) {
-            unlock(user, type);
+        if (shouldUnlock) {
+            unlockInternal(user, type, cache);
         } else {
             userAchievementRepository.save(ua);
         }
@@ -114,6 +138,27 @@ public class AchievementService {
     @Transactional
     public void syncRetroactive(AppUser user) {
         if (user == null) return;
+        Map<AchievementType, UserAchievement> cache = loadUserAchievementMap(user);
+        List<AlchemyRecipe> allRecipes = alchemyRecipeRepository.findAll();
+        List<DonjonRepository.DonjonLightProjection> allDonjonsLight = donjonRepository.findAllLightProjections();
+        syncRetroactiveInternal(user, cache, allRecipes, allDonjonsLight);
+    }
+
+    private Map<AchievementType, UserAchievement> loadUserAchievementMap(AppUser user) {
+        List<UserAchievement> list = userAchievementRepository.findByUserId(user.getId());
+        Map<AchievementType, UserAchievement> map = new EnumMap<>(AchievementType.class);
+        for (UserAchievement ua : list) {
+            if (ua.getAchievement() != null) {
+                map.put(ua.getAchievement(), ua);
+            }
+        }
+        return map;
+    }
+
+    private void syncRetroactiveInternal(AppUser user,
+                                         Map<AchievementType, UserAchievement> cache,
+                                         List<AlchemyRecipe> allRecipes,
+                                         List<DonjonRepository.DonjonLightProjection> allDonjonsLight) {
         UserStatistics stats = getOrCreateStats(user);
 
         // 1. MAITRE_DE_LA_VERITE (11 secrets au niveau 3)
@@ -126,10 +171,9 @@ public class AchievementService {
                 }
             }
         }
-        setProgress(user, AchievementType.MAITRE_DE_LA_VERITE, secretsLvl3, 11);
+        setProgressInternal(user, AchievementType.MAITRE_DE_LA_VERITE, secretsLvl3, 11, cache);
 
         // 2. RECETTES ALCHIMIE
-        List<AlchemyRecipe> allRecipes = alchemyRecipeRepository.findAll();
         Set<Long> seen = user.getSeenAlchemyRecipes() != null ? user.getSeenAlchemyRecipes() : Collections.emptySet();
 
         int totalConsumables = 0;
@@ -153,39 +197,38 @@ public class AchievementService {
         }
 
         if (totalConsumables > 0) {
-            setProgress(user, AchievementType.GRAND_GOURMET, seenConsumables, totalConsumables);
+            setProgressInternal(user, AchievementType.GRAND_GOURMET, seenConsumables, totalConsumables, cache);
         }
         if (totalEquipments > 0) {
-            setProgress(user, AchievementType.COLLECTIONNEUR, seenEquipments, totalEquipments);
+            setProgressInternal(user, AchievementType.COLLECTIONNEUR, seenEquipments, totalEquipments, cache);
         }
         if (totalAnomalies > 0) {
-            setProgress(user, AchievementType.MYSTICISME, seenAnomalies, totalAnomalies);
+            setProgressInternal(user, AchievementType.MYSTICISME, seenAnomalies, totalAnomalies, cache);
         }
 
         // 3. FORTUNE & ÉCONOMIE
         int currentGold = (int) user.getMonnaie();
-        setProgress(user, AchievementType.CERCUEIL_DORE, Math.min(10000, currentGold), 10000);
+        setProgressInternal(user, AchievementType.CERCUEIL_DORE, Math.min(10000, currentGold), 10000, cache);
 
         int maxShopLevel = shopUpgradeConfigRepository.findAll().stream()
                 .mapToInt(c -> c.getTargetLevel())
                 .max().orElse(4);
-        setProgress(user, AchievementType.CLIENT_FIDELE, user.getShopLevel() >= maxShopLevel ? 1 : 0, 1);
+        setProgressInternal(user, AchievementType.CLIENT_FIDELE, user.getShopLevel() >= maxShopLevel ? 1 : 0, 1, cache);
 
         // 4. STATS COMPTEURS
-        setProgress(user, AchievementType.COURAGE_FUYONS, stats.getFleeCount(), 10);
-        setProgress(user, AchievementType.GRAND_TRANSMUTATEUR, stats.getTransmutationsCount(), 50);
-        setProgress(user, AchievementType.PILLEUR_INSATIABLE, stats.getChestsOpenedCount(), 100);
-        setProgress(user, AchievementType.ZERO_DECHET, stats.getEquipmentsRecycledCount(), 50);
-        setProgress(user, AchievementType.CLIENT_VIP, (int) Math.min(5000, stats.getGoldSpentInShop()), 5000);
+        setProgressInternal(user, AchievementType.COURAGE_FUYONS, stats.getFleeCount(), 10, cache);
+        setProgressInternal(user, AchievementType.GRAND_TRANSMUTATEUR, stats.getTransmutationsCount(), 50, cache);
+        setProgressInternal(user, AchievementType.PILLEUR_INSATIABLE, stats.getChestsOpenedCount(), 100, cache);
+        setProgressInternal(user, AchievementType.ZERO_DECHET, stats.getEquipmentsRecycledCount(), 50, cache);
+        setProgressInternal(user, AchievementType.CLIENT_VIP, (int) Math.min(5000, stats.getGoldSpentInShop()), 5000, cache);
 
-        boolean hasCursedItem = equipmentRepository.findByUser_Username(user.getUsername()).stream()
-                .anyMatch(e -> e.getRarity() == generation.grimoire.enumeration.EquipmentRarity.MAUDIT);
+        boolean hasCursedItem = equipmentRepository.existsByUser_UsernameAndRarity(user.getUsername(), EquipmentRarity.MAUDIT);
         if (hasCursedItem) {
-            unlock(user, AchievementType.MALEDICTION);
+            unlockInternal(user, AchievementType.MALEDICTION, cache);
         }
 
         // 5. PROGRESSION DES DONJONS (Donjons libres & Secrets)
-        syncDungeonProgression(user);
+        syncDungeonProgressionInternal(user, allDonjonsLight, cache);
     }
 
     private String normalizeSecretName(String s) {
@@ -204,49 +247,60 @@ public class AchievementService {
     @Transactional
     public void syncDungeonProgression(AppUser user) {
         if (user == null) return;
-        List<Donjon> allDonjons = donjonRepository.findAll();
+        Map<AchievementType, UserAchievement> cache = loadUserAchievementMap(user);
+        List<DonjonRepository.DonjonLightProjection> allDonjonsLight = donjonRepository.findAllLightProjections();
+        syncDungeonProgressionInternal(user, allDonjonsLight, cache);
+    }
+
+    private void syncDungeonProgressionInternal(AppUser user,
+                                                List<DonjonRepository.DonjonLightProjection> allDonjons,
+                                                Map<AchievementType, UserAchievement> cache) {
         Set<Long> completedIds = user.getCompletedDungeons() != null ? user.getCompletedDungeons() : Collections.emptySet();
 
         for (AchievementType type : AchievementType.values()) {
             if (type.isFreeDungeons()) {
-                List<Donjon> freeDonjons = allDonjons.stream()
-                        .filter(d -> d.getRequiredSecret() == null || d.getRequiredSecret().trim().isEmpty())
+                List<DonjonRepository.DonjonLightProjection> freeDonjons = allDonjons.stream()
+                        .filter(d -> d.requiredSecret() == null || d.requiredSecret().trim().isEmpty())
                         .toList();
                 int total = freeDonjons.size();
                 int progress = (int) freeDonjons.stream()
-                        .filter(d -> completedIds.contains(d.getId()))
+                        .filter(d -> completedIds.contains(d.id()))
                         .count();
-                UserAchievement ua = getOrCreateAchievement(user, type);
+                UserAchievement ua = getOrCreateAchievementCached(user, type, cache);
                 if (total > 0 && progress >= total) {
-                    ua.setCurrentProgress(progress);
-                    if (!ua.isUnlocked()) {
-                        unlock(user, type);
-                    } else {
-                        userAchievementRepository.save(ua);
+                    if (ua.getCurrentProgress() != progress || !ua.isUnlocked()) {
+                        ua.setCurrentProgress(progress);
+                        if (!ua.isUnlocked()) {
+                            unlockInternal(user, type, cache);
+                        } else {
+                            userAchievementRepository.save(ua);
+                        }
                     }
-                } else if (!ua.isUnlocked()) {
+                } else if (!ua.isUnlocked() && ua.getCurrentProgress() != progress) {
                     ua.setCurrentProgress(progress);
                     userAchievementRepository.save(ua);
                 }
             } else if (type.getRequiredSecret() != null && !type.getRequiredSecret().isBlank()) {
                 int reqLevel = type.getRequiredSecretLevel();
-                List<Donjon> secretDonjons = allDonjons.stream()
-                        .filter(d -> isSameSecret(d.getRequiredSecret(), type.getRequiredSecret())
-                                && (d.getRequiredSecretLevel() <= 0 ? 1 : d.getRequiredSecretLevel()) == reqLevel)
+                List<DonjonRepository.DonjonLightProjection> secretDonjons = allDonjons.stream()
+                        .filter(d -> isSameSecret(d.requiredSecret(), type.getRequiredSecret())
+                                && (d.requiredSecretLevel() <= 0 ? 1 : d.requiredSecretLevel()) == reqLevel)
                         .toList();
                 int total = secretDonjons.size();
                 int progress = (int) secretDonjons.stream()
-                        .filter(d -> completedIds.contains(d.getId()))
+                        .filter(d -> completedIds.contains(d.id()))
                         .count();
-                UserAchievement ua = getOrCreateAchievement(user, type);
+                UserAchievement ua = getOrCreateAchievementCached(user, type, cache);
                 if (total > 0 && progress >= total) {
-                    ua.setCurrentProgress(progress);
-                    if (!ua.isUnlocked()) {
-                        unlock(user, type);
-                    } else {
-                        userAchievementRepository.save(ua);
+                    if (ua.getCurrentProgress() != progress || !ua.isUnlocked()) {
+                        ua.setCurrentProgress(progress);
+                        if (!ua.isUnlocked()) {
+                            unlockInternal(user, type, cache);
+                        } else {
+                            userAchievementRepository.save(ua);
+                        }
                     }
-                } else if (!ua.isUnlocked()) {
+                } else if (!ua.isUnlocked() && ua.getCurrentProgress() != progress) {
                     ua.setCurrentProgress(progress);
                     userAchievementRepository.save(ua);
                 }
@@ -256,22 +310,22 @@ public class AchievementService {
 
     @Transactional
     public UserAchievementsResponseDTO getAchievementsResponse(AppUser user) {
-        syncRetroactive(user);
+        Map<AchievementType, UserAchievement> map = loadUserAchievementMap(user);
+        List<AlchemyRecipe> allRecipes = alchemyRecipeRepository.findAll();
+        List<Donjon> allDonjons = donjonRepository.findAll();
+        List<DonjonRepository.DonjonLightProjection> allDonjonsLight = allDonjons.stream()
+                .map(d -> new DonjonRepository.DonjonLightProjection(
+                        d.getId(), d.getRequiredSecret(), d.getRequiredSecretLevel(), d.getRecommendedLevel(), d.getUnlockCostGold()))
+                .toList();
 
-        List<UserAchievement> userAchievements = userAchievementRepository.findByUserId(user.getId());
-        Map<AchievementType, UserAchievement> map = new EnumMap<>(AchievementType.class);
-        for (UserAchievement ua : userAchievements) {
-            map.put(ua.getAchievement(), ua);
-        }
+        syncRetroactiveInternal(user, map, allRecipes, allDonjonsLight);
 
         List<AchievementDTO> dtoList = new ArrayList<>();
         int totalUnlocked = 0;
 
-        List<AlchemyRecipe> allRecipes = alchemyRecipeRepository.findAll();
         int totalConsumables = (int) allRecipes.stream().filter(r -> r.getRewardType() == RecipeRewardType.GIVE_CONSUMABLE).count();
         int totalEquipments = (int) allRecipes.stream().filter(r -> r.getRewardType() == RecipeRewardType.GIVE_EQUIPMENT).count();
         int totalAnomalies = (int) allRecipes.stream().filter(r -> r.getRewardType() == RecipeRewardType.GIVE_ANOMALY || r.getRewardType() == RecipeRewardType.UPGRADE_ANOMALY).count();
-        List<Donjon> allDonjons = donjonRepository.findAll();
 
         for (AchievementType type : AchievementType.values()) {
             UserAchievement ua = map.get(type);
@@ -286,15 +340,15 @@ public class AchievementService {
             if (type == AchievementType.COLLECTIONNEUR) effectiveGoal = Math.max(1, totalEquipments);
             if (type == AchievementType.MYSTICISME) effectiveGoal = Math.max(1, totalAnomalies);
             if (type.isFreeDungeons()) {
-                long count = allDonjons.stream()
-                        .filter(d -> d.getRequiredSecret() == null || d.getRequiredSecret().trim().isEmpty())
+                long count = allDonjonsLight.stream()
+                        .filter(d -> d.requiredSecret() == null || d.requiredSecret().trim().isEmpty())
                         .count();
                 effectiveGoal = (int) Math.max(1, count);
             } else if (type.getRequiredSecret() != null && !type.getRequiredSecret().isBlank()) {
                 int reqLevel = type.getRequiredSecretLevel();
-                long count = allDonjons.stream()
-                        .filter(d -> isSameSecret(d.getRequiredSecret(), type.getRequiredSecret())
-                                && (d.getRequiredSecretLevel() <= 0 ? 1 : d.getRequiredSecretLevel()) == reqLevel)
+                long count = allDonjonsLight.stream()
+                        .filter(d -> isSameSecret(d.requiredSecret(), type.getRequiredSecret())
+                                && (d.requiredSecretLevel() <= 0 ? 1 : d.requiredSecretLevel()) == reqLevel)
                         .count();
                 effectiveGoal = (int) Math.max(1, count);
             }
@@ -341,7 +395,7 @@ public class AchievementService {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         for (Donjon d : allDonjons) {
             if (d.getSalles() == null) continue;
-            for (generation.grimoire.entity.pve.Salle s : d.getSalles()) {
+            for (Salle s : d.getSalles()) {
                 if (s.getCustomAchievementTitle() != null && !s.getCustomAchievementTitle().isBlank()) {
                     String title = s.getCustomAchievementTitle().trim();
                     configuredCustoms.putIfAbsent(title, new CustomAchieveMeta(
@@ -372,9 +426,9 @@ public class AchievementService {
             }
         }
 
-        List<generation.grimoire.entity.achievement.UserCustomAchievement> userCustoms = userCustomAchievementRepository.findByUser_Id(user.getId());
+        List<UserCustomAchievement> userCustoms = userCustomAchievementRepository.findByUser_Id(user.getId());
         Set<String> unlockedCustomTitles = new HashSet<>();
-        for (generation.grimoire.entity.achievement.UserCustomAchievement uca : userCustoms) {
+        for (UserCustomAchievement uca : userCustoms) {
             unlockedCustomTitles.add(uca.getTitle());
             dtoList.add(new AchievementDTO(
                     "CUSTOM_" + uca.getId(),

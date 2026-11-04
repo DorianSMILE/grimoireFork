@@ -337,13 +337,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (window.initAppMeta) await window.initAppMeta();
+        const initMetaTask = window.initAppMeta ? window.initAppMeta() : Promise.resolve();
 
         document.getElementById('dungeonsContent').style.display = 'block';
-        await loadCharacters();
-        await loadAnomalies();
-        await loadEquipments();
-        await loadConsumables();
+        await Promise.all([initMetaTask, loadCharacters(), loadAnomalies(), loadEquipments(), loadConsumables()]);
+
+
+
         await loadDungeons();
     };
 

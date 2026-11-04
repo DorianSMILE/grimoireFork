@@ -403,23 +403,16 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.isAdmin = data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN');
             window.dispatchEvent(new Event('authLoaded'));
 
-            // Redirection automatique si une session de combat est toujours en cours
+            // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
             if (!window.location.pathname.includes('/combat.html') &&
                 !window.location.pathname.includes('/login.html') &&
                 !window.location.pathname.includes('/register.html') &&
-                !isDungeonsPage) {
-                fetch('/api/pve/combat/current', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                }).then(async (curRes) => {
-                    if (curRes.ok) {
-                        const curData = await curRes.json();
-                        if (curData && curData.sessionId) {
-                            console.warn("Active combat session found via checkAuthStatus, redirecting to combat.html");
-                            localStorage.setItem('activeCombatId', curData.sessionId);
-                            window.location.href = '/combat.html';
-                        }
-                    }
-                }).catch(() => {});
+                !isDungeonsPage &&
+                data.activeCombatSessionId) {
+                console.warn("Active combat session found via /api/auth/me, redirecting to combat.html");
+                localStorage.setItem('activeCombatId', data.activeCombatSessionId);
+                window.location.href = '/combat.html';
+                return;
             }
             
             let prevGold = window.previousGold || 0;
@@ -449,43 +442,19 @@ window.checkAuthStatus = async function checkAuthStatus() {
                 window.animateGoldValue(goldSpan, prevGold, currentGold, 1000);
             }
 
-            // Check for newly unlocked secret dungeons
-            Promise.all([
-                    globalFetch('/api/pve/dungeons', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : []),
-                    globalFetch('/api/personnages', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : [])
-                ]).then(([dungeons, characters]) => {
-                    let seen = data.seenDungeons || [];
-                    let newCount = 0;
-                    const maxLevel = characters.length > 0 ? Math.max(...characters.map(c => c.voieLevel || 1)) : 0;
-
-                    dungeons.forEach(d => {
-                        if (maxLevel >= (d.recommendedLevel || 1)) {
-                            let isUnlocked = false;
-                            if (d.requiredSecret && d.requiredSecret.trim() !== '') {
-                                const userLevel = data.unlockedSecrets[d.requiredSecret] || 0;
-                                if (userLevel >= (d.requiredSecretLevel || 1)) {
-                                    isUnlocked = true;
-                                }
-                            } else {
-                                isUnlocked = true;
-                            }
-
-                            if (isUnlocked && !seen.includes(d.id)) {
-                                newCount++;
-                            }
-                        }
-                    });
-
-                    const badge = document.getElementById('navDungeonBadge');
-                    if (badge) {
-                        if (newCount > 0) {
-                            badge.textContent = newCount;
-                            badge.style.display = 'block';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                }).catch(() => {});
+            // Badge donjons débloqués pré-calculé côté serveur (SSOT via /api/auth/me)
+            const badge = document.getElementById('navDungeonBadge');
+            if (badge) {
+                const newCount = data.unseenDungeonsCount || 0;
+                if (newCount > 0) {
+                    badge.textContent = newCount;
+                    badge.classList.add('block');
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.remove('block');
+                    badge.classList.add('hidden');
+                }
+            }
 
         } else {
             localStorage.removeItem('isLikelyLoggedIn');

@@ -56,37 +56,41 @@ export async function loadEquipments(options = {}) {
         isAdmin = false
     } = options;
 
-    let results = [];
-
-    for (const source of sources) {
+    const sourceTasks = sources.map(async (source) => {
         try {
             const res = await globalFetch(source);
             if (res.ok) {
-                const data = await res.json();
-                results = results.concat(data);
+                return await res.json();
             }
         } catch (e) {
             console.error(`Erreur chargement ${source}:`, e);
         }
-    }
+        return [];
+    });
 
     if (includeAnomalies) {
-        try {
-            const aUrl = isAdmin ? '/api/anomalies/all' : '/api/anomalies';
-            const aRes = await globalFetch(aUrl);
-            if (aRes.ok) {
-                const aData = await aRes.json();
-                aData.forEach(a => {
-                    a.isAnomalie = true;
-                    a.slot = 'ANOMALIE';
-                    a.rarity = 'RELIQUE';
-                });
-                results = results.concat(aData);
+        const aUrl = isAdmin ? '/api/anomalies/all' : '/api/anomalies';
+        sourceTasks.push((async () => {
+            try {
+                const aRes = await globalFetch(aUrl);
+                if (aRes.ok) {
+                    const aData = await aRes.json();
+                    aData.forEach(a => {
+                        a.isAnomalie = true;
+                        a.slot = 'ANOMALIE';
+                        a.rarity = 'RELIQUE';
+                    });
+                    return aData;
+                }
+            } catch (e) {
+                console.error('Erreur chargement anomalies:', e);
             }
-        } catch (e) {
-            console.error('Erreur chargement anomalies:', e);
-        }
+            return [];
+        })());
     }
+
+    const arrays = await Promise.all(sourceTasks);
+    let results = arrays.flat();
 
     if (sources.length > 1) {
         let map = new Map();
@@ -119,21 +123,27 @@ export async function fetchMeta() {
 
         // Remplir les Voies
         const voieSel = document.getElementById('voieSelect');
-        if (voieSel) voieSel.style.fontFamily = "";
         const optgroupVoies = document.getElementById('optgroupVoiesFilter');
+        let voiesOptionsHtml = '';
+        let optgroupVoiesHtml = '';
         state.metaData.voies.forEach(v => {
-            voieSel.innerHTML += `<option value="${v.id}">${v.nom}</option>`;
-            if (optgroupVoies) optgroupVoies.innerHTML += `<option value="V_${v.id}">${v.nom}</option>`;
+            voiesOptionsHtml += `<option value="${v.id}">${v.nom}</option>`;
+            optgroupVoiesHtml += `<option value="V_${v.id}">${v.nom}</option>`;
         });
+        if (voieSel) voieSel.insertAdjacentHTML('beforeend', voiesOptionsHtml);
+        if (optgroupVoies) optgroupVoies.insertAdjacentHTML('beforeend', optgroupVoiesHtml);
 
         // Remplir les Spiritualités
         const spiritSel = document.getElementById('spiritSelect');
-        if (spiritSel) spiritSel.style.fontFamily = "";
         const optgroupSpirits = document.getElementById('optgroupSpiritsFilter');
+        let spiritsOptionsHtml = '';
+        let optgroupSpiritsHtml = '';
         state.metaData.spiritualites.forEach(s => {
-            spiritSel.innerHTML += `<option value="${s.id}">${s.nom}</option>`;
-            if (optgroupSpirits) optgroupSpirits.innerHTML += `<option value="S_${s.id}">${s.nom}</option>`;
+            spiritsOptionsHtml += `<option value="${s.id}">${s.nom}</option>`;
+            optgroupSpiritsHtml += `<option value="S_${s.id}">${s.nom}</option>`;
         });
+        if (spiritSel) spiritSel.insertAdjacentHTML('beforeend', spiritsOptionsHtml);
+        if (optgroupSpirits) optgroupSpirits.insertAdjacentHTML('beforeend', optgroupSpiritsHtml);
 
         if (state.metaData.mutations) {
             state.metaData.mutations.sort((a, b) => {
@@ -146,23 +156,24 @@ export async function fetchMeta() {
         }
 
         const mutationSel = document.getElementById('mutationSelect');
-        if (mutationSel) {
-            mutationSel.style.fontFamily = "";
-            state.metaData.mutations.forEach(m => {
-                mutationSel.innerHTML += `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`;
-            });
+        if (mutationSel && state.metaData.mutations) {
+            const mutationOptionsHtml = state.metaData.mutations
+                .map(m => `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`)
+                .join('');
+            mutationSel.insertAdjacentHTML('beforeend', mutationOptionsHtml);
         }
         
         const filterMutationSel = document.getElementById('filterMutation');
-        if (filterMutationSel) {
-            filterMutationSel.style.fontFamily = "";
+        if (filterMutationSel && state.metaData.mutations) {
             const seenNames = new Set();
+            let filterMutationHtml = '';
             state.metaData.mutations.forEach(m => {
                 if (!seenNames.has(m.nom)) {
                     seenNames.add(m.nom);
-                    filterMutationSel.innerHTML += `<option value="${m.nom.replace(/"/g, '&quot;')}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                    filterMutationHtml += `<option value="${m.nom.replace(/"/g, '&quot;')}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
                 }
             });
+            filterMutationSel.insertAdjacentHTML('beforeend', filterMutationHtml);
         }
 
         makeCustomSelect('voieSelect');
@@ -361,14 +372,14 @@ export async function loadSpells(forceRefresh = false) {
 // ---- LEAVE (mouseleave) ----
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES â€” ENTER
+//   EFFETS ÉLÉMENTAIRES — ENTER
 // ================================================================
 
 // 💨 VENT (Raison) : traits de vent qui balayent la carte de gauche à droite
 
 // 💧 EAU (Sûreté) : vague qui monte depuis le bas de la carte
 
-// â˜ ï¸ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
+// ☠️ POISON (Trahison) : bulles de poison verdâtres qui émanent du centre
 
 // 🪨 TERRE (Consolidation) : fragments de roche qui jaillissent vers le haut
 
@@ -384,34 +395,34 @@ export async function loadSpells(forceRefresh = false) {
 
 // 🌑 TÉNÈBRES : tentacules d'ombre qui surgissent des bords
 
-// âš–ï¸ KARMA : deux orbes â€” or et argent â€” qui convergent
+// ⚖️ KARMA : deux orbes — or et argent — qui convergent
 
 
 // ================================================================
-//   EFFETS ÉLÉMENTAIRES â€” LEAVE
+//   EFFETS ÉLÉMENTAIRES — LEAVE
 // ================================================================
 
-// 💨 VENT â€” le vent retombe : quelques tourbillons qui se dissipent
+// 💨 VENT — le vent retombe : quelques tourbillons qui se dissipent
 
-// 💧 EAU â€” gouttelettes qui tombent et éclaboussent
+// 💧 EAU — gouttelettes qui tombent et éclaboussent
 
-// â˜ ï¸ POISON â€” Brume toxique lourde, poisseuse et lente
+// ☠️ POISON — Brume toxique lourde, poisseuse et lente
 
-// 🪨 TERRE â€” poussière de pierre qui retombe lourdement depuis le bas
+// 🪨 TERRE — poussière de pierre qui retombe lourdement depuis le bas
 
-// 🌋 LAVE â€” braises qui refroidissent et tombent
+// 🌋 LAVE — braises qui refroidissent et tombent
 
-// 🌱 PLANTE â€” Liane grimpante lente + nuage de pollen
+// 🌱 PLANTE — Liane grimpante lente + nuage de pollen
 
-// 🔥 FEU â€” cendres et fumée qui s'élèvent
+// 🔥 FEU — cendres et fumée qui s'élèvent
 
-// 💥 EXPLOSION â€” retombée : éclats qui tombent + fumée
+// 💥 EXPLOSION — retombée : éclats qui tombent + fumée
 
-// 👻 ESPRIT â€” dissolution : la carte libère des âmes spectrales
+// 👻 ESPRIT — dissolution : la carte libère des âmes spectrales
 
-// 🌑 TÉNÈBRES â€” le vide se referme : brume noire/violette qui s'absorbe
+// 🌑 TÉNÈBRES — le vide se referme : brume noire/violette qui s'absorbe
 
-// âš–ï¸ KARMA â€” les orbes se séparent et partent en orbites opposées
+// ⚖️ KARMA — les orbes se séparent et partent en orbites opposées
 
 
 // Crée un div de base pour les particules
@@ -558,4 +569,3 @@ export async function postCombatSignal(sessionId, signalData) {
     }
     return res.json();
 }
-

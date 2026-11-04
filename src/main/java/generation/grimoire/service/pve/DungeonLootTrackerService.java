@@ -13,6 +13,7 @@ import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.pve.DonjonRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,9 +29,15 @@ public class DungeonLootTrackerService {
     private final generation.grimoire.repository.AlchemyRecipeRepository recipeRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Cacheable("equipmentDungeonSources")
     public Map<String, List<DungeonDropSourceDTO>> buildEquipmentDungeonSourcesMap() {
         List<Donjon> dungeons = donjonRepository.findAllByOrderByDisplayOrderAsc();
         Map<Long, String> equipmentIdToName = new HashMap<>();
+        for (Object[] row : equipmentRepository.findAllIdAndName()) {
+            if (row[0] instanceof Long id && row[1] instanceof String name) {
+                equipmentIdToName.put(id, name);
+            }
+        }
         Map<String, Map<Long, DungeonSourceAccumulator>> resultMap = new HashMap<>();
 
         for (Donjon d : dungeons) {
@@ -80,9 +87,15 @@ public class DungeonLootTrackerService {
         return finalMap;
     }
 
+    @Cacheable("anomalieDungeonSources")
     public Map<String, List<DungeonDropSourceDTO>> buildAnomalieDungeonSourcesMap() {
         List<Donjon> dungeons = donjonRepository.findAllByOrderByDisplayOrderAsc();
         Map<Long, String> anomalieIdToName = new HashMap<>();
+        for (Object[] row : anomalieRepository.findAllIdAndName()) {
+            if (row[0] instanceof Long id && row[1] instanceof String name) {
+                anomalieIdToName.put(id, name);
+            }
+        }
         Map<String, Map<Long, DungeonSourceAccumulator>> resultMap = new HashMap<>();
 
         for (Donjon d : dungeons) {
@@ -120,6 +133,7 @@ public class DungeonLootTrackerService {
         return finalMap;
     }
 
+    @Cacheable("equipmentAlchemySources")
     public Map<String, List<String>> buildEquipmentAlchemyRecipesMap() {
         List<generation.grimoire.entity.AlchemyRecipe> recipes = recipeRepository.findAll();
         Map<String, List<String>> map = new HashMap<>();
@@ -136,6 +150,7 @@ public class DungeonLootTrackerService {
         return map;
     }
 
+    @Cacheable("anomalieAlchemySources")
     public Map<String, List<String>> buildAnomalieAlchemyRecipesMap() {
         List<generation.grimoire.entity.AlchemyRecipe> recipes = recipeRepository.findAll();
         Map<String, List<String>> map = new HashMap<>();

@@ -3155,3 +3155,13 @@ button {
 .flex-none {
     flex: none !important;
 }
+
+
+/* Performance: offscreen rendering deferral */
+.cv-auto,
+.spell-card,
+.achievement-card,
+.equipment-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 260px;
+}

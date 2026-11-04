@@ -1,3 +1,32 @@
+function injectSpeculationRules() {
+    if (document.getElementById('grimoireSpeculationRules')) return;
+    if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('speculationrules')) return;
+
+    const specScript = document.createElement('script');
+    specScript.type = 'speculationrules';
+    specScript.id = 'grimoireSpeculationRules';
+    specScript.textContent = JSON.stringify({
+        prefetch: [
+            {
+                source: 'list',
+                urls: [
+                    '/',
+                    '/armory.html',
+                    '/dungeons.html',
+                    '/vault.html',
+                    '/shop.html',
+                    '/alchemy.html',
+                    '/hunting.html',
+                    '/achievements.html',
+                    '/secrets.html'
+                ],
+                eagerness: 'moderate'
+            }
+        ]
+    });
+    document.head.appendChild(specScript);
+}
+
 class AppNavbar extends HTMLElement {
     constructor() {
         super();
@@ -6,6 +35,7 @@ class AppNavbar extends HTMLElement {
     connectedCallback() {
         const activePage = this.getAttribute('active-page') || 'grimoire';
         this.render(activePage);
+        injectSpeculationRules();
         
         // Dispatche un événement pour auth.js qui peut maintenant s'attacher à #authNavContainer
         document.dispatchEvent(new Event('navbar-loaded'));

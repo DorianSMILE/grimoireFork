@@ -225,8 +225,8 @@ async function submitPersonnage() {
         if (res) {
             const data = await res.json();
             showNotif(data.message || 'Personnage sauvegardé !');
-            resetForm();
-            await loadPersonnages();
+            resetForm(); await loadPersonnages();
+        
         }
     } catch (e) {
         // globalFetch already calls showNotif with the specific error message
@@ -248,8 +248,8 @@ window.deletePersonnage = function (id) {
                 const res = await globalFetch(`/api/personnages/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     showNotif('Personnage supprimé.');
-                    if (pageState.editingId === id) resetForm();
-                    await loadPersonnages();
+                    if (pageState.editingId === id) resetForm(); await loadPersonnages();
+                
                 } else {
                     showNotif("Erreur lors de la suppression.", true);
                 }
@@ -275,9 +275,9 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
         if (res) {
             const data = await res.json();
             showNotif(data.message);
-            await loadAllEquipments();
+            await Promise.all([loadAllEquipments(), loadPersonnages()]);
             renderEquipModal();
-            await loadPersonnages();
+        
         }
     } catch (e) {
         showNotif(e.message || 'Erreur lors de l\'équipement.', true);
@@ -290,9 +290,9 @@ async function unequipItem(equipmentId) {
         if (res) {
             const data = await res.json();
             showNotif(data.message);
-            await loadAllEquipments();
+            await Promise.all([loadAllEquipments(), loadPersonnages()]);
             renderEquipModal();
-            await loadPersonnages();
+        
         }
     } catch (e) {
         showNotif(e.message || 'Erreur lors du déséquipement.', true);
@@ -309,9 +309,9 @@ async function deleteEquipment(id) {
         confirmBody: `Voulez-vous vraiment supprimer l'équipement <strong class="text-white">${eq.name}</strong> ?`,
         apiRoute: "/api/equipments/",
         onSuccess: async () => {
-            await loadAllEquipments();
+            await Promise.all([loadAllEquipments(), loadPersonnages()]);
             renderEquipModal();
-            await loadPersonnages();
+        
         }
     });
 }
@@ -642,7 +642,7 @@ function renderPersonnages() {
 
 async function openEquipModal(persoId) {
     pageState.equipModalPersoId = persoId;
-    await loadAllEquipments();
+    await Promise.all([loadAllEquipments(), loadPersonnages()]);
     const overlay = document.getElementById('equipModalOverlay');
     overlay.classList.add('active');
     renderEquipModal();
@@ -1157,8 +1157,8 @@ window.addEventListener('authLoaded', async () => {
         if (window.isAdmin) searchOwnerContainer.classList.remove('hidden');
         else searchOwnerContainer.classList.add('hidden');
     }
-    await loadAllEquipments();
-    await loadPersonnages();
+    await Promise.all([loadAllEquipments(), loadPersonnages()]);
+
 });
 
 ;

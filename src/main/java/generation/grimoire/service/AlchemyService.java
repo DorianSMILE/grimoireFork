@@ -84,13 +84,13 @@ public class AlchemyService {
         boolean hasNewDiscoveredItems = false;
         
         // Ensure all currently owned items are considered discovered (fixes items obtained via combat/quests)
-        for (Anomalie a : anomalieRepository.findByOwnerUsername(user.getUsername())) {
+        for (String aName : anomalieRepository.findDistinctNamesByOwnerUsername(user.getUsername())) { Anomalie a = new Anomalie(); a.setName(aName);
             if (discovered.add(a.getName())) {
                 user.getDiscoveredItems().add(a.getName());
                 hasNewDiscoveredItems = true;
             }
         }
-        for (Equipment e : equipmentRepository.findByUser_Username(user.getUsername())) {
+        for (String eName : equipmentRepository.findDistinctNamesByUserUsername(user.getUsername())) { Equipment e = new Equipment(); e.setName(eName);
             if (discovered.add(e.getName())) {
                 user.getDiscoveredItems().add(e.getName());
                 hasNewDiscoveredItems = true;
@@ -122,12 +122,12 @@ public class AlchemyService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById"}, allEntries = true)
+    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById", "equipmentAlchemySources", "anomalieAlchemySources"}, allEntries = true)
     public AlchemyRecipe saveRecipe(AlchemyRecipe recipe) {
         return recipeRepository.save(java.util.Objects.requireNonNull(recipe));
     }
 
-    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById"}, allEntries = true)
+    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById", "equipmentAlchemySources", "anomalieAlchemySources"}, allEntries = true)
     public void deleteRecipe(Long id) {
         recipeRepository.deleteById(java.util.Objects.requireNonNull(id));
     }

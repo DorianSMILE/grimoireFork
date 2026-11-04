@@ -1,6 +1,5 @@
 package generation.grimoire.security;
 
-import generation.grimoire.entity.auth.AppUser;
 import generation.grimoire.repository.auth.UserRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,13 +18,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser appUser = userRepository.findByUsername(username)
+        UserRepository.UserAuthProjection appUser = userRepository.findAuthProjectionByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return User.builder()
-                .username(appUser.getUsername())
-                .password(appUser.getPassword())
-                .roles(appUser.getRole())
+                .username(appUser.username())
+                .password(appUser.password())
+                .roles(appUser.role())
                 .build();
     }
 }

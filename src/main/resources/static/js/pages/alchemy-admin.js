@@ -17,8 +17,8 @@ window.addEventListener('authLoaded', async () => {
         document.body.innerHTML = "<h2 style='color:red;text-align:center;margin-top:50px;'>Accès Refusé : Réservé aux Admins</h2>";
         return;
     }
-    await loadItems();
-    loadRecipes();
+    await Promise.all([loadItems(), loadRecipes()]);
+
 });
 
 async function loadItems() {
@@ -501,7 +501,7 @@ document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             body: JSON.stringify(recipe)
         });
         if (res && res.ok) {
-            msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !";
+            msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !"; loadRecipes();
             msg.style.color = "#10b981";
             document.getElementById('recipeForm').reset();
             document.getElementById('recipeId').value = "";
@@ -510,7 +510,7 @@ document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             document.getElementById('reqAnomaliesList').innerHTML = '';
             document.getElementById('reqConsumablesList').innerHTML = '';
             document.getElementById('cancelEditBtn').classList.add('hidden');
-            loadRecipes();
+        
         } else {
             const err = await res.text();
             msg.innerText = "Erreur: " + err;
@@ -531,8 +531,8 @@ async function deleteRecipe(id) {
     });
     if (!confirmed) return;
     try {
-        await globalFetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' });
-        loadRecipes();
+        await globalFetch('/api/alchemy/admin/recipe/' + id, { method: 'DELETE' }); loadRecipes();
+    
     } catch (e) {
         showNotif("Erreur de suppression", true);
     }

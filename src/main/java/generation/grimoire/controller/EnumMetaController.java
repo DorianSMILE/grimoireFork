@@ -144,6 +144,26 @@ public class EnumMetaController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/tutorial-steps")
+    public List<Map<String, String>> getTutorialSteps() {
+        return Arrays.stream(TutorialStep.values())
+                .map(e -> {
+                    Map<String, String> m = new LinkedHashMap<>();
+                    m.put("name", e.name());
+                    m.put("phase", e.getPhase());
+                    m.put("stepOrder", String.valueOf(e.getStepOrder()));
+                    m.put("label", e.getLabel());
+                    m.put("description", e.getDescription());
+                    m.put("icon", e.getIcon());
+                    m.put("targetSelector", e.getTargetSelector());
+                    m.put("placement", e.getPlacement());
+                    m.put("advanceTrigger", e.getAdvanceTrigger());
+                    m.put("actionTargetSelector", e.getActionTargetSelector());
+                    return m;
+                })
+                .collect(Collectors.toList());
+    }
+
     @org.springframework.cache.annotation.Cacheable("enumMetaAll")
     @GetMapping("/all")
     public Map<String, List<Map<String, String>>> getAllMeta() {
@@ -157,6 +177,7 @@ public class EnumMetaController {
         allMeta.put("anomalieCategories", getAnomalieCategories());
         allMeta.put("statTypes", getStatTypes());
         allMeta.put("castingTypes", getCastingTypes());
+        allMeta.put("tutorialSteps", getTutorialSteps());
         return allMeta;
     }
 }

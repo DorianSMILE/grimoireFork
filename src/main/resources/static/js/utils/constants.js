@@ -100,7 +100,7 @@ export const STAT_DEFS = [
 
 window.STAT_DEFS = STAT_DEFS;
 
-const META_STORAGE_KEY = 'grimoire_meta_cache_v1';
+const META_STORAGE_KEY = 'grimoire_meta_cache_v3';
 let initMetaPromise = null;
 
 function applyMeta(allMeta) {
@@ -111,6 +111,9 @@ function applyMeta(allMeta) {
     }
     if (allMeta.sources) {
         allMeta.sources.forEach(s => GLOBAL_SRC_LABELS[s.name] = s.label);
+    }
+    if (allMeta.tutorialSteps) {
+        window.GRIMOIRE_TUTORIAL_STEPS = allMeta.tutorialSteps;
     }
 
     window.SLOT_LABELS = {};

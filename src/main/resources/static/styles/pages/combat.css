@@ -2068,7 +2068,7 @@ body {
     object-fit: contain;
     image-rendering: pixelated;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* Ombre de sol sous le héros */
@@ -2106,12 +2106,9 @@ body {
         transform: scale(0.95) translateX(-6px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.15) translateX(24px);
         filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.95)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
-    }
-    60% {
-        transform: scale(1.05) translateX(10px);
     }
     100% {
         transform: scale(1) translateX(0);
@@ -2119,7 +2116,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-attak img {
-    animation: heroSpriteAttak 0.55s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAttak 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-attak::after {
     transform: scale(1.2) translateX(10px);
@@ -2131,13 +2128,9 @@ body {
         transform: scale(0.95);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.12) translateY(2px);
         filter: drop-shadow(0 0 22px rgba(56, 189, 248, 1)) drop-shadow(0 0 35px rgba(56, 189, 248, 0.6));
-    }
-    70% {
-        transform: scale(1.04) translateY(0);
-        filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8));
     }
     100% {
         transform: scale(1);
@@ -2145,7 +2138,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-shield img {
-    animation: heroSpriteShield 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteShield 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 /* --- Pose: prepare (buff uniquement) --- */
@@ -2154,13 +2147,9 @@ body {
         transform: scale(0.95) translateY(2px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    40% {
+    35% {
         transform: scale(1.1) translateY(-6px);
         filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95)) drop-shadow(0 0 35px rgba(234, 179, 8, 0.5));
-    }
-    80% {
-        transform: scale(1.03) translateY(-2px);
-        filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7));
     }
     100% {
         transform: scale(1) translateY(0);
@@ -2168,7 +2157,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-prepare img {
-    animation: heroSpritePrepare 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpritePrepare 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-prepare::after {
     transform: scale(0.85);
@@ -2185,17 +2174,13 @@ body {
         transform: scale(1.16) translateY(-6px);
         filter: drop-shadow(0 0 22px rgba(239, 68, 68, 1)) drop-shadow(0 0 35px rgba(220, 38, 38, 0.7));
     }
-    75% {
-        transform: scale(1.06) translateY(-2px);
-        filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-power img {
-    animation: heroSpritePower 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpritePower 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-power::after {
     transform: scale(1.15);
@@ -2207,19 +2192,16 @@ body {
     0% {
         transform: scale(0.95) translateX(-4px);
     }
-    30% {
+    35% {
         transform: scale(1.12) translateX(18px);
         filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.95)) drop-shadow(0 0 30px rgba(139, 92, 246, 0.6));
-    }
-    70% {
-        transform: scale(1.04) translateX(8px);
     }
     100% {
         transform: scale(1) translateX(0);
     }
 }
 .combat-hero-sprite.pose-weakness img {
-    animation: heroSpriteWeakness 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteWeakness 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-weakness::after {
     transform: scale(1.1) translateX(8px);
@@ -2234,16 +2216,12 @@ body {
         transform: scale(1.12) translateY(-8px);
         filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.95)) drop-shadow(0 0 32px rgba(52, 211, 153, 0.6));
     }
-    75% {
-        transform: scale(1.03) translateY(-2px);
-        filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8));
-    }
     100% {
         transform: scale(1) translateY(0);
     }
 }
 .combat-hero-sprite.pose-heal img {
-    animation: heroSpriteHeal 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteHeal 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-heal::after {
     transform: scale(0.9);
@@ -2256,13 +2234,9 @@ body {
         transform: scale(0.95) translateX(-6px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.18) translateX(22px) translateY(-4px);
         filter: drop-shadow(0 0 24px rgba(220, 38, 38, 1)) drop-shadow(0 0 38px rgba(185, 28, 28, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.06) translateX(10px) translateY(-2px);
-        filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.85));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2270,7 +2244,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-blood img {
-    animation: heroSpriteBlood 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteBlood 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-blood::after {
     transform: scale(1.2) translateX(10px);
@@ -2286,17 +2260,13 @@ body {
         transform: scale(1.14) translateY(-8px);
         filter: drop-shadow(0 0 22px rgba(59, 130, 246, 1)) drop-shadow(0 0 35px rgba(14, 165, 233, 0.75));
     }
-    75% {
-        transform: scale(1.04) translateY(-2px);
-        filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-mana img {
-    animation: heroSpriteMana 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteMana 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-mana::after {
     transform: scale(0.9);
@@ -2313,17 +2283,13 @@ body {
         transform: scale(1.15) translateY(-6px);
         filter: drop-shadow(0 0 22px rgba(234, 179, 8, 1)) drop-shadow(0 0 35px rgba(250, 204, 21, 0.7));
     }
-    75% {
-        transform: scale(1.05) translateY(-2px);
-        filter: drop-shadow(0 0 14px rgba(234, 179, 8, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-buff img {
-    animation: heroSpriteBuff 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteBuff 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-buff::after {
     transform: scale(1.1);
@@ -2340,17 +2306,13 @@ body {
         transform: scale(1.16) translateY(-8px);
         filter: drop-shadow(0 0 22px rgba(245, 158, 11, 1)) drop-shadow(0 0 35px rgba(217, 119, 6, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
     }
-    75% {
-        transform: scale(1.06) translateY(-2px);
-        filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-auto-buff img {
-    animation: heroSpriteAutoBuff 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAutoBuff 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-auto-buff::after {
     transform: scale(1.15);
@@ -2367,17 +2329,13 @@ body {
         transform: scale(1.14) translateY(-5px);
         filter: drop-shadow(0 0 24px rgba(180, 115, 75, 1)) drop-shadow(0 0 38px rgba(153, 103, 76, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
     }
-    75% {
-        transform: scale(1.05) translateY(-2px);
-        filter: drop-shadow(0 0 15px rgba(180, 115, 75, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-renforce img {
-    animation: heroSpriteRenforce 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteRenforce 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-renforce::after {
     transform: scale(1.2);
@@ -2390,13 +2348,9 @@ body {
         transform: scale(0.95) translateX(-4px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.16) translateX(18px) translateY(-3px);
         filter: drop-shadow(0 0 22px rgba(16, 185, 129, 1)) drop-shadow(0 0 36px rgba(5, 150, 105, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.05) translateX(6px);
-        filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.85));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2404,7 +2358,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-poison img {
-    animation: heroSpritePoison 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpritePoison 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-poison::after {
     transform: scale(1.2) translateX(8px);
@@ -2421,10 +2375,6 @@ body {
         transform: scale(1.16) translateY(-8px);
         filter: drop-shadow(0 0 22px rgba(74, 222, 128, 1)) drop-shadow(0 0 35px rgba(34, 197, 94, 0.75)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
     }
-    75% {
-        transform: scale(1.05) translateY(-2px);
-        filter: drop-shadow(0 0 14px rgba(74, 222, 128, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
@@ -2432,7 +2382,7 @@ body {
 }
 .combat-hero-sprite.pose-bourgeon img,
 .combat-hero-sprite.pose-bourgeons img {
-    animation: heroSpriteBourgeon 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteBourgeon 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-bourgeon::after,
 .combat-hero-sprite.pose-bourgeons::after {
@@ -2446,13 +2396,9 @@ body {
         transform: scale(0.97) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    25% {
+    35% {
         transform: scale(1.06) translateY(-10px);
         filter: drop-shadow(0 0 20px rgba(167, 139, 250, 0.95)) drop-shadow(0 0 40px rgba(139, 92, 246, 0.55));
-    }
-    60% {
-        transform: scale(1.04) translateY(-14px);
-        filter: drop-shadow(0 0 28px rgba(167, 139, 250, 1)) drop-shadow(0 0 50px rgba(139, 92, 246, 0.75));
     }
     100% {
         transform: scale(1) translateY(0);
@@ -2460,7 +2406,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-levitating img {
-    animation: heroSpriteLevitating 0.75s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+    animation: heroSpriteLevitating 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-levitating::after {
     transform: scale(1.05);
@@ -2477,17 +2423,13 @@ body {
         transform: scale(1.1) translateY(-4px);
         filter: drop-shadow(0 0 24px rgba(20, 184, 166, 1)) drop-shadow(0 0 40px rgba(20, 184, 166, 0.55));
     }
-    70% {
-        transform: scale(1.05) translateY(-1px);
-        filter: drop-shadow(0 0 14px rgba(20, 184, 166, 0.8));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-protect img {
-    animation: heroSpriteProtect 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteProtect 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-protect::after {
     transform: scale(1.1);
@@ -2500,13 +2442,9 @@ body {
         transform: scale(0.95) translateX(-4px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.18) translateX(20px) translateY(-4px);
         filter: drop-shadow(0 0 24px rgba(249, 115, 22, 1)) drop-shadow(0 0 42px rgba(239, 68, 68, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.06) translateX(8px);
-        filter: drop-shadow(0 0 16px rgba(249, 115, 22, 0.9));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2514,7 +2452,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-fire img {
-    animation: heroSpriteFire 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteFire 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-fire::after {
     transform: scale(1.2) translateX(10px);
@@ -2527,17 +2465,9 @@ body {
         transform: scale(0.95) translateX(-2px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    20% {
+    25% {
         transform: scale(1.16) translateX(24px) translateY(-2px);
         filter: drop-shadow(0 0 22px rgba(250, 204, 21, 1)) drop-shadow(0 0 38px rgba(56, 189, 248, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    45% {
-        transform: scale(1.1) translateX(16px) translateY(1px);
-        filter: drop-shadow(0 0 28px rgba(250, 204, 21, 1)) drop-shadow(0 0 45px rgba(234, 179, 8, 0.9));
-    }
-    70% {
-        transform: scale(1.04) translateX(6px);
-        filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.8));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2545,7 +2475,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-lightning img {
-    animation: heroSpriteLightning 0.55s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards;
+    animation: heroSpriteLightning 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-lightning::after {
     transform: scale(1.25) translateX(12px);
@@ -2562,17 +2492,13 @@ body {
         transform: scale(1.12) translateY(-8px);
         filter: drop-shadow(0 0 24px rgba(56, 189, 248, 1)) drop-shadow(0 0 40px rgba(99, 102, 241, 0.75));
     }
-    70% {
-        transform: scale(1.04) translateY(-3px);
-        filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-absorb img {
-    animation: heroSpriteAbsorb 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+    animation: heroSpriteAbsorb 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-absorb::after {
     transform: scale(1.1);
@@ -2585,13 +2511,9 @@ body {
         transform: scale(0.95) translateX(-4px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.16) translateX(22px) translateY(-3px);
         filter: drop-shadow(0 0 24px rgba(163, 230, 53, 1)) drop-shadow(0 0 40px rgba(132, 204, 22, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.05) translateX(8px);
-        filter: drop-shadow(0 0 15px rgba(163, 230, 53, 0.85));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2599,7 +2521,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-acide img {
-    animation: heroSpriteAcide 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAcide 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-acide::after {
     transform: scale(1.2) translateX(10px);
@@ -2616,17 +2538,13 @@ body {
         transform: scale(1.14) translateY(-10px);
         filter: drop-shadow(0 0 24px rgba(52, 211, 153, 1)) drop-shadow(0 0 42px rgba(192, 132, 252, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
     }
-    70% {
-        transform: scale(1.05) translateY(-3px);
-        filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.85));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-buff-heal img {
-    animation: heroSpriteBuffHeal 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteBuffHeal 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-buff-heal::after {
     transform: scale(1.1);
@@ -2639,13 +2557,9 @@ body {
         transform: scale(0.95) translateX(-2px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.14) translateX(16px) translateY(-2px);
         filter: drop-shadow(0 0 24px rgba(168, 85, 247, 1)) drop-shadow(0 0 40px rgba(126, 34, 206, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.05) translateX(6px);
-        filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.85));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2653,7 +2567,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-debuff img {
-    animation: heroSpriteDebuff 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteDebuff 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-debuff::after {
     transform: scale(1.15) translateX(8px);
@@ -2670,17 +2584,13 @@ body {
         transform: scale(1.1) translateY(-5px);
         filter: drop-shadow(0 0 24px rgba(14, 165, 233, 1)) drop-shadow(0 0 40px rgba(99, 102, 241, 0.65)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
     }
-    70% {
-        transform: scale(1.04) translateY(-1px);
-        filter: drop-shadow(0 0 14px rgba(14, 165, 233, 0.8));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-capacity img {
-    animation: heroSpriteCapacity 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteCapacity 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-capacity::after {
     transform: scale(1.1);
@@ -2697,17 +2607,13 @@ body {
         transform: scale(1.12) translateY(-10px);
         filter: drop-shadow(0 0 28px rgba(192, 132, 252, 1)) drop-shadow(0 0 45px rgba(147, 51, 234, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9));
     }
-    70% {
-        transform: scale(1.04) translateY(-3px);
-        filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.8));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-detachement img {
-    animation: heroSpriteDetachement 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteDetachement 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-detachement::after {
     transform: scale(0.85);
@@ -2720,13 +2626,9 @@ body {
         transform: scale(0.95) translateX(-4px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.15) translateX(22px);
         filter: drop-shadow(0 0 24px rgba(225, 29, 72, 0.95)) drop-shadow(0 0 38px rgba(147, 51, 234, 0.8)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
-    }
-    60% {
-        transform: scale(1.05) translateX(8px);
-        filter: drop-shadow(0 0 14px rgba(225, 29, 72, 0.75));
     }
     100% {
         transform: scale(1) translateX(0);
@@ -2734,7 +2636,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-attak-exclu img {
-    animation: heroSpriteAttakExclu 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAttakExclu 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-attak-exclu::after {
     transform: scale(1.2) translateX(12px);
@@ -2747,13 +2649,9 @@ body {
         transform: scale(0.95) translateX(-6px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.18) translateX(26px) translateY(-3px);
         filter: drop-shadow(0 0 28px rgba(168, 85, 247, 1)) drop-shadow(0 0 45px rgba(59, 130, 246, 0.85)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9));
-    }
-    60% {
-        transform: scale(1.06) translateX(10px) translateY(-1px);
-        filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.85));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2761,7 +2659,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-attak-requis img {
-    animation: heroSpriteAttakRequis 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAttakRequis 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 /* --- Pose: all (effet ciblant tout le monde — Spiritualité de l'Esprit) --- */
 @keyframes heroSpriteAll {
@@ -2769,13 +2667,9 @@ body {
         transform: scale(0.95) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.2) translateY(-8px);
         filter: drop-shadow(0 0 26px rgba(56, 189, 248, 1)) drop-shadow(0 0 45px rgba(186, 230, 253, 0.85)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.06) translateY(-3px);
-        filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.8));
     }
     100% {
         transform: scale(1) translateY(0);
@@ -2783,7 +2677,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-all img {
-    animation: heroSpriteAll 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteAll 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-all::after {
     transform: scale(1.3) translateY(-4px);
@@ -2800,17 +2694,13 @@ body {
         transform: scale(1.12) translateY(-10px);
         filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.95)) drop-shadow(0 0 38px rgba(125, 211, 252, 0.8));
     }
-    70% {
-        transform: scale(1.05) translateY(-4px);
-        filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.75));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-meditation img {
-    animation: heroSpriteMeditation 0.75s cubic-bezier(0.25, 0.9, 0.35, 1.15) forwards;
+    animation: heroSpriteMeditation 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-meditation::after {
     transform: scale(1.1) translateY(-6px);
@@ -2833,13 +2723,9 @@ body {
         transform: scale(0.95) translateX(-4px);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.16) translateX(20px) translateY(-2px);
         filter: drop-shadow(0 0 26px rgba(168, 85, 247, 1)) drop-shadow(0 0 42px rgba(126, 34, 206, 0.9)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.05) translateX(6px);
-        filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.75));
     }
     100% {
         transform: scale(1) translateX(0) translateY(0);
@@ -2847,7 +2733,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-tenebre img {
-    animation: heroSpriteKarmaTenebre 0.65s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteKarmaTenebre 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-tenebre::after {
     transform: scale(1.2) translateX(10px);
@@ -2864,17 +2750,13 @@ body {
         transform: scale(1.14) translateY(-10px);
         filter: drop-shadow(0 0 24px rgba(217, 70, 239, 0.95)) drop-shadow(0 0 38px rgba(203, 213, 225, 0.85)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.85));
     }
-    70% {
-        transform: scale(1.05) translateY(-4px);
-        filter: drop-shadow(0 0 16px rgba(217, 70, 239, 0.75));
-    }
     100% {
         transform: scale(1) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
 }
 .combat-hero-sprite.pose-karma img {
-    animation: heroSpriteKarmaHarmonie 0.75s cubic-bezier(0.25, 0.9, 0.35, 1.15) forwards;
+    animation: heroSpriteKarmaHarmonie 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-karma::after {
     transform: scale(1.15) translateY(-6px);
@@ -2887,13 +2769,9 @@ body {
         transform: scale(0.95) translateY(0);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75));
     }
-    30% {
+    35% {
         transform: scale(1.18) translateY(-8px) translateX(6px);
         filter: drop-shadow(0 0 28px rgba(250, 204, 21, 1)) drop-shadow(0 0 45px rgba(254, 240, 138, 0.9)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.85));
-    }
-    65% {
-        transform: scale(1.06) translateY(-3px) translateX(2px);
-        filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.8));
     }
     100% {
         transform: scale(1) translateY(0) translateX(0);
@@ -2901,7 +2779,7 @@ body {
     }
 }
 .combat-hero-sprite.pose-lumiere img {
-    animation: heroSpriteKarmaLumiere 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+    animation: heroSpriteKarmaLumiere 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 .combat-hero-sprite.pose-lumiere::after {
     transform: scale(1.25) translateY(-4px);

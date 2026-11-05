@@ -101,6 +101,7 @@ public class PersonnageController {
         try {
             Personnage personnage;
             boolean isUpdate = false;
+            boolean isFirstCharacter = false;
 
             if (dto.getId() != null && personnageService.existsById(java.util.Objects.requireNonNull(dto.getId()))) {
                 personnage = personnageService.findByIdOrThrow(java.util.Objects.requireNonNull(dto.getId()));
@@ -126,6 +127,7 @@ public class PersonnageController {
                     errorResp.put("message", "Limite de personnages atteinte (" + max + ").");
                     return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(errorResp);
                 }
+                isFirstCharacter = (current == 0);
                 personnage = new Personnage();
                 personnage.setUser(user);
             }
@@ -178,6 +180,9 @@ public class PersonnageController {
             Map<String, Object> response = new HashMap<>();
             response.put("message", message);
             response.put("personnage", toResponseDto(saved));
+            boolean redirectToDungeonTutorial = isFirstCharacter && !isAdmin
+                    && (user == null || (!user.isTutorialCompleted() && user.getCompletedDungeons().isEmpty()));
+            response.put("redirectToDungeonTutorial", redirectToDungeonTutorial);
             return ResponseEntity.ok(response);
         } catch (Throwable e) {
             e.printStackTrace();

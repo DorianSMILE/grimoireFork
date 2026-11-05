@@ -203,6 +203,14 @@ public class AuthController {
             res.put("unlockedSpiritualiteLevels", u.getUnlockedSpiritualiteLevels());
             res.put("activeTitle", u.getActiveTitle());
             res.put("unlockedTitles", u.getUnlockedTitles());
+
+            boolean tutorialDone = isAdmin || u.isTutorialCompleted() || !u.getCompletedDungeons().isEmpty();
+            res.put("tutorialCompleted", tutorialDone);
+            String tutorialPhase = "NONE";
+            if (!tutorialDone) {
+                tutorialPhase = (currentChars == 0) ? "ARMORY" : "DUNGEON";
+            }
+            res.put("tutorialPhase", tutorialPhase);
         });
 
         return ResponseEntity.ok()
@@ -302,6 +310,22 @@ public class AuthController {
         }
 
         return ResponseEntity.badRequest().body(Map.of("message", "Fonctionnalité inconnue."));
+    }
+
+    @PostMapping("/tutorial/complete")
+    @Transactional
+    public ResponseEntity<?> completeTutorial() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non connecté."));
+        }
+        AppUser user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
+        }
+        user.setTutorialCompleted(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("tutorialCompleted", true, "tutorialPhase", "NONE"));
     }
 
     @PostMapping("/refresh")

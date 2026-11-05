@@ -225,6 +225,12 @@ async function submitPersonnage() {
         if (res) {
             const data = await res.json();
             showNotif(data.message || 'Personnage sauvegardé !');
+            if (data.redirectToDungeonTutorial) {
+                if (window.GrimoireTutorial) window.GrimoireTutorial.stop();
+                if (window.currentUser) window.currentUser.tutorialPhase = 'DUNGEON';
+                setTimeout(() => { window.location.href = '/dungeons.html?tutorial=1'; }, 650);
+                return;
+            }
             resetForm(); await loadPersonnages();
         
         }
@@ -276,6 +282,7 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
             const data = await res.json();
             showNotif(data.message);
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -291,6 +298,7 @@ async function unequipItem(equipmentId) {
             const data = await res.json();
             showNotif(data.message);
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -310,6 +318,7 @@ async function deleteEquipment(id) {
         apiRoute: "/api/equipments/",
         onSuccess: async () => {
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -643,6 +652,7 @@ function renderPersonnages() {
 async function openEquipModal(persoId) {
     pageState.equipModalPersoId = persoId;
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
     const overlay = document.getElementById('equipModalOverlay');
     overlay.classList.add('active');
     renderEquipModal();
@@ -1158,6 +1168,7 @@ window.addEventListener('authLoaded', async () => {
         else searchOwnerContainer.classList.add('hidden');
     }
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
 
 });
 
@@ -1166,6 +1177,55 @@ window.addEventListener('authLoaded', async () => {
 window.hideEqTooltip = function () {
     const tooltip = document.getElementById('globalSpellTooltip');
     if (tooltip) tooltip.classList.add('hidden');
+};
+
+function initArmoryTutorial() {
+    if (window.isAdmin || !window.currentUser || window.currentUser.tutorialCompleted) return;
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+
+    const hasNoChars = pageState.personnages.length === 0;
+    if (hasNoChars) {
+        window.GrimoireTutorial.startPhase('ARMORY', {
+            resolveTarget: (step) => {
+                if (step.name === 'ARMORY_PROFILE') {
+                    const spider = document.getElementById('armorySpiderSection');
+                    if (spider && !spider.classList.contains('hidden')) return spider;
+                    return document.getElementById('formPanel');
+                }
+                return document.querySelector(step.targetSelector);
+            },
+            onBeforeNext: (step) => {
+                if (step.name === 'ARMORY_NAME') {
+                    const nameInput = document.getElementById('charName');
+                    if (!nameInput || !nameInput.value.trim()) {
+                        showNotif('Donnez un nom à votre héros avant de continuer !', true);
+                        if (nameInput) nameInput.focus();
+                        return false;
+                    }
+                } else if (step.name === 'ARMORY_VOIE') {
+                    const voieSelect = document.getElementById('charVoie');
+                    if (!voieSelect || !voieSelect.value) {
+                        showNotif('Choisissez une Voie pour votre héros !', true);
+                        if (voieSelect) voieSelect.focus();
+                        return false;
+                    }
+                } else if (step.name === 'ARMORY_SPIRIT') {
+                    const spiritSelect = document.getElementById('charSpirit');
+                    if (!spiritSelect || !spiritSelect.value) {
+                        showNotif('Choisissez une Spiritualité pour votre héros !', true);
+                        if (spiritSelect) spiritSelect.focus();
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    } else if (window.currentUser.tutorialPhase === 'DUNGEON') {
+        window.GrimoireTutorial.startPhase('ARMORY_DONE');
+    }
+}
+
+function _noopArmoryEnd() {
 };
 
 

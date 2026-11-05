@@ -2363,7 +2363,7 @@ export function updateUI(data) {
         setTimeout(() => {
             const activeEnemyCard = document.querySelector(`.fighter-enemy[data-index="${activeEnemyIndex}"]`);
             if (activeEnemyCard) {
-                activeEnemyCard.style.transform = 'translateX(-50px)';
+                activeEnemyCard.style.transform = 'translateX(-24px)';
                 setTimeout(() => {
                     if (activeEnemyCard.classList.contains('active')) {
                         activeEnemyCard.style.transform = 'scale(1.05)';

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,17 +45,18 @@ public class AnomalieController {
             return ResponseEntity.status(401).build();
         }
 
+        List<Anomalie> list = anomalieRepository.findByOwnerUsername(username);
         Optional<AppUser> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent() && "ADMIN".equals(userOpt.get().getRole())) {
-            syncAdminAnomalies(userOpt.get());
+            list = syncAdminAnomalies(userOpt.get(), list);
         }
 
-        List<Anomalie> list = anomalieRepository.findByOwnerUsername(username);
         enrichAnomalies(list);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/all")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Anomalie>> getAllAdmin() {
         String username = getCurrentUsername();
         if (username == null)
@@ -83,39 +85,65 @@ public class AnomalieController {
         }
     }
 
-    private void syncAdminAnomalies(AppUser adminUser) {
+    private List<Anomalie> syncAdminAnomalies(AppUser adminUser, List<Anomalie> currentAdminAnomalies) {
         List<String> distinctNames = anomalieRepository.findDistinctNames();
-        List<Anomalie> adminAnomalies = anomalieRepository.findByOwnerUsername(adminUser.getUsername());
+        java.util.Set<String> ownedNames = new java.util.HashSet<>();
+        for (Anomalie a : currentAdminAnomalies) {
+            if (a.getName() != null) ownedNames.add(a.getName());
+        }
 
+        List<String> missingNames = new java.util.ArrayList<>();
         for (String name : distinctNames) {
-            if (name == null || name.trim().isEmpty())
-                continue;
-            boolean hasIt = adminAnomalies.stream().anyMatch(a -> name.equals(a.getName()));
-            if (!hasIt) {
-                Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(name);
-                if (template != null) {
-                    Anomalie newAno = new Anomalie();
-                    newAno.setName(template.getName());
-                    newAno.setSpiritualite(template.getSpiritualite());
-                    newAno.setCategory(template.getCategory());
-                    newAno.setDescription(template.getDescription());
-                    newAno.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                    newAno.setMagicObject(template.isMagicObject());
-                    newAno.setOwnerUsername(adminUser.getUsername());
-                    newAno.setUser(adminUser);
-                    anomalieRepository.save(newAno);
-                }
+            if (name != null && !name.trim().isEmpty() && !ownedNames.contains(name)) {
+                missingNames.add(name);
             }
         }
+        if (missingNames.isEmpty()) {
+            return currentAdminAnomalies;
+        }
+
+        List<Anomalie> allTemplates = anomalieRepository.findByIsTemplateTrue();
+        java.util.Map<String, Anomalie> templateByName = new java.util.HashMap<>();
+        for (Anomalie t : allTemplates) {
+            if (t.getName() != null) {
+                templateByName.merge(t.getName(), t, (oldVal, newVal) -> oldVal.getId() <= newVal.getId() ? oldVal : newVal);
+            }
+        }
+
+        List<Anomalie> toSave = new java.util.ArrayList<>();
+        for (String name : missingNames) {
+            Anomalie template = templateByName.get(name);
+            if (template != null) {
+                Anomalie newAno = new Anomalie();
+                newAno.setName(template.getName());
+                newAno.setSpiritualite(template.getSpiritualite());
+                newAno.setCategory(template.getCategory());
+                newAno.setDescription(template.getDescription());
+                newAno.setLevel(template.getLevel() != null ? template.getLevel() : 1);
+                newAno.setMagicObject(template.isMagicObject());
+                newAno.setOwnerUsername(adminUser.getUsername());
+                newAno.setUser(adminUser);
+                toSave.add(newAno);
+            }
+        }
+        if (!toSave.isEmpty()) {
+            List<Anomalie> saved = anomalieRepository.saveAll(toSave);
+            List<Anomalie> merged = new java.util.ArrayList<>(currentAdminAnomalies);
+            merged.addAll(saved);
+            return merged;
+        }
+        return currentAdminAnomalies;
     }
 
     @GetMapping("/all-names")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<String>> getAllAnomalyNames() {
         return ResponseEntity.ok(anomalieRepository.findDistinctNames());
     }
 
     @org.springframework.cache.annotation.Cacheable("anomalyTemplates")
     @GetMapping("/all-templates")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Anomalie>> getAllAnomalyTemplates() {
         List<Anomalie> allTemplates = anomalieRepository.findByIsTemplateTrue();
         java.util.Map<String, Anomalie> uniqueMap = new java.util.HashMap<>();
@@ -132,7 +160,7 @@ public class AnomalieController {
     @org.springframework.cache.annotation.CacheEvict(value = { "anomalyTemplates", "anomalieTemplates",
             "anomalieTemplateByName", "anomalieDistinctNames", "alchemyRecipes", "alchemyRecipesList",
             "alchemyRecipeById", "equipmentTemplates", "equipmentTemplateByName", "publicEquipmentTemplates",
-            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "monstres", "salles",
+            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "donjonsLight", "monstres", "salles",
             "lootEntriesByEquipment" }, allEntries = true)
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAnomalie(@PathVariable Long id, @RequestBody Anomalie anomalieDetails) {
@@ -187,7 +215,7 @@ public class AnomalieController {
     @org.springframework.cache.annotation.CacheEvict(value = { "anomalyTemplates", "anomalieTemplates",
             "anomalieTemplateByName", "anomalieDistinctNames", "alchemyRecipes", "alchemyRecipesList",
             "alchemyRecipeById", "equipmentTemplates", "equipmentTemplateByName", "publicEquipmentTemplates",
-            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "monstres", "salles",
+            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "donjonsLight", "monstres", "salles",
             "lootEntriesByEquipment" }, allEntries = true)
     @PostMapping
     public ResponseEntity<?> createAnomalie(@RequestBody Anomalie anomalie) {
@@ -247,7 +275,7 @@ public class AnomalieController {
     @org.springframework.cache.annotation.CacheEvict(value = { "anomalyTemplates", "anomalieTemplates",
             "anomalieTemplateByName", "anomalieDistinctNames", "alchemyRecipes", "alchemyRecipesList",
             "alchemyRecipeById", "equipmentTemplates", "equipmentTemplateByName", "publicEquipmentTemplates",
-            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "monstres", "salles",
+            "equipmentShopTemplates", "equipmentDistinctNames", "donjons", "donjonsLight", "monstres", "salles",
             "lootEntriesByEquipment" }, allEntries = true)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAnomalie(@PathVariable Long id) {

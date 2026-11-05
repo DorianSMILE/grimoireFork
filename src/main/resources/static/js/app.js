@@ -25,15 +25,17 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('authLoaded', async () => {
     const user = window.currentUser;
 
-    await constants.initMeta();
-    await api.fetchMeta();
-
     if (api.isAdmin(user)) {
         const forgePanel = document.getElementById('spellForgePanel');
+        if (forgePanel) forgePanel.classList.remove('is-hidden');
         if (forgePanel) forgePanel.style.display = '';
         const mainEl = document.querySelector('main');
         if (mainEl) mainEl.style.gridTemplateColumns = '';
     }
 
+    await Promise.all([
+        constants.initMeta(),
+        api.fetchMeta()
+    ]);
     await api.loadSpells();
 });

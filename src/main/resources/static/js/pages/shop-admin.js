@@ -344,7 +344,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             document.body.innerHTML = "<h2 class='text-error text-center mt-12'>Accès Refusé : Réservé aux Admins</h2>";
             return;
         }
-        await loadAnomalies();
+        await Promise.all([loadAnomalies(), loadEquipments(), loadUpgrades()]); if (true) { renderVault(); renderUpgradesGrid(); return; }
         loadEquipments();
         loadUpgrades();
     };
@@ -366,7 +366,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     eqInputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('input', updateWeightUI);
+            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(updateWeightUI, 150); });
             el.addEventListener('change', updateWeightUI);
         }
     });

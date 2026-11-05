@@ -63,6 +63,7 @@ public class Spell {
     private Mutation mutation;
 
     @OneToMany(mappedBy = "spell", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @org.hibernate.annotations.BatchSize(size = 50)
     @OrderBy("id ASC")
     private java.util.Set<SpellEffect> effects = new java.util.LinkedHashSet<>();
 

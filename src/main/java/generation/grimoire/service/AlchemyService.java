@@ -84,13 +84,13 @@ public class AlchemyService {
         boolean hasNewDiscoveredItems = false;
         
         // Ensure all currently owned items are considered discovered (fixes items obtained via combat/quests)
-        for (Anomalie a : anomalieRepository.findByOwnerUsername(user.getUsername())) {
+        for (String aName : anomalieRepository.findDistinctNamesByOwnerUsername(user.getUsername())) { Anomalie a = new Anomalie(); a.setName(aName);
             if (discovered.add(a.getName())) {
                 user.getDiscoveredItems().add(a.getName());
                 hasNewDiscoveredItems = true;
             }
         }
-        for (Equipment e : equipmentRepository.findByUser_Username(user.getUsername())) {
+        for (String eName : equipmentRepository.findDistinctNamesByUserUsername(user.getUsername())) { Equipment e = new Equipment(); e.setName(eName);
             if (discovered.add(e.getName())) {
                 user.getDiscoveredItems().add(e.getName());
                 hasNewDiscoveredItems = true;
@@ -122,12 +122,12 @@ public class AlchemyService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById"}, allEntries = true)
+    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById", "equipmentAlchemySources", "anomalieAlchemySources"}, allEntries = true)
     public AlchemyRecipe saveRecipe(AlchemyRecipe recipe) {
         return recipeRepository.save(java.util.Objects.requireNonNull(recipe));
     }
 
-    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById"}, allEntries = true)
+    @CacheEvict(value = {"alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById", "equipmentAlchemySources", "anomalieAlchemySources"}, allEntries = true)
     public void deleteRecipe(Long id) {
         recipeRepository.deleteById(java.util.Objects.requireNonNull(id));
     }
@@ -247,10 +247,16 @@ public class AlchemyService {
                 }
 
                 // Trier pour s'assurer que les objets utilisés dans les donjons (LootEntry) ne sont pas supprimés en premier
+                java.util.Set<Long> lootEquipmentIds = new java.util.HashSet<>();
+                for (Equipment eqCheck : matchingProvided) {
+                    if (!lootEntryRepository.findByEquipmentId(eqCheck.getId()).isEmpty()) {
+                        lootEquipmentIds.add(eqCheck.getId());
+                    }
+                }
                 List<Equipment> sortedProvided = new ArrayList<>(matchingProvided);
                 sortedProvided.sort((e1, e2) -> {
-                    boolean e1IsLoot = !lootEntryRepository.findByEquipmentId(e1.getId()).isEmpty();
-                    boolean e2IsLoot = !lootEntryRepository.findByEquipmentId(e2.getId()).isEmpty();
+                    boolean e1IsLoot = lootEquipmentIds.contains(e1.getId());
+                    boolean e2IsLoot = lootEquipmentIds.contains(e2.getId());
                     return Boolean.compare(e1IsLoot, e2IsLoot); // false (0) vient avant true (1)
                 });
 
@@ -258,7 +264,7 @@ public class AlchemyService {
                     Equipment e = sortedProvided.get(i);
                     
                     // Protection stricte : ne JAMAIS supprimer un template LootEntry, même s'il est sélectionné.
-                    if (!lootEntryRepository.findByEquipmentId(e.getId()).isEmpty()) {
+                    if (lootEquipmentIds.contains(e.getId())) {
                         continue;
                     }
 

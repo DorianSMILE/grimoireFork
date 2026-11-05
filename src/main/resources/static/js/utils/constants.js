@@ -100,141 +100,167 @@ export const STAT_DEFS = [
 
 window.STAT_DEFS = STAT_DEFS;
 
+const META_STORAGE_KEY = 'grimoire_meta_cache_v3';
+let initMetaPromise = null;
 
+function applyMeta(allMeta) {
+    window.GRIMOIRE_META = allMeta;
 
-export async function initMeta() {
-    if (window.GRIMOIRE_META) return;
-    try {
-        const [metaRes, recipesRes] = await Promise.all([
-            globalFetch('/api/meta/all', { silent: true }).catch(() => null),
-            globalFetch('/api/alchemy/recipes', { silent: true }).catch(() => null)
-        ]);
+    if (allMeta.statTypes) {
+        allMeta.statTypes.forEach(s => GLOBAL_STAT_LABELS[s.name] = s.label);
+    }
+    if (allMeta.sources) {
+        allMeta.sources.forEach(s => GLOBAL_SRC_LABELS[s.name] = s.label);
+    }
+    if (allMeta.tutorialSteps) {
+        window.GRIMOIRE_TUTORIAL_STEPS = allMeta.tutorialSteps;
+    }
 
-        if (recipesRes && recipesRes.ok) {
-            window.GRIMOIRE_ALCHEMY_RECIPES = await recipesRes.json();
+    window.SLOT_LABELS = {};
+    if (allMeta.equipmentSlots) {
+        allMeta.equipmentSlots.forEach(s => {
+            window.SLOT_LABELS[s.name] = { label: s.label, icon: s.icon, color: s.color || 'var(--danger, #ef4444)', extraClass: s.extraClass || '' };
+        });
+        window.SLOT_LABELS['ANOMALIE'] = { label: 'Anomalie', icon: 'auto_awesome', color: 'var(--warning, #f59e0b)', extraClass: '' };
+    }
+
+    window.CONSUMABLE_CATEGORIES = {};
+    if (allMeta.consumableCategories) {
+        allMeta.consumableCategories.forEach(c => {
+            window.CONSUMABLE_CATEGORIES[c.name] = { label: c.label, icon: c.icon, color: c.color || 'var(--slot-consommable)' };
+        });
+    }
+
+    window.ANOMALIE_CATEGORIES = {};
+    window.CATEGORY_ICONS = {};
+
+    if (allMeta.anomalieCategories) {
+        allMeta.anomalieCategories.forEach(c => {
+            window.CATEGORY_ICONS[c.name] = c.icon;
+            window.ANOMALIE_CATEGORIES[c.name] = {
+                label: c.label,
+                icon: c.icon
+            };
+        });
+    }
+
+    if (allMeta.castingTypes) {
+        window.CASTING_TYPES = window.CASTING_TYPES || {};
+        allMeta.castingTypes.forEach(ct => {
+            window.CASTING_TYPES[ct.name] = {
+                name: ct.name,
+                label: ct.label,
+                description: ct.description,
+                icon: ct.icon,
+                color: ct.color
+            };
+        });
+    }
+
+    window.RARITY_COLORS = {};
+    let rarityStyles = '';
+    if (allMeta.equipmentRarities) {
+        allMeta.equipmentRarities.forEach(r => {
+            let color = r.color || 'var(--everyone-color, #fbbf24)';
+            window.RARITY_COLORS[r.name] = color;
+
+            let weight = 600;
+            let shadow = 5;
+            if (r.name === 'EPIQUE') { weight = 700; shadow = 8; }
+            else if (r.name === 'RELIQUE' || r.name === 'MAUDIT') { weight = 800; shadow = 10; }
+
+            rarityStyles += `
+            .rarity-${r.name} {
+                color: ${color} !important;
+                text-shadow: 0 0 ${shadow}px color-mix(in srgb, ${color} 40%, transparent);
+                font-weight: ${weight};
+            }
+            
+            /* vault.css */
+            .vault-card.rarity-${r.name} {
+                border-top: 2px solid ${color};
+            }
+            `;
+
+            if (r.name !== 'COMMUN') {
+                rarityStyles += `
+                .vault-card.rarity-${r.name} {
+                    background: linear-gradient(180deg, color-mix(in srgb, ${color} 5%, transparent) 0%, rgba(30, 41, 59, 0.4) 30%);
+                }
+                `;
+            }
+
+            rarityStyles += `
+            /* shop.css */
+            .shop-rarity-group.group-${r.name} {
+                border-top: 3px solid ${color};
+            }
+            .group-${r.name} .shop-rarity-title {
+                color: ${color};
+                border-color: color-mix(in srgb, ${color} 30%, transparent);
+            }
+            
+            /* shop-admin.css */
+            .shop-admin-header.rarity-${r.name} {
+                background: color-mix(in srgb, ${color} 10%, transparent);
+                color: ${color};
+                border-bottom: 1px solid color-mix(in srgb, ${color} 20%, transparent);
+            }
+            `;
+        });
+        if (!document.getElementById('dynamic-rarity-styles')) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'dynamic-rarity-styles';
+            styleEl.innerHTML = rarityStyles;
+            document.head.appendChild(styleEl);
         }
-
-        if (metaRes && metaRes.ok) {
-            const allMeta = await metaRes.json();
-            window.GRIMOIRE_META = allMeta;
-
-            // Retro-compatibility
-            if (allMeta.statTypes) {
-                allMeta.statTypes.forEach(s => GLOBAL_STAT_LABELS[s.name] = s.label);
-            }
-            if (allMeta.sources) {
-                allMeta.sources.forEach(s => GLOBAL_SRC_LABELS[s.name] = s.label);
-            }
-
-            // Build Quick Access Maps
-            window.SLOT_LABELS = {};
-            if (allMeta.equipmentSlots) {
-                allMeta.equipmentSlots.forEach(s => {
-                    window.SLOT_LABELS[s.name] = { label: s.label, icon: s.icon, color: s.color || 'var(--danger, #ef4444)', extraClass: s.extraClass || '' };
-                });
-                window.SLOT_LABELS['ANOMALIE'] = { label: 'Anomalie', icon: 'auto_awesome', color: 'var(--warning, #f59e0b)', extraClass: '' };
-            }
-
-            window.CONSUMABLE_CATEGORIES = {};
-            if (allMeta.consumableCategories) {
-                allMeta.consumableCategories.forEach(c => {
-                    window.CONSUMABLE_CATEGORIES[c.name] = { label: c.label, icon: c.icon, color: c.color || 'var(--slot-consommable)' };
-                });
-            }
-
-            window.ANOMALIE_CATEGORIES = {};
-            window.CATEGORY_ICONS = {};
-
-            if (allMeta.anomalieCategories) {
-                allMeta.anomalieCategories.forEach(c => {
-                    window.CATEGORY_ICONS[c.name] = c.icon;
-                    
-                    window.ANOMALIE_CATEGORIES[c.name] = {
-                        label: c.label,
-                        icon: c.icon
-                    };
-                });
-            }
-
-            if (allMeta.castingTypes) {
-                window.CASTING_TYPES = window.CASTING_TYPES || {};
-                allMeta.castingTypes.forEach(ct => {
-                    window.CASTING_TYPES[ct.name] = {
-                        name: ct.name,
-                        label: ct.label,
-                        description: ct.description,
-                        icon: ct.icon,
-                        color: ct.color
-                    };
-                });
-            }
-
-            window.RARITY_COLORS = {};
-            let rarityStyles = '';
-            if (allMeta.equipmentRarities) {
-                allMeta.equipmentRarities.forEach(r => {
-                    let color = r.color || 'var(--everyone-color, #fbbf24)';
-                    window.RARITY_COLORS[r.name] = color;
-
-                    let weight = 600;
-                    let shadow = 5;
-                    if (r.name === 'EPIQUE') { weight = 700; shadow = 8; }
-                    else if (r.name === 'RELIQUE' || r.name === 'MAUDIT') { weight = 800; shadow = 10; }
-
-                    rarityStyles += `
-                    .rarity-${r.name} {
-                        color: ${color} !important;
-                        text-shadow: 0 0 ${shadow}px color-mix(in srgb, ${color} 40%, transparent);
-                        font-weight: ${weight};
-                    }
-                    
-                    /* vault.css */
-                    .vault-card.rarity-${r.name} {
-                        border-top: 2px solid ${color};
-                    }
-                    `;
-
-                    if (r.name !== 'COMMUN') {
-                        rarityStyles += `
-                        .vault-card.rarity-${r.name} {
-                            background: linear-gradient(180deg, color-mix(in srgb, ${color} 5%, transparent) 0%, rgba(30, 41, 59, 0.4) 30%);
-                        }
-                        `;
-                    }
-
-                    rarityStyles += `
-                    /* shop.css */
-                    .shop-rarity-group.group-${r.name} {
-                        border-top: 3px solid ${color};
-                    }
-                    .group-${r.name} .shop-rarity-title {
-                        color: ${color};
-                        border-color: color-mix(in srgb, ${color} 30%, transparent);
-                    }
-                    
-                    /* shop-admin.css */
-                    .shop-admin-header.rarity-${r.name} {
-                        background: color-mix(in srgb, ${color} 10%, transparent);
-                        color: ${color};
-                        border-bottom: 1px solid color-mix(in srgb, ${color} 20%, transparent);
-                    }
-                    `;
-                });
-                const styleEl = document.createElement('style');
-                styleEl.id = 'dynamic-rarity-styles';
-                styleEl.innerHTML = rarityStyles;
-                document.head.appendChild(styleEl);
-            }
-        }
-    } catch (e) {
-        console.error("Error loading global meta:", e);
     }
 }
 
+export async function initMeta() {
+    if (window.GRIMOIRE_META) return;
+    if (initMetaPromise) return initMetaPromise;
 
+    initMetaPromise = (async () => {
+        try {
+            let cachedMeta = null;
+            try {
+                const raw = sessionStorage.getItem(META_STORAGE_KEY);
+                if (raw) cachedMeta = JSON.parse(raw);
+            } catch (_) {}
 
+            const metaFetchPromise = cachedMeta
+                ? Promise.resolve(null)
+                : globalFetch('/api/meta/all', { silent: true }).catch(() => null);
 
+            const recipesFetchPromise = window.GRIMOIRE_ALCHEMY_RECIPES
+                ? Promise.resolve(null)
+                : globalFetch('/api/alchemy/recipes', { silent: true }).catch(() => null);
 
+            const [metaRes, recipesRes] = await Promise.all([metaFetchPromise, recipesFetchPromise]);
+
+            if (recipesRes && recipesRes.ok) {
+                window.GRIMOIRE_ALCHEMY_RECIPES = await recipesRes.json();
+            }
+
+            if (cachedMeta) {
+                applyMeta(cachedMeta);
+            } else if (metaRes && metaRes.ok) {
+                const allMeta = await metaRes.json();
+                try {
+                    sessionStorage.setItem(META_STORAGE_KEY, JSON.stringify(allMeta));
+                } catch (_) {}
+                applyMeta(allMeta);
+            }
+        } catch (e) {
+            console.error("Error loading global meta:", e);
+        } finally {
+            initMetaPromise = null;
+        }
+    })();
+
+    return initMetaPromise;
+}
 
 export const TARGET_LABELS = {
     'CASTER': 'Lanceur',
@@ -273,4 +299,3 @@ export const EFFECT_TYPE_CSS_CLASSES = {
     'HEAT': 'text-effect-heat', 'Heat': 'text-effect-heat', 'HEAT_FIXED': 'text-effect-heat', 'HEAT_PERCENTAGE': 'text-effect-heat', 'HEAT_OVER_TIME': 'text-effect-heat',
     'BUD': 'text-effect-bud'
 };
-

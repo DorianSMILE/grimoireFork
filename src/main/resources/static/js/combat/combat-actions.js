@@ -20,7 +20,7 @@ export async function endTurn() {
 
     if (isChannelingTick) {
         if (activePlayerCard) {
-            activePlayerCard.style.transform = 'translateX(50px)';
+            activePlayerCard.style.transform = 'translateX(24px)';
             setTimeout(() => {
                 if (activePlayerCard.classList.contains('active')) {
                     activePlayerCard.style.transform = 'scale(1.05)';

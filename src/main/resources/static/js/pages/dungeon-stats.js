@@ -14,11 +14,18 @@ const chartTheme = {
     fontFamily: "'Outfit', sans-serif"
 };
 
-Chart.defaults.color = chartTheme.color;
-Chart.defaults.font.family = chartTheme.fontFamily;
-Chart.defaults.scale.grid.color = chartTheme.gridColor;
+if (typeof Chart !== 'undefined') {
+    Chart.defaults.color = chartTheme.color;
+    Chart.defaults.font.family = chartTheme.fontFamily;
+    Chart.defaults.scale.grid.color = chartTheme.gridColor;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = chartTheme.color;
+        Chart.defaults.font.family = chartTheme.fontFamily;
+        Chart.defaults.scale.grid.color = chartTheme.gridColor;
+    }
     window.addEventListener('authLoaded', initStats);
 });
 
@@ -36,15 +43,18 @@ async function initStats() {
     }
 
     try {
-        const res = await window.globalFetch(endpoint);
-        const data = await res.json();
-        
+        const [res, donjonsRes] = await Promise.all([
+            window.globalFetch(endpoint),
+            window.globalFetch('/api/pve/dungeons')
+        ]);
+        const [data, allDonjons] = await Promise.all([
+            res.json(),
+            donjonsRes.json()
+        ]);
+
         allRuns = data.runs;
         globalStats = data.globalStatsByDungeon;
 
-        // Fetch dungeons for secrets
-        const donjonsRes = await window.globalFetch('/api/pve/dungeons');
-        const allDonjons = await donjonsRes.json();
         window.dungeonSecretMap = {};
         allDonjons.forEach(d => {
             window.dungeonSecretMap[d.id] = d.requiredSecret;
@@ -54,9 +64,9 @@ async function initStats() {
         allRuns.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         populateDungeonSelect();
-        
-        document.getElementById('statsLoader').style.display = 'none';
-        document.getElementById('statsContent').style.display = 'block';
+
+        document.getElementById('statsLoader').classList.add('is-hidden');
+        document.getElementById('statsContent').classList.remove('is-hidden');
 
         renderDashboard('ALL');
 
@@ -357,16 +367,18 @@ function updateSpiritualityChart(stats) {
 function updateRunsTable(runs) {
     const tbody = document.getElementById('runsTableBody');
     tbody.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    const isAdmin = window.isAdmin;
 
     for (let r of runs) {
         const date = new Date(r.timestamp).toLocaleString('fr-FR');
         
         let statusHtml = '';
         switch(r.outcome) {
-            case 'VICTORY': statusHtml = `<span class="status-badge status-VICTORY"><span class="material-symbols-outlined" style="font-size:14px">emoji_events</span> Victoire</span>`; break;
-            case 'DEFEAT': statusHtml = `<span class="status-badge status-DEFEAT"><span class="material-symbols-outlined" style="font-size:14px">skull</span> Défaite</span>`; break;
-            case 'FLEE': statusHtml = `<span class="status-badge status-FLEE"><span class="material-symbols-outlined" style="font-size:14px">directions_run</span> Fuite</span>`; break;
-            case 'TIMEOUT': statusHtml = `<span class="status-badge status-TIMEOUT"><span class="material-symbols-outlined" style="font-size:14px">timer</span> Timeout</span>`; break;
+            case 'VICTORY': statusHtml = `<span class="status-badge status-VICTORY"><span class="material-symbols-outlined text-sm">emoji_events</span> Victoire</span>`; break;
+            case 'DEFEAT': statusHtml = `<span class="status-badge status-DEFEAT"><span class="material-symbols-outlined text-sm">skull</span> Défaite</span>`; break;
+            case 'FLEE': statusHtml = `<span class="status-badge status-FLEE"><span class="material-symbols-outlined text-sm">directions_run</span> Fuite</span>`; break;
+            case 'TIMEOUT': statusHtml = `<span class="status-badge status-TIMEOUT"><span class="material-symbols-outlined text-sm">timer</span> Timeout</span>`; break;
         }
 
         const deathHtml = r.dead 
@@ -374,9 +386,8 @@ function updateRunsTable(runs) {
             : `<span class="text-success font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span> En vie</span>`;
 
         const tr = document.createElement('tr');
-        const isAdmin = window.isAdmin;
         tr.innerHTML = `
-            <td class="text-muted" style="white-space:nowrap">${date}</td>
+            <td class="text-muted whitespace-nowrap">${date}</td>
             <td class="font-medium text-white">${r.dungeonName}</td>
             ${isAdmin ? `<td class="text-white">${r.accountName || '-'}</td>` : ''}
             <td>
@@ -393,6 +404,7 @@ function updateRunsTable(runs) {
                 }
             </td>
         `;
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
     }
+    tbody.appendChild(fragment);
 }

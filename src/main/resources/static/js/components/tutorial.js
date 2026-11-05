@@ -27,7 +27,7 @@
 
     async function ensureTutorialStepsLoaded() {
         const hasUpdatedSteps = (arr) =>
-            Array.isArray(arr) && arr.some(s => s.name === 'DUNGEON_LOOT_SHIELD');
+            Array.isArray(arr) && arr.some(s => s.name === 'EQUIP_SELECT_ITEM' && s.targetSelector && s.targetSelector.includes(':has('));
 
         if (hasUpdatedSteps(window.GRIMOIRE_TUTORIAL_STEPS)) {
             return window.GRIMOIRE_TUTORIAL_STEPS;
@@ -533,6 +533,7 @@
         stopTutorial();
         if (window.currentUser) {
             window.currentUser.tutorialCompleted = true;
+            window.currentUser.equipTutorialActive = false;
             window.currentUser.tutorialPhase = 'NONE';
         }
         if (markOnServer && typeof window.globalFetch === 'function') {

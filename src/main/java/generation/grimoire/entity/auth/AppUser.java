@@ -99,6 +99,9 @@ public class AppUser {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean tutorialCompleted = false;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean equipTutorialCompleted = false;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @BatchSize(size = 50)

@@ -276,11 +276,15 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
         let url = `/api/equipments/${equipmentId}/equip/${personnageId}`;
         if (targetSlot) {
             url += `?targetSlot=${targetSlot}`;
+
         }
         const res = await globalFetch(url, { method: 'POST' });
         if (res) {
             const data = await res.json();
             showNotif(data.message);
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
     initArmoryTutorial();
             renderEquipModal();
@@ -297,6 +301,9 @@ async function unequipItem(equipmentId) {
         if (res) {
             const data = await res.json();
             showNotif(data.message);
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
     initArmoryTutorial();
             renderEquipModal();
@@ -317,6 +324,9 @@ async function deleteEquipment(id) {
         confirmBody: `Voulez-vous vraiment supprimer l'équipement <strong class="text-white">${eq.name}</strong> ?`,
         apiRoute: "/api/equipments/",
         onSuccess: async () => {
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
     initArmoryTutorial();
             renderEquipModal();
@@ -670,11 +680,20 @@ async function openEquipModal(persoId) {
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
     initArmoryTutorial();
     const overlay = document.getElementById('equipModalOverlay');
+    setTimeout(() => {
+        if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_CLICK_BTN') {
+            window.GrimoireTutorial.goToStepByName('EQUIP_SELECT_ITEM');
+            setTimeout(() => window.GrimoireTutorial.reposition(), 220);
+        }
+    }, 60);
     overlay.classList.add('active');
     renderEquipModal();
 }
 
 function closeEquipModal() {
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+        return;
+    }
     pageState.equipModalPersoId = null;
     document.getElementById('equipModalOverlay').classList.remove('active');
     const avatarEl = document.getElementById('equipModalAvatar');
@@ -1232,7 +1251,36 @@ window.hideEqTooltip = function () {
 };
 
 function initArmoryTutorial() {
-    if (window.isAdmin || !window.currentUser || window.currentUser.tutorialCompleted) return;
+    if (window.isAdmin || !window.currentUser) return;
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+    if (window.currentUser.tutorialCompleted) {
+        if (window.currentUser.equipTutorialActive && pageState.personnages.length > 0) {
+            window.GrimoireTutorial.startPhase('EQUIP_ARMORY', {
+                resolveTarget: (step) => {
+                    if (step.name === 'EQUIP_SELECT_ITEM') {
+                        const wrapper = document.querySelector('#equipSlotsContainer .equip-slot-card .custom-select-wrapper');
+                        if (wrapper) return wrapper.closest('.equip-slot-card') || wrapper;
+                        return document.getElementById('equipSlotsContainer');
+                    }
+                    return document.querySelector(step.targetSelector);
+                },
+                canPrev: () => false,
+                canNext: () => false,
+                onStepEnter: (step) => {
+                    const closeBtn = document.querySelector('#equipModalOverlay .equip-modal-close');
+                    if (closeBtn) {
+                        if (step.name === 'EQUIP_SELECT_ITEM') closeBtn.classList.add('is-hidden');
+                        else closeBtn.classList.remove('is-hidden');
+                    }
+                },
+                onStop: () => {
+                    const closeBtn = document.querySelector('#equipModalOverlay .equip-modal-close');
+                    if (closeBtn) closeBtn.classList.remove('is-hidden');
+                }
+            });
+        }
+        return;
+    }
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
 
     const hasNoChars = pageState.personnages.length === 0;

@@ -1,8 +1,11 @@
 package generation.grimoire.controller.auth;
 
+import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.auth.AppUser;
 import generation.grimoire.entity.pve.Donjon;
+import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.model.pve.CombatSession;
+import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
 import generation.grimoire.repository.pve.DonjonRepository;
@@ -44,6 +47,7 @@ public class AuthController {
     private final DonjonRepository donjonRepository;
     private final AlchemyService alchemyService;
     private final PersonnageRepository personnageRepository;
+    private final EquipmentRepository equipmentRepository;
     private final CombatService combatService;
     private final DungeonTutorialService dungeonTutorialService;
 
@@ -53,6 +57,7 @@ public class AuthController {
             DonjonRepository donjonRepository,
             AlchemyService alchemyService,
             PersonnageRepository personnageRepository,
+            EquipmentRepository equipmentRepository,
             CombatService combatService,
             DungeonTutorialService dungeonTutorialService) {
         this.authenticationManager = authenticationManager;
@@ -64,6 +69,7 @@ public class AuthController {
         this.donjonRepository = donjonRepository;
         this.alchemyService = alchemyService;
         this.personnageRepository = personnageRepository;
+        this.equipmentRepository = equipmentRepository;
         this.combatService = combatService;
         this.dungeonTutorialService = dungeonTutorialService;
     }
@@ -225,6 +231,18 @@ public class AuthController {
                 tutorialPhase = (currentChars == 0) ? "ARMORY" : "DUNGEON";
             }
             res.put("tutorialPhase", tutorialPhase);
+
+            boolean equipTutorialActive = false;
+            if (!isAdmin && !u.isEquipTutorialCompleted() && currentChars > 0) {
+                List<Equipment> userEqs = equipmentRepository.findByOwnerUsername(u.getUsername());
+                boolean hasEquipped = userEqs.stream()
+                        .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() != null);
+                if (!hasEquipped) {
+                    equipTutorialActive = userEqs.stream()
+                            .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() == null);
+                }
+            }
+            res.put("equipTutorialActive", equipTutorialActive);
         });
 
         return ResponseEntity.ok()
@@ -339,9 +357,12 @@ public class AuthController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
         }
+        if (user.isTutorialCompleted() || !user.getCompletedDungeons().isEmpty()) {
+            user.setEquipTutorialCompleted(true);
+        }
         user.setTutorialCompleted(true);
         userRepository.save(user);
-        return ResponseEntity.ok(Map.of("tutorialCompleted", true, "tutorialPhase", "NONE"));
+        return ResponseEntity.ok(Map.of("tutorialCompleted", true, "equipTutorialCompleted", user.isEquipTutorialCompleted(), "tutorialPhase", "NONE"));
     }
 
     @PostMapping("/refresh")

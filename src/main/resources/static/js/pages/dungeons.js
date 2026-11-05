@@ -349,7 +349,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 function initDungeonTutorial() {
-    if (window.isAdmin || !window.currentUser || window.currentUser.tutorialCompleted) return;
+    if (window.isAdmin || !window.currentUser) return;
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+    if (window.currentUser.tutorialCompleted) {
+        if (window.currentUser.equipTutorialActive) {
+            window.GrimoireTutorial.startPhase('EQUIP_NAV', {
+                canPrev: () => false,
+                canNext: () => false
+            });
+        }
+        return;
+    }
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
     if (!pageState.userCharacters || pageState.userCharacters.length === 0) return;
 
@@ -915,7 +925,7 @@ async function loadDungeons() {
     const urlParams = new URLSearchParams(window.location.search);
     const openDungeonId = urlParams.get('dungeonId');
     const openCharIds = urlParams.get('charIds');
-    if (openDungeonId) {
+    if (openDungeonId && !(window.currentUser && window.currentUser.equipTutorialActive)) {
         localStorage.removeItem('activeCombatId');
         const card = document.getElementById(`dungeon-card-${openDungeonId}`);
         if (card) {
@@ -1306,7 +1316,7 @@ window.selectCharacter = async function (id) {
     } else {
         window.clearInspectedCharacter();
     }
-    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive()) {
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
         const cur = window.GrimoireTutorial.getCurrentStep();
         if (cur && cur.name === 'DUNGEON_SELECT_HERO' && pageState.selectedCharIds.length > 0) {
             setTimeout(() => window.GrimoireTutorial.goToStepByName('DUNGEON_STATS_EQUIP'), 120);
@@ -1624,13 +1634,13 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     document.getElementById('dungeonsContent').style.display = 'none';
     document.getElementById('prepInterface').style.display = 'block';
-    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive()) {
-        setTimeout(() => window.GrimoireTutorial.goToStepByName('DUNGEON_SELECT_HERO'), 80);
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
+        setTimeout(() => { if (window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') window.GrimoireTutorial.goToStepByName('DUNGEON_SELECT_HERO'); }, 80);
     }
 };
 
 window.closePrepInterface = function () {
-    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive()) {
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
         return;
     }
     window._isStartingCombat = false;
@@ -1670,7 +1680,7 @@ window.startCombat = async function () {
     if (pageState.selectedConsumableIds.length > 0) {
         url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }
-    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive()) {
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
         await window.GrimoireTutorial.complete(true);
     }
     window.location.href = url;

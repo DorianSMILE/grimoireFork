@@ -100,7 +100,7 @@ export const STAT_DEFS = [
 
 window.STAT_DEFS = STAT_DEFS;
 
-const META_STORAGE_KEY = 'grimoire_meta_cache_v3';
+const META_STORAGE_KEY = 'grimoire_meta_cache_v4';
 let initMetaPromise = null;
 
 function applyMeta(allMeta) {

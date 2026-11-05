@@ -151,6 +151,39 @@ public enum TutorialStep {
             "top",
             "action",
             "#btnEnterDungeon"
+    ),
+    EQUIP_GO_ARMORY(
+            "EQUIP_NAV",
+            1,
+            "1. Premier Équipement Obtenu !",
+            "Vous avez récupéré votre premier équipement ! Cliquez sur l'onglet « Armurerie » pour aller l'équiper sur votre héros.",
+            "shield",
+            ".nav-armory",
+            "bottom",
+            "action",
+            ".nav-armory"
+    ),
+    EQUIP_CLICK_BTN(
+            "EQUIP_ARMORY",
+            1,
+            "1. Ouvrir l'Équipement",
+            "Cliquez sur le bouton « Équiper » de la carte de votre personnage pour ouvrir son inventaire d'équipement.",
+            "shield",
+            "#personnagesList .char-btn-equip",
+            "left",
+            "action",
+            "#personnagesList .char-btn-equip"
+    ),
+    EQUIP_SELECT_ITEM(
+            "EQUIP_ARMORY",
+            2,
+            "2. Équiper votre Objet",
+            "Cliquez sur « Choisir un équipement... » dans l'emplacement disponible, puis sélectionnez l'objet obtenu pour l'équiper !",
+            "checkroom",
+            "#equipSlotsContainer .equip-slot-card:has(.custom-select-wrapper)",
+            "right",
+            "action",
+            "#equipSlotsContainer .equip-slot-card"
     );
 
     private final String phase;

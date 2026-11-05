@@ -263,6 +263,16 @@ window.formatRichText = function (text) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    try {
+        if (sessionStorage.getItem('grimoire_html_cache_v9') !== '1') {
+            sessionStorage.setItem('grimoire_html_cache_v9', '1');
+            sessionStorage.removeItem('grimoire_app_meta_v1');
+            sessionStorage.removeItem('grimoire_app_meta_v2');
+            ['/dungeons.html', '/armory.html', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+                fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
+            });
+        }
+    } catch (_) {}
 
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');

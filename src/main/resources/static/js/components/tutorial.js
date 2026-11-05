@@ -11,6 +11,7 @@
         currentIndex: 0,
         activeStepObj: null,
         popoverEl: null,
+        arrowEl: null,
         badgeTextEl: null,
         iconEl: null,
         titleEl: null,
@@ -27,7 +28,9 @@
 
     async function ensureTutorialStepsLoaded() {
         const hasUpdatedSteps = (arr) =>
-            Array.isArray(arr) && arr.some(s => s.name === 'COMBAT_FLEE');
+            Array.isArray(arr)
+            && arr.some(s => s.name === 'COMBAT_TYPE_CHANNELED')
+            && arr.some(s => s.name === 'DUNGEON_SELECT_CARD' && s.placement === 'bottom');
 
         if (hasUpdatedSteps(window.GRIMOIRE_TUTORIAL_STEPS)) {
             return window.GRIMOIRE_TUTORIAL_STEPS;
@@ -185,6 +188,7 @@
         document.body.appendChild(popover);
 
         tutorialState.popoverEl = popover;
+        tutorialState.arrowEl = arrow;
         tutorialState.badgeTextEl = badgeText;
         tutorialState.iconEl = iconSpan;
         tutorialState.titleEl = titleH2;
@@ -193,6 +197,7 @@
         tutorialState.prevBtnEl = prevBtn;
         tutorialState.nextBtnEl = nextBtn;
         tutorialState.nextBtnLabelEl = nextLabel;
+        tutorialState.nextBtnIconEl = nextIcon;
         tutorialState.actionHintEl = actionHint;
 
         return popover;
@@ -241,60 +246,116 @@
         const rect = targetEl.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) return;
 
-        const popRect = popover.getBoundingClientRect();
-        const popWidth = popRect.width || 340;
-        const popHeight = popRect.height || 190;
+        const popWidth = popover.offsetWidth || popover.getBoundingClientRect().width || 340;
+        const popHeight = popover.offsetHeight || popover.getBoundingClientRect().height || 190;
         const gap = 16;
         const margin = 12;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        let placement = preferredPlacement || 'right';
+        const spaceTop = rect.top - margin;
+        const spaceBottom = vh - margin - rect.bottom;
+        const spaceLeft = rect.left - margin;
+        const spaceRight = vw - margin - rect.right;
 
-        // Viewport collision detection & smart flipping
-        if (placement === 'right' && rect.right + gap + popWidth > vw - margin) {
-            if (rect.left - gap - popWidth >= margin) {
-                placement = 'left';
-            } else {
-                placement = (rect.bottom + gap + popHeight <= vh - margin) ? 'bottom' : 'top';
-            }
-        } else if (placement === 'left' && rect.left - gap - popWidth < margin) {
-            if (rect.right + gap + popWidth <= vw - margin) {
-                placement = 'right';
-            } else {
-                placement = (rect.bottom + gap + popHeight <= vh - margin) ? 'bottom' : 'top';
-            }
-        } else if (placement === 'top' && rect.top - gap - popHeight < margin) {
-            placement = 'bottom';
-        } else if (placement === 'bottom' && rect.bottom + gap + popHeight > vh - margin) {
-            placement = 'top';
+        const fits = {
+            top: spaceTop >= popHeight + gap,
+            bottom: spaceBottom >= popHeight + gap,
+            left: spaceLeft >= popWidth + gap,
+            right: spaceRight >= popWidth + gap
+        };
+
+        const fallbackOrder = {
+            top: ['top', 'bottom', 'left', 'right'],
+            bottom: ['bottom', 'top', 'right', 'left'],
+            left: ['left', 'right', 'top', 'bottom'],
+            right: ['right', 'left', 'bottom', 'top']
+        };
+
+        const pref = preferredPlacement || 'bottom';
+        const candidates = fallbackOrder[pref] || fallbackOrder.bottom;
+        let placement = candidates.find(side => fits[side]);
+
+        if (!placement) {
+            const scores = {
+                bottom: spaceBottom - (popHeight + gap),
+                top: spaceTop - (popHeight + gap),
+                right: spaceRight - (popWidth + gap),
+                left: spaceLeft - (popWidth + gap)
+            };
+            placement = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0] || pref;
         }
 
-        popover.classList.remove('placement-right', 'placement-left', 'placement-top', 'placement-bottom');
-        popover.classList.add('placement-' + placement);
+        const targetCenterX = rect.left + rect.width / 2;
+        const targetCenterY = rect.top + rect.height / 2;
 
         let left = margin;
         let top = margin;
 
         if (placement === 'right') {
             left = rect.right + gap;
-            top = rect.top + Math.min(0, (rect.height - 60) / 2);
+            top = targetCenterY - popHeight / 2;
         } else if (placement === 'left') {
             left = rect.left - popWidth - gap;
-            top = rect.top + Math.min(0, (rect.height - 60) / 2);
+            top = targetCenterY - popHeight / 2;
         } else if (placement === 'top') {
-            left = rect.left + (rect.width - popWidth) / 2;
+            left = targetCenterX - popWidth / 2;
             top = rect.top - popHeight - gap;
         } else {
-            left = rect.left + (rect.width - popWidth) / 2;
+            left = targetCenterX - popWidth / 2;
             top = rect.bottom + gap;
         }
 
         left = Math.max(margin, Math.min(left, vw - popWidth - margin));
         top = Math.max(margin, Math.min(top, vh - popHeight - margin));
 
-        popover.style.left = Math.round(left) + 'px';
-        popover.style.top = Math.round(top) + 'px';
+        const finalLeft = Math.round(left);
+        const finalTop = Math.round(top);
+        const popCenterX = finalLeft + popWidth / 2;
+        const popCenterY = finalTop + popHeight / 2;
+
+        // Post-clamp geometric verification so arrow side always matches real relative position
+        if (placement === 'top' || placement === 'bottom') {
+            placement = (targetCenterY < popCenterY) ? 'bottom' : 'top';
+        } else if (placement === 'left' || placement === 'right') {
+            placement = (targetCenterX < popCenterX) ? 'right' : 'left';
+        }
+
+        popover.classList.remove('placement-right', 'placement-left', 'placement-top', 'placement-bottom');
+        popover.classList.add('placement-' + placement);
+
+        popover.style.left = finalLeft + 'px';
+        popover.style.top = finalTop + 'px';
+
+        const arrowEl = popover.querySelector('.tutorial-popover-arrow') || tutorialState.arrowEl;
+        if (arrowEl) {
+            tutorialState.arrowEl = arrowEl;
+            if (placement === 'top' || placement === 'bottom') {
+                const overlapLeft = Math.max(rect.left, finalLeft);
+                const overlapRight = Math.min(rect.right, finalLeft + popWidth);
+                const aimX = (overlapRight > overlapLeft)
+                    ? Math.max(overlapLeft, Math.min(overlapRight, targetCenterX))
+                    : targetCenterX;
+                const arrowLeft = Math.max(18, Math.min(popWidth - 30, Math.round(aimX - finalLeft - 6)));
+                popover.style.setProperty('--arrow-left', arrowLeft + 'px');
+                arrowEl.style.left = arrowLeft + 'px';
+                arrowEl.style.right = 'auto';
+                arrowEl.style.top = (placement === 'bottom') ? '-7px' : 'auto';
+                arrowEl.style.bottom = (placement === 'top') ? '-7px' : 'auto';
+            } else {
+                const overlapTop = Math.max(rect.top, finalTop);
+                const overlapBottom = Math.min(rect.bottom, finalTop + popHeight);
+                const aimY = (overlapBottom > overlapTop)
+                    ? Math.max(overlapTop, Math.min(overlapBottom, targetCenterY))
+                    : targetCenterY;
+                const arrowTop = Math.max(18, Math.min(popHeight - 30, Math.round(aimY - finalTop - 6)));
+                popover.style.setProperty('--arrow-top', arrowTop + 'px');
+                arrowEl.style.top = arrowTop + 'px';
+                arrowEl.style.bottom = 'auto';
+                arrowEl.style.left = (placement === 'right') ? '-7px' : 'auto';
+                arrowEl.style.right = (placement === 'left') ? '-7px' : 'auto';
+            }
+        }
     }
 
     function renderDots() {
@@ -386,10 +447,10 @@
         tutorialState.highlightedEl = targetEl;
         targetEl.classList.add('tutorial-target-highlight');
 
-        // Scroll into view smoothly if outside viewport
+        // Scroll into view immediately if outside viewport so bounding rect is final
         const tRect = targetEl.getBoundingClientRect();
-        if (tRect.top < 70 || tRect.bottom > window.innerHeight - 70) {
-            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (tRect.top < 12 || tRect.bottom > window.innerHeight - 12) {
+            targetEl.scrollIntoView({ behavior: 'instant', block: 'center' });
         }
 
         // Populate text via textContent (XSS-safe)
@@ -412,10 +473,13 @@
             const isLast = tutorialState.currentIndex === tutorialState.steps.length - 1;
             if (step.advanceTrigger === 'submit') {
                 tutorialState.nextBtnLabelEl.textContent = 'Forger';
+                if (tutorialState.nextBtnIconEl) tutorialState.nextBtnIconEl.textContent = 'arrow_forward';
             } else if (isLast) {
-                tutorialState.nextBtnLabelEl.textContent = 'Compris !';
+                tutorialState.nextBtnLabelEl.textContent = 'Fermer';
+                if (tutorialState.nextBtnIconEl) tutorialState.nextBtnIconEl.textContent = 'close';
             } else {
                 tutorialState.nextBtnLabelEl.textContent = 'Suivant';
+                if (tutorialState.nextBtnIconEl) tutorialState.nextBtnIconEl.textContent = 'arrow_forward';
             }
         } else {
             tutorialState.nextBtnEl.classList.add('is-hidden');

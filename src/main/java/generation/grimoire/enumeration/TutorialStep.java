@@ -82,7 +82,7 @@ public enum TutorialStep {
             "Chaque carte affiche le niveau conseillé, la difficulté (crânes) et le résumé des salles. Cliquez directement sur un donjon débloqué pour ouvrir la préparation.",
             "castle",
             "#dungeonsSectionsContainer .dungeon-card:not(.locked)",
-            "right",
+            "bottom",
             "action",
             "#dungeonsSectionsContainer .dungeon-card:not(.locked)"
     ),
@@ -251,10 +251,43 @@ public enum TutorialStep {
             "manual",
             ""
     ),
-    COMBAT_BASIC_ATTACK(
+    COMBAT_TYPE_INSTANT(
             "COMBAT_TOUR",
             3,
-            "3. L'Attaque de Base",
+            "3. Sort Instantané",
+            "Les sorts Instantanés (icône éclair jaune) ne consomment pas votre action principale du tour ! Vous pouvez en lancer plusieurs dans le même tour tant que vos ressources le permettent.",
+            "bolt",
+            "#combatSpellTypeFilterBtn",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_TYPE_BANAL(
+            "COMBAT_TOUR",
+            4,
+            "4. Sort Banal",
+            "Les sorts Banals (icône sablier bleu) constituent l'action principale classique : vous ne pouvez lancer qu'un seul sort Banal (ou une Attaque de base) par tour.",
+            "hourglass_empty",
+            "#combatSpellTypeFilterBtn",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_TYPE_CHANNELED(
+            "COMBAT_TOUR",
+            5,
+            "5. Sort Canalisé",
+            "Les sorts Canalisés (icône tourbillon violet) sont de puissantes actions qui s'exécutent sur plusieurs tours. Ils bloquent les actions banales durant leur canalisation (certains autorisent toutefois les sorts Instantanés).",
+            "cyclone",
+            "#combatSpellTypeFilterBtn",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_BASIC_ATTACK(
+            "COMBAT_TOUR",
+            6,
+            "6. L'Attaque de Base",
             "Vous manquez de Mana ou vos sorts sont en recharge ? L'Attaque de base ne coûte aucun Mana et inflige des dégâts physiques directs à un ennemi.",
             "swords",
             "#btnAttack",
@@ -264,8 +297,8 @@ public enum TutorialStep {
     ),
     COMBAT_END_TURN(
             "COMBAT_TOUR",
-            4,
-            "4. Fin de Tour",
+            7,
+            "7. Fin de Tour",
             "Si vous ne souhaitez pas ou ne pouvez plus effectuer d'action, cliquez sur « Fin de Tour » pour passer immédiatement au combattant suivant.",
             "hourglass_top",
             "#btnEndTurn",
@@ -275,8 +308,8 @@ public enum TutorialStep {
     ),
     COMBAT_FLEE(
             "COMBAT_TOUR",
-            5,
-            "5. Fuir le Combat",
+            8,
+            "8. Fuir le Combat",
             "En cas de grand danger, vous pouvez fuir le donjon à tout moment avec « Fuir », mais attention : l'abandon entraîne une pénalité d'Or et d'XP !",
             "directions_run",
             "#btnFlee",

@@ -97,28 +97,36 @@
 
 .tutorial-popover.placement-right .tutorial-popover-arrow {
     left: -7px;
-    top: 24px;
+    right: auto;
+    top: var(--arrow-top, 24px);
+    bottom: auto;
     border-right: none;
     border-top: none;
 }
 
 .tutorial-popover.placement-left .tutorial-popover-arrow {
     right: -7px;
-    top: 24px;
+    left: auto;
+    top: var(--arrow-top, 24px);
+    bottom: auto;
     border-left: none;
     border-bottom: none;
 }
 
 .tutorial-popover.placement-top .tutorial-popover-arrow {
     bottom: -7px;
-    left: 32px;
+    top: auto;
+    left: var(--arrow-left, 32px);
+    right: auto;
     border-left: none;
     border-top: none;
 }
 
 .tutorial-popover.placement-bottom .tutorial-popover-arrow {
     top: -7px;
-    left: 32px;
+    bottom: auto;
+    left: var(--arrow-left, 32px);
+    right: auto;
     border-right: none;
     border-bottom: none;
 }

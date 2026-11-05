@@ -190,10 +190,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             pageState.currentUsername = meData.username || null;
             window.currentUser = Object.assign(window.currentUser || {}, meData);
             const enemiesEl = document.getElementById('enemiesContainer');
-            if (enemiesEl && !window.isAdmin && window.currentUser.combatTutorialActive) {
+            if (enemiesEl && window.currentUser.combatTutorialActive) {
                 const tryStartCombatTutorial = () => {
                     if (window.currentUser && window.currentUser.combatTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive() && enemiesEl.children.length > 0) {
-                        window.GrimoireTutorial.startPhase('COMBAT_TOUR');
+                        window.GrimoireTutorial.startPhase('COMBAT_TOUR', {
+                            onStepEnter: (step) => {
+                                const filterMap = {
+                                    'COMBAT_TYPE_INSTANT': 'INSTANTANE',
+                                    'COMBAT_TYPE_BANAL': 'BANAL',
+                                    'COMBAT_TYPE_CHANNELED': 'CANALISE'
+                                };
+                                pageState.combatSpellTypeFilter = filterMap[step.name] || 'ALL';
+                                if (typeof window.updateCombatSpellTypeFilterUI === 'function') window.updateCombatSpellTypeFilterUI();
+                                if (typeof window.applySpellFilters === 'function') window.applySpellFilters();
+                            },
+                            onStop: () => {
+                                pageState.combatSpellTypeFilter = 'ALL';
+                                if (typeof window.updateCombatSpellTypeFilterUI === 'function') window.updateCombatSpellTypeFilterUI();
+                                if (typeof window.applySpellFilters === 'function') window.applySpellFilters();
+                            }
+                        });
                     }
                 };
                 tryStartCombatTutorial();

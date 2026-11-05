@@ -736,7 +736,7 @@ window.addEventListener('authLoaded', () => {
 
 
 function initShopTutorial() {
-    if (window.isAdmin || !window.currentUser) return;
+    if (!window.currentUser) return;
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
     if (window.currentUser.shopTutorialActive) {
         window.GrimoireTutorial.startPhase('SHOP_TOUR');

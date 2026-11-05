@@ -1251,7 +1251,7 @@ window.hideEqTooltip = function () {
 };
 
 function initArmoryTutorial() {
-    if (window.isAdmin || !window.currentUser) return;
+    if (!window.currentUser) return;
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
     if (window.currentUser.tutorialCompleted) {
         if (window.currentUser.equipTutorialActive && pageState.personnages.length > 0) {

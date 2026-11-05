@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 function initDungeonTutorial() {
-    if (window.isAdmin || !window.currentUser) return;
+    if (!window.currentUser) return;
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
     if (window.currentUser.tutorialCompleted) {
         if (window.currentUser.equipTutorialActive) {
@@ -386,7 +386,7 @@ function initDungeonTutorial() {
     window.GrimoireTutorial.startPhase('DUNGEON', {
         resolveTarget: (step) => {
             if (step.name === 'DUNGEON_SELECT_CARD') {
-                return document.querySelector('#dungeonsSectionsContainer .dungeon-card:not(.locked)')
+                return document.querySelector('#dungeonsSectionsContainer .tab-content.active .dungeon-card:not(.locked)') || document.querySelector('#dungeonsSectionsContainer .dungeon-card:not(.locked)')
                     || document.getElementById('dungeonsSectionsContainer');
             }
             if (step.name === 'DUNGEON_SELECT_HERO') {
@@ -1681,7 +1681,7 @@ window.startCombat = async function () {
     }
 
     const charIdsStr = pageState.selectedCharIds.join(',');
-    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}`;
+    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}&_t=${Date.now()}`;
     if (pageState.selectedConsumableIds.length > 0) {
         url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }

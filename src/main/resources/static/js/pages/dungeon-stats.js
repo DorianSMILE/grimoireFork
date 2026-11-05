@@ -408,3 +408,45 @@ function updateRunsTable(runs) {
     }
     tbody.appendChild(fragment);
 }
+
+
+window.resetTutorials = function () {
+    if (typeof window.showModal === 'function') {
+        window.showModal({
+            title: 'Réinitialiser les tutoriels ?',
+            body: 'Voulez-vous réactiver tous les tutoriels (création de personnage, préparation de donjon, premier équipement, boutique et premier combat) ?',
+            icon: 'restart_alt',
+            confirmText: 'Oui, réinitialiser',
+            onConfirm: async () => {
+                try {
+                    const res = await window.globalFetch('/api/auth/tutorial/reset', { method: 'POST' });
+                    if (res && res.ok) {
+                        if (window.currentUser) {
+                            window.currentUser.tutorialCompleted = false;
+                            window.currentUser.equipTutorialActive = true;
+                            window.currentUser.shopTutorialActive = true;
+                            window.currentUser.combatTutorialActive = true;
+                        }
+                        try {
+                            sessionStorage.removeItem('grimoire_app_meta_v1');
+                            sessionStorage.removeItem('grimoire_app_meta_v2');
+                            ['/dungeons.html', '/armory.html', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+                                fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
+                            });
+                        } catch (_) {}
+                        if (typeof window.showNotif === 'function') {
+                            window.showNotif('Tous les tutoriels ont été réinitialisés !');
+                        }
+                    } else if (typeof window.showNotif === 'function') {
+                        window.showNotif('Erreur lors de la réinitialisation des tutoriels.', true);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    if (typeof window.showNotif === 'function') {
+                        window.showNotif('Erreur réseau.', true);
+                    }
+                }
+            }
+        });
+    }
+};

@@ -224,7 +224,7 @@ public class AuthController {
             res.put("activeTitle", u.getActiveTitle());
             res.put("unlockedTitles", u.getUnlockedTitles());
 
-            boolean tutorialDone = isAdmin || u.isTutorialCompleted() || !u.getCompletedDungeons().isEmpty();
+            boolean tutorialDone = u.isTutorialCompleted();
             res.put("tutorialCompleted", tutorialDone);
             String tutorialPhase = "NONE";
             if (!tutorialDone) {
@@ -233,19 +233,15 @@ public class AuthController {
             res.put("tutorialPhase", tutorialPhase);
 
             boolean equipTutorialActive = false;
-            if (!isAdmin && !u.isEquipTutorialCompleted() && currentChars > 0) {
+            if (!u.isEquipTutorialCompleted() && currentChars > 0) {
                 List<Equipment> userEqs = equipmentRepository.findByOwnerUsername(u.getUsername());
-                boolean hasEquipped = userEqs.stream()
-                        .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() != null);
-                if (!hasEquipped) {
-                    equipTutorialActive = userEqs.stream()
-                            .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() == null);
-                }
+                equipTutorialActive = userEqs.stream()
+                        .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() == null);
             }
             res.put("equipTutorialActive", equipTutorialActive);
-            boolean shopTutorialActive = !isAdmin && Boolean.TRUE.equals(res.get("unlockedShop")) && !u.isShopTutorialCompleted();
+            boolean shopTutorialActive = (isAdmin || Boolean.TRUE.equals(res.get("unlockedShop"))) && !u.isShopTutorialCompleted();
             res.put("shopTutorialActive", shopTutorialActive);
-            boolean combatTutorialActive = !isAdmin && !u.isCombatTutorialCompleted();
+            boolean combatTutorialActive = !u.isCombatTutorialCompleted();
             res.put("combatTutorialActive", combatTutorialActive);
         });
 
@@ -367,12 +363,30 @@ public class AuthController {
             user.setCombatTutorialCompleted(true);
         } else if ("EQUIP_ARMORY".equals(phase) || "EQUIP_NAV".equals(phase)) {
             user.setEquipTutorialCompleted(true);
-        } else if (user.isTutorialCompleted() || !user.getCompletedDungeons().isEmpty()) {
-            user.setEquipTutorialCompleted(true);
+        } else {
+            user.setTutorialCompleted(true);
         }
-        user.setTutorialCompleted(true);
         userRepository.save(user);
-        return ResponseEntity.ok(Map.of("tutorialCompleted", true, "equipTutorialCompleted", user.isEquipTutorialCompleted(), "tutorialPhase", "NONE"));
+        return ResponseEntity.ok(Map.of("tutorialCompleted", user.isTutorialCompleted(), "equipTutorialCompleted", user.isEquipTutorialCompleted(), "tutorialPhase", "NONE"));
+    }
+
+    @PostMapping("/tutorial/reset")
+    @Transactional
+    public ResponseEntity<?> resetTutorials() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non connecté."));
+        }
+        AppUser user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
+        }
+        user.setTutorialCompleted(false);
+        user.setEquipTutorialCompleted(false);
+        user.setShopTutorialCompleted(false);
+        user.setCombatTutorialCompleted(false);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Tutoriels réinitialisés avec succès !"));
     }
 
     @PostMapping("/refresh")

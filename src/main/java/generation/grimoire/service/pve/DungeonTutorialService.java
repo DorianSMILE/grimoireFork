@@ -167,4 +167,22 @@ public class DungeonTutorialService {
                 .sorted(Comparator.comparingInt(Donjon::getDisplayOrder).thenComparing(Donjon::getId))
                 .toList();
     }
+
+    /**
+     * Vérifie si l'utilisateur a terminé tous les donjons de niveau 1 de la zone libre
+     * (condition de déblocage automatique de la Boutique).
+     */
+    public boolean hasCompletedAllLevel1FreeDungeons(AppUser user, List<DonjonRepository.DonjonLightProjection> allDungeons) {
+        if (user == null || allDungeons == null || allDungeons.isEmpty()) return false;
+
+        List<Long> level1FreeIds = allDungeons.stream()
+                .filter(d -> d.requiredSecret() == null || d.requiredSecret().trim().isEmpty())
+                .filter(d -> (d.recommendedLevel() > 0 ? d.recommendedLevel() : 1) == 1)
+                .map(DonjonRepository.DonjonLightProjection::id)
+                .toList();
+
+        if (level1FreeIds.isEmpty()) return true;
+        Set<Long> completedIds = user.getCompletedDungeons() != null ? user.getCompletedDungeons() : Collections.emptySet();
+        return completedIds.containsAll(level1FreeIds);
+    }
 }

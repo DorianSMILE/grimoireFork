@@ -603,6 +603,9 @@ function injectUnlockModal() {
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
+        .global-unlock-modal .is-hidden {
+            display: none !important;
+        }
         .global-unlock-overlay.active {
             opacity: 1;
             pointer-events: all;
@@ -718,8 +721,8 @@ function injectUnlockModal() {
                 <span class="material-symbols-outlined text-amber" style="font-size: 2.2rem;" id="globalUnlockIcon">lock_open</span>
             </div>
             <div class="global-unlock-modal-title" id="globalUnlockTitle">Débloquer ?</div>
-            <div class="global-unlock-modal-desc">Ce dévérouillage est <strong class="text-white">définitif</strong> pour votre compte. Vous n'aurez plus jamais à payer ce coût.</div>
-            <div class="global-unlock-modal-cost">
+            <div class="global-unlock-modal-desc" id="globalUnlockDesc">Ce dévérouillage est <strong class="text-white">définitif</strong> pour votre compte. Vous n'aurez plus jamais à payer ce coût.</div>
+            <div class="global-unlock-modal-cost" id="globalUnlockCostBox">
                 <span class="material-symbols-outlined" style="font-size: 1.3rem;">monetization_on</span>
                 <span id="globalUnlockCost">0</span> Or
             </div>
@@ -747,13 +750,36 @@ window.promptUnlockFeature = function (featureId, featureName, cost) {
     const overlay = document.getElementById('globalUnlockOverlay');
     document.getElementById('globalUnlockTitle').textContent = `Débloquer ${featureName} ?`;
     document.getElementById('globalUnlockCost').textContent = cost;
+    const descEl = document.getElementById('globalUnlockDesc');
+    const costBoxEl = document.getElementById('globalUnlockCostBox');
+    const confirmBtnEl = document.getElementById('globalUnlockConfirm');
+    const cancelBtnEl = document.getElementById('globalUnlockCancel');
+
+    if (featureId === 'shop') {
+        document.getElementById('globalUnlockTitle').textContent = 'Boutique Verrouillée';
+        document.getElementById('globalUnlockIcon').textContent = 'storefront';
+        if (descEl) {
+            descEl.textContent = (window.currentUser && window.currentUser.shopLockMessage)
+                || 'Terminez plus de donjons libres avant de débloquer la boutique.';
+        }
+        if (costBoxEl) costBoxEl.classList.add('is-hidden');
+        if (confirmBtnEl) confirmBtnEl.classList.add('is-hidden');
+        if (cancelBtnEl) cancelBtnEl.textContent = 'Compris';
+    } else {
+        if (descEl) {
+            descEl.innerHTML = 'Ce dévérouillage est <strong class="text-white">définitif</strong> pour votre compte. Vous n\'aurez plus jamais à payer ce coût.';
+        }
+        if (costBoxEl) costBoxEl.classList.remove('is-hidden');
+        if (confirmBtnEl) confirmBtnEl.classList.remove('is-hidden');
+        if (cancelBtnEl) cancelBtnEl.textContent = 'Annuler';
+    }
 
     if (featureId === 'vault') {
         document.getElementById('globalUnlockIcon').textContent = 'money_bag';
     } else if (featureId === 'alchemy') {
         document.getElementById('globalUnlockIcon').textContent = 'science';
     } else {
-        document.getElementById('globalUnlockIcon').textContent = 'lock_open';
+        document.getElementById('globalUnlockIcon').textContent = (featureId === 'shop') ? 'storefront' : 'lock_open';
     }
 
     overlay.classList.add('active');

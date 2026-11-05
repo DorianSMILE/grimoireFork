@@ -555,7 +555,29 @@ window.openBuyModal = function (id, isConsumable = false) {
                     if (window.checkAuthStatus) {
                         window.checkAuthStatus(); // Met à jour l'or affiché
                     }
-                    loadShop(); // Met à jour l'affichage de la boutique (boutons Vendu)
+                    if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
+        const mainEl = document.querySelector('.vault-main');
+        if (mainEl) {
+            mainEl.classList.add('is-hidden');
+            const lockWrap = document.createElement('div');
+            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
+            lockIcon.textContent = 'lock';
+            const lockTitle = document.createElement('h1');
+            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
+            lockTitle.textContent = 'Boutique Verrouillée';
+            const lockMsg = document.createElement('p');
+            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
+            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
+            lockWrap.appendChild(lockIcon);
+            lockWrap.appendChild(lockTitle);
+            lockWrap.appendChild(lockMsg);
+            mainEl.parentNode.insertBefore(lockWrap, mainEl);
+        }
+        return;
+    }
+    loadShop(); // Met à jour l'affichage de la boutique (boutons Vendu)
                 } else {
                     showNotif(data.message || "Erreur lors de l'achat.", true);
                 }
@@ -607,7 +629,29 @@ function startPromoCountdown() {
 
         if (allExpired && countdownEls.length > 0) {
             clearInterval(promoCountdownInterval);
-            loadShop();
+            if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
+        const mainEl = document.querySelector('.vault-main');
+        if (mainEl) {
+            mainEl.classList.add('is-hidden');
+            const lockWrap = document.createElement('div');
+            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
+            lockIcon.textContent = 'lock';
+            const lockTitle = document.createElement('h1');
+            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
+            lockTitle.textContent = 'Boutique Verrouillée';
+            const lockMsg = document.createElement('p');
+            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
+            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
+            lockWrap.appendChild(lockIcon);
+            lockWrap.appendChild(lockTitle);
+            lockWrap.appendChild(lockMsg);
+            mainEl.parentNode.insertBefore(lockWrap, mainEl);
+        }
+        return;
+    }
+    loadShop();
         }
     };
 
@@ -660,6 +704,28 @@ function renderBlackMarket() {
 }
 
 window.addEventListener('authLoaded', () => {
+    if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
+        const mainEl = document.querySelector('.vault-main');
+        if (mainEl) {
+            mainEl.classList.add('is-hidden');
+            const lockWrap = document.createElement('div');
+            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
+            lockIcon.textContent = 'lock';
+            const lockTitle = document.createElement('h1');
+            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
+            lockTitle.textContent = 'Boutique Verrouillée';
+            const lockMsg = document.createElement('p');
+            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
+            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
+            lockWrap.appendChild(lockIcon);
+            lockWrap.appendChild(lockTitle);
+            lockWrap.appendChild(lockMsg);
+            mainEl.parentNode.insertBefore(lockWrap, mainEl);
+        }
+        return;
+    }
     loadShop();
     const adminLink = document.getElementById('adminShopLink');
     if (adminLink) {

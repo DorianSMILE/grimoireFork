@@ -122,7 +122,8 @@ public class AuthController {
             res.put("unlockedDungeons", u.getUnlockedDungeons());
             res.put("unlockedVault", u.isUnlockedVault());
             res.put("unlockedAlchemy", u.isUnlockedAlchemy());
-            res.put("unlockedShop", u.isUnlockedShop());
+            res.put("unlockedShop", dungeonTutorialService.hasCompletedAllLevel1FreeDungeons(u, allDungeons));
+            res.put("shopLockMessage", "Terminez plus de donjons libres avant de débloquer la boutique.");
             int huntingClaimableCount = 0;
             java.time.LocalDate todayParis = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris"));
             for (generation.grimoire.entity.pve.HuntingQuestEntry e : huntingQuestEntryRepository.findByAccountName(u.getUsername())) {
@@ -294,13 +295,15 @@ public class AuthController {
             userRepository.save(user);
             return ResponseEntity.ok(Map.of("message", "Alchimie débloquée avec succès !"));
         } else if ("shop".equals(feature)) {
-            if (user.isUnlockedShop())
-                return ResponseEntity.ok(Map.of("message", "Déjà débloqué."));
-            if (user.getMonnaie() < 75)
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Pas assez d'or."));
-            user.setMonnaie(user.getMonnaie() - 75);
-            user.setUnlockedShop(true);
-            userRepository.save(user);
+            List<DonjonRepository.DonjonLightProjection> allDungeons = donjonRepository.findAllLightProjections();
+            if (!dungeonTutorialService.hasCompletedAllLevel1FreeDungeons(user, allDungeons)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Terminez plus de donjons libres avant de débloquer la boutique."));
+            }
+            if (!user.isUnlockedShop()) {
+                user.setUnlockedShop(true);
+                userRepository.save(user);
+            }
             return ResponseEntity.ok(Map.of("message", "Boutique débloquée avec succès !"));
         } else if ("roster".equals(feature)) {
             int currentMax = user.getMaxCharacters();

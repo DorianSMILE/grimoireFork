@@ -1275,17 +1275,52 @@ window.selectCharacter = async function (id) {
         }
     }
 
-    await window.inspectCharacter(id);
+    if (pageState.selectedCharIds.includes(id)) {
+        await window.inspectCharacter(id);
+    } else if (pageState.selectedCharIds.length > 0) {
+        if (pageState.inspectedCharacterId === id) {
+            await window.inspectCharacter(pageState.selectedCharIds[0]);
+        }
+    } else {
+        window.clearInspectedCharacter();
+    }
     if (window.GrimoireTutorial && window.GrimoireTutorial.isActive()) {
         const cur = window.GrimoireTutorial.getCurrentStep();
         if (cur && cur.name === 'DUNGEON_SELECT_HERO' && pageState.selectedCharIds.length > 0) {
             setTimeout(() => window.GrimoireTutorial.goToStepByName('DUNGEON_STATS_EQUIP'), 120);
-        }
+        }    
     }
 };
 
+window.clearInspectedCharacter = function() {
+    pageState.inspectedCharacterId = null;
+    document.querySelectorAll('.char-inspect-btn').forEach(btn => btn.classList.remove('is-inspecting'));
+    const statEmpty = document.getElementById('prepStatEmpty');
+    if (statEmpty) {
+        statEmpty.classList.remove('hidden');
+        statEmpty.style.display = '';
+    }
+    const statGrid = document.getElementById('prepStatGrid');
+    if (statGrid) {
+        statGrid.classList.add('hidden');
+    }
+    const equipList = document.getElementById('prepEquipList');
+    if (equipList) {
+        equipList.innerHTML = '<div class="text-sm text-muted">Aucun équipement à afficher.</div>';
+    }
+    const armoryBtn = document.getElementById('btnArmoryPrepLink');
+    if (armoryBtn) {
+        armoryBtn.classList.add('is-hidden');
+        armoryBtn.href = '/armory.html';
+    }
+};
 window.inspectCharacter = async function(id) {
     pageState.inspectedCharacterId = id;
+    const armoryBtn = document.getElementById('btnArmoryPrepLink');
+    if (armoryBtn) {
+        armoryBtn.href = '/armory.html?openEquip=' + id;
+        armoryBtn.classList.remove('is-hidden');
+    }
     document.querySelectorAll('.char-inspect-btn').forEach(btn => btn.classList.remove('is-inspecting'));
     const activeBtn = document.getElementById('charInspectBtn_' + id);
     if (activeBtn) {
@@ -1553,13 +1588,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
         }
     });
 
-    pageState.inspectedCharacterId = null;
-    document.querySelectorAll('.char-inspect-btn').forEach(btn => btn.classList.remove('is-inspecting'));
-
-    document.getElementById('prepStatEmpty').classList.remove('hidden');
-    document.getElementById('prepStatEmpty').style.display = '';
-    document.getElementById('prepStatGrid').classList.add('hidden');
-    document.getElementById('prepEquipList').innerHTML = '<div class="text-sm text-muted">Aucun équipement à afficher.</div>';
+    window.clearInspectedCharacter();
 
     window._isStartingCombat = false;
     const btn = document.getElementById('btnEnterDungeon');
@@ -1588,8 +1617,7 @@ window.closePrepInterface = function () {
     pageState.currentDungeonId = null;
     pageState.selectedCharIds = [];
     pageState.selectedConsumableIds = [];
-    pageState.inspectedCharacterId = null;
-    document.querySelectorAll('.char-inspect-btn').forEach(btn => btn.classList.remove('is-inspecting'));
+        window.clearInspectedCharacter();
 };
 
 window.startCombat = async function () {

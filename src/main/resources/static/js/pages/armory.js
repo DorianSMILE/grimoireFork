@@ -647,6 +647,22 @@ function renderPersonnages() {
     }).join('');
 }
 
+function getVoieAvatarName(voie) {
+    if (!voie) return null;
+    const raw = typeof voie === 'string' ? voie : (voie.nom || voie.name || '');
+    if (!raw) return null;
+    const vNom = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (vNom.includes('consolidation')) return 'consolidation';
+    if (vNom.includes('conviction')) return 'conviction';
+    if (vNom.includes('creation')) return 'creation';
+    if (vNom.includes('destruction')) return 'destruction';
+    if (vNom.includes('raison')) return 'raison';
+    if (vNom.includes('surete')) return 'surete';
+    if (vNom.includes('trahison')) return 'trahison';
+    if (vNom.includes('violence')) return 'violence';
+    return null;
+}
+
 // ===== Equipment Modal =====
 
 async function openEquipModal(persoId) {
@@ -661,6 +677,15 @@ async function openEquipModal(persoId) {
 function closeEquipModal() {
     pageState.equipModalPersoId = null;
     document.getElementById('equipModalOverlay').classList.remove('active');
+    const avatarEl = document.getElementById('equipModalAvatar');
+    if (avatarEl) {
+        avatarEl.innerHTML = '<span class="material-symbols-outlined text-warning">shield</span>';
+        avatarEl.classList.remove('has-avatar');
+    }
+    const affilEl = document.getElementById('equipModalAffiliations');
+    if (affilEl) {
+        affilEl.innerHTML = '';
+    }
 }
 
 function renderEquipModal() {
@@ -668,6 +693,23 @@ function renderEquipModal() {
     if (!perso) return;
 
     document.getElementById('equipModalTitle').textContent = `Équipement de ${perso.name}`;
+
+    const avatarEl = document.getElementById('equipModalAvatar');
+    if (avatarEl) {
+        const avatarName = getVoieAvatarName(perso.voie);
+        if (avatarName) {
+            avatarEl.innerHTML = `<img src="/images/avatar/${avatarName}.png" alt="${avatarName}" class="equip-modal-avatar-img">`;
+            avatarEl.classList.add('has-avatar');
+        } else {
+            avatarEl.innerHTML = '<span class="material-symbols-outlined text-warning">shield</span>';
+            avatarEl.classList.remove('has-avatar');
+        }
+    }
+
+    const affilEl = document.getElementById('equipModalAffiliations');
+    if (affilEl) {
+        affilEl.innerHTML = buildCharBadgesHtml(perso);
+    }
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
@@ -1167,7 +1209,17 @@ window.addEventListener('authLoaded', async () => {
         if (window.isAdmin) searchOwnerContainer.classList.remove('hidden');
         else searchOwnerContainer.classList.add('hidden');
     }
+
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
+    if (!isNaN(openEquipCharId)) {
+        setTimeout(() => {
+            openEquipModal(openEquipCharId);
+        }, 100);
+    }
+
     initArmoryTutorial();
 
 });

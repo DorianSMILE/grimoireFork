@@ -18,8 +18,8 @@
     <link rel="stylesheet" href="/styles/variables.css?v=1786180000001">
     <link rel="stylesheet" href="/styles/ui/components.css?v=1786180000001">
     <link rel="stylesheet" href="/styles/ui/utilities.css?v=1786180000001">
+    <link rel="stylesheet" href="/styles/pages/armory.css?v=1786180000005">
     <link rel="stylesheet" href="/styles/ui/tutorial.css?v=2">
-    <link rel="stylesheet" href="/styles/pages/armory.css?v=1786180000004">
     <link rel="stylesheet" href="/styles/sprites/blacksmith.css?v=1786180000001">
     <script src="/js/components/navbar.js"></script>
 </head>
@@ -354,9 +354,14 @@
     <div class="equip-modal-overlay" id="equipModalOverlay" onclick="if(event.target===this) closeEquipModal()">
         <div class="equip-modal">
             <div class="equip-modal-header">
-                <div class="equip-modal-title">
-                    <span class="material-symbols-outlined text-warning">shield</span>
-                    <span id="equipModalTitle">Équipement</span>
+                <div class="equip-modal-title flex items-center gap-3">
+                    <div id="equipModalAvatar" class="equip-modal-avatar">
+                        <span class="material-symbols-outlined text-warning">shield</span>
+                    </div>
+                    <div class="equip-modal-header-info">
+                        <span id="equipModalTitle">Équipement</span>
+                        <div id="equipModalAffiliations" class="equip-modal-affiliations"></div>
+                    </div>
                 </div>
                 <button class="equip-modal-close" onclick="closeEquipModal()">
                     <span class="material-symbols-outlined text-2xl">close</span>

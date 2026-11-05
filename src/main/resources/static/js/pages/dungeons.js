@@ -552,6 +552,25 @@ async function loadDungeons() {
                 categories.delete('free');
             }
 
+            const syncGlobalDungeonBadge = () => {
+                const globalBadge = document.getElementById('navDungeonBadge');
+                if (!globalBadge) return;
+                let totalUnseen = 0;
+                categories.forEach(c => { totalUnseen += (c.newCount || 0); });
+                if (totalUnseen > 0) {
+                    globalBadge.textContent = totalUnseen;
+                    globalBadge.classList.add('block');
+                    globalBadge.classList.remove('hidden');
+                    globalBadge.style.display = 'block';
+                } else {
+                    globalBadge.textContent = '0';
+                    globalBadge.classList.remove('block');
+                    globalBadge.classList.add('hidden');
+                    globalBadge.style.display = 'none';
+                }
+            };
+            syncGlobalDungeonBadge();
+
             if (activeTabId && !categories.has(activeTabId)) {
                 activeTabId = null; // Fallback if the tab category no longer exists
             }
@@ -590,10 +609,13 @@ async function loadDungeons() {
                         const globalBadge = document.getElementById('navDungeonBadge');
                         if (globalBadge) {
                             let currentTotal = parseInt(globalBadge.textContent || '0', 10);
-                            let newTotal = currentTotal - cat.newCount;
+                            let newTotal = 0;
+                            categories.forEach(c => { if (c.id !== cat.id) newTotal += (c.newCount || 0); });
                             if (newTotal > 0) {
                                 globalBadge.textContent = newTotal;
                             } else {
+                                globalBadge.classList.remove('block');
+                                globalBadge.classList.add('hidden');
                                 globalBadge.style.display = 'none';
                                 globalBadge.textContent = '0';
                             }

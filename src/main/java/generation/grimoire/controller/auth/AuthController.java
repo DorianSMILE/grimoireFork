@@ -1,6 +1,7 @@
 package generation.grimoire.controller.auth;
 
 import generation.grimoire.entity.auth.AppUser;
+import generation.grimoire.entity.pve.Donjon;
 import generation.grimoire.model.pve.CombatSession;
 import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
@@ -10,6 +11,7 @@ import generation.grimoire.security.JwtService;
 import generation.grimoire.security.RefreshTokenService;
 import generation.grimoire.service.AlchemyService;
 import generation.grimoire.service.pve.CombatService;
+import generation.grimoire.service.pve.DungeonTutorialService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
@@ -27,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,6 +45,7 @@ public class AuthController {
     private final AlchemyService alchemyService;
     private final PersonnageRepository personnageRepository;
     private final CombatService combatService;
+    private final DungeonTutorialService dungeonTutorialService;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService,
@@ -49,7 +53,8 @@ public class AuthController {
             DonjonRepository donjonRepository,
             AlchemyService alchemyService,
             PersonnageRepository personnageRepository,
-            CombatService combatService) {
+            CombatService combatService,
+            DungeonTutorialService dungeonTutorialService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -60,6 +65,7 @@ public class AuthController {
         this.alchemyService = alchemyService;
         this.personnageRepository = personnageRepository;
         this.combatService = combatService;
+        this.dungeonTutorialService = dungeonTutorialService;
     }
 
     @PostMapping("/register")
@@ -161,12 +167,19 @@ public class AuthController {
 
             // Calcul SSOT des donjons nouvellement débloqués non vus (évite de télécharger /api/pve/dungeons + /api/personnages sur chaque page)
             int maxLevel = currentChars > 0 ? personnageRepository.findMaxVoieLevelByUsername(u.getUsername()) : 0;
+            List<Donjon> freeDungeons = dungeonTutorialService.getSortedFreeDungeons();
+            Set<Long> visibleTutorialFreeIds = dungeonTutorialService.getVisibleTutorialFreeDungeonIds(u, freeDungeons);
             int unseenDungeonsCount = 0;
             for (DonjonRepository.DonjonLightProjection d : allDungeons) {
                 int recLevel = d.recommendedLevel() > 0 ? d.recommendedLevel() : 1;
-                if (maxLevel >= recLevel) {
+                boolean isSecret = d.requiredSecret() != null && !d.requiredSecret().trim().isEmpty();
+                if (!isSecret && visibleTutorialFreeIds != null && !visibleTutorialFreeIds.contains(d.id())) {
+                    continue;
+                }
+                boolean levelBypassed = !isSecret && currentChars > 0 && dungeonTutorialService.isLevelBypassed(u, d.id());
+                if (maxLevel >= recLevel || levelBypassed) {
                     boolean isUnlocked = false;
-                    if (d.requiredSecret() != null && !d.requiredSecret().trim().isEmpty()) {
+                    if (isSecret) {
                         int userSecretLvl = u.getUnlockedSecrets().getOrDefault(d.requiredSecret(), 0);
                         int reqSecretLvl = d.requiredSecretLevel() > 0 ? d.requiredSecretLevel() : 1;
                         if (userSecretLvl >= reqSecretLvl) {

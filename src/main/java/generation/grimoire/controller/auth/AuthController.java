@@ -243,6 +243,10 @@ public class AuthController {
                 }
             }
             res.put("equipTutorialActive", equipTutorialActive);
+            boolean shopTutorialActive = !isAdmin && Boolean.TRUE.equals(res.get("unlockedShop")) && !u.isShopTutorialCompleted();
+            res.put("shopTutorialActive", shopTutorialActive);
+            boolean combatTutorialActive = !isAdmin && !u.isCombatTutorialCompleted();
+            res.put("combatTutorialActive", combatTutorialActive);
         });
 
         return ResponseEntity.ok()
@@ -348,7 +352,7 @@ public class AuthController {
 
     @PostMapping("/tutorial/complete")
     @Transactional
-    public ResponseEntity<?> completeTutorial() {
+    public ResponseEntity<?> completeTutorial(@RequestParam(required = false) String phase) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non connecté."));
@@ -357,7 +361,13 @@ public class AuthController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
         }
-        if (user.isTutorialCompleted() || !user.getCompletedDungeons().isEmpty()) {
+        if ("SHOP_TOUR".equals(phase) || "SHOP_NAV".equals(phase)) {
+            user.setShopTutorialCompleted(true);
+        } else if ("COMBAT_TOUR".equals(phase)) {
+            user.setCombatTutorialCompleted(true);
+        } else if ("EQUIP_ARMORY".equals(phase) || "EQUIP_NAV".equals(phase)) {
+            user.setEquipTutorialCompleted(true);
+        } else if (user.isTutorialCompleted() || !user.getCompletedDungeons().isEmpty()) {
             user.setEquipTutorialCompleted(true);
         }
         user.setTutorialCompleted(true);

@@ -1278,6 +1278,11 @@ function initArmoryTutorial() {
                     if (closeBtn) closeBtn.classList.remove('is-hidden');
                 }
             });
+        } else if (window.currentUser.shopTutorialActive) {
+            window.GrimoireTutorial.startPhase('SHOP_NAV', {
+                canPrev: () => false,
+                canNext: () => false
+            });
         }
         return;
     }

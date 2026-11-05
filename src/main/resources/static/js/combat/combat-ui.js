@@ -826,6 +826,9 @@ export function updateUI(data) {
 
                 document.getElementById('btnAttack').disabled = false;
                 renderEnemies(data.enemies, turnMap);
+                if (!window.isAdmin && window.currentUser && window.currentUser.combatTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive()) {
+                    window.GrimoireTutorial.startPhase('COMBAT_TOUR');
+                }
 
                 // Track previous XP to animate next time
                 data.players.forEach(p => {

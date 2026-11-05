@@ -188,6 +188,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (meRes.ok) {
             const meData = await meRes.json();
             pageState.currentUsername = meData.username || null;
+            window.currentUser = Object.assign(window.currentUser || {}, meData);
+            const enemiesEl = document.getElementById('enemiesContainer');
+            if (enemiesEl && !window.isAdmin && window.currentUser.combatTutorialActive) {
+                const tryStartCombatTutorial = () => {
+                    if (window.currentUser && window.currentUser.combatTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive() && enemiesEl.children.length > 0) {
+                        window.GrimoireTutorial.startPhase('COMBAT_TOUR');
+                    }
+                };
+                tryStartCombatTutorial();
+                const obs = new MutationObserver(() => tryStartCombatTutorial());
+                obs.observe(enemiesEl, { childList: true });
+            }
         }
     } catch (_) { }
 

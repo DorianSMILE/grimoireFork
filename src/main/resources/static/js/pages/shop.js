@@ -32,6 +32,7 @@ async function loadShop() {
         renderBlackMarket();
         startPromoCountdown();
         renderUpgradePanel();
+        initShopTutorial();
     } catch (e) {
         console.error('Erreur chargement boutique:', e);
         document.getElementById('shopGrid').innerHTML = `<div class="text-error"><span class="material-symbols-outlined">error</span> Erreur de connexion.</div>`;
@@ -732,3 +733,12 @@ window.addEventListener('authLoaded', () => {
         adminLink.style.display = window.isAdmin ? 'inline-flex' : 'none';
     }
 });
+
+
+function initShopTutorial() {
+    if (window.isAdmin || !window.currentUser) return;
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+    if (window.currentUser.shopTutorialActive) {
+        window.GrimoireTutorial.startPhase('SHOP_TOUR');
+    }
+}

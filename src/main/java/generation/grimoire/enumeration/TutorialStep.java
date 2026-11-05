@@ -184,6 +184,105 @@ public enum TutorialStep {
             "right",
             "action",
             "#equipSlotsContainer .equip-slot-card"
+    ),
+    SHOP_GO_NAV(
+            "SHOP_NAV",
+            1,
+            "1. Boutique Débloquée !",
+            "Félicitations ! Vous avez terminé les donjons libres de niveau 1 et débloqué la Boutique. Cliquez sur l'onglet « Boutique » pour découvrir les offres du marchand.",
+            "storefront",
+            ".nav-shop",
+            "bottom",
+            "action",
+            ".nav-shop"
+    ),
+    SHOP_DAILY(
+            "SHOP_TOUR",
+            1,
+            "1. Boutique du Jour",
+            "Voici l'étal principal du marchand ! Ces équipements se renouvellent automatiquement chaque jour à minuit. Débloquez les emplacements verrouillés en améliorant la boutique.",
+            "storefront",
+            "#shopGrid",
+            "bottom",
+            "manual",
+            ""
+    ),
+    SHOP_SPECIALS(
+            "SHOP_TOUR",
+            2,
+            "2. Offres Spéciales & Consommables",
+            "Retrouvez ici les promotions temporaires à prix réduit ainsi que des consommables précieux (potions, clés, cordes) pour préparer vos prochaines expéditions.",
+            "local_offer",
+            "#specialsGrid",
+            "top",
+            "manual",
+            ""
+    ),
+    SHOP_UPGRADE(
+            "SHOP_TOUR",
+            3,
+            "3. Améliorer la Boutique",
+            "Investissez votre Or et vos Anomalies ici pour faire monter la boutique de niveau : vous débloquerez davantage d'articles quotidiens, des raretés supérieures et les promotions !",
+            "upgrade",
+            "#shopUpgradePanel",
+            "left",
+            "manual",
+            ""
+    ),
+    COMBAT_SPELLS(
+            "COMBAT_TOUR",
+            1,
+            "1. Vos Sorts de Combat",
+            "Voici la liste des sorts disponibles pour le héros actif lors de son tour. Chaque sort indique son coût en Mana, son temps de recharge et ses effets. Cliquez sur un sort puis sur sa cible pour le lancer.",
+            "auto_awesome",
+            "#spellsContainer",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_SPELL_FILTER(
+            "COMBAT_TOUR",
+            2,
+            "2. Tri et Filtres de Sorts",
+            "Basculez ici entre vos sorts de Voie et de Spiritualité, ou utilisez le filtre par Type pour afficher uniquement vos sorts d'attaque, de soutien ou de contrôle.",
+            "filter_list",
+            ".csp-sidebar:not(.csp-sidebar-right)",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_BASIC_ATTACK(
+            "COMBAT_TOUR",
+            3,
+            "3. L'Attaque de Base",
+            "Vous manquez de Mana ou vos sorts sont en recharge ? L'Attaque de base ne coûte aucun Mana et inflige des dégâts physiques directs à un ennemi.",
+            "swords",
+            "#btnAttack",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_END_TURN(
+            "COMBAT_TOUR",
+            4,
+            "4. Fin de Tour",
+            "Si vous ne souhaitez pas ou ne pouvez plus effectuer d'action, cliquez sur « Fin de Tour » pour passer immédiatement au combattant suivant.",
+            "hourglass_top",
+            "#btnEndTurn",
+            "top",
+            "manual",
+            ""
+    ),
+    COMBAT_FLEE(
+            "COMBAT_TOUR",
+            5,
+            "5. Fuir le Combat",
+            "En cas de grand danger, vous pouvez fuir le donjon à tout moment avec « Fuir », mais attention : l'abandon entraîne une pénalité d'Or et d'XP !",
+            "directions_run",
+            "#btnFlee",
+            "top",
+            "manual",
+            ""
     );
 
     private final String phase;

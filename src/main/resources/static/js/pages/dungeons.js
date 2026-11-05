@@ -357,6 +357,11 @@ function initDungeonTutorial() {
                 canPrev: () => false,
                 canNext: () => false
             });
+        } else if (window.currentUser.shopTutorialActive) {
+            window.GrimoireTutorial.startPhase('SHOP_NAV', {
+                canPrev: () => false,
+                canNext: () => false
+            });
         }
         return;
     }
@@ -925,7 +930,7 @@ async function loadDungeons() {
     const urlParams = new URLSearchParams(window.location.search);
     const openDungeonId = urlParams.get('dungeonId');
     const openCharIds = urlParams.get('charIds');
-    if (openDungeonId && !(window.currentUser && window.currentUser.equipTutorialActive)) {
+    if (openDungeonId && !(window.currentUser && (window.currentUser.equipTutorialActive || window.currentUser.shopTutorialActive))) {
         localStorage.removeItem('activeCombatId');
         const card = document.getElementById(`dungeon-card-${openDungeonId}`);
         if (card) {

@@ -27,7 +27,7 @@
 
     async function ensureTutorialStepsLoaded() {
         const hasUpdatedSteps = (arr) =>
-            Array.isArray(arr) && arr.some(s => s.name === 'EQUIP_SELECT_ITEM' && s.targetSelector && s.targetSelector.includes(':has('));
+            Array.isArray(arr) && arr.some(s => s.name === 'COMBAT_FLEE');
 
         if (hasUpdatedSteps(window.GRIMOIRE_TUTORIAL_STEPS)) {
             return window.GRIMOIRE_TUTORIAL_STEPS;
@@ -482,7 +482,7 @@
         if (tutorialState.currentIndex < tutorialState.steps.length - 1) {
             nextStep();
         } else {
-            completeTutorial(tutorialState.phase === 'DUNGEON');
+            completeTutorial(tutorialState.phase === 'DUNGEON' || tutorialState.phase === 'SHOP_TOUR' || tutorialState.phase === 'COMBAT_TOUR');
         }
     }
 
@@ -530,15 +530,23 @@
     }
 
     async function completeTutorial(markOnServer = true) {
+        const currentPhase = tutorialState.phase || '';
         stopTutorial();
         if (window.currentUser) {
-            window.currentUser.tutorialCompleted = true;
-            window.currentUser.equipTutorialActive = false;
-            window.currentUser.tutorialPhase = 'NONE';
+            if (currentPhase === 'SHOP_TOUR' || currentPhase === 'SHOP_NAV') {
+                window.currentUser.shopTutorialActive = false;
+            } else if (currentPhase === 'COMBAT_TOUR') {
+                window.currentUser.combatTutorialActive = false;
+            } else if (currentPhase === 'EQUIP_ARMORY' || currentPhase === 'EQUIP_NAV') {
+                window.currentUser.equipTutorialActive = false;
+            } else {
+                window.currentUser.tutorialCompleted = true;
+                window.currentUser.tutorialPhase = 'NONE';
+            }
         }
         if (markOnServer && typeof window.globalFetch === 'function') {
             try {
-                await window.globalFetch('/api/auth/tutorial/complete', {
+                await window.globalFetch(`/api/auth/tutorial/complete?phase=${encodeURIComponent(currentPhase)}`, {
                     method: 'POST',
                     silent: true
                 });

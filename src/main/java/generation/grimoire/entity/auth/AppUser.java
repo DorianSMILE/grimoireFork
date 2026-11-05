@@ -102,6 +102,12 @@ public class AppUser {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean equipTutorialCompleted = false;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean shopTutorialCompleted = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean combatTutorialCompleted = false;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @BatchSize(size = 50)

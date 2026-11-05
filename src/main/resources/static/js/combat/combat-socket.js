@@ -1,6 +1,6 @@
 import { showFloatingTextOnElement } from './combat-utils.js';
 import { pageState } from './combat-state.js';
-import { updateUI } from './combat-ui.js?v=1786180000220';
+import { updateUI } from './combat-ui.js?v=1786180000221';
 import * as ui from '../ui.js?v=1786180000220';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';

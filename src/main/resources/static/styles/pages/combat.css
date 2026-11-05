@@ -538,6 +538,10 @@ body {
     color: #6ee7b7;
 }
 
+.combat-cost-src-icon {
+    font-size: 0.95rem;
+}
+
 .combat-cost-value {
     display: inline-flex;
     align-items: center;

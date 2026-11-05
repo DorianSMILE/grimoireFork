@@ -1,6 +1,6 @@
 import { shakeStyle } from './combat-utils.js';
 import { initMultiSSE } from './combat-socket.js';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000220';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000221';
 import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js';
 import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js';
 import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js';

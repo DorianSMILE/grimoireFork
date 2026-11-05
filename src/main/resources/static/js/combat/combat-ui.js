@@ -3972,20 +3972,28 @@ export function renderSpellCard(sp) {
         return `data-color="${color}" data-prefer-top data-tooltip-html="${escapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip(); (this.closest('.combat-spell-card') && window.showGlobalTooltip(this.closest('.combat-spell-card')))"`;
     };
 
+    const getSrcIcon = (src) => {
+        const info = ui.getSourceIconInfo(src);
+        const colorClass = info.cssClass || 'src-color-violet';
+        return `<span class="material-symbols-outlined align-middle combat-cost-src-icon ${colorClass}">${info.icon}</span>`;
+    };
+
     let costDetailsHtml = [];
     if (sp.manaCost > 0 || sp.percentManaCost > 0) {
         const realMana = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : (sp.manaCost || 0);
         const rawMana = avail && avail.rawManaCost !== undefined ? avail.rawManaCost : realMana;
         const valModClass = realMana < rawMana ? 'combat-cost-val-reduced' : (realMana > rawMana ? 'combat-cost-val-increased' : '');
+        const srcIconHtml = sp.percentManaCost > 0 ? getSrcIcon(sp.percentManaCostSource || 'CASTER_MANA_MAX') : '';
         const hoverAttrs = buildCostHoverAttrs('MANA', '#38bdf8');
-        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-mana cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-mana">water_drop</span><span class="combat-cost-value combat-cost-value-mana ${valModClass}"><span>${realMana}</span></span></span>`);
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-mana cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-mana">water_drop</span><span class="combat-cost-value combat-cost-value-mana ${valModClass}"><span>${realMana}</span>${srcIconHtml}</span></span>`);
     }
     if (sp.healCost > 0 || sp.percentHealCost > 0) {
         const realHeal = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : (sp.healCost || 0);
         const rawHeal = avail && avail.rawHealCost !== undefined ? avail.rawHealCost : realHeal;
         const valModClass = realHeal < rawHeal ? 'combat-cost-val-reduced' : (realHeal > rawHeal ? 'combat-cost-val-increased' : '');
+        const srcIconHtml = sp.percentHealCost > 0 ? getSrcIcon(sp.percentHealCostSource || 'CASTER_HEALTH_MAX') : '';
         const hoverAttrs = buildCostHoverAttrs('HEAL', '#f43f5e');
-        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-hp cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-hp">bloodtype</span><span class="combat-cost-value combat-cost-value-hp ${valModClass}"><span>${realHeal}</span></span></span>`);
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-hp cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-hp">bloodtype</span><span class="combat-cost-value combat-cost-value-hp ${valModClass}"><span>${realHeal}</span>${srcIconHtml}</span></span>`);
     }
     if (sp.heatCost > 0 || sp.percentHeatCost > 0) {
         const realHeat = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : (sp.heatCost || 0);

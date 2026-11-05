@@ -3,8 +3,8 @@ import { pageState } from './combat-state.js';
 import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js';
 import { currentSpellsTab, initiateCombatCast } from './combat-spells.js';
 import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js';
-import * as ui from '../ui.js?v=1786180000220';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
+import * as ui from '../ui.js?v=1786180000230';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000230';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { showFighterPingMenu } from './combat-signals.js';
 import { renderHeroCombatSprite } from './combat-sprites.js';
@@ -285,7 +285,7 @@ export function getTrapEffectStats(room) {
 
 export function updateUI(data) {
     if (ui.hideGlobalTooltip) {
-        ui.hideGlobalTooltip();
+        ui.hideGlobalTooltip(true);
     }
 
     if (pageState.currentSessionData && data && !data.error) {
@@ -3969,7 +3969,7 @@ export function renderSpellCard(sp) {
     const buildCostHoverAttrs = (costType, color) => {
         const tooltipHtml = (ui.generateSpellCostTooltipHtml ? ui.generateSpellCostTooltipHtml(costType, sp, avail) : '') || buildFallbackCostTooltipHtml(costType);
         const escapedTooltip = (tooltipHtml || '').replace(/"/g, '&quot;');
-        return `data-color="${color}" data-prefer-top data-tooltip-html="${escapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip(); (this.closest('.combat-spell-card') && window.showGlobalTooltip(this.closest('.combat-spell-card')))"`;
+        return `data-color="${color}" data-prefer-top data-tooltip-html="${escapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.onChildTooltipLeave ? window.onChildTooltipLeave(event, this) : window.hideGlobalTooltip()"`;
     };
 
     const getSrcIcon = (src) => {
@@ -4022,7 +4022,7 @@ export function renderSpellCard(sp) {
         }) : '';
 
     const ctEscapedTooltip = (ctTooltipHtml || '').replace(/"/g, '&quot;');
-    const ctHoverAttrs = `data-color="${ctInfo.color}" data-prefer-top data-tooltip-html="${ctEscapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip(); (this.closest('.combat-spell-card') && window.showGlobalTooltip(this.closest('.combat-spell-card')))"`;
+    const ctHoverAttrs = `data-color="${ctInfo.color}" data-prefer-top data-tooltip-html="${ctEscapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.onChildTooltipLeave ? window.onChildTooltipLeave(event, this) : window.hideGlobalTooltip()"`;
 
     if (ctInfo.name === 'INSTANTANE') {
         castingTypeHtml = `<span class="material-symbols-outlined text-base text-gold cursor-help" ${ctHoverAttrs}>bolt</span>`;
@@ -4082,9 +4082,9 @@ export function renderSpellCard(sp) {
 
     }
 
-    let effectsSummary = getSpellEffectsSummaryHtml(sp);
+    let effectsSummary = getCalculatedSpellEffectsSummaryHtml ? getCalculatedSpellEffectsSummaryHtml(sp, avail) : getSpellEffectsSummaryHtml(sp);
 
-    const tooltipAttrs = effectsSummary ? 'onmouseenter="window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip()"' : '';
+    const tooltipAttrs = effectsSummary ? 'data-prefer-top onmouseenter="window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip()"' : '';
 
     // Check spell availability
     const isCastable = !avail || avail.castable;

@@ -216,7 +216,7 @@
             gap: 0.5rem;
         }
 
-#globalSpellTooltip .effect-line, #globalFixedTooltip .effect-line{
+#globalSpellTooltip .effect-line, #globalFixedTooltip .effect-line, #effectFixedTooltip .effect-line{
             flex-wrap: nowrap !important;
             white-space: nowrap !important;
         }

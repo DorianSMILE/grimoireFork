@@ -588,4 +588,73 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getHealModifiers().get(0).label()).contains("Brèche spirituelle");
         assertThat(avail.getHealModifiers().get(0).valueText()).isEqualTo("+5 PV");
     }
+
+    @Test
+    @DisplayName("compute - Pré-calcule les valeurs réelles des effets de sort (Dégâts %, Bouclier, Buff avec source, DoT)")
+    void compute_withPercentageEffects_shouldExposeCalculatedEffectPreviews() {
+        caster.setPower(40);
+        caster.setHealthMax(200);
+        caster.setHealthCurrent(150);
+
+        Spell spell = createSpell(1L, "Explosion Arcanique", 20, 0, 0, SpellCastingType.BANAL);
+
+        // Effet 0 : 150% de CASTER_POWER (40) = 60 dégâts magiques
+        generation.grimoire.entity.spell.type.effect.DamagePercentageEffect dmgEff =
+                new generation.grimoire.entity.spell.type.effect.DamagePercentageEffect();
+        dmgEff.setId(101L);
+        dmgEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        dmgEff.setPercentage(1.50);
+        dmgEff.setDamageSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+
+        // Effet 1 : Bouclier 10 + 50% de CASTER_POWER (20) = 30
+        generation.grimoire.entity.spell.type.effect.ShieldEffect shieldEff =
+                new generation.grimoire.entity.spell.type.effect.ShieldEffect();
+        shieldEff.setId(102L);
+        shieldEff.setFixedValue(10);
+        shieldEff.setPercentage(0.50);
+        shieldEff.setShieldSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        shieldEff.setDuration(2);
+
+        // Effet 2 : Buff Armure +5 flat + 25% de CASTER_POWER (+10) = +15 flat
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect buffEff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        buffEff.setId(103L);
+        buffEff.setStatAffected(generation.grimoire.enumeration.StatType.ARMURE);
+        buffEff.setFlatValue(5);
+        buffEff.setModifier(0.25);
+        buffEff.setModifierSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        buffEff.setDuration(3);
+
+        // Effet 3 : DoT 5 + 20% de CASTER_POWER (8) = 13/tour
+        generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dotEff =
+                new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
+        dotEff.setId(104L);
+        dotEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        dotEff.setFixedDamagePerTick(5);
+        dotEff.setPercentageDamagePerTick(0.20);
+        dotEff.setDamageSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        dotEff.setDuration(3);
+
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(dmgEff, shieldEff, buffEff, dotEff)));
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        assertThat(avail.getEffectPreviews()).hasSize(4);
+
+        assertThat(avail.getEffectPreviews().get(0).calculatedValue()).isEqualTo(60);
+        assertThat(avail.getEffectPreviews().get(0).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(1).calculatedValue()).isEqualTo(30);
+        assertThat(avail.getEffectPreviews().get(1).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(2).calculatedValue()).isEqualTo(15);
+        assertThat(avail.getEffectPreviews().get(2).calculatedPercentModifier()).isEqualTo(0);
+        assertThat(avail.getEffectPreviews().get(2).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(3).calculatedValue()).isEqualTo(13);
+        assertThat(avail.getEffectPreviews().get(3).sourceResolvedToFlat()).isTrue();
+    }
 }

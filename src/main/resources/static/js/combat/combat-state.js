@@ -1,11 +1,11 @@
 import { shakeStyle } from './combat-utils.js';
 import { initMultiSSE } from './combat-socket.js';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000221';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000230';
 import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js';
 import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js';
 import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js';
-import * as ui from '../ui.js?v=1786180000220';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
+import * as ui from '../ui.js?v=1786180000230';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000230';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { initCombatSignals, showFighterPingMenu } from './combat-signals.js';
 
@@ -107,6 +107,10 @@ export function setButtonsProcessing(isProc) {
 
 window.showGlobalTooltip = ui.showGlobalTooltip;
 window.hideGlobalTooltip = ui.hideGlobalTooltip;
+window.onChildTooltipLeave = ui.onChildTooltipLeave;
+window.showEffectTooltip = ui.showEffectTooltip;
+window.showEffectTooltipFromEl = ui.showEffectTooltipFromEl;
+window.hideEffectTooltip = ui.hideEffectTooltip;
 
 window.doAction = doAction;
 window.endTurn = endTurn;

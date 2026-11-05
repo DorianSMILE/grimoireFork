@@ -1,6 +1,7 @@
 package generation.grimoire.model.pve;
 
 import generation.grimoire.dto.pve.SpellCostModifierDTO;
+import generation.grimoire.dto.pve.SpellEffectPreviewDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,6 +48,23 @@ public class SpellAvailability {
     private List<SpellCostModifierDTO> manaModifiers = new ArrayList<>();
     private List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
     private List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
+    private List<SpellEffectPreviewDTO> effectPreviews = new ArrayList<>();
+
+    public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,
+                             int finalManaCost, int finalHealCost, int finalHeatCost,
+                             int rawManaCost, int percentManaAmount,
+                             int rawHealCost, int percentHealAmount,
+                             int rawHeatCost, int percentHeatAmount,
+                             List<SpellCostModifierDTO> manaModifiers,
+                             List<SpellCostModifierDTO> healModifiers,
+                             List<SpellCostModifierDTO> heatModifiers) {
+        this(spellId, castable, reason, tooltip,
+                finalManaCost, finalHealCost, finalHeatCost,
+                rawManaCost, percentManaAmount,
+                rawHealCost, percentHealAmount,
+                rawHeatCost, percentHeatAmount,
+                manaModifiers, healModifiers, heatModifiers, new ArrayList<>());
+    }
 
     public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,
                              int finalManaCost, int finalHealCost, int finalHeatCost) {

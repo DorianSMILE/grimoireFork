@@ -610,15 +610,35 @@ export async function showModal(options) {
 }
 
 export function showGlobalTooltip(el) {
+    if (!el) return;
     let tooltip = document.getElementById('globalFixedTooltip');
     if (!tooltip) {
         tooltip = document.createElement('div');
         tooltip.id = 'globalFixedTooltip';
-        tooltip.className = 'global-tooltip';
+        tooltip.className = 'global-tooltip is-interactive';
         document.body.appendChild(tooltip);
+    } else {
+        tooltip.classList.add('is-interactive');
     }
 
-    if (tooltip.hideTimeout) clearTimeout(tooltip.hideTimeout);
+    if (!tooltip.dataset.hoverBound) {
+        tooltip.dataset.hoverBound = 'true';
+        tooltip.addEventListener('mouseenter', () => {
+            if (tooltip.hideTimeout) {
+                clearTimeout(tooltip.hideTimeout);
+                tooltip.hideTimeout = null;
+            }
+        });
+        tooltip.addEventListener('mouseleave', () => {
+            hideGlobalTooltip();
+        });
+    }
+
+    if (tooltip.hideTimeout) {
+        clearTimeout(tooltip.hideTimeout);
+        tooltip.hideTimeout = null;
+    }
+    hideEffectTooltip();
 
     const dataEl = el.querySelector('.tooltip-data');
     if (dataEl) {
@@ -629,25 +649,28 @@ export function showGlobalTooltip(el) {
         return;
     }
 
-    const elColor = el.getAttribute('data-color');
-    if (elColor) {
-        tooltip.style.borderColor = elColor;
-        const titleEl = tooltip.querySelector('.anomaly-tooltip-title, .tooltip-title');
-        if (titleEl) {
-            titleEl.style.color = elColor;
-            titleEl.style.borderBottom = '1px solid ' + elColor;
-        }
-    } else {
-        tooltip.style.borderColor = 'rgba(168, 85, 247, 0.5)';
-    }
+    const borderClasses = [
+        'tooltip-border-mana', 'tooltip-border-hp', 'tooltip-border-heat',
+        'tooltip-border-gold', 'tooltip-border-blue', 'tooltip-border-purple'
+    ];
+    tooltip.classList.remove(...borderClasses);
+    const elColor = (el.getAttribute('data-color') || '').toLowerCase();
+    if (elColor === '#38bdf8') tooltip.classList.add('tooltip-border-mana');
+    else if (elColor === '#f43f5e') tooltip.classList.add('tooltip-border-hp');
+    else if (elColor === '#f97316') tooltip.classList.add('tooltip-border-heat');
+    else if (elColor === '#fbbf24') tooltip.classList.add('tooltip-border-gold');
+    else if (elColor === '#60a5fa') tooltip.classList.add('tooltip-border-blue');
+    else tooltip.classList.add('tooltip-border-purple');
 
-    tooltip.style.display = 'block';
+    tooltip.classList.add('is-visible');
 
     const rect = el.getBoundingClientRect();
     const tooltipHeight = tooltip.offsetHeight;
     const tooltipWidth = tooltip.offsetWidth;
 
-    const preferTop = el.getAttribute('data-tooltip-position') === 'top' || el.hasAttribute('data-prefer-top');
+    const preferTop = el.getAttribute('data-tooltip-position') === 'top'
+        || el.hasAttribute('data-prefer-top')
+        || el.classList.contains('combat-spell-card');
     let topPos;
     if (preferTop) {
         topPos = rect.top - tooltipHeight - 8;
@@ -670,16 +693,37 @@ export function showGlobalTooltip(el) {
     tooltip.style.left = leftPos + 'px';
 }
 
-export function hideGlobalTooltip() {
+export function hideGlobalTooltip(immediate = false) {
     const tooltip = document.getElementById('globalFixedTooltip');
-    if (tooltip) {
-        tooltip.style.display = 'none';
-        if (tooltip.hideTimeout) clearTimeout(tooltip.hideTimeout);
+    if (!tooltip) return;
+    if (tooltip.hideTimeout) {
+        clearTimeout(tooltip.hideTimeout);
+        tooltip.hideTimeout = null;
+    }
+    if (immediate === true) {
+        tooltip.classList.remove('is-visible');
+        hideEffectTooltip();
+        return;
+    }
+    tooltip.hideTimeout = setTimeout(() => {
+        tooltip.classList.remove('is-visible');
+        hideEffectTooltip();
+    }, 150);
+}
+
+export function onChildTooltipLeave(event, el) {
+    const card = el && el.closest ? el.closest('.combat-spell-card') : null;
+    const related = event ? event.relatedTarget : null;
+    if (card && related && card.contains(related)) {
+        showGlobalTooltip(card);
+    } else {
+        hideGlobalTooltip();
     }
 }
 
 window.showGlobalTooltip = showGlobalTooltip;
 window.hideGlobalTooltip = hideGlobalTooltip;
+window.onChildTooltipLeave = onChildTooltipLeave;
 
 export function getCastingTypeName(castingType) {
     if (!castingType) return 'BANAL';
@@ -981,50 +1025,86 @@ export function generateMutationTooltipHtml(mut) {
 window.generateMutationTooltipHtml = generateMutationTooltipHtml;
 
 export function showEffectTooltip(el, text) {
+    if (!el || !text) return;
     let tooltip = document.getElementById('effectFixedTooltip');
     if (!tooltip) {
         tooltip = document.createElement('div');
         tooltip.id = 'effectFixedTooltip';
-        tooltip.className = 'global-tooltip';
-        tooltip.style.zIndex = '9999999'; // Higher than globalFixedTooltip
+        tooltip.className = 'global-tooltip effect-fixed-tooltip';
         document.body.appendChild(tooltip);
+    } else {
+        tooltip.classList.add('effect-fixed-tooltip');
     }
 
-    if (tooltip.hideTimeout) clearTimeout(tooltip.hideTimeout);
+    if (tooltip.hideTimeout) {
+        clearTimeout(tooltip.hideTimeout);
+        tooltip.hideTimeout = null;
+    }
 
     tooltip.innerHTML = text;
-    tooltip.style.borderColor = 'rgba(168, 85, 247, 0.5)';
-    tooltip.style.display = 'block';
+    tooltip.classList.add('is-visible');
 
-    const rect = el.getBoundingClientRect();
+    const parentTooltip = el.closest ? el.closest('#globalFixedTooltip') : null;
+    const anchorRect = parentTooltip ? parentTooltip.getBoundingClientRect() : el.getBoundingClientRect();
     const tooltipHeight = tooltip.offsetHeight;
     const tooltipWidth = tooltip.offsetWidth;
 
-    let topPos = rect.bottom + 8;
-    let leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
+    let topPos;
+    let leftPos;
 
-    if (topPos + tooltipHeight > window.innerHeight) {
-        topPos = rect.top - tooltipHeight - 8;
+    if (parentTooltip) {
+        topPos = anchorRect.top - tooltipHeight - 8;
+        leftPos = anchorRect.left + anchorRect.width / 2 - tooltipWidth / 2;
+        if (topPos < 10) {
+            if (anchorRect.right + tooltipWidth + 12 <= window.innerWidth) {
+                topPos = Math.max(10, anchorRect.top);
+                leftPos = anchorRect.right + 8;
+            } else if (anchorRect.left - tooltipWidth - 12 >= 0) {
+                topPos = Math.max(10, anchorRect.top);
+                leftPos = anchorRect.left - tooltipWidth - 8;
+            } else {
+                topPos = anchorRect.bottom + 8;
+            }
+        }
+    } else {
+        topPos = anchorRect.bottom + 8;
+        leftPos = anchorRect.left + anchorRect.width / 2 - tooltipWidth / 2;
+        if (topPos + tooltipHeight > window.innerHeight) {
+            topPos = anchorRect.top - tooltipHeight - 8;
+        }
     }
 
     if (leftPos < 10) leftPos = 10;
     if (leftPos + tooltipWidth > window.innerWidth - 10) {
         leftPos = window.innerWidth - tooltipWidth - 10;
     }
+    if (topPos < 10) topPos = 10;
 
     tooltip.style.top = topPos + 'px';
     tooltip.style.left = leftPos + 'px';
 }
 
+export function showEffectTooltipFromEl(el) {
+    if (!el) return;
+    const tpl = el.querySelector('.raw-tooltip-data');
+    const html = tpl ? tpl.innerHTML : (el.getAttribute('data-tooltip-html') || '');
+    if (!html) return;
+    showEffectTooltip(el, html);
+}
+
 export function hideEffectTooltip() {
     const tooltip = document.getElementById('effectFixedTooltip');
     if (tooltip) {
-        tooltip.style.display = 'none';
-        if (tooltip.hideTimeout) clearTimeout(tooltip.hideTimeout);
+        tooltip.classList.remove('is-visible');
+        if (tooltip.hideTimeout) {
+            clearTimeout(tooltip.hideTimeout);
+            tooltip.hideTimeout = null;
+        }
     }
 }
 
 window.showEffectTooltip = showEffectTooltip;
+window.showEffectTooltipFromEl = showEffectTooltipFromEl;
 window.hideEffectTooltip = hideEffectTooltip;
 
 export function renderConsumableCategorySelect() {

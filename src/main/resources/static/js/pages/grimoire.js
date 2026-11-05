@@ -582,7 +582,7 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                     <div class="indicator shrink-0 bg-amber-500"></div>
                     <span class="font-semibold text-target-caster">[Lanceur]</span>
                     <span class="text-error font-medium">🔥 Chaleur</span>
-                    <span class="text-slate-200">➔ génère <span class="calc-val-highlight">${sp.heatGenerated}</span> Chaleur</span>
+                    <span class="text-slate-200">➔ génère <span class="calc-val-highlight eff-color-orange">${sp.heatGenerated}</span> Chaleur</span>
                 </div>`;
     }
 
@@ -701,40 +701,72 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
             const dtStr = dt === 'magic' ? 'Magiques' : (dt === 'physic' ? 'Physiques' : 'Bruts');
             const dtHtml = `<span class="font-bold ${dtColorClass}">${dtStr}</span>`;
 
+            const sa = ((e.statAffected || e.effectType || '') + '').toUpperCase();
+            let statIcon = { icon: 'star', colorClass: 'eff-color-slate' };
+            if (sa.includes('SPEED')) statIcon = { icon: 'bolt', colorClass: 'eff-color-amber' };
+            else if (sa.includes('MANA')) statIcon = { icon: 'water_drop', colorClass: 'eff-color-sky' };
+            else if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) statIcon = { icon: 'favorite', colorClass: 'eff-color-pink' };
+            else if (sa.includes('CRIT')) statIcon = { icon: 'gps_fixed', colorClass: 'eff-color-red' };
+            else if (sa.includes('ARMOR') || sa.includes('ARMURE')) statIcon = { icon: 'shield', colorClass: 'eff-color-blue' };
+            else if (sa.includes('RESISTANCE')) statIcon = { icon: 'shield', colorClass: 'eff-color-emerald' };
+            else if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) statIcon = { icon: 'fitness_center', colorClass: 'eff-color-rose' };
+            else if (sa.includes('POWER')) statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+            else if (sa.includes('HEAL_RECEIVED')) statIcon = { icon: 'health_and_safety', colorClass: 'eff-color-emerald' };
+            else if (sa.includes('SHIELD_RECEIVED')) statIcon = { icon: 'security', colorClass: 'eff-color-cyan' };
+            else if (sa.includes('HEAL_GIVEN')) statIcon = { icon: 'healing', colorClass: 'eff-color-emerald-light' };
+            else if (sa.includes('SHIELD_GIVEN')) statIcon = { icon: 'add_moderator', colorClass: 'eff-color-cyan-light' };
+            else if (sa === 'SHIELD_PIERCED') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-red' };
+            else if (sa === 'SHIELD_PENETRATION') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+            else if (sa === 'DAMAGE_TAKEN_MAGIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-purple' };
+            else if (sa === 'DAMAGE_TAKEN_PHYSIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
+            else if (sa === 'DAMAGE_TAKEN_BRUT') statIcon = { icon: 'explosion', colorClass: 'eff-color-red-dark' };
+            else if (sa === 'DAMAGE_GIVEN_MAGIC') statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+            else if (sa === 'DAMAGE_GIVEN_PHYSIC') statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
+            else if (sa === 'DAMAGE_GIVEN_BRUT') statIcon = { icon: 'bloodtype', colorClass: 'eff-color-red-dark' };
+            else if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-fuchsia' };
+            else if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-rose' };
+            else if (sa.includes('DAMAGE_TAKEN')) statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
+            else if (sa.includes('DAMAGE_GIVEN')) statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
+            else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+            else if (t === 'POISON') statIcon = { icon: 'science', colorClass: 'eff-color-emerald' };
+            else if (t === 'BURN') statIcon = { icon: 'local_fire_department', colorClass: 'eff-color-orange' };
+
+            const statColorClass = statIcon.colorClass;
+
             let detailsStr = '';
             if (['DamageFixed', 'FIXED_DAMAGE', 'DamagePercentage', 'PERCENTAGE_DAMAGE'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.damage || 0);
-                detailsStr = `➔ inflige <span class="calc-val-highlight">${val}</span> Dégâts ${dtHtml}`;
+                detailsStr = `➔ inflige <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}`;
             } else if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.healAmount || 0);
                 const isNeg = val < 0 || (e.healAmount || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
                     detailsStr = target === 'CASTER'
-                        ? `➔ coûte <span class="calc-val-highlight">${Math.abs(val)}</span> PV`
-                        : `➔ retire <span class="calc-val-highlight">${Math.abs(val)}</span> PV`;
+                        ? `➔ coûte <span class="calc-val-highlight eff-color-pink">${Math.abs(val)}</span> PV`
+                        : `➔ retire <span class="calc-val-highlight eff-color-pink">${Math.abs(val)}</span> PV`;
                 } else {
-                    detailsStr = `➔ rend <span class="calc-val-highlight">${val}</span> PV`;
+                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-emerald">${val}</span> PV`;
                 }
             } else if (t === 'AME_DETACHEE') {
-                detailsStr = `➔ +5 Dégâts Phys. et +30% Dégâts Phys. (3 tours)`;
+                detailsStr = `➔ <span class="calc-val-highlight eff-color-rose">+5</span> Dégâts Phys. et <span class="calc-val-highlight eff-color-rose">+30%</span> Dégâts Phys. (3 tours)`;
             } else if (['BuffDebuff', 'BUFF_DEBUFF', 'POISON', 'BURN'].includes(t)) {
                 const parts = [];
                 if (preview) {
                     const flatVal = preview.calculatedValue || 0;
                     const pctMod = preview.calculatedPercentModifier || 0;
                     if (flatVal !== 0 || preview.sourceResolvedToFlat) {
-                        parts.push(`<span class="calc-val-highlight">${flatVal > 0 ? '+' : ''}${flatVal}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${flatVal > 0 ? '+' : ''}${flatVal}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                     if (pctMod !== 0) {
-                        parts.push(`<span class="calc-val-highlight">${pctMod > 0 ? '+' : ''}${pctMod}%</span> en ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${pctMod > 0 ? '+' : ''}${pctMod}%</span> en ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                 } else {
                     if (e.flatValue) {
-                        parts.push(`<span class="calc-val-highlight">${e.flatValue > 0 ? '+' : ''}${e.flatValue}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${e.flatValue > 0 ? '+' : ''}${e.flatValue}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                     if (e.modifier) {
                         const sign = e.modifier > 0 ? '+' : '';
-                        parts.push(`<span class="calc-val-highlight">${sign}${Math.round(e.modifier * 100)}%</span> en ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${sign}${Math.round(e.modifier * 100)}%</span> en ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                 }
                 if (parts.length === 0) parts.push(`modifie ${ui.formatStat(e.statAffected || e.effectType)}`);
@@ -743,48 +775,48 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
             } else if (['DamageOverTime', 'DOT'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedDamagePerTick || e.damage || 0);
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ DoT de <span class="calc-val-highlight">${val}</span> Dégâts ${dtHtml}/tour${durStr}`;
+                detailsStr = `➔ DoT de <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}/tour${durStr}`;
             } else if (['HealOverTime', 'HOT', 'HEAL_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedHealPerTick || e.healAmount || 0);
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ HoT de <span class="calc-val-highlight">${val}</span> PV/tour${durStr}`;
+                detailsStr = `➔ HoT de <span class="calc-val-highlight eff-color-emerald">${val}</span> PV/tour${durStr}`;
             } else if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.manaAmount || 0);
                 const isNeg = val < 0 || (e.manaAmount || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
                     detailsStr = target === 'CASTER'
-                        ? `➔ coûte <span class="calc-val-highlight">${Math.abs(val)}</span> Mana`
-                        : `➔ retire <span class="calc-val-highlight">${Math.abs(val)}</span> Mana`;
+                        ? `➔ coûte <span class="calc-val-highlight eff-color-sky">${Math.abs(val)}</span> Mana`
+                        : `➔ retire <span class="calc-val-highlight eff-color-sky">${Math.abs(val)}</span> Mana`;
                 } else {
-                    detailsStr = `➔ rend <span class="calc-val-highlight">${val}</span> Mana`;
+                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-sky">${val}</span> Mana`;
                 }
             } else if (['ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedManaPerTick || e.manaAmount || 0);
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ MoT de <span class="calc-val-highlight">${val}</span> Mana/tour${durStr}`;
+                detailsStr = `➔ MoT de <span class="calc-val-highlight eff-color-sky">${val}</span> Mana/tour${durStr}`;
             } else if (['Purge', 'PURGE', 'DISPEL'].includes(t)) {
                 detailsStr = `➔ dissipe les altérations`;
             } else if (['Shield', 'SHIELD'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedValue || e.flatValue || 0);
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ Bouclier de <span class="calc-val-highlight">${val}</span>${durStr}`;
+                detailsStr = `➔ Bouclier de <span class="calc-val-highlight eff-color-blue">${val}</span>${durStr}`;
             } else if (['Heat', 'HEAT', 'HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.amount || e.flatValue || 0);
                 const isNeg = val < 0 || (e.amount || e.flatValue || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
-                    detailsStr = `➔ consomme <span class="calc-val-highlight">${Math.abs(val)}</span> Chaleur`;
+                    detailsStr = `➔ consomme <span class="calc-val-highlight eff-color-orange">${Math.abs(val)}</span> Chaleur`;
                 } else {
-                    detailsStr = `➔ génère <span class="calc-val-highlight">${val}</span> Chaleur`;
+                    detailsStr = `➔ génère <span class="calc-val-highlight eff-color-orange">${val}</span> Chaleur`;
                 }
             } else if (t === 'BUD') {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.amount || e.flatValue || 1);
-                detailsStr = `➔ génère <span class="calc-val-highlight">${val}</span> Bourgeon(s)`;
+                detailsStr = `➔ génère <span class="calc-val-highlight eff-color-emerald">${val}</span> Bourgeon(s)`;
             } else if (['HeatOverTime', 'HEAT_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.flatValue || e.fixedValue || 0);
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
                 const isConsuming = val < 0 || (e.flatValue || e.fixedValue || 0) < 0 || (e.percentage || 0) < 0;
                 const verb = isConsuming ? 'Consomme' : 'Génère';
-                detailsStr = `➔ Tick Chaleur : ${verb} <span class="calc-val-highlight">${Math.abs(val)}</span>/tour${durStr}`;
+                detailsStr = `➔ Tick Chaleur : ${verb} <span class="calc-val-highlight eff-color-orange">${Math.abs(val)}</span>/tour${durStr}`;
             }
 
             const keyBadge = e.requiredChoiceKey != null ? `<span class="badge-pill badge-amber-flat" title="S'active uniquement si l'option choisie au cast est ${e.requiredChoiceKey}">Option ${e.requiredChoiceKey}</span>` : '';
@@ -810,34 +842,6 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
 
             let statIconHtml = '';
             if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t) && e.statAffected) {
-                const sa = e.statAffected.toUpperCase();
-                let statIcon = { icon: 'star', colorClass: 'eff-color-slate' };
-                if (sa.includes('SPEED')) statIcon = { icon: 'bolt', colorClass: 'eff-color-amber' };
-                else if (sa.includes('MANA')) statIcon = { icon: 'water_drop', colorClass: 'eff-color-sky' };
-                else if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) statIcon = { icon: 'favorite', colorClass: 'eff-color-pink' };
-                else if (sa.includes('CRIT')) statIcon = { icon: 'gps_fixed', colorClass: 'eff-color-red' };
-                else if (sa.includes('ARMOR') || sa.includes('ARMURE')) statIcon = { icon: 'shield', colorClass: 'eff-color-blue' };
-                else if (sa.includes('RESISTANCE')) statIcon = { icon: 'shield', colorClass: 'eff-color-emerald' };
-                else if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) statIcon = { icon: 'fitness_center', colorClass: 'eff-color-rose' };
-                else if (sa.includes('POWER')) statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
-                else if (sa.includes('HEAL_RECEIVED')) statIcon = { icon: 'health_and_safety', colorClass: 'eff-color-emerald' };
-                else if (sa.includes('SHIELD_RECEIVED')) statIcon = { icon: 'security', colorClass: 'eff-color-cyan' };
-                else if (sa.includes('HEAL_GIVEN')) statIcon = { icon: 'healing', colorClass: 'eff-color-emerald-light' };
-                else if (sa.includes('SHIELD_GIVEN')) statIcon = { icon: 'add_moderator', colorClass: 'eff-color-cyan-light' };
-                else if (sa === 'SHIELD_PIERCED') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-red' };
-                else if (sa === 'SHIELD_PENETRATION') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
-                else if (sa === 'DAMAGE_TAKEN_MAGIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-purple' };
-                else if (sa === 'DAMAGE_TAKEN_PHYSIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
-                else if (sa === 'DAMAGE_TAKEN_BRUT') statIcon = { icon: 'explosion', colorClass: 'eff-color-red-dark' };
-                else if (sa === 'DAMAGE_GIVEN_MAGIC') statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
-                else if (sa === 'DAMAGE_GIVEN_PHYSIC') statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
-                else if (sa === 'DAMAGE_GIVEN_BRUT') statIcon = { icon: 'bloodtype', colorClass: 'eff-color-red-dark' };
-                else if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-fuchsia' };
-                else if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-rose' };
-                else if (sa.includes('DAMAGE_TAKEN')) statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
-                else if (sa.includes('DAMAGE_GIVEN')) statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
-                else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
-
                 if (sa !== 'POISON' && sa !== 'BURN' && sa !== 'AME_DETACHEE') {
                     statIconHtml = `<span class="material-symbols-outlined eff-icon-stat ${statIcon.colorClass}">${statIcon.icon}</span>`;
                 }

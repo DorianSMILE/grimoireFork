@@ -1754,3 +1754,30 @@
 .status-locked {
     color: #64748b;
 }
+
+/* Calculated values & spell effect preview colors */
+.calc-val-highlight {
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.dt-text-magic { color: #a855f7; }
+.dt-text-physic { color: #f43f5e; }
+.dt-text-brut { color: #ef4444; }
+
+.eff-color-emerald { color: #10b981; }
+.eff-color-emerald-light { color: #34d399; }
+.eff-color-rose { color: #f43f5e; }
+.eff-color-red { color: #ef4444; }
+.eff-color-red-dark { color: #b91c1c; }
+.eff-color-blue { color: #3b82f6; }
+.eff-color-sky { color: #38bdf8; }
+.eff-color-cyan { color: #06b6d4; }
+.eff-color-cyan-light { color: #22d3ee; }
+.eff-color-orange { color: #f97316; }
+.eff-color-orange-light { color: #fb923c; }
+.eff-color-amber { color: #f59e0b; }
+.eff-color-purple { color: #a855f7; }
+.eff-color-fuchsia { color: #d946ef; }
+.eff-color-pink { color: #ec4899; }
+.eff-color-slate { color: #94a3b8; }

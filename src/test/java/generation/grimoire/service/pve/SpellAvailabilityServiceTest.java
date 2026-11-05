@@ -535,4 +535,57 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getFinalHealCost()).isEqualTo(10);
         assertThat(avail.getFinalHeatCost()).isEqualTo(15);
     }
+
+    @Test
+    @DisplayName("compute - Calcule le coût réel en mana et PV avec pourcentage, taxe maudite et conserve les coûts même si bloqué")
+    void compute_withPercentageCostsAndCursedModifiers_shouldExposeRealCostsAndModifiers() {
+        caster.setManaMax(200);
+        caster.setManaCurrent(150);
+        caster.setHealthMax(100);
+        caster.setHealthCurrent(80);
+        caster.setBanalSpellCastThisTurn(true); // Bloque par ACTION_LIMIT mais doit quand même exposer les coûts réels
+
+        Equipment cursedWeapon = new Equipment();
+        cursedWeapon.setSlot(EquipmentSlot.ANNEAU);
+        cursedWeapon.setSpecialEffect(EquipmentEffectType.CURSED_MANA_TAX);
+        cursedWeapon.setSpecialEffectValue(20); // +20% surcoût mana
+        Equipment cursedRing = new Equipment();
+        cursedRing.setSlot(EquipmentSlot.ANNEAU);
+        cursedRing.setSpecialEffect(EquipmentEffectType.CURSED_HP_LOSS_ON_MANA);
+        cursedRing.setSpecialEffectValue(10); // 10% du mana dépensé en PV
+        caster.getEquipments().add(cursedWeapon);
+        caster.getEquipments().add(cursedRing);
+
+        Spell spell = createSpell(1L, "Rituel Maudit", 15, 5, 0, SpellCastingType.BANAL);
+        spell.setPercentManaCost(20);
+        spell.setPercentManaCostSource(generation.grimoire.enumeration.Source.CASTER_MANA_CURRENT); // 20% de 150 = 30
+        spell.setPercentHealCost(10);
+        spell.setPercentHealCostSource(generation.grimoire.enumeration.Source.CASTER_HEALTH_MAX); // 10% de 100 = 10
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        assertThat(avail.isCastable()).isFalse();
+        assertThat(avail.getReason()).isEqualTo("ACTION_LIMIT");
+
+        // Mana: base 15 + 30 (20% de 150) = 45, +20% taxe maudite (+9) = 54
+        assertThat(avail.getPercentManaAmount()).isEqualTo(30);
+        assertThat(avail.getRawManaCost()).isEqualTo(45);
+        assertThat(avail.getFinalManaCost()).isEqualTo(54);
+        assertThat(avail.getManaModifiers()).hasSize(2);
+        assertThat(avail.getManaModifiers().get(0).label()).contains("Incantations Lourdes");
+        assertThat(avail.getManaModifiers().get(0).valueText()).isEqualTo("+9 Mana");
+        assertThat(avail.getManaModifiers().get(0).bonus()).isFalse();
+        assertThat(avail.getManaModifiers().get(1).label()).contains("Brèche spirituelle");
+
+        // PV: base 5 + 10 (10% de 100) = 15, et modificateur Brèche spirituelle (10% de 54 = 5 PV)
+        assertThat(avail.getPercentHealAmount()).isEqualTo(10);
+        assertThat(avail.getRawHealCost()).isEqualTo(15);
+        assertThat(avail.getFinalHealCost()).isEqualTo(15);
+        assertThat(avail.getHealModifiers()).hasSize(1);
+        assertThat(avail.getHealModifiers().get(0).label()).contains("Brèche spirituelle");
+        assertThat(avail.getHealModifiers().get(0).valueText()).isEqualTo("+5 PV");
+    }
 }

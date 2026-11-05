@@ -3,7 +3,7 @@ import { pageState } from './combat-state.js';
 import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js';
 import { currentSpellsTab, initiateCombatCast } from './combat-spells.js';
 import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js';
-import * as ui from '../ui.js';
+import * as ui from '../ui.js?v=1786180000220';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { showFighterPingMenu } from './combat-signals.js';
@@ -3899,37 +3899,105 @@ export function renderSpellCard(sp) {
         `;
     }
 
-    const getSrcIcon = (src) => {
-        const info = ui.getSourceIconInfo(src);
-        return `<span class="material-symbols-outlined align-middle" title="${ui.formatSrc(src || '')}" style="font-size: 0.95rem; color: ${info.color};">${info.icon}</span>`;
+    const availabilityList = pageState.currentSessionData.spellAvailability || [];
+    const avail = availabilityList.find(a => a.spellId === sp.id);
+
+    const buildFallbackCostTooltipHtml = (costType) => {
+        if (costType === 'MANA') {
+            const flatCost = sp.manaCost || 0;
+            const pctCost = sp.percentManaCost || 0;
+            const srcKey = sp.percentManaCostSource || 'CASTER_MANA_MAX';
+            const srcLabel = ui.formatSrc ? ui.formatSrc(srcKey) : srcKey;
+            const srcInfo = ui.getSourceIconInfo ? ui.getSourceIconInfo(srcKey) : { icon: 'water_drop', cssClass: 'src-color-blue-dark' };
+            const finalCost = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : flatCost;
+            const pctAmount = avail && avail.percentManaAmount !== undefined ? avail.percentManaAmount : null;
+            const modifiers = (avail && avail.manaModifiers) || [];
+            const parts = [];
+            if (flatCost > 0) parts.push(`<strong>${flatCost} Mana</strong>`);
+            if (pctCost > 0) {
+                const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} Mana)</span>` : '';
+                parts.push(`<strong>${pctCost}%</strong> <span class="material-symbols-outlined align-middle text-sm ${srcInfo.cssClass || 'src-color-blue-dark'}">${srcInfo.icon}</span> <span>${srcLabel}</span>${pctValStr}`);
+            }
+            const formulaText = parts.length > 0 ? parts.join(' + ') : '0 Mana';
+            const modsHtml = modifiers.length > 0
+                ? `<div class="cost-tooltip-modifiers">${modifiers.map(m => `<div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}"><span>${m.label}</span><span class="font-bold">${m.valueText}</span></div>`).join('')}</div>`
+                : '';
+            return `<div class="tooltip-title cost-tooltip-title-mana"><span class="material-symbols-outlined text-base">water_drop</span><span>Coût réel : ${finalCost} Mana</span></div><div class="tooltip-desc cost-tooltip-formula">Calcul : ${formulaText}</div>${modsHtml}`;
+        }
+        if (costType === 'HEAL') {
+            const flatCost = sp.healCost || 0;
+            const pctCost = sp.percentHealCost || 0;
+            const srcKey = sp.percentHealCostSource || 'CASTER_HEALTH_MAX';
+            const srcLabel = ui.formatSrc ? ui.formatSrc(srcKey) : srcKey;
+            const srcInfo = ui.getSourceIconInfo ? ui.getSourceIconInfo(srcKey) : { icon: 'favorite', cssClass: 'src-color-emerald' };
+            const finalCost = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : flatCost;
+            const pctAmount = avail && avail.percentHealAmount !== undefined ? avail.percentHealAmount : null;
+            const modifiers = (avail && avail.healModifiers) || [];
+            const parts = [];
+            if (flatCost > 0) parts.push(`<strong>${flatCost} PV</strong>`);
+            if (pctCost > 0) {
+                const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} PV)</span>` : '';
+                parts.push(`<strong>${pctCost}%</strong> <span class="material-symbols-outlined align-middle text-sm ${srcInfo.cssClass || 'src-color-emerald'}">${srcInfo.icon}</span> <span>${srcLabel}</span>${pctValStr}`);
+            }
+            const formulaText = parts.length > 0 ? parts.join(' + ') : '0 PV';
+            const modsHtml = modifiers.length > 0
+                ? `<div class="cost-tooltip-modifiers">${modifiers.map(m => `<div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}"><span>${m.label}</span><span class="font-bold">${m.valueText}</span></div>`).join('')}</div>`
+                : '';
+            return `<div class="tooltip-title cost-tooltip-title-hp"><span class="material-symbols-outlined text-base">bloodtype</span><span>Coût réel : ${finalCost} PV</span></div><div class="tooltip-desc cost-tooltip-formula">Calcul : ${formulaText}</div>${modsHtml}`;
+        }
+        if (costType === 'HEAT') {
+            const flatCost = sp.heatCost || 0;
+            const pctCost = sp.percentHeatCost || 0;
+            const finalCost = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : flatCost;
+            const pctAmount = avail && avail.percentHeatAmount !== undefined ? avail.percentHeatAmount : null;
+            const modifiers = (avail && avail.heatModifiers) || [];
+            const parts = [];
+            if (flatCost > 0) parts.push(`<strong>${flatCost} Chaleur</strong>`);
+            if (pctCost > 0) {
+                const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} Chaleur)</span>` : '';
+                parts.push(`<strong>${pctCost}%</strong> <span>Chaleur Actuelle</span>${pctValStr}`);
+            }
+            const formulaText = parts.length > 0 ? parts.join(' + ') : '0 Chaleur';
+            const modsHtml = modifiers.length > 0
+                ? `<div class="cost-tooltip-modifiers">${modifiers.map(m => `<div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}"><span>${m.label}</span><span class="font-bold">${m.valueText}</span></div>`).join('')}</div>`
+                : '';
+            return `<div class="tooltip-title cost-tooltip-title-heat"><span class="material-symbols-outlined text-base">local_fire_department</span><span>Coût réel : ${finalCost} Chaleur</span></div><div class="tooltip-desc cost-tooltip-formula">Calcul : ${formulaText}</div>${modsHtml}`;
+        }
+        return '';
+    };
+
+    const buildCostHoverAttrs = (costType, color) => {
+        const tooltipHtml = (ui.generateSpellCostTooltipHtml ? ui.generateSpellCostTooltipHtml(costType, sp, avail) : '') || buildFallbackCostTooltipHtml(costType);
+        const escapedTooltip = (tooltipHtml || '').replace(/"/g, '&quot;');
+        return `data-color="${color}" data-prefer-top data-tooltip-html="${escapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip(); (this.closest('.combat-spell-card') && window.showGlobalTooltip(this.closest('.combat-spell-card')))"`;
     };
 
     let costDetailsHtml = [];
     if (sp.manaCost > 0 || sp.percentManaCost > 0) {
-        let text = '';
-        if (sp.manaCost > 0 && sp.percentManaCost > 0) text = `<span>${sp.manaCost} + ${sp.percentManaCost}%</span>${getSrcIcon(sp.percentManaCostSource || 'CASTER_MANA_MAX')}`;
-        else if (sp.manaCost > 0) text = `<span>${sp.manaCost}</span>`;
-        else text = `<span>${sp.percentManaCost}%</span>${getSrcIcon(sp.percentManaCostSource || 'CASTER_MANA_MAX')}`;
-        costDetailsHtml.push(`<span style="display:inline-flex; align-items:center; gap:0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: #38bdf8;" title="Mana">water_drop</span><span style="display:inline-flex; align-items:center; gap:0.2rem; border-bottom: 1px solid rgba(56, 189, 248, 0.5); padding-bottom: 0.05rem; white-space:nowrap;">${text}</span></span>`);
+        const realMana = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : (sp.manaCost || 0);
+        const rawMana = avail && avail.rawManaCost !== undefined ? avail.rawManaCost : realMana;
+        const valModClass = realMana < rawMana ? 'combat-cost-val-reduced' : (realMana > rawMana ? 'combat-cost-val-increased' : '');
+        const hoverAttrs = buildCostHoverAttrs('MANA', '#38bdf8');
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-mana cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-mana">water_drop</span><span class="combat-cost-value combat-cost-value-mana ${valModClass}"><span>${realMana}</span></span></span>`);
     }
     if (sp.healCost > 0 || sp.percentHealCost > 0) {
-        let text = '';
-        if (sp.healCost > 0 && sp.percentHealCost > 0) text = `<span>${sp.healCost} + ${sp.percentHealCost}%</span>${getSrcIcon(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')}`;
-        else if (sp.healCost > 0) text = `<span>${sp.healCost}</span>`;
-        else text = `<span>${sp.percentHealCost}%</span>${getSrcIcon(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')}`;
-        costDetailsHtml.push(`<span style="display:inline-flex; align-items:center; gap:0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: #f43f5e;" title="PV">bloodtype</span><span style="display:inline-flex; align-items:center; gap:0.2rem; border-bottom: 1px solid rgba(244, 63, 94, 0.5); padding-bottom: 0.05rem; white-space:nowrap;">${text}</span></span>`);
+        const realHeal = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : (sp.healCost || 0);
+        const rawHeal = avail && avail.rawHealCost !== undefined ? avail.rawHealCost : realHeal;
+        const valModClass = realHeal < rawHeal ? 'combat-cost-val-reduced' : (realHeal > rawHeal ? 'combat-cost-val-increased' : '');
+        const hoverAttrs = buildCostHoverAttrs('HEAL', '#f43f5e');
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-hp cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-hp">bloodtype</span><span class="combat-cost-value combat-cost-value-hp ${valModClass}"><span>${realHeal}</span></span></span>`);
     }
     if (sp.heatCost > 0 || sp.percentHeatCost > 0) {
-        let text = '';
-        if (sp.heatCost > 0 && sp.percentHeatCost > 0) text = `<span>${sp.heatCost} + ${sp.percentHeatCost}%</span>`;
-        else if (sp.heatCost > 0) text = `<span>${sp.heatCost}</span>`;
-        else text = `<span>${sp.percentHeatCost}%</span>`;
-        costDetailsHtml.push(`<span style="display:inline-flex; align-items:center; gap:0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: #f97316;" title="Chaleur">local_fire_department</span><span style="display:inline-flex; align-items:center; gap:0.2rem; border-bottom: 1px solid rgba(249, 115, 22, 0.5); padding-bottom: 0.05rem; white-space:nowrap;">${text}</span></span>`);
+        const realHeat = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : (sp.heatCost || 0);
+        const rawHeat = avail && avail.rawHeatCost !== undefined ? avail.rawHeatCost : realHeat;
+        const valModClass = realHeat < rawHeat ? 'combat-cost-val-reduced' : (realHeat > rawHeat ? 'combat-cost-val-increased' : '');
+        const hoverAttrs = buildCostHoverAttrs('HEAT', '#f97316');
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-heat cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-heat">local_fire_department</span><span class="combat-cost-value combat-cost-value-heat ${valModClass}"><span>${realHeat}</span></span></span>`);
     }
     if (sp.seedCost > 0) {
-        costDetailsHtml.push(`<span style="display:inline-flex; align-items:center; gap:0.2rem;"><span class="material-symbols-outlined" style="font-size: 1.1rem; color: #6ee7b7;" title="Graines">yard</span><span style="display:inline-flex; align-items:center; gap:0.2rem; border-bottom: 1px solid rgba(110, 231, 183, 0.5); padding-bottom: 0.05rem; white-space:nowrap;"><span>${sp.seedCost}</span></span></span>`);
+        costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-seed"><span class="material-symbols-outlined combat-cost-icon-seed" title="Graines">yard</span><span class="combat-cost-value combat-cost-value-seed"><span>${sp.seedCost}</span></span></span>`);
     }
-    let costDetails = costDetailsHtml.join('<span style="color:rgba(255,255,255,0.2); margin:0 0.2rem;">|</span>');
+    let costDetails = costDetailsHtml.join('<span class="combat-cost-sep">|</span>');
     if (costDetailsHtml.length === 0) costDetails = '';
     let castingTypeHtml = '';
     const ctInfo = ui.getCastingTypeInfo ? ui.getCastingTypeInfo(sp.castingType) : {
@@ -4011,8 +4079,6 @@ export function renderSpellCard(sp) {
     const tooltipAttrs = effectsSummary ? 'onmouseenter="window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip()"' : '';
 
     // Check spell availability
-    const availabilityList = pageState.currentSessionData.spellAvailability || [];
-    const avail = availabilityList.find(a => a.spellId === sp.id);
     const isCastable = !avail || avail.castable;
     let disabledClass = isCastable ? '' : ' spell-disabled';
     const onClickAttr = isCastable ? `onclick="initiateCombatCast(${sp.id})"` : '';

@@ -504,6 +504,141 @@ body {
     margin-top: auto;
 }
 
+.combat-cost-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    pointer-events: auto;
+    border-radius: 4px;
+    padding: 0.05rem 0.15rem;
+    transition: background-color 0.15s ease;
+}
+
+.combat-cost-badge:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.combat-cost-icon-mana {
+    font-size: 1.1rem;
+    color: #38bdf8;
+}
+
+.combat-cost-icon-hp {
+    font-size: 1.1rem;
+    color: #f43f5e;
+}
+
+.combat-cost-icon-heat {
+    font-size: 1.1rem;
+    color: #f97316;
+}
+
+.combat-cost-icon-seed {
+    font-size: 1.1rem;
+    color: #6ee7b7;
+}
+
+.combat-cost-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding-bottom: 0.05rem;
+    white-space: nowrap;
+}
+
+.combat-cost-value-mana {
+    border-bottom: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+.combat-cost-value-hp {
+    border-bottom: 1px solid rgba(244, 63, 94, 0.5);
+}
+
+.combat-cost-value-heat {
+    border-bottom: 1px solid rgba(249, 115, 22, 0.5);
+}
+
+.combat-cost-value-seed {
+    border-bottom: 1px solid rgba(110, 231, 183, 0.5);
+}
+
+.combat-cost-val-reduced {
+    color: #34d399;
+}
+
+.combat-cost-val-increased {
+    color: #fb7185;
+}
+
+.combat-cost-sep {
+    color: rgba(255, 255, 255, 0.2);
+    margin: 0 0.2rem;
+}
+
+.cost-tooltip-title-mana {
+    color: #38bdf8;
+    border-bottom-color: rgba(56, 189, 248, 0.25);
+}
+
+.cost-tooltip-title-hp {
+    color: #f43f5e;
+    border-bottom-color: rgba(244, 63, 94, 0.25);
+}
+
+.cost-tooltip-title-heat {
+    color: #f97316;
+    border-bottom-color: rgba(249, 115, 22, 0.25);
+}
+
+.cost-tooltip-formula {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.cost-tooltip-modifiers {
+    margin-top: 0.4rem;
+    padding-top: 0.35rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.78rem;
+}
+
+.cost-tooltip-mod-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.cost-tooltip-mod-row.is-bonus {
+    color: #34d399;
+}
+
+.cost-tooltip-mod-row.is-malus {
+    color: #fb7185;
+}
+
+.src-color-emerald { color: #10b981; }
+.src-color-emerald-light { color: #34d399; }
+.src-color-emerald-dark { color: #059669; }
+.src-color-rose { color: #f43f5e; }
+.src-color-pink { color: #ec4899; }
+.src-color-red-dark { color: #b91c1c; }
+.src-color-blue-dark { color: #1d4ed8; }
+.src-color-cyan { color: #22d3ee; }
+.src-color-orange { color: #f97316; }
+.src-color-orange-light { color: #fb923c; }
+.src-color-purple { color: #a855f7; }
+.src-color-amber-light { color: #fcd34d; }
+.src-color-amber { color: #f59e0b; }
+.src-color-red-light { color: #f87171; }
+.src-color-red { color: #dc2626; }
+.src-color-violet { color: #8b5cf6; }
+
 .combat-spell-options select {
     width: 100%;
     background: rgba(0, 0, 0, 0.4);

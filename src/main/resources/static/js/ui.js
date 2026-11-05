@@ -7,6 +7,10 @@ export function formatStat(stat) {
 }
 
 export function formatSrc(src) {
+    if (!src) return '';
+    if (typeof src === 'object') {
+        return src.label || GLOBAL_SRC_LABELS[src.name] || src.name || '';
+    }
     return GLOBAL_SRC_LABELS[src] || src;
 }
 
@@ -16,37 +20,38 @@ export function getSourceIconInfo(srcValue) {
     const isLanceur = text.includes('lanceur') || text.includes('lanc') || text.includes('caster');
 
     if (text.includes('pv') || text.includes('health') || text.includes('vie')) {
-        if (text.includes('max')) return { icon: 'favorite', color: isLanceur ? '#10b981' : '#f43f5e' };
-        if (text.includes('act') || text.includes('curr') || text.includes('tour')) return { icon: 'monitor_heart', color: isLanceur ? '#34d399' : '#ec4899' };
-        if (text.includes('manq') || text.includes('miss')) return { icon: 'heart_broken', color: isLanceur ? '#059669' : '#b91c1c' };
-        return { icon: 'favorite', color: isLanceur ? '#10b981' : '#f43f5e' };
+        if (text.includes('max')) return { icon: 'favorite', color: isLanceur ? '#10b981' : '#f43f5e', cssClass: isLanceur ? 'src-color-emerald' : 'src-color-rose' };
+        if (text.includes('act') || text.includes('curr') || text.includes('tour')) return { icon: 'monitor_heart', color: isLanceur ? '#34d399' : '#ec4899', cssClass: isLanceur ? 'src-color-emerald-light' : 'src-color-pink' };
+        if (text.includes('manq') || text.includes('miss')) return { icon: 'heart_broken', color: isLanceur ? '#059669' : '#b91c1c', cssClass: isLanceur ? 'src-color-emerald-dark' : 'src-color-red-dark' };
+        return { icon: 'favorite', color: isLanceur ? '#10b981' : '#f43f5e', cssClass: isLanceur ? 'src-color-emerald' : 'src-color-rose' };
     }
 
     if (text.includes('mana')) {
         const manaColor = isLanceur ? '#1d4ed8' : '#22d3ee';
-        if (text.includes('max')) return { icon: 'water_drop', color: manaColor };
-        if (text.includes('act') || text.includes('curr') || text.includes('tour')) return { icon: 'waves', color: manaColor };
-        if (text.includes('manq') || text.includes('miss')) return { icon: 'opacity', color: manaColor };
-        return { icon: 'water_drop', color: manaColor };
+        const manaClass = isLanceur ? 'src-color-blue-dark' : 'src-color-cyan';
+        if (text.includes('max')) return { icon: 'water_drop', color: manaColor, cssClass: manaClass };
+        if (text.includes('act') || text.includes('curr') || text.includes('tour')) return { icon: 'waves', color: manaColor, cssClass: manaClass };
+        if (text.includes('manq') || text.includes('miss')) return { icon: 'opacity', color: manaColor, cssClass: manaClass };
+        return { icon: 'water_drop', color: manaColor, cssClass: manaClass };
     }
 
     if (text.includes('force phy') || text.includes('physical')) {
-        return { icon: 'fitness_center', color: isLanceur ? '#f43f5e' : '#f97316' };
+        return { icon: 'fitness_center', color: isLanceur ? '#f43f5e' : '#f97316', cssClass: isLanceur ? 'src-color-rose' : 'src-color-orange' };
     }
 
     if (text.includes('puiss') || text.includes('power')) {
-        return { icon: 'auto_awesome', color: isLanceur ? '#a855f7' : '#fb923c' };
+        return { icon: 'auto_awesome', color: isLanceur ? '#a855f7' : '#fb923c', cssClass: isLanceur ? 'src-color-purple' : 'src-color-orange-light' };
     }
 
     if (text.includes('vit') || text.includes('speed')) {
-        return { icon: 'speed', color: isLanceur ? '#fcd34d' : '#f59e0b' };
+        return { icon: 'speed', color: isLanceur ? '#fcd34d' : '#f59e0b', cssClass: isLanceur ? 'src-color-amber-light' : 'src-color-amber' };
     }
 
     if (text.includes('crit')) {
-        return { icon: 'crisis_alert', color: isLanceur ? '#f87171' : '#dc2626' };
+        return { icon: 'crisis_alert', color: isLanceur ? '#f87171' : '#dc2626', cssClass: isLanceur ? 'src-color-red-light' : 'src-color-red' };
     }
 
-    return { icon: 'stars', color: '#8b5cf6' };
+    return { icon: 'stars', color: '#8b5cf6', cssClass: 'src-color-violet' };
 }
 
 export function updateDisplayModeUI() {
@@ -764,6 +769,136 @@ export function generateCastingTypeTooltipHtml(castingType, options = {}) {
 window.getCastingTypeName = getCastingTypeName;
 window.getCastingTypeInfo = getCastingTypeInfo;
 window.generateCastingTypeTooltipHtml = generateCastingTypeTooltipHtml;
+
+export function generateSpellCostTooltipHtml(costType, sp, avail) {
+    if (!sp) return '';
+    if (costType === 'MANA') {
+        const flatCost = sp.manaCost || 0;
+        const pctCost = sp.percentManaCost || 0;
+        const srcKey = sp.percentManaCostSource || 'CASTER_MANA_MAX';
+        const srcLabel = formatSrc(srcKey);
+        const srcInfo = getSourceIconInfo(srcKey);
+        const finalCost = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : flatCost;
+        const pctAmount = avail && avail.percentManaAmount !== undefined ? avail.percentManaAmount : null;
+        const modifiers = (avail && avail.manaModifiers) || [];
+
+        const parts = [];
+        if (flatCost > 0) parts.push(`<strong>${flatCost} Mana</strong>`);
+        if (pctCost > 0) {
+            const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} Mana)</span>` : '';
+            parts.push(`<strong>${pctCost}%</strong> <span class="material-symbols-outlined align-middle text-sm ${srcInfo.cssClass}">${srcInfo.icon}</span> <span>${srcLabel}</span>${pctValStr}`);
+        }
+        const formulaText = parts.length > 0 ? parts.join(' + ') : '0 Mana';
+
+        let modsHtml = '';
+        if (modifiers.length > 0) {
+            modsHtml = `<div class="cost-tooltip-modifiers">` +
+                modifiers.map(m => `
+                    <div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}">
+                        <span>${m.label}</span>
+                        <span class="font-bold">${m.valueText}</span>
+                    </div>
+                `).join('') +
+                `</div>`;
+        }
+
+        return `
+            <div class="tooltip-title cost-tooltip-title-mana">
+                <span class="material-symbols-outlined text-base">water_drop</span>
+                <span>Coût réel : ${finalCost} Mana</span>
+            </div>
+            <div class="tooltip-desc cost-tooltip-formula">
+                Calcul : ${formulaText}
+            </div>
+            ${modsHtml}
+        `.trim();
+    }
+
+    if (costType === 'HEAL') {
+        const flatCost = sp.healCost || 0;
+        const pctCost = sp.percentHealCost || 0;
+        const srcKey = sp.percentHealCostSource || 'CASTER_HEALTH_MAX';
+        const srcLabel = formatSrc(srcKey);
+        const srcInfo = getSourceIconInfo(srcKey);
+        const finalCost = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : flatCost;
+        const pctAmount = avail && avail.percentHealAmount !== undefined ? avail.percentHealAmount : null;
+        const modifiers = (avail && avail.healModifiers) || [];
+
+        const parts = [];
+        if (flatCost > 0) parts.push(`<strong>${flatCost} PV</strong>`);
+        if (pctCost > 0) {
+            const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} PV)</span>` : '';
+            parts.push(`<strong>${pctCost}%</strong> <span class="material-symbols-outlined align-middle text-sm ${srcInfo.cssClass}">${srcInfo.icon}</span> <span>${srcLabel}</span>${pctValStr}`);
+        }
+        const formulaText = parts.length > 0 ? parts.join(' + ') : '0 PV';
+
+        let modsHtml = '';
+        if (modifiers.length > 0) {
+            modsHtml = `<div class="cost-tooltip-modifiers">` +
+                modifiers.map(m => `
+                    <div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}">
+                        <span>${m.label}</span>
+                        <span class="font-bold">${m.valueText}</span>
+                    </div>
+                `).join('') +
+                `</div>`;
+        }
+
+        return `
+            <div class="tooltip-title cost-tooltip-title-hp">
+                <span class="material-symbols-outlined text-base">bloodtype</span>
+                <span>Coût réel : ${finalCost} PV</span>
+            </div>
+            <div class="tooltip-desc cost-tooltip-formula">
+                Calcul : ${formulaText}
+            </div>
+            ${modsHtml}
+        `.trim();
+    }
+
+    if (costType === 'HEAT') {
+        const flatCost = sp.heatCost || 0;
+        const pctCost = sp.percentHeatCost || 0;
+        const finalCost = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : flatCost;
+        const pctAmount = avail && avail.percentHeatAmount !== undefined ? avail.percentHeatAmount : null;
+        const modifiers = (avail && avail.heatModifiers) || [];
+
+        const parts = [];
+        if (flatCost > 0) parts.push(`<strong>${flatCost} Chaleur</strong>`);
+        if (pctCost > 0) {
+            const pctValStr = pctAmount !== null ? ` <span class="text-slate-400">(${pctAmount} Chaleur)</span>` : '';
+            parts.push(`<strong>${pctCost}%</strong> <span>Chaleur Actuelle</span>${pctValStr}`);
+        }
+        const formulaText = parts.length > 0 ? parts.join(' + ') : '0 Chaleur';
+
+        let modsHtml = '';
+        if (modifiers.length > 0) {
+            modsHtml = `<div class="cost-tooltip-modifiers">` +
+                modifiers.map(m => `
+                    <div class="cost-tooltip-mod-row ${m.bonus ? 'is-bonus' : 'is-malus'}">
+                        <span>${m.label}</span>
+                        <span class="font-bold">${m.valueText}</span>
+                    </div>
+                `).join('') +
+                `</div>`;
+        }
+
+        return `
+            <div class="tooltip-title cost-tooltip-title-heat">
+                <span class="material-symbols-outlined text-base">local_fire_department</span>
+                <span>Coût réel : ${finalCost} Chaleur</span>
+            </div>
+            <div class="tooltip-desc cost-tooltip-formula">
+                Calcul : ${formulaText}
+            </div>
+            ${modsHtml}
+        `.trim();
+    }
+
+    return '';
+}
+
+window.generateSpellCostTooltipHtml = generateSpellCostTooltipHtml;
 
 export function generateMutationTooltipHtml(mut) {
     if (!mut) return '';

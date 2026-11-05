@@ -1,12 +1,17 @@
 package generation.grimoire.model.pve;
 
+import generation.grimoire.dto.pve.SpellCostModifierDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Représente la disponibilité d'un sort pour le joueur pendant le combat.
- * Envoyé au frontend pour griser les sorts non-lançables avec une icône explicative.
+ * Envoyé au frontend pour griser les sorts non-lançables avec une icône explicative
+ * et exposer les coûts réels pré-calculés ainsi que le détail de leurs modificateurs.
  */
 @Data
 @NoArgsConstructor
@@ -31,6 +36,31 @@ public class SpellAvailability {
     private int finalManaCost;
     private int finalHealCost;
     private int finalHeatCost;
+
+    private int rawManaCost;
+    private int percentManaAmount;
+    private int rawHealCost;
+    private int percentHealAmount;
+    private int rawHeatCost;
+    private int percentHeatAmount;
+
+    private List<SpellCostModifierDTO> manaModifiers = new ArrayList<>();
+    private List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
+    private List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
+
+    public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,
+                             int finalManaCost, int finalHealCost, int finalHeatCost) {
+        this.spellId = spellId;
+        this.castable = castable;
+        this.reason = reason;
+        this.tooltip = tooltip;
+        this.finalManaCost = finalManaCost;
+        this.finalHealCost = finalHealCost;
+        this.finalHeatCost = finalHeatCost;
+        this.rawManaCost = finalManaCost;
+        this.rawHealCost = finalHealCost;
+        this.rawHeatCost = finalHeatCost;
+    }
     
     public static SpellAvailability available(Long spellId) {
         return new SpellAvailability(spellId, true, null, null, 0, 0, 0);

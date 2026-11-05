@@ -1,8 +1,12 @@
 package generation.grimoire.service.pve;
 
+import generation.grimoire.dto.pve.SpellCostModifierDTO;
 import generation.grimoire.entity.Spell;
 import generation.grimoire.entity.SpellEffect;
 import generation.grimoire.entity.personnage.Personnage;
+import generation.grimoire.enumeration.EquipmentEffectType;
+import generation.grimoire.enumeration.KarmaAlignment;
+import generation.grimoire.enumeration.Source;
 import generation.grimoire.enumeration.SpellCastingType;
 import generation.grimoire.event.CanCastCheckEvent;
 import generation.grimoire.event.CastingTypeAdjustEvent;
@@ -11,14 +15,16 @@ import generation.grimoire.model.pve.CombatSession;
 import generation.grimoire.model.pve.SpellAvailability;
 import generation.grimoire.repository.SpellRepository;
 import generation.grimoire.service.PassiveDispatcher;
+import generation.grimoire.utils.StatCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Calcule la disponibilité de chaque sort pour le joueur actif.
+ * Calcule la disponibilité et les coûts dynamiques de chaque sort pour le joueur actif.
  * Reproduit la logique de validation de SpellService.castSpellGroup() en mode lecture seule.
  */
 @Service
@@ -68,9 +74,12 @@ class SpellAvailabilityService {
     }
 
     private SpellAvailability checkSpellAvailability(Spell spell, Personnage p, CombatSession session) {
+        // Calculer systématiquement les coûts réels et leurs modificateurs pour l'affichage dynamique
+        ComputedSpellCosts computedCosts = computeSpellCosts(spell, p, session);
+
         String canCastError = p.canCast(spell);
         if (canCastError != null) {
-            return SpellAvailability.blocked(spell.getId(), "CONDITION", canCastError);
+            return buildAvailability(spell.getId(), false, "CONDITION", canCastError, computedCosts);
         }
 
         // 1) Déterminer le type de casting effectif (avec passif Création)
@@ -87,61 +96,166 @@ class SpellAvailabilityService {
         // Rule A: Si canalisation en cours
         if (p.getRemainingChannelingTurns() > 0) {
             if (cType != SpellCastingType.INSTANTANE) {
-                return SpellAvailability.blocked(spell.getId(), "CHANNELING",
-                        "Canalisation en cours : seuls les sorts instantanés sont autorisés");
+                return buildAvailability(spell.getId(), false, "CHANNELING",
+                        "Canalisation en cours : seuls les sorts instantanés sont autorisés", computedCosts);
             }
             if (!p.isAllowInstantDuringCurrentChanneling()) {
-                return SpellAvailability.blocked(spell.getId(), "CHANNELING",
-                        "Cette canalisation interdit les sorts instantanés");
+                return buildAvailability(spell.getId(), false, "CHANNELING",
+                        "Cette canalisation interdit les sorts instantanés", computedCosts);
             }
         }
 
         // Rule B: Si un sort banal ou une attaque a déjà été lancé ce tour
         if (p.isBanalSpellCastThisTurn() && p.getRemainingChannelingTurns() == 0) {
-            return SpellAvailability.blocked(spell.getId(), "ACTION_LIMIT",
-                    "Action majeure déjà effectuée ce tour (les sorts instantanés doivent être lancés avant)");
+            return buildAvailability(spell.getId(), false, "ACTION_LIMIT",
+                    "Action majeure déjà effectuée ce tour (les sorts instantanés doivent être lancés avant)", computedCosts);
         }
 
         // Rule C: Si un sort instantané a déjà été lancé ce tour
         if (cType == SpellCastingType.INSTANTANE && p.isInstantSpellCastThisTurn()) {
-            return SpellAvailability.blocked(spell.getId(), "ACTION_LIMIT",
-                    "Sort instantané déjà lancé ce tour");
+            return buildAvailability(spell.getId(), false, "ACTION_LIMIT",
+                    "Sort instantané déjà lancé ce tour", computedCosts);
         }
 
         // 3) Vérification des conditions de spiritualité (Esprit, Ténèbres, Karma)
         CanCastCheckEvent canCastEvent = new CanCastCheckEvent(p, p, spell);
         passiveDispatcher.dispatch(p, spell, canCastEvent);
         if (!canCastEvent.isAllowed()) {
-            return SpellAvailability.blocked(spell.getId(), "CONDITION",
-                    getConditionTooltip(p, spell));
+            return buildAvailability(spell.getId(), false, "CONDITION",
+                    getConditionTooltip(p, spell), computedCosts);
         }
 
-        // 4) Calcul des coûts ajustés (passifs Création, Consolidation, Destruction, Karma Harmonie)
-        int actualManaCost = spell.getManaCost();
-        if (spell.getPercentManaCost() > 0) {
-            double manaBase = generation.grimoire.utils.StatCalculator.getSourceValue(
-                    spell.getPercentManaCostSource() != null ? spell.getPercentManaCostSource()
-                            : generation.grimoire.enumeration.Source.CASTER_MANA_MAX,
-                    p, p);
-            actualManaCost += (int) (manaBase * spell.getPercentManaCost() / 100);
+        int actualManaCost = computedCosts.finalManaCost();
+        int actualHealCost = computedCosts.finalHealCost();
+        int actualHeatCost = computedCosts.finalHeatCost();
+
+        // 5) Vérification des ressources
+        if (p.getManaCurrent() < actualManaCost) {
+            return buildAvailability(spell.getId(), false, "RESOURCE",
+                    "Mana insuffisant (" + p.getManaCurrent() + "/" + actualManaCost + ")",
+                    computedCosts);
         }
-        int cursedTaxPct = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_MANA_TAX);
-        if (cursedTaxPct > 0 && actualManaCost > 0) {
-            actualManaCost += (int) Math.ceil(actualManaCost * (cursedTaxPct / 100.0));
+        if (p.getHealthCurrent() < actualHealCost) {
+            return buildAvailability(spell.getId(), false, "RESOURCE",
+                    "PV insuffisants (" + p.getHealthCurrent() + "/" + actualHealCost + ")",
+                    computedCosts);
         }
-        int actualHealCost = spell.getHealCost();
-        if (spell.getPercentHealCost() > 0) {
-            double healBase = generation.grimoire.utils.StatCalculator.getSourceValue(
-                    spell.getPercentHealCostSource() != null ? spell.getPercentHealCostSource()
-                            : generation.grimoire.enumeration.Source.CASTER_HEALTH_MAX,
-                    p, p);
-            actualHealCost += (int) (healBase * spell.getPercentHealCost() / 100);
-        }
-        int actualHeatCost = spell.getHeatCost();
-        if (spell.getPercentHeatCost() > 0) {
-            actualHeatCost += (int) (100.0 * spell.getPercentHeatCost() / 100.0);
+        int currentHeat = p.getPassiveState("destruction_heat", 0);
+        if (actualHeatCost > 0 && currentHeat < actualHeatCost) {
+            return buildAvailability(spell.getId(), false, "RESOURCE",
+                    "Chaleur insuffisante (" + currentHeat + "/" + actualHeatCost + ")",
+                    computedCosts);
         }
 
+        int actualSeedCost = spell.getSeedCost();
+        int currentBuds = p.getPassiveState("creation_buds", 0);
+        boolean willPassiveTrigger = currentBuds > 0 && p.getPassiveState("creation_used_this_turn", 0) == 0;
+        int requiredBuds = actualSeedCost + (willPassiveTrigger ? 1 : 0);
+        if (currentBuds < requiredBuds) {
+            return buildAvailability(spell.getId(), false, "RESOURCE",
+                    "Graines insuffisantes (" + currentBuds + "/" + requiredBuds + ")",
+                    computedCosts);
+        }
+
+        return buildAvailability(spell.getId(), true, null, null, computedCosts);
+    }
+
+    private record ComputedSpellCosts(
+            int finalManaCost,
+            int finalHealCost,
+            int finalHeatCost,
+            int rawManaCost,
+            int percentManaAmount,
+            int rawHealCost,
+            int percentHealAmount,
+            int rawHeatCost,
+            int percentHeatAmount,
+            List<SpellCostModifierDTO> manaModifiers,
+            List<SpellCostModifierDTO> healModifiers,
+            List<SpellCostModifierDTO> heatModifiers
+    ) {}
+
+    private SpellAvailability buildAvailability(Long spellId, boolean castable, String reason, String tooltip,
+                                                ComputedSpellCosts c) {
+        return new SpellAvailability(
+                spellId,
+                castable,
+                reason,
+                tooltip,
+                c.finalManaCost(),
+                c.finalHealCost(),
+                c.finalHeatCost(),
+                c.rawManaCost(),
+                c.percentManaAmount(),
+                c.rawHealCost(),
+                c.percentHealAmount(),
+                c.rawHeatCost(),
+                c.percentHeatAmount(),
+                c.manaModifiers(),
+                c.healModifiers(),
+                c.heatModifiers()
+        );
+    }
+
+    private ComputedSpellCosts computeSpellCosts(Spell spell, Personnage p, CombatSession session) {
+        Personnage defaultTarget = p;
+        if (session != null && session.getEnemies() != null) {
+            for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
+                if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
+                    defaultTarget = m.getAsPersonnage();
+                    break;
+                }
+            }
+        }
+
+        List<SpellCostModifierDTO> manaModifiers = new ArrayList<>();
+        List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
+        List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
+
+        // 1. Coût Mana de base + %
+        int baseMana = spell.getManaCost();
+        int pctMana = spell.getPercentManaCost();
+        Source manaSource = spell.getPercentManaCostSource() != null
+                ? spell.getPercentManaCostSource()
+                : Source.CASTER_MANA_MAX;
+        int percentManaAmount = 0;
+        if (pctMana > 0) {
+            double manaBase = StatCalculator.getSourceValue(manaSource, p, defaultTarget);
+            percentManaAmount = (int) (manaBase * pctMana / 100);
+        }
+        int rawManaCost = baseMana + percentManaAmount;
+        int actualManaCost = rawManaCost;
+
+        // 2. Surcoût d'arme/équipement maudit : Incantations Lourdes (CURSED_MANA_TAX)
+        int cursedTaxPct = p.getSpecialEffectValue(EquipmentEffectType.CURSED_MANA_TAX);
+        if (cursedTaxPct != 0 && actualManaCost > 0) {
+            int taxPct = Math.abs(cursedTaxPct);
+            int taxAmount = (int) Math.ceil(actualManaCost * (taxPct / 100.0));
+            actualManaCost += taxAmount;
+            manaModifiers.add(new SpellCostModifierDTO(
+                    "Incantations Lourdes (+" + taxPct + "%)",
+                    "+" + taxAmount + " Mana",
+                    false));
+        }
+
+        // 3. Coût PV (Sacrifice) de base + %
+        int baseHeal = spell.getHealCost();
+        int pctHeal = spell.getPercentHealCost();
+        Source healSource = spell.getPercentHealCostSource() != null
+                ? spell.getPercentHealCostSource()
+                : Source.CASTER_HEALTH_MAX;
+        int percentHealAmount = 0;
+        if (pctHeal > 0) {
+            double healBase = StatCalculator.getSourceValue(healSource, p, defaultTarget);
+            percentHealAmount = (int) (healBase * pctHeal / 100);
+        }
+        int rawHealCost = baseHeal + percentHealAmount;
+        int actualHealCost = rawHealCost;
+
+        // 4. Coût Chaleur de base + % + effets négatifs
+        int baseHeat = spell.getHeatCost();
+        int pctHeat = spell.getPercentHeatCost();
+        int percentHeatAmount = pctHeat > 0 ? (int) (100.0 * pctHeat / 100.0) : 0;
         int minRequiredHeatFromEffects = 0;
         if (spell.getEffects() != null) {
             for (SpellEffect effect : spell.getEffects()) {
@@ -152,17 +266,23 @@ class SpellAvailabilityService {
                         }
                     } else if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatPercentageEffect hpe) {
                         if (hpe.getPercentage() < 0) {
-                            double srcVal = generation.grimoire.utils.StatCalculator.getSourceValue(hpe.getSource(), p,
-                                    p);
+                            double srcVal = StatCalculator.getSourceValue(hpe.getSource(), p, defaultTarget);
                             minRequiredHeatFromEffects += (int) (-hpe.getPercentage() * srcVal);
                         }
                     }
                 }
             }
         }
-        actualHeatCost += minRequiredHeatFromEffects;
+        int rawHeatCost = baseHeat + percentHeatAmount + minRequiredHeatFromEffects;
+        int actualHeatCost = rawHeatCost;
 
-        // Ajustement des coûts via les passifs
+        // 5. Ajustement des coûts via les passifs (Création, Destruction, Karma)
+        int prevHeatWasMax = p.getPassiveState("destruction_heat_was_max", 0);
+        int prevHeatGen = p.getPassiveState("destruction_heat_generated_this_cast", 0);
+        int manaBeforePassives = actualManaCost;
+        int healBeforePassives = actualHealCost;
+        int heatBeforePassives = actualHeatCost;
+
         int[] costs = { actualManaCost, actualHealCost, actualHeatCost };
         SpellCostAdjustEvent costEvent = new SpellCostAdjustEvent(p, p, spell, costs);
         passiveDispatcher.dispatch(p, spell, costEvent);
@@ -170,35 +290,116 @@ class SpellAvailabilityService {
         actualHealCost = costs[1];
         actualHeatCost = costs[2];
 
-        // 5) Vérification des ressources
-        if (p.getManaCurrent() < actualManaCost) {
-            return SpellAvailability.blocked(spell.getId(), "RESOURCE",
-                    "Mana insuffisant (" + p.getManaCurrent() + "/" + actualManaCost + ")",
-                    actualManaCost, actualHealCost, actualHeatCost);
-        }
-        if (p.getHealthCurrent() < actualHealCost) {
-            return SpellAvailability.blocked(spell.getId(), "RESOURCE",
-                    "PV insuffisants (" + p.getHealthCurrent() + "/" + actualHealCost + ")",
-                    actualManaCost, actualHealCost, actualHeatCost);
-        }
-        int currentHeat = p.getPassiveState("destruction_heat", 0);
-        if (actualHeatCost > 0 && currentHeat < actualHeatCost) {
-            return SpellAvailability.blocked(spell.getId(), "RESOURCE",
-                    "Chaleur insuffisante (" + currentHeat + "/" + actualHeatCost + ")",
-                    actualManaCost, actualHealCost, actualHeatCost);
+        p.setPassiveState("destruction_heat_was_max", prevHeatWasMax);
+        p.setPassiveState("destruction_heat_generated_this_cast", prevHeatGen);
+
+        // Identifier les passifs ayant réduit/modifié les coûts pour l'infobulle détaillée
+        recordPassiveModifiers(spell, p,
+                manaBeforePassives, actualManaCost, manaModifiers, "Mana",
+                healBeforePassives, actualHealCost, healModifiers, "PV",
+                heatBeforePassives, actualHeatCost, heatModifiers, "Chaleur");
+
+        // 6. Effets d'équipements maudits / reliques / épiques liés à la dépense de mana
+        if (actualManaCost > 0) {
+            int hpLossPct = p.getSpecialEffectValue(EquipmentEffectType.CURSED_HP_LOSS_ON_MANA);
+            if (hpLossPct != 0) {
+                int hpLoss = (int) (actualManaCost * Math.abs(hpLossPct) / 100.0);
+                if (hpLoss > 0) {
+                    manaModifiers.add(new SpellCostModifierDTO(
+                            "Brèche spirituelle (" + Math.abs(hpLossPct) + "%)",
+                            "-" + hpLoss + " PV subis",
+                            false));
+                    healModifiers.add(new SpellCostModifierDTO(
+                            "Brèche spirituelle (" + Math.abs(hpLossPct) + "% mana)",
+                            "+" + hpLoss + " PV",
+                            false));
+                }
+            }
+
+            int vitalArcanePct = p.getSpecialEffectValue(EquipmentEffectType.VITAL_ARCANE);
+            if (vitalArcanePct > 0) {
+                int heal = (int) (actualManaCost * vitalArcanePct / 100.0);
+                if (heal > 0) {
+                    manaModifiers.add(new SpellCostModifierDTO(
+                            "Arcane Vitale (+" + vitalArcanePct + "%)",
+                            "+" + heal + " PV soignés",
+                            true));
+                }
+            }
         }
 
-        int actualSeedCost = spell.getSeedCost();
-        int currentBuds = p.getPassiveState("creation_buds", 0);
-        boolean willPassiveTrigger = currentBuds > 0 && p.getPassiveState("creation_used_this_turn", 0) == 0;
-        int requiredBuds = actualSeedCost + (willPassiveTrigger ? 1 : 0);
-        if (currentBuds < requiredBuds) {
-            return SpellAvailability.blocked(spell.getId(), "RESOURCE",
-                    "Graines insuffisantes (" + currentBuds + "/" + requiredBuds + ")",
-                    actualManaCost, actualHealCost, actualHeatCost);
-        }
+        return new ComputedSpellCosts(
+                actualManaCost,
+                actualHealCost,
+                actualHeatCost,
+                rawManaCost,
+                percentManaAmount,
+                rawHealCost,
+                percentHealAmount,
+                rawHeatCost,
+                percentHeatAmount,
+                manaModifiers,
+                healModifiers,
+                heatModifiers
+        );
+    }
 
-        return SpellAvailability.available(spell.getId(), actualManaCost, actualHealCost, actualHeatCost);
+    private void recordPassiveModifiers(
+            Spell spell, Personnage p,
+            int manaBefore, int manaAfter, List<SpellCostModifierDTO> manaMods, String manaUnit,
+            int healBefore, int healAfter, List<SpellCostModifierDTO> healMods, String healUnit,
+            int heatBefore, int heatAfter, List<SpellCostModifierDTO> heatMods, String heatUnit) {
+
+        boolean isInstantOriginal = spell.getAction() == 1
+                || (spell.getAction() <= 0 && spell.getCastingType() == SpellCastingType.INSTANTANE);
+        boolean creationFreeActive = isInstantOriginal
+                && p.getPassiveState("creation_buds", 0) > 0
+                && p.getPassiveState("creation_used_this_turn", 0) == 0;
+        boolean destructionFreeActive = p.getPassiveState("destruction_heat", 0) >= 100;
+
+        int karmaGauge = p.getPassiveState("karma_locked", 0) == 0 ? p.getPassiveState("karma_gauge", 0) : 0;
+        boolean karmaIllumination = karmaGauge >= 3
+                && spell.getKarmaAlignment() == KarmaAlignment.PROTECTIVE
+                && spell.getSpiritualite() != null
+                && p.getSpiritualite() != null
+                && Objects.equals(spell.getSpiritualite().getId(), p.getSpiritualite().getId());
+
+        addSingleResourcePassiveMod(manaBefore, manaAfter, manaMods, manaUnit,
+                creationFreeActive, destructionFreeActive, karmaIllumination, karmaGauge);
+        addSingleResourcePassiveMod(healBefore, healAfter, healMods, healUnit,
+                creationFreeActive, destructionFreeActive, karmaIllumination, karmaGauge);
+        addSingleResourcePassiveMod(heatBefore, heatAfter, heatMods, heatUnit,
+                false, destructionFreeActive, karmaIllumination, karmaGauge);
+    }
+
+    private void addSingleResourcePassiveMod(
+            int before, int after, List<SpellCostModifierDTO> mods, String unit,
+            boolean creationFreeActive, boolean destructionFreeActive,
+            boolean karmaIllumination, int karmaGauge) {
+        if (before == after) {
+            return;
+        }
+        int diff = after - before; // négatif si réduction
+        if (after == 0 && before > 0) {
+            if (creationFreeActive) {
+                mods.add(new SpellCostModifierDTO("Voie de la Création (Bourgeon)", "-" + before + " " + unit + " (Gratuit)", true));
+                return;
+            }
+            if (destructionFreeActive) {
+                mods.add(new SpellCostModifierDTO("Voie de la Destruction (Surcharge)", "-" + before + " " + unit + " (Gratuit)", true));
+                return;
+            }
+            if (karmaIllumination) {
+                mods.add(new SpellCostModifierDTO("Karma (Illumination)", "-" + before + " " + unit + " (Gratuit)", true));
+                return;
+            }
+        }
+        if (karmaGauge > 0 && diff < 0) {
+            int pct = karmaGauge * 10;
+            mods.add(new SpellCostModifierDTO("Esprit Karmique (-" + pct + "%)", diff + " " + unit, true));
+            return;
+        }
+        mods.add(new SpellCostModifierDTO("Effet Passif", (diff > 0 ? "+" : "") + diff + " " + unit, diff < 0));
     }
 
     /**

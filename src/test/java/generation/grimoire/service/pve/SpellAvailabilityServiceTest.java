@@ -657,4 +657,117 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getEffectPreviews().get(3).calculatedValue()).isEqualTo(13);
         assertThat(avail.getEffectPreviews().get(3).sourceResolvedToFlat()).isTrue();
     }
+
+    @Test
+    @DisplayName("Devrait calculer des aperçus spécifiques pour chaque ennemi en fonction de ses stats")
+    void shouldComputeDifferentPreviewsForEachTargetEnemy() {
+        // Ennemi 1 : 100 PV manquants
+        Personnage enemy1 = new Personnage();
+        enemy1.setId(10L);
+        enemy1.setName("Gobelin A");
+        enemy1.setHealthMax(1000);
+        enemy1.setHealthCurrent(900);
+        generation.grimoire.model.pve.ActiveMonster m1 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(enemy1);
+
+        // Ennemi 2 : 500 PV manquants
+        Personnage enemy2 = new Personnage();
+        enemy2.setId(11L);
+        enemy2.setName("Gobelin B");
+        enemy2.setHealthMax(1000);
+        enemy2.setHealthCurrent(500);
+        generation.grimoire.model.pve.ActiveMonster m2 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m2.setAsPersonnage(enemy2);
+
+        session.setEnemies(List.of(m1, m2));
+
+        // Sort : 20% des PV manquants de la cible en dégâts bruts
+        Spell spell = createSpell(200L, "Exécution", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamagePercentageEffect pctEff =
+                new generation.grimoire.entity.spell.type.effect.DamagePercentageEffect();
+        pctEff.setId(201L);
+        pctEff.setDamageType(generation.grimoire.enumeration.DamageType.BRUT);
+        pctEff.setPercentage(0.20);
+        pctEff.setDamageSource(generation.grimoire.enumeration.Source.TARGET_HEALTH_MISSING);
+        pctEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(pctEff)));
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+
+        // Aperçu par défaut (sur 1er ennemi : 20% de 100 = 20)
+        assertThat(avail.getEffectPreviews()).hasSize(1);
+        assertThat(avail.getEffectPreviews().get(0).calculatedValue()).isEqualTo(20);
+
+        // Aperçus spécifiques aux cibles
+        assertThat(avail.getEnemyPreviews()).hasSize(2);
+        assertThat(avail.getEnemyPreviews().get(0).effectPreviews().get(0).calculatedValue()).isEqualTo(20);
+        assertThat(avail.getEnemyPreviews().get(1).effectPreviews().get(0).calculatedValue()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("Devrait calculer les dégâts réels finaux en prenant en compte armure, passifs de monstre, débuffs et boucliers")
+    void shouldComputeRealFinalDamageWithArmorMonsterPassivesDebuffsAndShields() {
+        // Lanceur : +20% DAMAGE_GIVEN_PHYSIC
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect casterBuff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        casterBuff.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_GIVEN_PHYSIC);
+        casterBuff.setModifier(0.20);
+        casterBuff.setDuration(2);
+        caster.getActiveBuffs().add(casterBuff);
+
+        // Cible : Monstre REPTILE (-15% dégâts physiques), 100 Armure (50% réduction),
+        // Débuff +25% DAMAGE_TAKEN_PHYSIC, et 20 points de Bouclier actif
+        Personnage reptileTarget = new Personnage();
+        reptileTarget.setId(20L);
+        reptileTarget.setName("Lézard Cuirassé");
+        reptileTarget.setHealthMax(500);
+        reptileTarget.setHealthCurrent(500);
+        reptileTarget.setArmor(100);
+        reptileTarget.setMonsterType(generation.grimoire.enumeration.MonsterType.REPTILE);
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect targetDebuff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        targetDebuff.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_TAKEN_PHYSIC);
+        targetDebuff.setModifier(0.25);
+        targetDebuff.setDuration(2);
+        reptileTarget.getActiveBuffs().add(targetDebuff);
+        reptileTarget.addShield(20, 2, "Écailles");
+
+        generation.grimoire.model.pve.ActiveMonster m1 =
+                new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(reptileTarget);
+        session.setEnemies(List.of(m1));
+
+        // Sort : 100 dégâts physiques fixes
+        Spell spell = createSpell(300L, "Frappe Lourde", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamageFixedEffect dmgEff =
+                new generation.grimoire.entity.spell.type.effect.DamageFixedEffect();
+        dmgEff.setId(301L);
+        dmgEff.setDamageType(generation.grimoire.enumeration.DamageType.PHYSIC);
+        dmgEff.setDamage(100);
+        dmgEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(dmgEff)));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        var preview = avail.getEnemyPreviews().get(0).effectPreviews().get(0);
+
+        // Calcul attendu :
+        // 1. dealDamage : 100 * 1.20 = 120
+        // 2. REPTILE : ceil(120 * 0.85) = 102
+        // 3. DAMAGE_TAKEN_PHYSIC (+25%) : 102 * 1.25 = 127.5
+        // 4. Armure 100 (réduction 50%) : (int)(127.5 * 0.5) = 63
+        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV
+        assertThat(preview.calculatedValue()).isEqualTo(43);
+        assertThat(preview.hpDamage()).isEqualTo(43);
+        assertThat(preview.shieldAbsorbed()).isEqualTo(20);
+    }
 }

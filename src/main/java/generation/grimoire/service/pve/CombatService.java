@@ -360,6 +360,10 @@ public class CombatService {
         CombatSession session = getSession(sessionId);
         if (session != null) {
             session.setReloadCount(session.getReloadCount() + 1);
+            try {
+                spellAvailabilityService.compute(session);
+            } catch (Exception ignored) {
+            }
         }
         return session;
     }

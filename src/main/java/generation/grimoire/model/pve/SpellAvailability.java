@@ -2,12 +2,15 @@ package generation.grimoire.model.pve;
 
 import generation.grimoire.dto.pve.SpellCostModifierDTO;
 import generation.grimoire.dto.pve.SpellEffectPreviewDTO;
+import generation.grimoire.dto.pve.SpellTargetPreviewDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Représente la disponibilité d'un sort pour le joueur pendant le combat.
@@ -49,6 +52,8 @@ public class SpellAvailability {
     private List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
     private List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
     private List<SpellEffectPreviewDTO> effectPreviews = new ArrayList<>();
+    private Map<Integer, SpellTargetPreviewDTO> enemyPreviews = new HashMap<>();
+    private Map<Integer, SpellTargetPreviewDTO> allyPreviews = new HashMap<>();
 
     public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,
                              int finalManaCost, int finalHealCost, int finalHeatCost,
@@ -63,7 +68,26 @@ public class SpellAvailability {
                 rawManaCost, percentManaAmount,
                 rawHealCost, percentHealAmount,
                 rawHeatCost, percentHeatAmount,
-                manaModifiers, healModifiers, heatModifiers, new ArrayList<>());
+                manaModifiers, healModifiers, heatModifiers, new ArrayList<>(),
+                new HashMap<>(), new HashMap<>());
+    }
+
+    public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,
+                             int finalManaCost, int finalHealCost, int finalHeatCost,
+                             int rawManaCost, int percentManaAmount,
+                             int rawHealCost, int percentHealAmount,
+                             int rawHeatCost, int percentHeatAmount,
+                             List<SpellCostModifierDTO> manaModifiers,
+                             List<SpellCostModifierDTO> healModifiers,
+                             List<SpellCostModifierDTO> heatModifiers,
+                             List<SpellEffectPreviewDTO> effectPreviews) {
+        this(spellId, castable, reason, tooltip,
+                finalManaCost, finalHealCost, finalHeatCost,
+                rawManaCost, percentManaAmount,
+                rawHealCost, percentHealAmount,
+                rawHeatCost, percentHeatAmount,
+                manaModifiers, healModifiers, heatModifiers, effectPreviews,
+                new HashMap<>(), new HashMap<>());
     }
 
     public SpellAvailability(Long spellId, boolean castable, String reason, String tooltip,

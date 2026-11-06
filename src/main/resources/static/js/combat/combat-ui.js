@@ -1,10 +1,10 @@
-import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js';
-import { pageState } from './combat-state.js';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js';
+import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
+import { pageState } from './combat-state.js?v=1786180000234';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000234';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000234';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000234';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000231';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { showFighterPingMenu } from './combat-signals.js';
 import { renderHeroCombatSprite } from './combat-sprites.js';
@@ -350,6 +350,19 @@ export function updateUI(data) {
     if (data && data.multi !== undefined) {
         pageState.isMulti = (data.multi === true);
     }
+
+    // Auto-select first alive target if current is null or dead
+    if (data.enemies && data.enemies.length > 0) {
+        if (pageState.selectedTargetIndex === null || !data.enemies[pageState.selectedTargetIndex] || data.enemies[pageState.selectedTargetIndex].dead) {
+            const firstAlive = data.enemies.findIndex(e => !e.dead);
+            pageState.selectedTargetIndex = firstAlive !== -1 ? firstAlive : null;
+        }
+    }
+    if (data.players && data.players.length > 0 && pageState.selectedAllyIndex !== -1 && pageState.selectedAllyIndex !== null) {
+        if (!data.players[pageState.selectedAllyIndex] || data.players[pageState.selectedAllyIndex].healthCurrent <= 0) {
+            pageState.selectedAllyIndex = -1;
+        }
+    }
     const emotesBtn = document.getElementById('btnCombatEmotes');
     if (emotesBtn) {
         if (pageState.isMulti) {
@@ -479,16 +492,12 @@ export function updateUI(data) {
             const isAllySelected = index === pageState.selectedAllyIndex;
 
             const div = document.createElement('div');
-            div.className = `fighter fighter-player ${isActive ? 'active' : ''} ${isAllySelected ? 'selected-ally' : ''} ${isDead ? 'dead' : ''}`;
+            div.className = `fighter fighter-player ${isActive ? 'active' : ''} ${isAllySelected ? 'selected-ally is-selected' : ''} ${isDead ? 'dead' : ''}`;
             div.dataset.fighterId = `hero-${p.id || index}`;
             div.dataset.index = index;
             div.dataset.ownerUsername = p.ownerUsername || p.user?.username || '';
 
-            if (isAllySelected) {
-                div.style.borderColor = '#10b981';
-                div.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4)';
-                div.style.transform = 'scale(1.02)';
-            } else if (isActive) {
+            if (isActive) {
                 div.style.borderColor = '#38bdf8';
                 div.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
                 div.style.transform = 'scale(1.05)';
@@ -514,6 +523,13 @@ export function updateUI(data) {
             div.innerHTML = timerHtml + generateFighterHtml(p, true, false, forcedHp, forcedMana, turnMap.players[index] || null);
             playersContainer.appendChild(div);
             renderHeroCombatSprite(div, p, isActive, isDead);
+
+            div.addEventListener('click', (e) => {
+                if (e.target.closest('.fighter-card-ping-btn')) return;
+                if (pageState.pendingCastSpellId !== null) return;
+                if (isDead || pageState.isProcessing) return;
+                setSelectedCombatAlly(index);
+            });
 
             div.addEventListener('contextmenu', (e) => {
                 if (!pageState.isMulti) return;
@@ -3145,6 +3161,43 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
     `;
 }
 
+export function setSelectedCombatTarget(index) {
+    if (pageState.selectedTargetIndex === index) return;
+    pageState.selectedTargetIndex = index;
+    document.querySelectorAll('.fighter-enemy').forEach(card => {
+        const cardIdx = parseInt(card.dataset.index, 10);
+        if (cardIdx === index) {
+            card.classList.add('is-selected');
+        } else {
+            card.classList.remove('is-selected');
+        }
+    });
+    if (pageState.currentSessionData && pageState.currentSessionData.availableSpells) {
+        renderSpells(pageState.currentSessionData.availableSpells);
+    }
+}
+window.setSelectedCombatTarget = setSelectedCombatTarget;
+
+export function setSelectedCombatAlly(index) {
+    if (pageState.selectedAllyIndex === index) {
+        pageState.selectedAllyIndex = -1;
+    } else {
+        pageState.selectedAllyIndex = index;
+    }
+    document.querySelectorAll('.fighter-player').forEach(card => {
+        const cardIdx = parseInt(card.dataset.index, 10);
+        if (cardIdx === pageState.selectedAllyIndex) {
+            card.classList.add('is-selected', 'selected-ally');
+        } else {
+            card.classList.remove('is-selected', 'selected-ally');
+        }
+    });
+    if (pageState.currentSessionData && pageState.currentSessionData.availableSpells) {
+        renderSpells(pageState.currentSessionData.availableSpells);
+    }
+}
+window.setSelectedCombatAlly = setSelectedCombatAlly;
+
 export function renderEnemies(enemies, turnMap = null) {
     const container = document.getElementById('enemiesContainer');
     container.innerHTML = '';
@@ -3191,8 +3244,10 @@ export function renderEnemies(enemies, turnMap = null) {
         if (typeof activeMonster.currentHp !== 'undefined') pMonster.healthCurrent = activeMonster.currentHp;
         if (typeof activeMonster.maxHp !== 'undefined') pMonster.healthMax = activeMonster.maxHp;
 
+        const isEnemySelected = index === pageState.selectedTargetIndex;
+
         const div = document.createElement('div');
-        div.className = `fighter fighter-enemy enemy-card ${isBossSolo ? 'fighter-boss-solo' : ''} ${isActive ? 'active' : ''} ${activeMonster.dead ? 'dead' : ''}`;
+        div.className = `fighter fighter-enemy enemy-card ${isBossSolo ? 'fighter-boss-solo' : ''} ${isActive ? 'active' : ''} ${isEnemySelected ? 'is-selected' : ''} ${activeMonster.dead ? 'dead' : ''}`;
         div.dataset.index = index;
         div.dataset.fighterId = `monster-${m.monsterId || index}`;
         div.style.position = 'relative';
@@ -3231,6 +3286,13 @@ export function renderEnemies(enemies, turnMap = null) {
 
         div.innerHTML = generateFighterHtml(pMonster, false, isBoss, forcedHp, forcedMana, turnMap && turnMap.enemies ? turnMap.enemies[index] : null, isBossSolo);
         container.appendChild(div);
+
+        div.addEventListener('click', (e) => {
+            if (e.target.closest('.fighter-card-ping-btn')) return;
+            if (pageState.pendingCastSpellId !== null) return;
+            if (activeMonster.dead || pageState.isProcessing) return;
+            setSelectedCombatTarget(index);
+        });
 
         div.addEventListener('contextmenu', (e) => {
             if (!pageState.isMulti) return;
@@ -3902,6 +3964,11 @@ export function renderSpellCard(sp) {
     const availabilityList = pageState.currentSessionData.spellAvailability || [];
     const avail = availabilityList.find(a => a.spellId === sp.id);
 
+    const targetPreview = (pageState.selectedTargetIndex !== null && avail?.enemyPreviews?.[pageState.selectedTargetIndex])
+        || (pageState.selectedAllyIndex !== -1 && pageState.selectedAllyIndex !== null && avail?.allyPreviews?.[pageState.selectedAllyIndex])
+        || null;
+    const effectiveAvail = targetPreview || avail;
+
     const buildFallbackCostTooltipHtml = (costType) => {
         if (costType === 'MANA') {
             const flatCost = sp.manaCost || 0;
@@ -3909,9 +3976,9 @@ export function renderSpellCard(sp) {
             const srcKey = sp.percentManaCostSource || 'CASTER_MANA_MAX';
             const srcLabel = ui.formatSrc ? ui.formatSrc(srcKey) : srcKey;
             const srcInfo = ui.getSourceIconInfo ? ui.getSourceIconInfo(srcKey) : { icon: 'water_drop', cssClass: 'src-color-blue-dark' };
-            const finalCost = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : flatCost;
-            const pctAmount = avail && avail.percentManaAmount !== undefined ? avail.percentManaAmount : null;
-            const modifiers = (avail && avail.manaModifiers) || [];
+            const finalCost = effectiveAvail && effectiveAvail.finalManaCost !== undefined ? effectiveAvail.finalManaCost : flatCost;
+            const pctAmount = effectiveAvail && effectiveAvail.percentManaAmount !== undefined ? effectiveAvail.percentManaAmount : null;
+            const modifiers = (effectiveAvail && effectiveAvail.manaModifiers) || [];
             const parts = [];
             if (flatCost > 0) parts.push(`<strong>${flatCost} Mana</strong>`);
             if (pctCost > 0) {
@@ -3930,9 +3997,9 @@ export function renderSpellCard(sp) {
             const srcKey = sp.percentHealCostSource || 'CASTER_HEALTH_MAX';
             const srcLabel = ui.formatSrc ? ui.formatSrc(srcKey) : srcKey;
             const srcInfo = ui.getSourceIconInfo ? ui.getSourceIconInfo(srcKey) : { icon: 'favorite', cssClass: 'src-color-emerald' };
-            const finalCost = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : flatCost;
-            const pctAmount = avail && avail.percentHealAmount !== undefined ? avail.percentHealAmount : null;
-            const modifiers = (avail && avail.healModifiers) || [];
+            const finalCost = effectiveAvail && effectiveAvail.finalHealCost !== undefined ? effectiveAvail.finalHealCost : flatCost;
+            const pctAmount = effectiveAvail && effectiveAvail.percentHealAmount !== undefined ? effectiveAvail.percentHealAmount : null;
+            const modifiers = (effectiveAvail && effectiveAvail.healModifiers) || [];
             const parts = [];
             if (flatCost > 0) parts.push(`<strong>${flatCost} PV</strong>`);
             if (pctCost > 0) {
@@ -3948,9 +4015,9 @@ export function renderSpellCard(sp) {
         if (costType === 'HEAT') {
             const flatCost = sp.heatCost || 0;
             const pctCost = sp.percentHeatCost || 0;
-            const finalCost = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : flatCost;
-            const pctAmount = avail && avail.percentHeatAmount !== undefined ? avail.percentHeatAmount : null;
-            const modifiers = (avail && avail.heatModifiers) || [];
+            const finalCost = effectiveAvail && effectiveAvail.finalHeatCost !== undefined ? effectiveAvail.finalHeatCost : flatCost;
+            const pctAmount = effectiveAvail && effectiveAvail.percentHeatAmount !== undefined ? effectiveAvail.percentHeatAmount : null;
+            const modifiers = (effectiveAvail && effectiveAvail.heatModifiers) || [];
             const parts = [];
             if (flatCost > 0) parts.push(`<strong>${flatCost} Chaleur</strong>`);
             if (pctCost > 0) {
@@ -3967,7 +4034,7 @@ export function renderSpellCard(sp) {
     };
 
     const buildCostHoverAttrs = (costType, color) => {
-        const tooltipHtml = (ui.generateSpellCostTooltipHtml ? ui.generateSpellCostTooltipHtml(costType, sp, avail) : '') || buildFallbackCostTooltipHtml(costType);
+        const tooltipHtml = (ui.generateSpellCostTooltipHtml ? ui.generateSpellCostTooltipHtml(costType, sp, effectiveAvail) : '') || buildFallbackCostTooltipHtml(costType);
         const escapedTooltip = (tooltipHtml || '').replace(/"/g, '&quot;');
         return `data-color="${color}" data-prefer-top data-tooltip-html="${escapedTooltip}" onmouseenter="event.stopPropagation(); window.showGlobalTooltip(this)" onmouseleave="window.onChildTooltipLeave ? window.onChildTooltipLeave(event, this) : window.hideGlobalTooltip()"`;
     };
@@ -3980,24 +4047,24 @@ export function renderSpellCard(sp) {
 
     let costDetailsHtml = [];
     if (sp.manaCost > 0 || sp.percentManaCost > 0) {
-        const realMana = avail && avail.finalManaCost !== undefined ? avail.finalManaCost : (sp.manaCost || 0);
-        const rawMana = avail && avail.rawManaCost !== undefined ? avail.rawManaCost : realMana;
+        const realMana = effectiveAvail && effectiveAvail.finalManaCost !== undefined ? effectiveAvail.finalManaCost : (sp.manaCost || 0);
+        const rawMana = effectiveAvail && effectiveAvail.rawManaCost !== undefined ? effectiveAvail.rawManaCost : realMana;
         const valModClass = realMana < rawMana ? 'combat-cost-val-reduced' : (realMana > rawMana ? 'combat-cost-val-increased' : '');
         const srcIconHtml = sp.percentManaCost > 0 ? getSrcIcon(sp.percentManaCostSource || 'CASTER_MANA_MAX') : '';
         const hoverAttrs = buildCostHoverAttrs('MANA', '#38bdf8');
         costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-mana cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-mana">water_drop</span><span class="combat-cost-value combat-cost-value-mana ${valModClass}"><span>${realMana}</span>${srcIconHtml}</span></span>`);
     }
     if (sp.healCost > 0 || sp.percentHealCost > 0) {
-        const realHeal = avail && avail.finalHealCost !== undefined ? avail.finalHealCost : (sp.healCost || 0);
-        const rawHeal = avail && avail.rawHealCost !== undefined ? avail.rawHealCost : realHeal;
+        const realHeal = effectiveAvail && effectiveAvail.finalHealCost !== undefined ? effectiveAvail.finalHealCost : (sp.healCost || 0);
+        const rawHeal = effectiveAvail && effectiveAvail.rawHealCost !== undefined ? effectiveAvail.rawHealCost : realHeal;
         const valModClass = realHeal < rawHeal ? 'combat-cost-val-reduced' : (realHeal > rawHeal ? 'combat-cost-val-increased' : '');
         const srcIconHtml = sp.percentHealCost > 0 ? getSrcIcon(sp.percentHealCostSource || 'CASTER_HEALTH_MAX') : '';
         const hoverAttrs = buildCostHoverAttrs('HEAL', '#f43f5e');
         costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-hp cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-hp">bloodtype</span><span class="combat-cost-value combat-cost-value-hp ${valModClass}"><span>${realHeal}</span>${srcIconHtml}</span></span>`);
     }
     if (sp.heatCost > 0 || sp.percentHeatCost > 0) {
-        const realHeat = avail && avail.finalHeatCost !== undefined ? avail.finalHeatCost : (sp.heatCost || 0);
-        const rawHeat = avail && avail.rawHeatCost !== undefined ? avail.rawHeatCost : realHeat;
+        const realHeat = effectiveAvail && effectiveAvail.finalHeatCost !== undefined ? effectiveAvail.finalHeatCost : (sp.heatCost || 0);
+        const rawHeat = effectiveAvail && effectiveAvail.rawHeatCost !== undefined ? effectiveAvail.rawHeatCost : realHeat;
         const valModClass = realHeat < rawHeat ? 'combat-cost-val-reduced' : (realHeat > rawHeat ? 'combat-cost-val-increased' : '');
         const hoverAttrs = buildCostHoverAttrs('HEAT', '#f97316');
         costDetailsHtml.push(`<span class="combat-cost-badge combat-cost-heat cursor-help" ${hoverAttrs}><span class="material-symbols-outlined combat-cost-icon-heat">local_fire_department</span><span class="combat-cost-value combat-cost-value-heat ${valModClass}"><span>${realHeat}</span></span></span>`);

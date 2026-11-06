@@ -588,9 +588,44 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
 
     if (sp.effects && sp.effects.length > 0) {
         sp.effects.forEach((e, idx) => {
-            const preview = (e.id != null ? previews.find(p => p.effectId === e.id) : null) || previews[idx] || null;
             const target = e.effectTarget || e.effect_target;
-            const targetText = TARGET_LABELS[target] || 'Cible';
+            let effectivePreviews = previews;
+            let targetLabelExtra = '';
+
+            const isHostileTarget = !target || ['TARGET', 'ALL_ENEMIES', 'ALL_COMBATANTS'].includes(target);
+            const isAllyTarget = target === 'ALLY';
+
+            if (isAllyTarget && window.pageState && window.pageState.selectedAllyIndex !== -1 && window.pageState.selectedAllyIndex !== null) {
+                const allyIdx = window.pageState.selectedAllyIndex;
+                if (avail && avail.allyPreviews && avail.allyPreviews[allyIdx]) {
+                    effectivePreviews = avail.allyPreviews[allyIdx].effectPreviews || previews;
+                }
+                const allyObj = window.pageState.currentSessionData?.players?.[allyIdx];
+                if (allyObj && allyObj.healthCurrent > 0) {
+                    const allyName = allyObj.name || '';
+                    if (allyName) {
+                        targetLabelExtra = ` : ${allyName}`;
+                    }
+                }
+            } else if (window.pageState && window.pageState.selectedTargetIndex !== null && window.pageState.selectedTargetIndex !== undefined) {
+                const targetIdx = window.pageState.selectedTargetIndex;
+                if (avail && avail.enemyPreviews && avail.enemyPreviews[targetIdx]) {
+                    effectivePreviews = avail.enemyPreviews[targetIdx].effectPreviews || previews;
+                }
+                if (isHostileTarget) {
+                    const enemyObj = window.pageState.currentSessionData?.enemies?.[targetIdx];
+                    if (enemyObj && !enemyObj.dead) {
+                        const enemyName = enemyObj.base?.name || enemyObj.asPersonnage?.name || '';
+                        if (enemyName) {
+                            targetLabelExtra = ` : ${enemyName}`;
+                        }
+                    }
+                }
+            }
+
+            const preview = (e.id != null ? effectivePreviews.find(p => p.effectId === e.id) : null) || effectivePreviews[idx] || null;
+            const baseTargetText = TARGET_LABELS[target] || 'Cible';
+            const targetText = targetLabelExtra ? `${baseTargetText}${targetLabelExtra}` : baseTargetText;
             const tClass = TARGET_CSS_CLASSES[target] || 'text-target-enemy';
 
             let rawType = e.effectType || e.effect_type || '';
@@ -736,7 +771,18 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
             let detailsStr = '';
             if (['DamageFixed', 'FIXED_DAMAGE', 'DamagePercentage', 'PERCENTAGE_DAMAGE'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.damage || 0);
-                detailsStr = `➔ inflige <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}`;
+                const shieldAbs = preview && preview.shieldAbsorbed ? preview.shieldAbsorbed : 0;
+                const extraBrut = preview && preview.extraBrutDamage ? preview.extraBrutDamage : 0;
+                let shieldStr = '';
+                if (shieldAbs > 0) {
+                    shieldStr = val > 0
+                        ? ` <span class="text-slate-400">(+ <span class="calc-val-highlight eff-color-blue">${shieldAbs}</span> 🛡️ bouclier)</span>`
+                        : ` <span class="text-slate-400">(<span class="calc-val-highlight eff-color-blue">${shieldAbs}</span> 🛡️ absorbés)</span>`;
+                }
+                const extraBrutStr = extraBrut > 0
+                    ? ` <span class="text-slate-400">+ <span class="calc-val-highlight dt-text-brut">${extraBrut}</span> <span class="font-bold dt-text-brut">Bruts</span></span>`
+                    : '';
+                detailsStr = `➔ inflige <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}${shieldStr}${extraBrutStr}`;
             } else if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.healAmount || 0);
                 const isNeg = val < 0 || (e.healAmount || 0) < 0 || (e.percentage || 0) < 0;

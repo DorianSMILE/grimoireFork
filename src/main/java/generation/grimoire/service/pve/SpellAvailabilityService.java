@@ -2,6 +2,7 @@ package generation.grimoire.service.pve;
 
 import generation.grimoire.dto.pve.SpellCostModifierDTO;
 import generation.grimoire.dto.pve.SpellEffectPreviewDTO;
+import generation.grimoire.dto.pve.SpellTargetPreviewDTO;
 import generation.grimoire.entity.Spell;
 import generation.grimoire.entity.SpellEffect;
 import generation.grimoire.entity.personnage.Personnage;
@@ -81,14 +82,41 @@ class SpellAvailabilityService {
     }
 
     private SpellAvailability checkSpellAvailability(Spell spell, Personnage p, CombatSession session) {
-        // Calculer systématiquement les coûts réels et leurs modificateurs pour l'affichage dynamique
-        ComputedSpellCosts computedCosts = computeSpellCosts(spell, p, session);
-
-        String canCastError = p.canCast(spell);
-        if (canCastError != null) {
-            return buildAvailability(spell.getId(), false, "CONDITION", canCastError, computedCosts);
+        Personnage defaultTarget = p;
+        if (session != null && session.getEnemies() != null) {
+            for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
+                if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
+                    defaultTarget = m.getAsPersonnage();
+                    break;
+                }
+            }
+        }
+        Personnage defaultAlly = p;
+        if (session != null && session.getPlayers() != null) {
+            for (Personnage ally : session.getPlayers()) {
+                if (ally != null && ally != p && ally.getHealthCurrent() > 0) {
+                    defaultAlly = ally;
+                    break;
+                }
+            }
         }
 
+        // Calculer systématiquement les coûts réels et leurs modificateurs pour l'affichage dynamique
+        ComputedSpellCosts computedCosts = computeSpellCostsForTargets(spell, p, defaultTarget, defaultAlly);
+
+        SpellAvailability avail;
+        String canCastError = p.canCast(spell);
+        if (canCastError != null) {
+            avail = buildAvailability(spell.getId(), false, "CONDITION", canCastError, computedCosts);
+        } else {
+            avail = evaluateSpellRules(spell, p, computedCosts);
+        }
+
+        populateTargetPreviews(avail, spell, p, session, defaultTarget, defaultAlly);
+        return avail;
+    }
+
+    private SpellAvailability evaluateSpellRules(Spell spell, Personnage p, ComputedSpellCosts computedCosts) {
         // 1) Déterminer le type de casting effectif (avec passif Création)
         SpellCastingType cType = spell.getCastingType();
         if (cType == null)
@@ -167,6 +195,53 @@ class SpellAvailabilityService {
         return buildAvailability(spell.getId(), true, null, null, computedCosts);
     }
 
+    private void populateTargetPreviews(
+            SpellAvailability avail, Spell spell, Personnage p, CombatSession session,
+            Personnage defaultTarget, Personnage defaultAlly) {
+        if (session == null) {
+            return;
+        }
+        if (session.getEnemies() != null) {
+            int enemyIdx = 0;
+            for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
+                if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
+                    Personnage enemyTarget = m.getAsPersonnage();
+                    ComputedSpellCosts costs = computeSpellCostsForTargets(spell, p, enemyTarget, defaultAlly);
+                    avail.getEnemyPreviews().put(enemyIdx, toTargetPreview(costs));
+                }
+                enemyIdx++;
+            }
+        }
+        if (session.getPlayers() != null) {
+            int allyIdx = 0;
+            for (Personnage ally : session.getPlayers()) {
+                if (ally != null && ally.getHealthCurrent() > 0) {
+                    ComputedSpellCosts costs = computeSpellCostsForTargets(spell, p, defaultTarget, ally);
+                    avail.getAllyPreviews().put(allyIdx, toTargetPreview(costs));
+                }
+                allyIdx++;
+            }
+        }
+    }
+
+    private SpellTargetPreviewDTO toTargetPreview(ComputedSpellCosts c) {
+        return new SpellTargetPreviewDTO(
+                c.finalManaCost(),
+                c.finalHealCost(),
+                c.finalHeatCost(),
+                c.rawManaCost(),
+                c.percentManaAmount(),
+                c.rawHealCost(),
+                c.percentHealAmount(),
+                c.rawHeatCost(),
+                c.percentHeatAmount(),
+                c.manaModifiers(),
+                c.healModifiers(),
+                c.heatModifiers(),
+                c.effectPreviews()
+        );
+    }
+
     private record ComputedSpellCosts(
             int finalManaCost,
             int finalHealCost,
@@ -206,26 +281,7 @@ class SpellAvailabilityService {
         );
     }
 
-    private ComputedSpellCosts computeSpellCosts(Spell spell, Personnage p, CombatSession session) {
-        Personnage defaultTarget = p;
-        if (session != null && session.getEnemies() != null) {
-            for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
-                if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
-                    defaultTarget = m.getAsPersonnage();
-                    break;
-                }
-            }
-        }
-        Personnage defaultAlly = p;
-        if (session != null && session.getPlayers() != null) {
-            for (Personnage ally : session.getPlayers()) {
-                if (ally != null && ally != p && ally.getHealthCurrent() > 0) {
-                    defaultAlly = ally;
-                    break;
-                }
-            }
-        }
-
+    private ComputedSpellCosts computeSpellCostsForTargets(Spell spell, Personnage p, Personnage target, Personnage ally) {
         List<SpellCostModifierDTO> manaModifiers = new ArrayList<>();
         List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
         List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
@@ -238,7 +294,7 @@ class SpellAvailabilityService {
                 : Source.CASTER_MANA_MAX;
         int percentManaAmount = 0;
         if (pctMana > 0) {
-            double manaBase = StatCalculator.getSourceValue(manaSource, p, defaultTarget);
+            double manaBase = StatCalculator.getSourceValue(manaSource, p, target);
             percentManaAmount = (int) (manaBase * pctMana / 100);
         }
         int rawManaCost = baseMana + percentManaAmount;
@@ -264,7 +320,7 @@ class SpellAvailabilityService {
                 : Source.CASTER_HEALTH_MAX;
         int percentHealAmount = 0;
         if (pctHeal > 0) {
-            double healBase = StatCalculator.getSourceValue(healSource, p, defaultTarget);
+            double healBase = StatCalculator.getSourceValue(healSource, p, target);
             percentHealAmount = (int) (healBase * pctHeal / 100);
         }
         int rawHealCost = baseHeal + percentHealAmount;
@@ -284,7 +340,7 @@ class SpellAvailabilityService {
                         }
                     } else if (effect instanceof generation.grimoire.entity.spell.type.effect.HeatPercentageEffect hpe) {
                         if (hpe.getPercentage() < 0) {
-                            double srcVal = StatCalculator.getSourceValue(hpe.getSource(), p, defaultTarget);
+                            double srcVal = StatCalculator.getSourceValue(hpe.getSource(), p, target);
                             minRequiredHeatFromEffects += (int) (-hpe.getPercentage() * srcVal);
                         }
                     }
@@ -346,7 +402,7 @@ class SpellAvailabilityService {
             }
         }
 
-        List<SpellEffectPreviewDTO> effectPreviews = computeSpellEffectPreviews(spell, p, defaultTarget, defaultAlly);
+        List<SpellEffectPreviewDTO> effectPreviews = computeSpellEffectPreviews(spell, p, target, ally);
 
         return new ComputedSpellCosts(
                 actualManaCost,
@@ -372,16 +428,150 @@ class SpellAvailabilityService {
             return previews;
         }
 
-        double karmaDamageAmp = computeKarmaDamageAmplification(spell, caster);
-        double sureteHealAmp = computeSureteHealAmplification(caster);
+        Personnage simCaster = cloneForSimulation(caster, null);
+        Personnage simEnemy = defaultEnemyTarget != null
+                ? cloneForSimulation(defaultEnemyTarget, null)
+                : cloneNeutralTargetFromCaster(caster);
+        Personnage simAlly = defaultAllyTarget != null
+                ? cloneForSimulation(defaultAllyTarget, null)
+                : simCaster;
+
+        double karmaDamageAmp = computeKarmaDamageAmplification(spell, simCaster);
+        double sureteHealAmp = computeSureteHealAmplification(simCaster);
+        applyPreCastPassivesToSim(spell, simCaster, simEnemy);
 
         int i = 0;
         for (SpellEffect effect : spell.getEffects()) {
-            Personnage recipient = resolvePreviewRecipient(effect, caster, defaultEnemyTarget, defaultAllyTarget);
-            previews.add(computeSingleEffectPreview(i, effect, caster, recipient, karmaDamageAmp, sureteHealAmp));
+            Personnage recipient = resolvePreviewRecipient(effect, simCaster, simEnemy, simAlly);
+            previews.add(computeSingleEffectPreview(i, effect, simCaster, recipient, karmaDamageAmp, sureteHealAmp));
             i++;
         }
         return previews;
+    }
+
+    private Personnage cloneForSimulation(Personnage src, Personnage fallback) {
+        if (src == null) {
+            return fallback != null ? cloneForSimulation(fallback, null) : new Personnage();
+        }
+        Personnage copy = new Personnage();
+        copy.setId(src.getId());
+        copy.setName(src.getName());
+        copy.setTeamId(src.getTeamId());
+        copy.setMonsterType(src.getMonsterType());
+        copy.setMonsterName(src.getMonsterName());
+        copy.setHealthMax(src.getHealthMax());
+        copy.setHealthCurrent(src.getHealthCurrent());
+        copy.setManaMax(src.getManaMax());
+        copy.setManaCurrent(src.getManaCurrent());
+        copy.setPower(src.getPower());
+        copy.setStrength(src.getStrength());
+        copy.setArmor(src.getArmor());
+        copy.setResistance(src.getResistance());
+        copy.setCrit(src.getCrit());
+        copy.setSpeed(src.getSpeed());
+        copy.setRegenHp(src.getRegenHp());
+        copy.setRegenMana(src.getRegenMana());
+        copy.setVoie(src.getVoie());
+        copy.setVoieLevel(src.getVoieLevel());
+        copy.setSpiritualite(src.getSpiritualite());
+        copy.setSpiritualiteLevel(src.getSpiritualiteLevel());
+        copy.setUsedCheatDeath(src.isUsedCheatDeath());
+        if (src.getEquipments() != null) {
+            copy.setEquipments(new ArrayList<>(src.getEquipments()));
+        }
+        if (src.getPassiveStates() != null) {
+            copy.setPassiveStates(new java.util.HashMap<>(src.getPassiveStates()));
+        }
+        if (src.getActiveBuffs() != null) {
+            List<BuffDebuffEffect> buffs = new ArrayList<>();
+            for (BuffDebuffEffect b : src.getActiveBuffs()) {
+                if (b != null) {
+                    buffs.add(b.cloneEffect());
+                }
+            }
+            copy.setActiveBuffs(buffs);
+        }
+        if (src.getActiveShields() != null) {
+            List<generation.grimoire.entity.personnage.ActiveShield> shields = new ArrayList<>();
+            for (generation.grimoire.entity.personnage.ActiveShield s : src.getActiveShields()) {
+                if (s != null && s.getAmount() > 0) {
+                    shields.add(new generation.grimoire.entity.personnage.ActiveShield(
+                            s.getAmount(), s.getDuration(), s.getSourceName()));
+                }
+            }
+            copy.setActiveShields(shields);
+        }
+        if (src.getActiveDamageOverTimeEffects() != null) {
+            List<DamageOverTimeEffect> dots = new ArrayList<>();
+            for (DamageOverTimeEffect d : src.getActiveDamageOverTimeEffects()) {
+                if (d != null) {
+                    dots.add(d.cloneEffect());
+                }
+            }
+            copy.setActiveDamageOverTimeEffects(dots);
+        }
+        return copy;
+    }
+
+    private Personnage cloneNeutralTargetFromCaster(Personnage caster) {
+        Personnage dummy = new Personnage();
+        if (caster != null) {
+            dummy.setHealthMax(caster.getHealthMax());
+            dummy.setHealthCurrent(caster.getHealthCurrent());
+            dummy.setManaMax(caster.getManaMax());
+            dummy.setManaCurrent(caster.getManaCurrent());
+            dummy.setPower(caster.getPower());
+            dummy.setStrength(caster.getStrength());
+        } else {
+            dummy.setHealthMax(100);
+            dummy.setHealthCurrent(100);
+            dummy.setManaMax(100);
+            dummy.setManaCurrent(100);
+        }
+        return dummy;
+    }
+
+    private void applyPreCastPassivesToSim(Spell spell, Personnage simCaster, Personnage simEnemy) {
+        if (simCaster == null || spell.getEffects() == null) {
+            return;
+        }
+        if (simCaster.getVoie() != null && simCaster.getVoie().getPassiveEffects() != null) {
+            boolean hasSurete = simCaster.getVoie().getPassiveEffects().stream()
+                    .anyMatch(p -> p instanceof SuretePassiveEffect);
+            if (hasSurete && simCaster.getPassiveState("surete_points", 0) >= 100) {
+                boolean touchesEnemy = false;
+                boolean touchesSelf = false;
+                for (SpellEffect eff : spell.getEffects()) {
+                    EffectTarget tgt = eff.getEffectTarget() != null ? eff.getEffectTarget() : EffectTarget.TARGET;
+                    if (tgt == EffectTarget.TARGET || tgt == EffectTarget.ALL_ENEMIES || tgt == EffectTarget.ALL_COMBATANTS) {
+                        touchesEnemy = true;
+                    }
+                    if (tgt == EffectTarget.CASTER || tgt == EffectTarget.ALL_COMBATANTS) {
+                        touchesSelf = true;
+                    }
+                }
+                if (touchesEnemy && simEnemy != null) {
+                    BuffDebuffEffect debuffMag = new BuffDebuffEffect();
+                    debuffMag.setStatAffected(StatType.DAMAGE_TAKEN_MAGIC);
+                    debuffMag.setModifier(0.20);
+                    debuffMag.setDuration(2);
+                    simEnemy.getActiveBuffs().add(debuffMag);
+
+                    BuffDebuffEffect debuffPhys = new BuffDebuffEffect();
+                    debuffPhys.setStatAffected(StatType.DAMAGE_TAKEN_PHYSIC);
+                    debuffPhys.setModifier(0.20);
+                    debuffPhys.setDuration(2);
+                    simEnemy.getActiveBuffs().add(debuffPhys);
+                }
+                if (touchesSelf) {
+                    BuffDebuffEffect buffPower = new BuffDebuffEffect();
+                    buffPower.setStatAffected(StatType.POWER);
+                    buffPower.setModifier(0.20);
+                    buffPower.setDuration(3);
+                    simCaster.getActiveBuffs().add(buffPower);
+                }
+            }
+        }
     }
 
     private Personnage resolvePreviewRecipient(
@@ -446,8 +636,10 @@ class SpellAvailabilityService {
             }
             double dmg = dfe.getDamage() * amp;
             dmg = dfe.applyEquipmentModifiers(dmg, caster, recipient, dt);
-            int finalDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
-            return new SpellEffectPreviewDTO(index, dfe.getId(), finalDmg, 0, false);
+            int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
+            SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
+            return new SpellEffectPreviewDTO(index, dfe.getId(), res.hpDamage(), 0, false,
+                    res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamagePercentageEffect dpe) {
             DamageType dt = dpe.getDamageType();
@@ -458,8 +650,10 @@ class SpellAvailabilityService {
             double sourceVal = StatCalculator.getSourceValue(dpe.getDamageSource(), caster, recipient);
             double dmg = dpe.calculateDamage(sourceVal) * amp;
             dmg = dpe.applyEquipmentModifiers(dmg, caster, recipient, dt);
-            int finalDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
-            return new SpellEffectPreviewDTO(index, dpe.getId(), finalDmg, 0, true);
+            int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
+            SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
+            return new SpellEffectPreviewDTO(index, dpe.getId(), res.hpDamage(), 0, true,
+                    res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamageOverTimeEffect dot) {
             DamageType dt = dot.getDamageType();
@@ -475,15 +669,24 @@ class SpellAvailabilityService {
             }
             int totalDmg = (int) (baseDmg * amp);
             double reducedDmg = dot.applyEquipmentModifiers(totalDmg, caster, recipient, dt);
-            return new SpellEffectPreviewDTO(index, dot.getId(), (int) reducedDmg, 0, hasPct);
+            int tickDmg = computeMitigatedDamageBeforeShields(
+                    recipient, (int) reducedDmg, dt, Boolean.TRUE.equals(dot.getBurn()));
+            if (recipient != null && recipient.getActiveDamageOverTimeEffects() != null) {
+                DamageOverTimeEffect cloneDot = dot.cloneEffect();
+                cloneDot.setFixedDamagePerTick((int) reducedDmg);
+                cloneDot.setPercentageDamagePerTick(0);
+                recipient.getActiveDamageOverTimeEffects().add(cloneDot);
+            }
+            return new SpellEffectPreviewDTO(index, dot.getId(), tickDmg, 0, hasPct);
         }
         if (effect instanceof HealFixedEffect hfe) {
             boolean isAllyTarget = hfe.getEffectTarget() == EffectTarget.ALLY || hfe.getEffectTarget() == EffectTarget.ALL_ALLIES;
             double amp = hfe.getAmplificationMultiplier() * (isAllyTarget ? sureteHealAmp : 1.0);
             double healGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.HEAL_GIVEN));
-            int finalHeal = (int) (hfe.getHealAmount() * amp * healGivenMult);
-            if (hfe.getEffectTarget() == EffectTarget.CASTER && finalHeal > 0) {
-                finalHeal = computeReceivedHeal(caster, finalHeal);
+            int rawHeal = (int) (hfe.getHealAmount() * amp * healGivenMult);
+            int finalHeal = rawHeal > 0 ? computeReceivedHeal(recipient, rawHeal) : rawHeal;
+            if (recipient != null) {
+                recipient.setHealthCurrent(Math.max(0, Math.min(recipient.getTotalHealthMax(), recipient.getHealthCurrent() + finalHeal)));
             }
             return new SpellEffectPreviewDTO(index, hfe.getId(), finalHeal, 0, false);
         }
@@ -492,9 +695,10 @@ class SpellAvailabilityService {
             double amp = hpe.getAmplificationMultiplier() * (isAllyTarget ? sureteHealAmp : 1.0);
             double sourceVal = StatCalculator.getSourceValue(hpe.getHealSource(), caster, recipient);
             double healGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.HEAL_GIVEN));
-            int finalHeal = (int) (hpe.calculateHeal(sourceVal) * amp * healGivenMult);
-            if (hpe.getEffectTarget() == EffectTarget.CASTER && finalHeal > 0) {
-                finalHeal = computeReceivedHeal(caster, finalHeal);
+            int rawHeal = (int) (hpe.calculateHeal(sourceVal) * amp * healGivenMult);
+            int finalHeal = rawHeal > 0 ? computeReceivedHeal(recipient, rawHeal) : rawHeal;
+            if (recipient != null) {
+                recipient.setHealthCurrent(Math.max(0, Math.min(recipient.getTotalHealthMax(), recipient.getHealthCurrent() + finalHeal)));
             }
             return new SpellEffectPreviewDTO(index, hpe.getId(), finalHeal, 0, true);
         }
@@ -508,17 +712,24 @@ class SpellAvailabilityService {
                 totalHeal += (int) (sourceVal * hot.getPercentageHealPerTick());
             }
             double healGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.HEAL_GIVEN));
-            totalHeal = (int) (totalHeal * amp * healGivenMult);
-            return new SpellEffectPreviewDTO(index, hot.getId(), totalHeal, 0, hasPct);
+            int rawHeal = (int) (totalHeal * amp * healGivenMult);
+            int finalHeal = rawHeal > 0 ? computeReceivedHeal(recipient, rawHeal) : rawHeal;
+            return new SpellEffectPreviewDTO(index, hot.getId(), finalHeal, 0, hasPct);
         }
         if (effect instanceof ManaFixedEffect mfe) {
             int finalMana = (int) (mfe.getManaAmount() * mfe.getAmplificationMultiplier());
+            if (recipient != null) {
+                recipient.setManaCurrent(Math.max(0, Math.min(recipient.getTotalManaMax(), recipient.getManaCurrent() + finalMana)));
+            }
             return new SpellEffectPreviewDTO(index, mfe.getId(), finalMana, 0, false);
         }
         if (effect instanceof ManaPercentageEffect mpe) {
             Source src = mpe.getManaSource() != null ? mpe.getManaSource() : Source.TARGET_MANA_MAX;
             double sourceVal = StatCalculator.getSourceValue(src, caster, recipient);
             int finalMana = (int) (mpe.calculateMana(sourceVal) * mpe.getAmplificationMultiplier());
+            if (recipient != null) {
+                recipient.setManaCurrent(Math.max(0, Math.min(recipient.getTotalManaMax(), recipient.getManaCurrent() + finalMana)));
+            }
             return new SpellEffectPreviewDTO(index, mpe.getId(), finalMana, 0, true);
         }
         if (effect instanceof ManaOverTimeEffect mot) {
@@ -540,10 +751,13 @@ class SpellAvailabilityService {
             }
             double shieldGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.SHIELD_GIVEN));
             shieldAmount *= shieldGivenMult;
-            int finalShield = (int) shieldAmount;
-            if (se.getEffectTarget() == EffectTarget.CASTER) {
-                double shieldReceivedMult = Math.max(0, caster.getStatBuffMultiplier(StatType.SHIELD_RECEIVED));
-                finalShield = (int) (finalShield * shieldReceivedMult);
+            int rawShield = (int) shieldAmount;
+            double shieldReceivedMult = recipient != null
+                    ? Math.max(0, recipient.getStatBuffMultiplier(StatType.SHIELD_RECEIVED))
+                    : 1.0;
+            int finalShield = (int) (rawShield * shieldReceivedMult);
+            if (recipient != null && finalShield > 0) {
+                recipient.addShield(rawShield, se.getDuration(), "Sim");
             }
             return new SpellEffectPreviewDTO(index, se.getId(), finalShield, 0, hasPct);
         }
@@ -551,6 +765,7 @@ class SpellAvailabilityService {
             int totalFlat = bde.getFlatValue();
             int pctMod = 0;
             boolean resolvedSource = false;
+            double rawModToApply = 0.0;
             if (bde.getModifier() != 0) {
                 if (bde.getModifierSource() != null) {
                     double baseVal = StatCalculator.getSourceValue(bde.getModifierSource(), caster, recipient);
@@ -558,9 +773,17 @@ class SpellAvailabilityService {
                     resolvedSource = true;
                 } else {
                     pctMod = (int) Math.round(bde.getModifier() * 100);
+                    rawModToApply = bde.getModifier();
                 }
             }
+            applySimulatedBuffDebuff(recipient, bde, totalFlat, rawModToApply);
             return new SpellEffectPreviewDTO(index, bde.getId(), totalFlat, pctMod, resolvedSource);
+        }
+        if (effect instanceof PurgeEffect pe) {
+            if (recipient != null) {
+                recipient.purgeAllBuffsAndDebuffs();
+            }
+            return new SpellEffectPreviewDTO(index, pe.getId(), 0, 0, false);
         }
         if (effect instanceof HeatFixedEffect hfe) {
             return new SpellEffectPreviewDTO(index, hfe.getId(), hfe.getAmount(), 0, false);
@@ -583,6 +806,319 @@ class SpellAvailabilityService {
             return new SpellEffectPreviewDTO(index, be.getId(), be.getAmount(), 0, false);
         }
         return new SpellEffectPreviewDTO(index, effect.getId(), 0, 0, false);
+    }
+
+    private void applySimulatedBuffDebuff(
+            Personnage recipient, BuffDebuffEffect bde, int totalFlatToApply, double totalModifierToApply) {
+        if (recipient == null) return;
+        if (bde.getStatAffected() == StatType.AME_DETACHEE) {
+            boolean exists = recipient.getActiveBuffs().stream()
+                    .anyMatch(b -> b.getStatAffected() == StatType.AME_DETACHEE);
+            if (!exists) {
+                BuffDebuffEffect clone = bde.cloneEffect();
+                clone.setDuration(3);
+                recipient.getActiveBuffs().add(clone);
+            }
+            return;
+        }
+        if (totalFlatToApply != 0) {
+            if (bde.getDuration() > 0) {
+                BuffDebuffEffect cloneFlat = bde.cloneEffect();
+                cloneFlat.setFlatValue(totalFlatToApply);
+                cloneFlat.setModifier(0);
+                recipient.getActiveBuffs().add(cloneFlat);
+            } else {
+                try {
+                    recipient.applyFlatBuff(bde.getStatAffected(), totalFlatToApply);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        if (totalModifierToApply != 0) {
+            BuffDebuffEffect cloneMult = bde.cloneEffect();
+            cloneMult.setFlatValue(0);
+            cloneMult.setModifier(totalModifierToApply);
+            recipient.getActiveBuffs().add(cloneMult);
+        }
+    }
+
+    private record SimulatedDamageResult(int hpDamage, int shieldAbsorbed, int extraBrutDamage) {}
+
+    private SimulatedDamageResult simulateDealAndTakeDamage(
+            Personnage caster, Personnage target, int outgoingDmg, DamageType dt) {
+        if (target == null) {
+            return new SimulatedDamageResult(outgoingDmg, 0, 0);
+        }
+        DamageType effectiveType = dt != null ? dt : DamageType.MAGIC;
+        int extraBrutTotal = 0;
+
+        // 1. Passif Voie de la Trahison (s'applique avant l'impact physique principal)
+        if (effectiveType == DamageType.PHYSIC && caster != null
+                && caster.getVoie() != null && caster.getVoie().getPassiveEffects() != null) {
+            boolean hasTrahison = caster.getVoie().getPassiveEffects().stream()
+                    .anyMatch(p -> p instanceof generation.grimoire.entity.voie.passif.specific.TrahisonPassiveEffect);
+            if (hasTrahison) {
+                if (caster.getPassiveState("trahison_used_this_turn", 0) == 0) {
+                    int extra = (int) Math.round(outgoingDmg * 0.10);
+                    if (extra > 0) {
+                        SimulatedDamageResult r = simulateTakeDamage(target, extra, DamageType.BRUT, caster, false);
+                        extraBrutTotal += r.hpDamage() + r.shieldAbsorbed();
+                    }
+                    caster.setPassiveState("trahison_used_this_turn", 1);
+                }
+                if (caster.getPassiveState("trahison_low_hp_used_this_turn", 0) == 0
+                        && target.getHealthCurrent() <= target.getHealthMax() * 0.5) {
+                    int extra = (int) Math.round(outgoingDmg * 0.20);
+                    if (extra > 0) {
+                        SimulatedDamageResult r = simulateTakeDamage(target, extra, DamageType.BRUT, caster, false);
+                        extraBrutTotal += r.hpDamage() + r.shieldAbsorbed();
+                    }
+                    caster.setPassiveState("trahison_low_hp_used_this_turn", 1);
+                }
+                if (caster.getPassiveState("trahison_debuff_used_this_turn", 0) == 0 && target.hasDebuff()) {
+                    int extra = (int) Math.round(outgoingDmg * 0.15);
+                    if (extra > 0) {
+                        SimulatedDamageResult r = simulateTakeDamage(target, extra, DamageType.BRUT, caster, false);
+                        extraBrutTotal += r.hpDamage() + r.shieldAbsorbed();
+                    }
+                    caster.setPassiveState("trahison_debuff_used_this_turn", 1);
+                }
+            }
+        }
+
+        // 2. Impact principal (avec gestion Hybride si le lanceur est un monstre Hybride)
+        int mainHpDmg = 0;
+        int mainShieldAbs = 0;
+        int baseForDemon = outgoingDmg;
+        if (caster != null
+                && caster.getMonsterType() == generation.grimoire.enumeration.MonsterType.HYBRIDE
+                && effectiveType != DamageType.BRUT) {
+            int total = (int) (outgoingDmg * 1.2);
+            SimulatedDamageResult r1 = simulateTakeDamage(target, total / 2, DamageType.PHYSIC, caster, false);
+            SimulatedDamageResult r2 = simulateTakeDamage(target, total - (total / 2), DamageType.MAGIC, caster, false);
+            mainHpDmg = r1.hpDamage() + r2.hpDamage();
+            mainShieldAbs = r1.shieldAbsorbed() + r2.shieldAbsorbed();
+            baseForDemon = total;
+        } else {
+            SimulatedDamageResult r = simulateTakeDamage(target, outgoingDmg, effectiveType, caster, false);
+            mainHpDmg = r.hpDamage();
+            mainShieldAbs = r.shieldAbsorbed();
+        }
+
+        // 3. Passif Démon (+10% brut)
+        if (caster != null && caster.getMonsterType() == generation.grimoire.enumeration.MonsterType.DEMON) {
+            int brutDmg = (int) Math.ceil(baseForDemon * 0.10);
+            if (brutDmg > 0) {
+                SimulatedDamageResult r = simulateTakeDamage(target, brutDmg, DamageType.BRUT, caster, false);
+                extraBrutTotal += r.hpDamage() + r.shieldAbsorbed();
+            }
+        }
+
+        return new SimulatedDamageResult(mainHpDmg, mainShieldAbs, extraBrutTotal);
+    }
+
+    private int computeMitigatedDamageBeforeShields(
+            Personnage p, int damage, DamageType damageType, boolean isBurn) {
+        if (p == null) return damage;
+        DamageType dt = damageType != null ? damageType : DamageType.MAGIC;
+        if (dt == DamageType.INCOMPRESSIBLE) {
+            return damage;
+        }
+        int workingDamage = damage;
+        if (p.getMonsterType() == generation.grimoire.enumeration.MonsterType.REPTILE && dt == DamageType.PHYSIC) {
+            workingDamage = (int) Math.ceil(workingDamage * 0.85);
+        }
+
+        double effectiveArmor = p.getArmor() + p.getStatFlatBonus(StatType.ARMURE);
+        double effectiveResistance = p.getResistance() + p.getStatFlatBonus(StatType.RESISTANCE);
+        double constant = 100.0;
+
+        double resistanceValue = switch (dt) {
+            case PHYSIC -> effectiveArmor * Math.max(0, p.getStatBuffMultiplier(StatType.ARMURE));
+            case MAGIC -> {
+                double res = effectiveResistance * Math.max(0, p.getStatBuffMultiplier(StatType.RESISTANCE));
+                yield isBurn ? res * 2 : res;
+            }
+            default -> 0.0;
+        };
+
+        double reductionFactor;
+        if (resistanceValue >= 0) {
+            reductionFactor = Math.min(resistanceValue / (resistanceValue + constant), 0.90);
+        } else {
+            reductionFactor = resistanceValue / (Math.abs(resistanceValue) + constant);
+        }
+
+        StatType statType = switch (dt) {
+            case MAGIC -> StatType.DAMAGE_TAKEN_MAGIC;
+            case PHYSIC -> StatType.DAMAGE_TAKEN_PHYSIC;
+            default -> StatType.DAMAGE_TAKEN_BRUT;
+        };
+
+        double damageTakenMultiplier = Math.max(0.0, p.getStatBuffMultiplier(statType));
+        int cursedVul = p.getSpecialEffectValue(EquipmentEffectType.CURSED_VULNERABILITY);
+        if (cursedVul != 0) {
+            damageTakenMultiplier += (Math.abs(cursedVul) / 100.0);
+        }
+        if (dt == DamageType.PHYSIC) {
+            int shroud = p.getPassiveState("PHYSICAL_SHROUD", 0);
+            if (shroud > 0) {
+                damageTakenMultiplier -= (shroud / 100.0);
+            }
+        } else if (dt == DamageType.MAGIC) {
+            int shroud = p.getPassiveState("MAGIC_SHROUD", 0);
+            if (shroud > 0) {
+                damageTakenMultiplier -= (shroud / 100.0);
+            }
+        }
+        if (damageTakenMultiplier < 0) {
+            damageTakenMultiplier = 0;
+        }
+
+        int flat = p.getStatFlatBonus(statType);
+        double damageAfterBuff = workingDamage * damageTakenMultiplier + flat;
+        double finalDamage = damageAfterBuff * (1.0 - reductionFactor);
+
+        int effectiveDamage = (int) finalDamage;
+        if (damageAfterBuff > 0 && effectiveDamage < 1) {
+            effectiveDamage = 1;
+        }
+        return Math.max(0, effectiveDamage);
+    }
+
+    private SimulatedDamageResult simulateTakeDamage(
+            Personnage p, int damage, DamageType damageType, Personnage caster, boolean isBurn) {
+        if (p == null) {
+            return new SimulatedDamageResult(damage, 0, 0);
+        }
+        DamageType dt = damageType != null ? damageType : DamageType.MAGIC;
+        if (dt == DamageType.INCOMPRESSIBLE) {
+            p.setHealthCurrent(Math.max(0, p.getHealthCurrent() - damage));
+            return new SimulatedDamageResult(damage, 0, 0);
+        }
+
+        int effectiveDamage = computeMitigatedDamageBeforeShields(p, damage, dt, isBurn);
+
+        // Capillarité
+        if (caster != null && caster != p && (dt == DamageType.PHYSIC || dt == DamageType.MAGIC)) {
+            int capillarityPct = caster.getSpecialEffectValue(EquipmentEffectType.CAPILLARITY);
+            if (capillarityPct > 0 && p.getManaCurrent() > 0 && effectiveDamage > 0) {
+                int desiredDrain = (int) Math.ceil(effectiveDamage * (capillarityPct / 100.0));
+                int manaDrained = Math.min(effectiveDamage, Math.min(p.getManaCurrent(), desiredDrain));
+                if (manaDrained > 0) {
+                    p.setManaCurrent(p.getManaCurrent() - manaDrained);
+                    effectiveDamage -= manaDrained;
+                    caster.setManaCurrent(caster.getManaCurrent() + manaDrained);
+                }
+            }
+        }
+
+        // Perce-Bouclier / Bouclier Percé
+        double casterPenetrationPct = 0.0;
+        if (caster != null && caster.getActiveBuffs() != null) {
+            boolean hasPenBuff = caster.getActiveBuffs().stream()
+                    .anyMatch(b -> b.affectsStatType(StatType.SHIELD_PENETRATION) && b.getFlatValue() == 0);
+            if (hasPenBuff) {
+                casterPenetrationPct = caster.getStatBuffMultiplier(StatType.SHIELD_PENETRATION) - 1.0;
+            }
+        }
+
+        double targetPiercedPct = 0.0;
+        if (p.getActiveBuffs() != null) {
+            boolean hasPiercedBuff = p.getActiveBuffs().stream()
+                    .anyMatch(b -> b.affectsStatType(StatType.SHIELD_PIERCED) && b.getFlatValue() == 0);
+            if (hasPiercedBuff) {
+                targetPiercedPct = p.getStatBuffMultiplier(StatType.SHIELD_PIERCED) - 1.0;
+            }
+        }
+
+        double targetPenetrationPctDebuff = 0.0;
+        if (p.getActiveBuffs() != null) {
+            boolean hasTargetPenDebuff = p.getActiveBuffs().stream()
+                    .anyMatch(b -> b.affectsStatType(StatType.SHIELD_PENETRATION) && b.getFlatValue() == 0);
+            if (hasTargetPenDebuff) {
+                double targetPenetrationMult = p.getStatBuffMultiplier(StatType.SHIELD_PENETRATION);
+                if (targetPenetrationMult < 1.0) {
+                    targetPenetrationPctDebuff = 1.0 - targetPenetrationMult;
+                }
+            }
+        }
+
+        double totalBypassPct = casterPenetrationPct + targetPiercedPct + targetPenetrationPctDebuff;
+
+        int casterPenetrationFlat = caster != null ? caster.getStatFlatBonus(StatType.SHIELD_PENETRATION) : 0;
+        int targetPiercedFlat = p.getStatFlatBonus(StatType.SHIELD_PIERCED);
+        int targetPenetrationFlatDebuff = p.getStatFlatBonus(StatType.SHIELD_PENETRATION);
+        int targetPiercedFlatCombined = targetPiercedFlat + (targetPenetrationFlatDebuff < 0 ? -targetPenetrationFlatDebuff : 0);
+
+        int totalBypassFlat = casterPenetrationFlat + targetPiercedFlatCombined;
+
+        int bypassDamage = 0;
+        if (totalBypassPct > 0 || totalBypassFlat > 0) {
+            double rawBypass = effectiveDamage * Math.min(1.0, totalBypassPct) + totalBypassFlat;
+            bypassDamage = (int) Math.round(Math.min(effectiveDamage, Math.max(0, rawBypass)));
+        }
+
+        int remainingDamage = effectiveDamage - bypassDamage;
+
+        // Bouclier de Mana
+        int manaShieldAbsorbed = 0;
+        int manaShieldPct = p.getSpecialEffectValue(EquipmentEffectType.MANA_SHIELD);
+        if (manaShieldPct > 0 && remainingDamage > 0) {
+            int manaAbsorb = Math.min(p.getManaCurrent(), (int) Math.ceil(remainingDamage * (manaShieldPct / 100.0)));
+            if (manaAbsorb > 0) {
+                p.setManaCurrent(p.getManaCurrent() - manaAbsorb);
+                remainingDamage -= manaAbsorb;
+                manaShieldAbsorbed = manaAbsorb;
+            }
+        }
+
+        // Boucliers actifs
+        int shieldPointsBroken = 0;
+        if (remainingDamage > 0 && p.getActiveShields() != null && !p.getActiveShields().isEmpty()) {
+            double shieldDamageMult = 1.0;
+            int shieldDamageFlat = 0;
+            if (caster != null) {
+                if (dt == DamageType.MAGIC) {
+                    shieldDamageMult = caster.getStatBuffMultiplier(StatType.DAMAGE_GIVEN_MAGIC_TO_SHIELD);
+                    shieldDamageFlat = caster.getStatFlatBonus(StatType.DAMAGE_GIVEN_MAGIC_TO_SHIELD);
+                } else if (dt == DamageType.PHYSIC) {
+                    shieldDamageMult = caster.getStatBuffMultiplier(StatType.DAMAGE_GIVEN_PHYSIC_TO_SHIELD);
+                    shieldDamageFlat = caster.getStatFlatBonus(StatType.DAMAGE_GIVEN_PHYSIC_TO_SHIELD);
+                }
+            }
+            double safeMult = Math.max(0.001, shieldDamageMult);
+
+            for (generation.grimoire.entity.personnage.ActiveShield shield : p.getActiveShields()) {
+                if (shield.getAmount() > 0) {
+                    double damageToShield = remainingDamage * safeMult + shieldDamageFlat;
+                    if (damageToShield > 0) {
+                        int absorbed = Math.min(shield.getAmount(), (int) Math.ceil(damageToShield));
+                        shield.setAmount(shield.getAmount() - absorbed);
+                        shieldPointsBroken += absorbed;
+
+                        double rawConsumed = (absorbed - shieldDamageFlat) / safeMult;
+                        if (rawConsumed < 0) {
+                            rawConsumed = 0;
+                        }
+                        int rawConsumedInt = (int) Math.ceil(rawConsumed);
+                        remainingDamage -= rawConsumedInt;
+                        shieldDamageFlat = Math.max(0, shieldDamageFlat - absorbed);
+
+                        if (remainingDamage <= 0) {
+                            remainingDamage = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+            p.getActiveShields().removeIf(s -> s.getAmount() <= 0);
+        }
+
+        int totalDamageToHealth = bypassDamage + remainingDamage;
+        p.setHealthCurrent(Math.max(0, p.getHealthCurrent() - totalDamageToHealth));
+
+        return new SimulatedDamageResult(totalDamageToHealth, shieldPointsBroken + manaShieldAbsorbed, 0);
     }
 
     private int computeOutgoingDealDamage(Personnage caster, int baseDamage, DamageType type) {

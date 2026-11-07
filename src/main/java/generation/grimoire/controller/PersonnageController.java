@@ -41,6 +41,7 @@ public class PersonnageController {
     }
 
     @GetMapping
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<PersonnageResponseDTO>> getAllPersonnages(java.security.Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
@@ -66,11 +67,12 @@ public class PersonnageController {
             userMax = 2;
         int max = isAdmin ? 999 : userMax;
 
-        int current = personnageRepository.findByUser_Username(principal.getName()).size();
+        int current = (int) personnageRepository.countByUser_Username(principal.getName());
 
         return ResponseEntity.ok(Map.of("maxCharacters", max, "currentCharacters", current));
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/all")
     public ResponseEntity<List<PersonnageResponseDTO>> getAllAdmin(java.security.Principal principal) {
         if (principal == null)
@@ -99,6 +101,7 @@ public class PersonnageController {
         try {
             Personnage personnage;
             boolean isUpdate = false;
+            boolean isFirstCharacter = false;
 
             if (dto.getId() != null && personnageService.existsById(java.util.Objects.requireNonNull(dto.getId()))) {
                 personnage = personnageService.findByIdOrThrow(java.util.Objects.requireNonNull(dto.getId()));
@@ -118,12 +121,13 @@ public class PersonnageController {
                     userMax = 2;
                 int max = isAdmin ? 999 : userMax;
 
-                int current = personnageRepository.findByUser_Username(principal.getName()).size();
+                int current = (int) personnageRepository.countByUser_Username(principal.getName());
                 if (current >= max) {
                     Map<String, Object> errorResp = new HashMap<>();
                     errorResp.put("message", "Limite de personnages atteinte (" + max + ").");
                     return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(errorResp);
                 }
+                isFirstCharacter = (current == 0);
                 personnage = new Personnage();
                 personnage.setUser(user);
             }
@@ -176,6 +180,9 @@ public class PersonnageController {
             Map<String, Object> response = new HashMap<>();
             response.put("message", message);
             response.put("personnage", toResponseDto(saved));
+            boolean redirectToDungeonTutorial = isFirstCharacter && !isAdmin
+                    && (user == null || (!user.isTutorialCompleted() && user.getCompletedDungeons().isEmpty()));
+            response.put("redirectToDungeonTutorial", redirectToDungeonTutorial);
             return ResponseEntity.ok(response);
         } catch (Throwable e) {
             e.printStackTrace();

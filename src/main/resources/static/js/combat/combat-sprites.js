@@ -991,7 +991,7 @@ export function handleCombatSpriteLog(logEntry, sessionData = null) {
     }
 
     // Animation procédurale de translation de la carte pour le coéquipier
-    card.style.transform = 'translateX(50px)';
+    card.style.transform = 'translateX(24px)';
     setTimeout(() => {
         card.style.transform = card.classList.contains('active') ? 'scale(1.05)' : 'scale(0.95)';
     }, 200);

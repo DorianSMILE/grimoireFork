@@ -1,7 +1,11 @@
 package generation.grimoire.controller.auth;
 
+import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.auth.AppUser;
+import generation.grimoire.entity.pve.Donjon;
+import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.model.pve.CombatSession;
+import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
 import generation.grimoire.repository.pve.DonjonRepository;
@@ -10,6 +14,7 @@ import generation.grimoire.security.JwtService;
 import generation.grimoire.security.RefreshTokenService;
 import generation.grimoire.service.AlchemyService;
 import generation.grimoire.service.pve.CombatService;
+import generation.grimoire.service.pve.DungeonTutorialService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
@@ -27,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,7 +47,9 @@ public class AuthController {
     private final DonjonRepository donjonRepository;
     private final AlchemyService alchemyService;
     private final PersonnageRepository personnageRepository;
+    private final EquipmentRepository equipmentRepository;
     private final CombatService combatService;
+    private final DungeonTutorialService dungeonTutorialService;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService,
@@ -49,7 +57,9 @@ public class AuthController {
             DonjonRepository donjonRepository,
             AlchemyService alchemyService,
             PersonnageRepository personnageRepository,
-            CombatService combatService) {
+            EquipmentRepository equipmentRepository,
+            CombatService combatService,
+            DungeonTutorialService dungeonTutorialService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -59,7 +69,9 @@ public class AuthController {
         this.donjonRepository = donjonRepository;
         this.alchemyService = alchemyService;
         this.personnageRepository = personnageRepository;
+        this.equipmentRepository = equipmentRepository;
         this.combatService = combatService;
+        this.dungeonTutorialService = dungeonTutorialService;
     }
 
     @PostMapping("/register")
@@ -91,7 +103,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
@@ -116,7 +128,8 @@ public class AuthController {
             res.put("unlockedDungeons", u.getUnlockedDungeons());
             res.put("unlockedVault", u.isUnlockedVault());
             res.put("unlockedAlchemy", u.isUnlockedAlchemy());
-            res.put("unlockedShop", u.isUnlockedShop());
+            res.put("unlockedShop", dungeonTutorialService.hasCompletedAllLevel1FreeDungeons(u, allDungeons));
+            res.put("shopLockMessage", "Terminez plus de donjons libres avant de débloquer la boutique.");
             int huntingClaimableCount = 0;
             java.time.LocalDate todayParis = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris"));
             for (generation.grimoire.entity.pve.HuntingQuestEntry e : huntingQuestEntryRepository.findByAccountName(u.getUsername())) {
@@ -161,12 +174,19 @@ public class AuthController {
 
             // Calcul SSOT des donjons nouvellement débloqués non vus (évite de télécharger /api/pve/dungeons + /api/personnages sur chaque page)
             int maxLevel = currentChars > 0 ? personnageRepository.findMaxVoieLevelByUsername(u.getUsername()) : 0;
+            List<Donjon> freeDungeons = dungeonTutorialService.getSortedFreeDungeons();
+            Set<Long> visibleTutorialFreeIds = dungeonTutorialService.getVisibleTutorialFreeDungeonIds(u, freeDungeons);
             int unseenDungeonsCount = 0;
             for (DonjonRepository.DonjonLightProjection d : allDungeons) {
                 int recLevel = d.recommendedLevel() > 0 ? d.recommendedLevel() : 1;
-                if (maxLevel >= recLevel) {
+                boolean isSecret = d.requiredSecret() != null && !d.requiredSecret().trim().isEmpty();
+                if (!isSecret && visibleTutorialFreeIds != null && !visibleTutorialFreeIds.contains(d.id())) {
+                    continue;
+                }
+                boolean levelBypassed = !isSecret && currentChars > 0 && dungeonTutorialService.isLevelBypassed(u, d.id());
+                if (maxLevel >= recLevel || levelBypassed) {
                     boolean isUnlocked = false;
-                    if (d.requiredSecret() != null && !d.requiredSecret().trim().isEmpty()) {
+                    if (isSecret) {
                         int userSecretLvl = u.getUnlockedSecrets().getOrDefault(d.requiredSecret(), 0);
                         int reqSecretLvl = d.requiredSecretLevel() > 0 ? d.requiredSecretLevel() : 1;
                         if (userSecretLvl >= reqSecretLvl) {
@@ -203,6 +223,26 @@ public class AuthController {
             res.put("unlockedSpiritualiteLevels", u.getUnlockedSpiritualiteLevels());
             res.put("activeTitle", u.getActiveTitle());
             res.put("unlockedTitles", u.getUnlockedTitles());
+
+            boolean tutorialDone = u.isTutorialCompleted();
+            res.put("tutorialCompleted", tutorialDone);
+            String tutorialPhase = "NONE";
+            if (!tutorialDone) {
+                tutorialPhase = (currentChars == 0) ? "ARMORY" : "DUNGEON";
+            }
+            res.put("tutorialPhase", tutorialPhase);
+
+            boolean equipTutorialActive = false;
+            if (!u.isEquipTutorialCompleted() && currentChars > 0) {
+                List<Equipment> userEqs = equipmentRepository.findByOwnerUsername(u.getUsername());
+                equipTutorialActive = userEqs.stream()
+                        .anyMatch(e -> !e.isTemplate() && e.getSlot() != EquipmentSlot.CONSOMMABLE && e.getPersonnage() == null);
+            }
+            res.put("equipTutorialActive", equipTutorialActive);
+            boolean shopTutorialActive = (isAdmin || Boolean.TRUE.equals(res.get("unlockedShop"))) && !u.isShopTutorialCompleted();
+            res.put("shopTutorialActive", shopTutorialActive);
+            boolean combatTutorialActive = !u.isCombatTutorialCompleted();
+            res.put("combatTutorialActive", combatTutorialActive);
         });
 
         return ResponseEntity.ok()
@@ -273,13 +313,15 @@ public class AuthController {
             userRepository.save(user);
             return ResponseEntity.ok(Map.of("message", "Alchimie débloquée avec succès !"));
         } else if ("shop".equals(feature)) {
-            if (user.isUnlockedShop())
-                return ResponseEntity.ok(Map.of("message", "Déjà débloqué."));
-            if (user.getMonnaie() < 75)
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Pas assez d'or."));
-            user.setMonnaie(user.getMonnaie() - 75);
-            user.setUnlockedShop(true);
-            userRepository.save(user);
+            List<DonjonRepository.DonjonLightProjection> allDungeons = donjonRepository.findAllLightProjections();
+            if (!dungeonTutorialService.hasCompletedAllLevel1FreeDungeons(user, allDungeons)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Terminez plus de donjons libres avant de débloquer la boutique."));
+            }
+            if (!user.isUnlockedShop()) {
+                user.setUnlockedShop(true);
+                userRepository.save(user);
+            }
             return ResponseEntity.ok(Map.of("message", "Boutique débloquée avec succès !"));
         } else if ("roster".equals(feature)) {
             int currentMax = user.getMaxCharacters();
@@ -302,6 +344,49 @@ public class AuthController {
         }
 
         return ResponseEntity.badRequest().body(Map.of("message", "Fonctionnalité inconnue."));
+    }
+
+    @PostMapping("/tutorial/complete")
+    @Transactional
+    public ResponseEntity<?> completeTutorial(@RequestParam(required = false) String phase) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non connecté."));
+        }
+        AppUser user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
+        }
+        if ("SHOP_TOUR".equals(phase) || "SHOP_NAV".equals(phase)) {
+            user.setShopTutorialCompleted(true);
+        } else if ("COMBAT_TOUR".equals(phase)) {
+            user.setCombatTutorialCompleted(true);
+        } else if ("EQUIP_ARMORY".equals(phase) || "EQUIP_NAV".equals(phase)) {
+            user.setEquipTutorialCompleted(true);
+        } else {
+            user.setTutorialCompleted(true);
+        }
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("tutorialCompleted", user.isTutorialCompleted(), "equipTutorialCompleted", user.isEquipTutorialCompleted(), "tutorialPhase", "NONE"));
+    }
+
+    @PostMapping("/tutorial/reset")
+    @Transactional
+    public ResponseEntity<?> resetTutorials() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non connecté."));
+        }
+        AppUser user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utilisateur introuvable."));
+        }
+        user.setTutorialCompleted(false);
+        user.setEquipTutorialCompleted(false);
+        user.setShopTutorialCompleted(false);
+        user.setCombatTutorialCompleted(false);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Tutoriels réinitialisés avec succès !"));
     }
 
     @PostMapping("/refresh")

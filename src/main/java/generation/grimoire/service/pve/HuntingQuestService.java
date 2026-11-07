@@ -211,10 +211,11 @@ public class HuntingQuestService {
 
     private Donjon selectDungeonWeighted(List<Donjon> dungeons) {
         // Compter les runs par dungeon
-        List<DungeonRunStat> allStats = runStatRepository.findAll();
-        Map<Long, Long> runCounts = allStats.stream()
-                .filter(stat -> stat.getDungeonId() != null)
-                .collect(Collectors.groupingBy(stat -> stat.getDungeonId(), Collectors.counting()));
+        Map<Long, Long> runCounts = runStatRepository.countRunsByDungeon().stream()
+                .collect(Collectors.toMap(r -> r.dungeonId(), r -> r.count()));
+
+
+
 
         long maxRuns = runCounts.values().stream().mapToLong(v -> v != null ? v : 0L).max().orElse(1);
 
@@ -358,9 +359,9 @@ public class HuntingQuestService {
 
     /** Calcule le seuil top 20% pour une quête weekly */
     private int getTop20Threshold(Long questId) {
-        List<HuntingQuestEntry> ranked = entryRepository.findByQuestIdOrderByBestTurnCountAsc(questId);
-        if (ranked.isEmpty()) return 0;
-        return Math.max(1, (int) Math.ceil(ranked.size() * 0.2));
+        long count = entryRepository.countCompletedByQuestId(questId);
+        if (count == 0) return 0;
+        return Math.max(1, (int) Math.ceil(count * 0.2));
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -488,6 +489,7 @@ public class HuntingQuestService {
     // Lecture (pour l'API)
     // ═══════════════════════════════════════════════════════════════════════
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getDailyQuestData(String username) {
         Map<String, Object> result = new HashMap<>();
         questRepository.findByTypeAndActiveTrue("DAILY").ifPresent(quest -> {
@@ -502,6 +504,7 @@ public class HuntingQuestService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getWeeklyQuestData(String username) {
         Map<String, Object> result = new HashMap<>();
         questRepository.findByTypeAndActiveTrue("WEEKLY").ifPresent(quest -> {
@@ -509,7 +512,7 @@ public class HuntingQuestService {
             result.put("leaderboard", getLeaderboard(quest.getId()));
 
             int threshold = getTop20Threshold(quest.getId());
-            long totalParticipants = entryRepository.findByQuestIdOrderByBestTurnCountAsc(quest.getId()).size();
+            long totalParticipants = entryRepository.countCompletedByQuestId(quest.getId());
             result.put("top20Threshold", threshold);
             result.put("totalParticipants", totalParticipants);
 
@@ -534,7 +537,7 @@ public class HuntingQuestService {
                 prevData.put("leaderboard", getLeaderboard(prev.getId()));
 
                 int prevThreshold = getTop20Threshold(prev.getId());
-                long prevTotal = entryRepository.findByQuestIdOrderByBestTurnCountAsc(prev.getId()).size();
+                long prevTotal = entryRepository.countCompletedByQuestId(prev.getId());
                 prevData.put("top20Threshold", prevThreshold);
                 prevData.put("totalParticipants", prevTotal);
 

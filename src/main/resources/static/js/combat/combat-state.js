@@ -1,11 +1,11 @@
-import { shakeStyle } from './combat-utils.js';
-import { initMultiSSE } from './combat-socket.js';
-import { updateUI, renderSpells } from './combat-ui.js';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js';
-import * as ui from '../ui.js';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
+import { shakeStyle } from './combat-utils.js?v=1786180000234';
+import { initMultiSSE } from './combat-socket.js?v=1786180000234';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000234';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000234';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000234';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000234';
+import * as ui from '../ui.js?v=1786180000231';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { initCombatSignals, showFighterPingMenu } from './combat-signals.js';
 
@@ -107,6 +107,10 @@ export function setButtonsProcessing(isProc) {
 
 window.showGlobalTooltip = ui.showGlobalTooltip;
 window.hideGlobalTooltip = ui.hideGlobalTooltip;
+window.onChildTooltipLeave = ui.onChildTooltipLeave;
+window.showEffectTooltip = ui.showEffectTooltip;
+window.showEffectTooltipFromEl = ui.showEffectTooltipFromEl;
+window.hideEffectTooltip = ui.hideEffectTooltip;
 
 window.doAction = doAction;
 window.endTurn = endTurn;
@@ -188,6 +192,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (meRes.ok) {
             const meData = await meRes.json();
             pageState.currentUsername = meData.username || null;
+            window.currentUser = Object.assign(window.currentUser || {}, meData);
+            const enemiesEl = document.getElementById('enemiesContainer');
+            if (enemiesEl && window.currentUser.combatTutorialActive) {
+                const tryStartCombatTutorial = () => {
+                    if (window.currentUser && window.currentUser.combatTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive() && enemiesEl.children.length > 0) {
+                        window.GrimoireTutorial.startPhase('COMBAT_TOUR', {
+                            onStepEnter: (step) => {
+                                const filterMap = {
+                                    'COMBAT_TYPE_INSTANT': 'INSTANTANE',
+                                    'COMBAT_TYPE_BANAL': 'BANAL',
+                                    'COMBAT_TYPE_CHANNELED': 'CANALISE'
+                                };
+                                pageState.combatSpellTypeFilter = filterMap[step.name] || 'ALL';
+                                if (typeof window.updateCombatSpellTypeFilterUI === 'function') window.updateCombatSpellTypeFilterUI();
+                                if (typeof window.applySpellFilters === 'function') window.applySpellFilters();
+                            },
+                            onStop: () => {
+                                pageState.combatSpellTypeFilter = 'ALL';
+                                if (typeof window.updateCombatSpellTypeFilterUI === 'function') window.updateCombatSpellTypeFilterUI();
+                                if (typeof window.applySpellFilters === 'function') window.applySpellFilters();
+                            }
+                        });
+                    }
+                };
+                tryStartCombatTutorial();
+                const obs = new MutationObserver(() => tryStartCombatTutorial());
+                obs.observe(enemiesEl, { childList: true });
+            }
         }
     } catch (_) { }
 

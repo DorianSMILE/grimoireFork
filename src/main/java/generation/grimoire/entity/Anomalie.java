@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "Anomalie", indexes = {
-    @Index(name = "idx_anomalie_owner", columnList = "ownerUsername")
+    @Index(name = "idx_anomalie_owner", columnList = "ownerUsername"),
+    @Index(name = "idx_anomalie_template", columnList = "is_template"),
+    @Index(name = "idx_anomalie_name", columnList = "name")
 })
 public class Anomalie {
 

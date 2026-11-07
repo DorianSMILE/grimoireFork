@@ -50,17 +50,17 @@ public class SecretController {
         }
 
         // Check if all dungeons are completed
-        List<generation.grimoire.entity.pve.Donjon> allDungeons = donjonRepository.findAll();
-        List<generation.grimoire.entity.pve.Donjon> dungeonsForLevel = allDungeons.stream()
-                .filter(d -> secretName.equalsIgnoreCase(d.getRequiredSecret()) && d.getRequiredSecretLevel() == level)
+        List<DonjonRepository.DonjonLightProjection> allDungeons = donjonRepository.findAllLightProjections();
+        List<DonjonRepository.DonjonLightProjection> dungeonsForLevel = allDungeons.stream()
+                .filter(d -> secretName.equalsIgnoreCase(d.requiredSecret()) && d.requiredSecretLevel() == level)
                 .toList();
 
         if (dungeonsForLevel.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Aucun donjon n'existe pour ce secret et ce niveau."));
         }
 
-        for (generation.grimoire.entity.pve.Donjon d : dungeonsForLevel) {
-            if (!user.getCompletedDungeons().contains(d.getId())) {
+        for (DonjonRepository.DonjonLightProjection d : dungeonsForLevel) {
+            if (!user.getCompletedDungeons().contains(d.id())) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tous les donjons de ce niveau ne sont pas terminés."));
             }
         }

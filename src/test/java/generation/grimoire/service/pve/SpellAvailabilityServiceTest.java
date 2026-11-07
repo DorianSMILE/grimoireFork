@@ -535,4 +535,239 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getFinalHealCost()).isEqualTo(10);
         assertThat(avail.getFinalHeatCost()).isEqualTo(15);
     }
+
+    @Test
+    @DisplayName("compute - Calcule le coût réel en mana et PV avec pourcentage, taxe maudite et conserve les coûts même si bloqué")
+    void compute_withPercentageCostsAndCursedModifiers_shouldExposeRealCostsAndModifiers() {
+        caster.setManaMax(200);
+        caster.setManaCurrent(150);
+        caster.setHealthMax(100);
+        caster.setHealthCurrent(80);
+        caster.setBanalSpellCastThisTurn(true); // Bloque par ACTION_LIMIT mais doit quand même exposer les coûts réels
+
+        Equipment cursedWeapon = new Equipment();
+        cursedWeapon.setSlot(EquipmentSlot.ANNEAU);
+        cursedWeapon.setSpecialEffect(EquipmentEffectType.CURSED_MANA_TAX);
+        cursedWeapon.setSpecialEffectValue(20); // +20% surcoût mana
+        Equipment cursedRing = new Equipment();
+        cursedRing.setSlot(EquipmentSlot.ANNEAU);
+        cursedRing.setSpecialEffect(EquipmentEffectType.CURSED_HP_LOSS_ON_MANA);
+        cursedRing.setSpecialEffectValue(10); // 10% du mana dépensé en PV
+        caster.getEquipments().add(cursedWeapon);
+        caster.getEquipments().add(cursedRing);
+
+        Spell spell = createSpell(1L, "Rituel Maudit", 15, 5, 0, SpellCastingType.BANAL);
+        spell.setPercentManaCost(20);
+        spell.setPercentManaCostSource(generation.grimoire.enumeration.Source.CASTER_MANA_CURRENT); // 20% de 150 = 30
+        spell.setPercentHealCost(10);
+        spell.setPercentHealCostSource(generation.grimoire.enumeration.Source.CASTER_HEALTH_MAX); // 10% de 100 = 10
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        assertThat(avail.isCastable()).isFalse();
+        assertThat(avail.getReason()).isEqualTo("ACTION_LIMIT");
+
+        // Mana: base 15 + 30 (20% de 150) = 45, +20% taxe maudite (+9) = 54
+        assertThat(avail.getPercentManaAmount()).isEqualTo(30);
+        assertThat(avail.getRawManaCost()).isEqualTo(45);
+        assertThat(avail.getFinalManaCost()).isEqualTo(54);
+        assertThat(avail.getManaModifiers()).hasSize(2);
+        assertThat(avail.getManaModifiers().get(0).label()).contains("Incantations Lourdes");
+        assertThat(avail.getManaModifiers().get(0).valueText()).isEqualTo("+9 Mana");
+        assertThat(avail.getManaModifiers().get(0).bonus()).isFalse();
+        assertThat(avail.getManaModifiers().get(1).label()).contains("Brèche spirituelle");
+
+        // PV: base 5 + 10 (10% de 100) = 15, et modificateur Brèche spirituelle (10% de 54 = 5 PV)
+        assertThat(avail.getPercentHealAmount()).isEqualTo(10);
+        assertThat(avail.getRawHealCost()).isEqualTo(15);
+        assertThat(avail.getFinalHealCost()).isEqualTo(15);
+        assertThat(avail.getHealModifiers()).hasSize(1);
+        assertThat(avail.getHealModifiers().get(0).label()).contains("Brèche spirituelle");
+        assertThat(avail.getHealModifiers().get(0).valueText()).isEqualTo("+5 PV");
+    }
+
+    @Test
+    @DisplayName("compute - Pré-calcule les valeurs réelles des effets de sort (Dégâts %, Bouclier, Buff avec source, DoT)")
+    void compute_withPercentageEffects_shouldExposeCalculatedEffectPreviews() {
+        caster.setPower(40);
+        caster.setHealthMax(200);
+        caster.setHealthCurrent(150);
+
+        Spell spell = createSpell(1L, "Explosion Arcanique", 20, 0, 0, SpellCastingType.BANAL);
+
+        // Effet 0 : 150% de CASTER_POWER (40) = 60 dégâts magiques
+        generation.grimoire.entity.spell.type.effect.DamagePercentageEffect dmgEff =
+                new generation.grimoire.entity.spell.type.effect.DamagePercentageEffect();
+        dmgEff.setId(101L);
+        dmgEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        dmgEff.setPercentage(1.50);
+        dmgEff.setDamageSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+
+        // Effet 1 : Bouclier 10 + 50% de CASTER_POWER (20) = 30
+        generation.grimoire.entity.spell.type.effect.ShieldEffect shieldEff =
+                new generation.grimoire.entity.spell.type.effect.ShieldEffect();
+        shieldEff.setId(102L);
+        shieldEff.setFixedValue(10);
+        shieldEff.setPercentage(0.50);
+        shieldEff.setShieldSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        shieldEff.setDuration(2);
+
+        // Effet 2 : Buff Armure +5 flat + 25% de CASTER_POWER (+10) = +15 flat
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect buffEff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        buffEff.setId(103L);
+        buffEff.setStatAffected(generation.grimoire.enumeration.StatType.ARMURE);
+        buffEff.setFlatValue(5);
+        buffEff.setModifier(0.25);
+        buffEff.setModifierSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        buffEff.setDuration(3);
+
+        // Effet 3 : DoT 5 + 20% de CASTER_POWER (8) = 13/tour
+        generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect dotEff =
+                new generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect();
+        dotEff.setId(104L);
+        dotEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        dotEff.setFixedDamagePerTick(5);
+        dotEff.setPercentageDamagePerTick(0.20);
+        dotEff.setDamageSource(generation.grimoire.enumeration.Source.CASTER_POWER);
+        dotEff.setDuration(3);
+
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(dmgEff, shieldEff, buffEff, dotEff)));
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        assertThat(avail.getEffectPreviews()).hasSize(4);
+
+        assertThat(avail.getEffectPreviews().get(0).calculatedValue()).isEqualTo(60);
+        assertThat(avail.getEffectPreviews().get(0).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(1).calculatedValue()).isEqualTo(30);
+        assertThat(avail.getEffectPreviews().get(1).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(2).calculatedValue()).isEqualTo(15);
+        assertThat(avail.getEffectPreviews().get(2).calculatedPercentModifier()).isEqualTo(0);
+        assertThat(avail.getEffectPreviews().get(2).sourceResolvedToFlat()).isTrue();
+
+        assertThat(avail.getEffectPreviews().get(3).calculatedValue()).isEqualTo(13);
+        assertThat(avail.getEffectPreviews().get(3).sourceResolvedToFlat()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Devrait calculer des aperçus spécifiques pour chaque ennemi en fonction de ses stats")
+    void shouldComputeDifferentPreviewsForEachTargetEnemy() {
+        // Ennemi 1 : 100 PV manquants
+        Personnage enemy1 = new Personnage();
+        enemy1.setId(10L);
+        enemy1.setName("Gobelin A");
+        enemy1.setHealthMax(1000);
+        enemy1.setHealthCurrent(900);
+        generation.grimoire.model.pve.ActiveMonster m1 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(enemy1);
+
+        // Ennemi 2 : 500 PV manquants
+        Personnage enemy2 = new Personnage();
+        enemy2.setId(11L);
+        enemy2.setName("Gobelin B");
+        enemy2.setHealthMax(1000);
+        enemy2.setHealthCurrent(500);
+        generation.grimoire.model.pve.ActiveMonster m2 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m2.setAsPersonnage(enemy2);
+
+        session.setEnemies(List.of(m1, m2));
+
+        // Sort : 20% des PV manquants de la cible en dégâts bruts
+        Spell spell = createSpell(200L, "Exécution", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamagePercentageEffect pctEff =
+                new generation.grimoire.entity.spell.type.effect.DamagePercentageEffect();
+        pctEff.setId(201L);
+        pctEff.setDamageType(generation.grimoire.enumeration.DamageType.BRUT);
+        pctEff.setPercentage(0.20);
+        pctEff.setDamageSource(generation.grimoire.enumeration.Source.TARGET_HEALTH_MISSING);
+        pctEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(pctEff)));
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+
+        // Aperçu par défaut (sur 1er ennemi : 20% de 100 = 20)
+        assertThat(avail.getEffectPreviews()).hasSize(1);
+        assertThat(avail.getEffectPreviews().get(0).calculatedValue()).isEqualTo(20);
+
+        // Aperçus spécifiques aux cibles
+        assertThat(avail.getEnemyPreviews()).hasSize(2);
+        assertThat(avail.getEnemyPreviews().get(0).effectPreviews().get(0).calculatedValue()).isEqualTo(20);
+        assertThat(avail.getEnemyPreviews().get(1).effectPreviews().get(0).calculatedValue()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("Devrait calculer les dégâts réels finaux en prenant en compte armure, passifs de monstre, débuffs et boucliers")
+    void shouldComputeRealFinalDamageWithArmorMonsterPassivesDebuffsAndShields() {
+        // Lanceur : +20% DAMAGE_GIVEN_PHYSIC
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect casterBuff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        casterBuff.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_GIVEN_PHYSIC);
+        casterBuff.setModifier(0.20);
+        casterBuff.setDuration(2);
+        caster.getActiveBuffs().add(casterBuff);
+
+        // Cible : Monstre REPTILE (-15% dégâts physiques), 100 Armure (50% réduction),
+        // Débuff +25% DAMAGE_TAKEN_PHYSIC, et 20 points de Bouclier actif
+        Personnage reptileTarget = new Personnage();
+        reptileTarget.setId(20L);
+        reptileTarget.setName("Lézard Cuirassé");
+        reptileTarget.setHealthMax(500);
+        reptileTarget.setHealthCurrent(500);
+        reptileTarget.setArmor(100);
+        reptileTarget.setMonsterType(generation.grimoire.enumeration.MonsterType.REPTILE);
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect targetDebuff =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        targetDebuff.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_TAKEN_PHYSIC);
+        targetDebuff.setModifier(0.25);
+        targetDebuff.setDuration(2);
+        reptileTarget.getActiveBuffs().add(targetDebuff);
+        reptileTarget.addShield(20, 2, "Écailles");
+
+        generation.grimoire.model.pve.ActiveMonster m1 =
+                new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(reptileTarget);
+        session.setEnemies(List.of(m1));
+
+        // Sort : 100 dégâts physiques fixes
+        Spell spell = createSpell(300L, "Frappe Lourde", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamageFixedEffect dmgEff =
+                new generation.grimoire.entity.spell.type.effect.DamageFixedEffect();
+        dmgEff.setId(301L);
+        dmgEff.setDamageType(generation.grimoire.enumeration.DamageType.PHYSIC);
+        dmgEff.setDamage(100);
+        dmgEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(dmgEff)));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        assertThat(session.getSpellAvailability()).hasSize(1);
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        var preview = avail.getEnemyPreviews().get(0).effectPreviews().get(0);
+
+        // Calcul attendu :
+        // 1. dealDamage : 100 * 1.20 = 120
+        // 2. REPTILE : ceil(120 * 0.85) = 102
+        // 3. DAMAGE_TAKEN_PHYSIC (+25%) : 102 * 1.25 = 127.5
+        // 4. Armure 100 (réduction 50%) : (int)(127.5 * 0.5) = 63
+        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV
+        assertThat(preview.calculatedValue()).isEqualTo(43);
+        assertThat(preview.hpDamage()).isEqualTo(43);
+        assertThat(preview.shieldAbsorbed()).isEqualTo(20);
+    }
 }

@@ -1,5 +1,5 @@
-import * as ui from '../ui.js';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
+import * as ui from '../ui.js?v=1786180000231';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 
 

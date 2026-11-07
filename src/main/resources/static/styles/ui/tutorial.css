@@ -1,0 +1,320 @@
+/* ==========================================================================
+   GRIMOIRE — Reusable Onboarding Tutorial & Tethered Info-Tooltips
+   ========================================================================== */
+
+/* Highlighted Target Element */
+.tutorial-target-highlight {
+    position: relative;
+    z-index: 9990 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.85), 0 0 24px rgba(56, 189, 248, 0.45) !important;
+    border-radius: 8px;
+    animation: tutorialTargetPulse 2s ease-in-out infinite;
+    transition: box-shadow 0.25s ease;
+}
+
+@keyframes tutorialTargetPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.9), 0 0 22px rgba(56, 189, 248, 0.45);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.95), 0 0 32px rgba(245, 158, 11, 0.55);
+    }
+}
+
+.tutorial-input-Attention {
+    animation: shakeError 0.4s ease;
+}
+
+/* Native Manual Popover Container */
+.tutorial-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    z-index: 999995;
+    overflow: visible;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tutorial-popover[popover]:is(:popover-open, .\:popover-open),
+.tutorial-popover.is-visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.tutorial-popover.is-hidden {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@supports (anchor-name: --tutorial-active-anchor) {
+    .tutorial-target-highlight {
+        anchor-name: --tutorial-active-anchor;
+    }
+}
+
+@supports (container-type: anchored) {
+    .tutorial-popover {
+        container-type: anchored;
+    }
+}
+
+/* Inner Card */
+.tutorial-popover-card {
+    position: relative;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.75), 0 0 24px rgba(56, 189, 248, 0.22);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+/* Directional Arrows */
+.tutorial-popover-arrow {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #131d33;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+.tutorial-popover.placement-right .tutorial-popover-arrow {
+    left: -7px;
+    right: auto;
+    top: var(--arrow-top, 24px);
+    bottom: auto;
+    border-right: none;
+    border-top: none;
+}
+
+.tutorial-popover.placement-left .tutorial-popover-arrow {
+    right: -7px;
+    left: auto;
+    top: var(--arrow-top, 24px);
+    bottom: auto;
+    border-left: none;
+    border-bottom: none;
+}
+
+.tutorial-popover.placement-top .tutorial-popover-arrow {
+    bottom: -7px;
+    top: auto;
+    left: var(--arrow-left, 32px);
+    right: auto;
+    border-left: none;
+    border-top: none;
+}
+
+.tutorial-popover.placement-bottom .tutorial-popover-arrow {
+    top: -7px;
+    bottom: auto;
+    left: var(--arrow-left, 32px);
+    right: auto;
+    border-right: none;
+    border-bottom: none;
+}
+
+/* Header */
+.tutorial-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.tutorial-popover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+}
+
+.tutorial-popover-skip {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    padding: 0.2rem 0.45rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.tutorial-popover-skip:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Title & Body */
+.tutorial-popover-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.tutorial-popover-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+.tutorial-popover-title {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.25;
+}
+
+.tutorial-popover-desc {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    line-height: 1.48;
+}
+
+/* Footer: Progress Dots & Navigation Buttons */
+.tutorial-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tutorial-progress-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.tutorial-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.35);
+    transition: all 0.2s ease;
+}
+
+.tutorial-dot.is-active {
+    width: 18px;
+    background: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.tutorial-dot.is-completed {
+    background: #10b981;
+}
+
+.tutorial-popover-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.tutorial-btn-prev {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    padding: 0.38rem 0.65rem;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    transition: all 0.18s ease;
+}
+
+.tutorial-btn-prev:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.tutorial-btn-next {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #ffffff;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    transition: all 0.18s ease;
+}
+
+.tutorial-btn-next:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.45);
+}
+
+/* Action-Required Hint & Forced Loot Preview States */
+.tutorial-action-hint {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    padding: 0.3rem 0.65rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+#prepLootDropdown.tutorial-loot-open {
+    display: flex !important;
+}
+
+#prepLootTooltipTrigger.tutorial-trigger-visible {
+    display: flex !important;
+}

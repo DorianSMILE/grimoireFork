@@ -19,7 +19,10 @@ import lombok.ToString;
 @ToString(exclude = { "personnage", "user" })
 @Entity
 @Table(name = "Equipment", indexes = {
-        @Index(name = "idx_equipment_owner", columnList = "owner_username")
+        @Index(name = "idx_equipment_owner", columnList = "owner_username"),
+        @Index(name = "idx_equipment_personnage", columnList = "personnage_id"),
+        @Index(name = "idx_equipment_user", columnList = "user_id"),
+        @Index(name = "idx_equipment_template", columnList = "is_template")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "personnage", "user" })
 public class Equipment {

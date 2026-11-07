@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/styles/ui/components.css?v=1786180000040">
     <link rel="stylesheet" href="/styles/ui/utilities.css?v=1786180000002">
     <link rel="stylesheet" href="/styles/ui/equipment.css?v=1786180000002">
+    <link rel="stylesheet" href="/styles/ui/tutorial.css?v=3">
     <link rel="stylesheet" href="/styles/pages/dungeons.css?v=1786180000003">
     <link rel="stylesheet" href="/styles/sprite/agis.css">
     <script src="/js/components/navbar.js?v=1786180000040"></script>
@@ -76,7 +77,7 @@
                     <div id="prepDungeonDesc" class="text-muted">Préparez votre équipe et votre
                         équipement avant de plonger.</div>
                 </div>
-                <button onclick="closePrepInterface()"
+                <button id="btnClosePrep" onclick="closePrepInterface()"
                     class="btn-retour border border-white/10 text-slate-50 py-3 px-6 rounded-lg cursor-pointer flex items-center gap-2 font-inter">
                     <span class="material-symbols-outlined text-xl">arrow_back</span> Retour
                 </button>
@@ -96,7 +97,7 @@
                 </div>
 
                 <!-- Colonne Centrale : Aperçu des Stats et Equipement -->
-                <div>
+                <div id="prepStatsEquipSection">
                     <h3 class="font-outfit text-xl text-slate-50 mb-6 flex items-center gap-2">
                         <span class="material-symbols-outlined text-purple">analytics</span> Statistiques
                         Totales
@@ -114,8 +115,10 @@
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-warning">shield</span> Équipement Actuel
                         </div>
-                        <a href="/armory.html" class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-normal no-underline border border-sky-500/30 bg-sky-500/10 px-2 py-1 rounded transition-colors" title="Accéder à l'Armurerie pour modifier l'équipement">
-                            <span class="material-symbols-outlined text-sm">shield</span> Modifier dans l'Armurerie
+                        <a href="/armory.html" id="btnArmoryPrepLink" class="btn-armory-link is-hidden" title="Modifier l'équipement dans l'Armurerie">
+                            <span class="material-symbols-outlined btn-armory-icon">edit</span>
+                            <span>Modifier</span>
+                            <span class="material-symbols-outlined btn-armory-arrow">open_in_new</span>
                         </a>
                     </h3>
                     <div id="prepEquipList">
@@ -125,6 +128,7 @@
 
                 <!-- Colonne Droite : Consommable & Bouton d'entrée -->
                 <div>
+                    <div id="prepInventorySection">
                     <h3 class="font-outfit text-xl text-slate-50 mb-6 flex items-center gap-2 justify-between">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-success">inventory_2</span>
@@ -168,8 +172,9 @@
                     <div id="prepConsumableList" class="mb-8 max-h-[250px] overflow-y-auto overflow-x-hidden pr-2">
                         <!-- Rempli par JS -->
                     </div>
+                    </div>
 
-                    <div class="bg-red-600/5 p-6 rounded-xl border border-red-600/20 mb-6 relative">
+                    <div id="prepRoomsSection" class="bg-red-600/5 p-6 rounded-xl border border-red-600/20 mb-6 relative">
                         <div class="flex justify-between items-start mb-4">
                             <div class="text-sm text-red-300 font-semibold uppercase tracking-[1px]">
                                 Ennemis détectés
@@ -393,10 +398,11 @@
         <div id="heroEquipmentTooltipContent" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
     </div>
 
-    <script defer src="/js/services/auth.js?v=18" type="module"></script>
+    <script defer src="/js/services/auth.js?v=26" type="module"></script>
     <script defer src="/js/utils/utils.js"></script>
     <script type="module" src="/js/ui.js"></script>
-    <script defer src="/js/pages/dungeons.js?v=11"></script>
+    <script defer src="/js/components/tutorial.js?v=9"></script>
+    <script defer src="/js/pages/dungeons.js?v=18"></script>
     
     <script defer src="/js/components/loader.js"></script>
 
@@ -404,8 +410,3 @@
 </body>
 
 </html>
-
-
-
-
-

@@ -225,6 +225,12 @@ async function submitPersonnage() {
         if (res) {
             const data = await res.json();
             showNotif(data.message || 'Personnage sauvegardé !');
+            if (data.redirectToDungeonTutorial) {
+                if (window.GrimoireTutorial) window.GrimoireTutorial.stop();
+                if (window.currentUser) window.currentUser.tutorialPhase = 'DUNGEON';
+                setTimeout(() => { window.location.href = '/dungeons.html?tutorial=1'; }, 650);
+                return;
+            }
             resetForm(); await loadPersonnages();
         
         }
@@ -270,12 +276,17 @@ async function equipItem(equipmentId, personnageId, targetSlot = null) {
         let url = `/api/equipments/${equipmentId}/equip/${personnageId}`;
         if (targetSlot) {
             url += `?targetSlot=${targetSlot}`;
+
         }
         const res = await globalFetch(url, { method: 'POST' });
         if (res) {
             const data = await res.json();
             showNotif(data.message);
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -290,7 +301,11 @@ async function unequipItem(equipmentId) {
         if (res) {
             const data = await res.json();
             showNotif(data.message);
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -309,7 +324,11 @@ async function deleteEquipment(id) {
         confirmBody: `Voulez-vous vraiment supprimer l'équipement <strong class="text-white">${eq.name}</strong> ?`,
         apiRoute: "/api/equipments/",
         onSuccess: async () => {
+            if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+                await window.GrimoireTutorial.complete(true);
+            }
             await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
             renderEquipModal();
         
         }
@@ -638,19 +657,54 @@ function renderPersonnages() {
     }).join('');
 }
 
+function getVoieAvatarName(voie) {
+    if (!voie) return null;
+    const raw = typeof voie === 'string' ? voie : (voie.nom || voie.name || '');
+    if (!raw) return null;
+    const vNom = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (vNom.includes('consolidation')) return 'consolidation';
+    if (vNom.includes('conviction')) return 'conviction';
+    if (vNom.includes('creation')) return 'creation';
+    if (vNom.includes('destruction')) return 'destruction';
+    if (vNom.includes('raison')) return 'raison';
+    if (vNom.includes('surete')) return 'surete';
+    if (vNom.includes('trahison')) return 'trahison';
+    if (vNom.includes('violence')) return 'violence';
+    return null;
+}
+
 // ===== Equipment Modal =====
 
 async function openEquipModal(persoId) {
     pageState.equipModalPersoId = persoId;
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    initArmoryTutorial();
     const overlay = document.getElementById('equipModalOverlay');
+    setTimeout(() => {
+        if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_CLICK_BTN') {
+            window.GrimoireTutorial.goToStepByName('EQUIP_SELECT_ITEM');
+            setTimeout(() => window.GrimoireTutorial.reposition(), 220);
+        }
+    }, 60);
     overlay.classList.add('active');
     renderEquipModal();
 }
 
 function closeEquipModal() {
+    if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.name === 'EQUIP_SELECT_ITEM') {
+        return;
+    }
     pageState.equipModalPersoId = null;
     document.getElementById('equipModalOverlay').classList.remove('active');
+    const avatarEl = document.getElementById('equipModalAvatar');
+    if (avatarEl) {
+        avatarEl.innerHTML = '<span class="material-symbols-outlined text-warning">shield</span>';
+        avatarEl.classList.remove('has-avatar');
+    }
+    const affilEl = document.getElementById('equipModalAffiliations');
+    if (affilEl) {
+        affilEl.innerHTML = '';
+    }
 }
 
 function renderEquipModal() {
@@ -658,6 +712,23 @@ function renderEquipModal() {
     if (!perso) return;
 
     document.getElementById('equipModalTitle').textContent = `Équipement de ${perso.name}`;
+
+    const avatarEl = document.getElementById('equipModalAvatar');
+    if (avatarEl) {
+        const avatarName = getVoieAvatarName(perso.voie);
+        if (avatarName) {
+            avatarEl.innerHTML = `<img src="/images/avatar/${avatarName}.png" alt="${avatarName}" class="equip-modal-avatar-img">`;
+            avatarEl.classList.add('has-avatar');
+        } else {
+            avatarEl.innerHTML = '<span class="material-symbols-outlined text-warning">shield</span>';
+            avatarEl.classList.remove('has-avatar');
+        }
+    }
+
+    const affilEl = document.getElementById('equipModalAffiliations');
+    if (affilEl) {
+        affilEl.innerHTML = buildCharBadgesHtml(perso);
+    }
 
     // Render slots
     const slotsContainer = document.getElementById('equipSlotsContainer');
@@ -1157,7 +1228,18 @@ window.addEventListener('authLoaded', async () => {
         if (window.isAdmin) searchOwnerContainer.classList.remove('hidden');
         else searchOwnerContainer.classList.add('hidden');
     }
+
     await Promise.all([loadAllEquipments(), loadPersonnages()]);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
+    if (!isNaN(openEquipCharId)) {
+        setTimeout(() => {
+            openEquipModal(openEquipCharId);
+        }, 100);
+    }
+
+    initArmoryTutorial();
 
 });
 
@@ -1166,6 +1248,89 @@ window.addEventListener('authLoaded', async () => {
 window.hideEqTooltip = function () {
     const tooltip = document.getElementById('globalSpellTooltip');
     if (tooltip) tooltip.classList.add('hidden');
+};
+
+function initArmoryTutorial() {
+    if (!window.currentUser) return;
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+    if (window.currentUser.tutorialCompleted) {
+        if (window.currentUser.equipTutorialActive && pageState.personnages.length > 0) {
+            window.GrimoireTutorial.startPhase('EQUIP_ARMORY', {
+                resolveTarget: (step) => {
+                    if (step.name === 'EQUIP_SELECT_ITEM') {
+                        const wrapper = document.querySelector('#equipSlotsContainer .equip-slot-card .custom-select-wrapper');
+                        if (wrapper) return wrapper.closest('.equip-slot-card') || wrapper;
+                        return document.getElementById('equipSlotsContainer');
+                    }
+                    return document.querySelector(step.targetSelector);
+                },
+                canPrev: () => false,
+                canNext: () => false,
+                onStepEnter: (step) => {
+                    const closeBtn = document.querySelector('#equipModalOverlay .equip-modal-close');
+                    if (closeBtn) {
+                        if (step.name === 'EQUIP_SELECT_ITEM') closeBtn.classList.add('is-hidden');
+                        else closeBtn.classList.remove('is-hidden');
+                    }
+                },
+                onStop: () => {
+                    const closeBtn = document.querySelector('#equipModalOverlay .equip-modal-close');
+                    if (closeBtn) closeBtn.classList.remove('is-hidden');
+                }
+            });
+        } else if (window.currentUser.shopTutorialActive) {
+            window.GrimoireTutorial.startPhase('SHOP_NAV', {
+                canPrev: () => false,
+                canNext: () => false
+            });
+        }
+        return;
+    }
+    if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
+
+    const hasNoChars = pageState.personnages.length === 0;
+    if (hasNoChars) {
+        window.GrimoireTutorial.startPhase('ARMORY', {
+            resolveTarget: (step) => {
+                if (step.name === 'ARMORY_PROFILE') {
+                    const spider = document.getElementById('armorySpiderSection');
+                    if (spider && !spider.classList.contains('hidden')) return spider;
+                    return document.getElementById('formPanel');
+                }
+                return document.querySelector(step.targetSelector);
+            },
+            onBeforeNext: (step) => {
+                if (step.name === 'ARMORY_NAME') {
+                    const nameInput = document.getElementById('charName');
+                    if (!nameInput || !nameInput.value.trim()) {
+                        showNotif('Donnez un nom à votre héros avant de continuer !', true);
+                        if (nameInput) nameInput.focus();
+                        return false;
+                    }
+                } else if (step.name === 'ARMORY_VOIE') {
+                    const voieSelect = document.getElementById('charVoie');
+                    if (!voieSelect || !voieSelect.value) {
+                        showNotif('Choisissez une Voie pour votre héros !', true);
+                        if (voieSelect) voieSelect.focus();
+                        return false;
+                    }
+                } else if (step.name === 'ARMORY_SPIRIT') {
+                    const spiritSelect = document.getElementById('charSpirit');
+                    if (!spiritSelect || !spiritSelect.value) {
+                        showNotif('Choisissez une Spiritualité pour votre héros !', true);
+                        if (spiritSelect) spiritSelect.focus();
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    } else if (window.currentUser.tutorialPhase === 'DUNGEON') {
+        window.GrimoireTutorial.startPhase('ARMORY_DONE');
+    }
+}
+
+function _noopArmoryEnd() {
 };
 
 

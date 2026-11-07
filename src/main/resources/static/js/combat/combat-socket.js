@@ -1,8 +1,8 @@
-import { showFloatingTextOnElement } from './combat-utils.js';
-import { pageState } from './combat-state.js';
-import { updateUI } from './combat-ui.js';
-import * as ui from '../ui.js';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js';
+import { showFloatingTextOnElement } from './combat-utils.js?v=1786180000234';
+import { pageState } from './combat-state.js?v=1786180000234';
+import { updateUI } from './combat-ui.js?v=1786180000234';
+import * as ui from '../ui.js?v=1786180000231';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
 import { handleSignalReceived } from './combat-signals.js';
 import { handleCombatSpriteLog } from './combat-sprites.js';

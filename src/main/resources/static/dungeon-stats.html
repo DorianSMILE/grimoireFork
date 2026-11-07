@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/styles/ui/utilities.css?v=1786180000010">
     <script src="/js/components/navbar.js?v=1786180000010"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         .stats-grid {
@@ -176,8 +176,30 @@
             border-color: var(--info);
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
         }
+        .btn-reset-tutorials {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e2e8f0;
+            padding: 0.7rem 1.15rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-reset-tutorials:hover {
+            background: rgba(56, 189, 248, 0.14);
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+        }
     </style>
-    <script src="/js/components/navbar.js"></script>
+
 </head>
 <body>
     <app-navbar active-page="dungeon-stats"></app-navbar>
@@ -188,7 +210,12 @@
                 <span class="material-symbols-outlined text-info" style="font-size: 2.5rem;">insights</span>
                 <span class="logo-text-gradient logo-dungeon">Statistiques PvE</span>
             </h2>
-            <div class="custom-select-wrapper dungeon-selector w-[280px] z-50" id="dungeonSelectWrapper" tabindex="0">
+            <div class="flex items-center gap-4">
+                <button type="button" id="resetTutorialsBtn" class="btn-reset-tutorials" onclick="window.resetTutorials()">
+                    <span class="material-symbols-outlined text-info">restart_alt</span>
+                    <span>Réinitialiser les tutoriels</span>
+                </button>
+                <div class="custom-select-wrapper dungeon-selector w-[280px] z-50" id="dungeonSelectWrapper" tabindex="0">
                 <div class="custom-select-trigger" id="dungeonSelectTrigger" onclick="document.getElementById('dungeonSelectWrapper').classList.toggle('open')">
                     <div class="cs-content" id="dungeonSelectContent">Tous les donjons</div>
                     <span class="material-symbols-outlined cs-arrow">expand_more</span>
@@ -199,9 +226,11 @@
             </div>
         </div>
 
+            </div>
+        </div>
         <app-loader id="statsLoader" message="Analyse des archives..."></app-loader>
 
-        <div id="statsContent" style="display: none;">
+        <div id="statsContent" class="is-hidden">
             <!-- KPIs -->
             <div class="kpi-grid">
                 <div class="kpi-card">
@@ -312,8 +341,8 @@
 
     
     <script type="module" src="/js/components/loader.js"></script>
-    <script type="module" src="/js/services/auth.js?v=15"></script>
+    <script type="module" src="/js/services/auth.js?v=26"></script>
     <script defer src="/js/utils/utils.js"></script>
-    <script type="module" src="/js/pages/dungeon-stats.js"></script>
+    <script type="module" src="/js/pages/dungeon-stats.js?v=3"></script>
 </body>
 </html>

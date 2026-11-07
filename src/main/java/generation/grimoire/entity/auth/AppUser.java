@@ -3,6 +3,7 @@ package generation.grimoire.entity.auth;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -38,6 +39,7 @@ public class AppUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_unlocked_secrets", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "secret_name")
     @Column(name = "level")
@@ -45,36 +47,42 @@ public class AppUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_unlocked_dungeons", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "dungeon_id")
     private Set<Long> unlockedDungeons = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_claimed_secret_rewards", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "secret_level_key")
     private Set<String> claimedSecretRewards = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_completed_dungeons", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "dungeon_id")
     private Set<Long> completedDungeons = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_discovered_items", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "item_name")
     private Set<String> discoveredItems = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_seen_alchemy_recipes", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "recipe_id")
     private Set<Long> seenAlchemyRecipes = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_seen_dungeons", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "dungeon_id")
     private Set<Long> seenDungeons = new HashSet<>();
@@ -88,8 +96,21 @@ public class AppUser {
     @Column(nullable = false)
     private boolean unlockedShop = false;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean tutorialCompleted = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean equipTutorialCompleted = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean shopTutorialCompleted = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean combatTutorialCompleted = false;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_unlocked_voie_levels", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "voie_id")
     @Column(name = "max_level")
@@ -97,6 +118,7 @@ public class AppUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_unlocked_spirit_levels", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "spirit_id")
     @Column(name = "max_level")
@@ -104,6 +126,7 @@ public class AppUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_shop_purchases", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "item_name")
     private Set<String> dailyShopPurchases = new HashSet<>();
@@ -118,6 +141,7 @@ public class AppUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 50)
     @CollectionTable(name = "user_unlocked_titles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "title")
     private Set<String> unlockedTitles = new HashSet<>();

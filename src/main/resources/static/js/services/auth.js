@@ -14,6 +14,7 @@ if (activeCombatId &&
     !window.location.pathname.includes('/login.html') && 
     window.location.pathname !== '/login' &&
     !window.location.pathname.includes('/register.html') &&
+    window.location.pathname !== '/register' &&
     !isDungeonsPage) {
     console.warn('Active combat session found in localStorage, redirecting to combat page.');
     window.location.href = '/combat.html';
@@ -398,7 +399,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
             <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
+            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
                 S'inscrire
             </a>
         `;
@@ -419,6 +420,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
                 !window.location.pathname.includes('/login.html') &&
                 window.location.pathname !== '/login' &&
                 !window.location.pathname.includes('/register.html') &&
+                window.location.pathname !== '/register' &&
                 !isDungeonsPage &&
                 data.activeCombatSessionId) {
                 console.warn("Active combat session found via /api/auth/me, redirecting to combat.html");
@@ -491,7 +493,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
             <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
+            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
                 S'inscrire
             </a>
         `;

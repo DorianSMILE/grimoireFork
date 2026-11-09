@@ -167,6 +167,36 @@ export async function loginApi(
   };
 }
 
+export async function registerApi(
+  credentials: LoginRequest
+): Promise<{ ok: boolean; message?: string }> {
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(credentials),
+  });
+
+  const data = (await res.json()) as AuthResponse;
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      message: data.message || data.error || "Erreur lors de l'inscription",
+    };
+  }
+
+  if (data.token) {
+    setAccessToken(data.token);
+  }
+  localStorage.setItem(LIKELY_LOGGED_IN_KEY, 'true');
+
+  return {
+    ok: true,
+    message: data.message || "Inscription réussie ! Redirection vers l'armurerie...",
+  };
+}
+
 export async function fetchCurrentUser(): Promise<CurrentUserResponse | null> {
   const res = await apiFetch('/api/auth/me');
   if (!res.ok) {

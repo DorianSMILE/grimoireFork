@@ -19,12 +19,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(combatInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/styles/**", "/app/**", "/login", "/api/combat/**", "/api/pve/combat/**", "/api/pve/multi/**", "/api/auth/**", "/combat.html", "/error", "/api/anomalies/**");
+                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/styles/**", "/app/**", "/login", "/register", "/api/combat/**", "/api/pve/combat/**", "/api/pve/multi/**", "/api/auth/**", "/combat.html", "/error", "/api/anomalies/**");
     }
 
     @Override
     public void addViewControllers(@NonNull ViewControllerRegistry registry) {
         // Routes SPA React migrées
         registry.addViewController("/login").setViewName("forward:/app/index.html");
+        registry.addViewController("/register").setViewName("forward:/app/index.html");
     }
 }

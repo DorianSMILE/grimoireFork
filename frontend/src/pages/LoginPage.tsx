@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { isAlreadyAuthenticated, loginApi } from '../services/api';
 
 export function LoginPage() {
@@ -98,7 +99,7 @@ export function LoginPage() {
         </form>
 
         <div className="auth-footer">
-          Nouveau ici ? <a href="/register.html">Créer un compte</a>
+          Nouveau ici ? <Link to="/register">Créer un compte</Link>
         </div>
       </div>
     </div>

@@ -580,13 +580,11 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getManaModifiers().get(0).bonus()).isFalse();
         assertThat(avail.getManaModifiers().get(1).label()).contains("Brèche spirituelle");
 
-        // PV: base 5 + 10 (10% de 100) = 15, et modificateur Brèche spirituelle (10% de 54 = 5 PV)
+        // PV: base 5 + 10 (10% de 100) = 15
         assertThat(avail.getPercentHealAmount()).isEqualTo(10);
         assertThat(avail.getRawHealCost()).isEqualTo(15);
         assertThat(avail.getFinalHealCost()).isEqualTo(15);
-        assertThat(avail.getHealModifiers()).hasSize(1);
-        assertThat(avail.getHealModifiers().get(0).label()).contains("Brèche spirituelle");
-        assertThat(avail.getHealModifiers().get(0).valueText()).isEqualTo("+5 PV");
+        assertThat(avail.getHealModifiers()).isEmpty();
     }
 
     @Test

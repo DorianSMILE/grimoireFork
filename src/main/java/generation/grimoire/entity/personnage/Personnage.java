@@ -581,9 +581,13 @@ public class Personnage {
         buffDebuff.setModifier(modifier);
         activeBuffs.add(buffDebuff);
 
+        int flat = buffDebuff.getFlatValue();
+        double mod = modifier != null ? modifier : 0.0;
+        String details = BuffDebuffEffect.formatEffectDetails(flat, mod);
+        String detailsPart = details.isEmpty() ? "" : " " + details;
+
         System.out.println(name + " reçoit un effet sur " + buffDebuff.getStatAffected()
-                + " (modificateur : " + modifier
-                + ") pour " + buffDebuff.getDuration() + " tours.");
+                + detailsPart + " pour " + buffDebuff.getDuration() + " tours.");
     }
 
     /**

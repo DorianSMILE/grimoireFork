@@ -160,13 +160,25 @@ function appendSignalLog(signal) {
     const logContainer = document.getElementById('combatLog');
     if (!logContainer) return;
 
+    const action = signal.action;
+    const actionObj = (typeof action === 'object' && action) ? action : null;
+    const iconName = actionObj && actionObj.icon ? actionObj.icon : 'sensors';
+
+    let rawMsg = signal.formattedMessage || 'Signal';
+    rawMsg = rawMsg.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{FE0F}\s]+/u, '').trim();
+
     const entry = document.createElement('div');
     entry.className = 'log-entry log-entry-signal';
 
-    const textSpan = document.createElement('span');
-    textSpan.className = 'log-signal-text';
-    textSpan.textContent = signal.formattedMessage || 'Signal';
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-symbols-outlined log-entry-icon log-icon-signal';
+    iconSpan.textContent = iconName;
 
+    const textSpan = document.createElement('span');
+    textSpan.className = 'log-entry-text log-signal-text';
+    textSpan.textContent = rawMsg;
+
+    entry.appendChild(iconSpan);
     entry.appendChild(textSpan);
     logContainer.prepend(entry);
 }

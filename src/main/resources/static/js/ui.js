@@ -725,6 +725,9 @@ export function showGlobalTooltip(el) {
             }
         }
         if (topPos < 10) topPos = 10;
+        if (topPos + tooltipHeight > window.innerHeight - 10) {
+            topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
+        }
 
         leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
         if (leftPos < 10) leftPos = 10;
@@ -1127,6 +1130,9 @@ export function showEffectTooltip(el, text) {
         leftPos = window.innerWidth - tooltipWidth - 10;
     }
     if (topPos < 10) topPos = 10;
+    if (topPos + tooltipHeight > window.innerHeight - 10) {
+        topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
+    }
 
     tooltip.style.top = topPos + 'px';
     tooltip.style.left = leftPos + 'px';

@@ -283,6 +283,457 @@ export function getTrapEffectStats(room) {
     }
 }
 
+export const LOG_INLINE_EMOJIS = [
+    { regex: /⚔️|🗡️/g, icon: 'swords', cls: 'log-icon-physic' },
+    { regex: /💥/g, icon: 'flash_on', cls: 'log-icon-crit' },
+    { regex: /🔥/g, icon: 'local_fire_department', cls: 'log-icon-burn' },
+    { regex: /🌱/g, icon: 'psychology', cls: 'log-icon-hp' },
+    { regex: /✨/g, icon: 'auto_awesome', cls: 'log-icon-magic' },
+    { regex: /🏆/g, icon: 'emoji_events', cls: 'log-icon-trophy' },
+    { regex: /👑/g, icon: 'crown', cls: 'log-icon-trophy' },
+    { regex: /✅/g, icon: 'check_circle', cls: 'log-icon-challenge-success' },
+    { regex: /❌/g, icon: 'cancel', cls: 'log-icon-challenge-fail' },
+    { regex: /💰/g, icon: 'monetization_on', cls: 'log-icon-gold' },
+    { regex: /💖|❤️|💚/g, icon: 'favorite', cls: 'log-icon-hp' },
+    { regex: /🎁/g, icon: 'redeem', cls: 'log-icon-gift' },
+    { regex: /⏳/g, icon: 'hourglass_top', cls: 'log-icon-time' },
+    { regex: /💧/g, icon: 'water_drop', cls: 'log-icon-mana' },
+    { regex: /💀|☠️/g, icon: 'skull', cls: 'log-icon-death' },
+    { regex: /🛡️/g, icon: 'shield', cls: 'log-icon-shield' },
+    { regex: /🌀/g, icon: 'cyclone', cls: 'log-icon-spell' },
+    { regex: /🔮/g, icon: 'auto_awesome', cls: 'log-icon-xp' },
+    { regex: /🍔/g, icon: 'restaurant', cls: 'log-icon-consumable' },
+    { regex: /🎒/g, icon: 'inventory_2', cls: 'log-icon-consumable' },
+    { regex: /🗑️/g, icon: 'delete', cls: 'log-icon-discard' },
+    { regex: /🎉/g, icon: 'celebration', cls: 'log-icon-victory' },
+    { regex: /❄️/g, icon: 'ac_unit', cls: 'log-icon-frost' },
+    { regex: /🌵/g, icon: 'spa', cls: 'log-icon-brut' },
+    { regex: /👼/g, icon: 'health_and_safety', cls: 'log-icon-hp' },
+    { regex: /⚠️/g, icon: 'warning', cls: 'log-icon-warn' },
+    { regex: /🚫/g, icon: 'block', cls: 'log-icon-miss' },
+    { regex: /🛠️/g, icon: 'build', cls: 'log-icon-mechanism' },
+    { regex: /🌑/g, icon: 'dark_mode', cls: 'log-karma-dark' },
+    { regex: /🌕/g, icon: 'light_mode', cls: 'log-karma-light' },
+    { regex: /🌗/g, icon: 'contrast', cls: 'log-karma-mid' },
+    { regex: /⚖️/g, icon: 'balance', cls: 'log-karma-harmony' }
+];
+
+export const LEADING_EMOJI_ICON_MAP = [
+    { regex: /^🏁\s*/u, icon: 'sports_score', entryCls: 'log-turn-separator', iconCls: 'log-icon-turn' },
+    { regex: /^(?:⚔️|🗡️)\s*/u, icon: 'swords', entryCls: 'log-damage-physic', iconCls: 'log-icon-physic' },
+    { regex: /^💥\s*/u, icon: 'crisis_alert', entryCls: 'log-damage-crit', iconCls: 'log-icon-crit' },
+    { regex: /^🔥\s*/u, icon: 'local_fire_department', entryCls: 'log-damage-burn', iconCls: 'log-icon-burn' },
+    { regex: /^🌱\s*/u, icon: 'psychology', entryCls: 'log-heal-hp', iconCls: 'log-icon-creation' },
+    { regex: /^✨\s*/u, icon: 'auto_awesome', entryCls: 'log-spell', iconCls: 'log-icon-magic' },
+    { regex: /^(?:🏆|👑)\s*/u, icon: 'emoji_events', entryCls: 'log-achievement', iconCls: 'log-icon-trophy' },
+    { regex: /^✅\s*/u, icon: 'check_circle', entryCls: 'log-challenge-success', iconCls: 'log-icon-challenge-success' },
+    { regex: /^❌\s*/u, icon: 'cancel', entryCls: 'log-challenge-fail', iconCls: 'log-icon-challenge-fail' },
+    { regex: /^💰\s*/u, icon: 'monetization_on', entryCls: 'log-reward-gold', iconCls: 'log-icon-gold' },
+    { regex: /^(?:💖|❤️|💚)\s*/u, icon: 'favorite', entryCls: 'log-heal-hp', iconCls: 'log-icon-hp' },
+    { regex: /^🎁\s*/u, icon: 'redeem', entryCls: 'log-reward-gift', iconCls: 'log-icon-gift' },
+    { regex: /^⏳\s*/u, icon: 'hourglass_top', entryCls: 'log-generic', iconCls: 'log-icon-time' },
+    { regex: /^💧\s*/u, icon: 'water_drop', entryCls: 'log-heal-mana', iconCls: 'log-icon-mana' },
+    { regex: /^(?:💀|☠️)\s*/u, icon: 'skull', entryCls: 'log-death', iconCls: 'log-icon-death' },
+    { regex: /^🛡️\s*/u, icon: 'shield', entryCls: 'log-shield', iconCls: 'log-icon-shield' },
+    { regex: /^🌀\s*/u, icon: 'cyclone', entryCls: 'log-spell', iconCls: 'log-icon-spell' },
+    { regex: /^🔮\s*/u, icon: 'auto_awesome', entryCls: 'log-reward-xp', iconCls: 'log-icon-xp' },
+    { regex: /^🍔\s*/u, icon: 'restaurant', entryCls: 'log-consumable', iconCls: 'log-icon-consumable' },
+    { regex: /^🎒\s*/u, icon: 'inventory_2', entryCls: 'log-consumable', iconCls: 'log-icon-consumable' },
+    { regex: /^🗑️\s*/u, icon: 'delete', entryCls: 'log-discard', iconCls: 'log-icon-discard' },
+    { regex: /^🎉\s*/u, icon: 'celebration', entryCls: 'log-victory', iconCls: 'log-icon-victory' },
+    { regex: /^❄️\s*/u, icon: 'ac_unit', entryCls: 'log-damage-frost', iconCls: 'log-icon-frost' },
+    { regex: /^🌵\s*/u, icon: 'spa', entryCls: 'log-damage-brut', iconCls: 'log-icon-brut' },
+    { regex: /^👼\s*/u, icon: 'health_and_safety', entryCls: 'log-heal-hp', iconCls: 'log-icon-hp' },
+    { regex: /^⚠️\s*/u, icon: 'warning', entryCls: 'log-generic', iconCls: 'log-icon-warn' },
+    { regex: /^🚫\s*/u, icon: 'block', entryCls: 'log-miss', iconCls: 'log-icon-miss' },
+    { regex: /^🛠️\s*/u, icon: 'build', entryCls: 'log-mechanism', iconCls: 'log-icon-mechanism' }
+];
+
+export function createCombatLogEntryElement(log, players = [], enemies = []) {
+    const div = document.createElement('div');
+    let text = log;
+    let iconName = 'chevron_right';
+    let entryClass = 'log-entry log-generic';
+    let iconClass = 'log-icon-generic';
+
+    // 0. Check leading emoji
+    for (const lead of LEADING_EMOJI_ICON_MAP) {
+        if (lead.regex.test(text)) {
+            iconName = lead.icon;
+            entryClass = `log-entry ${lead.entryCls}`;
+            iconClass = lead.iconCls;
+            text = text.replace(lead.regex, '');
+            break;
+        }
+    }
+
+    // 1. Turn Separator
+    if (text.startsWith("--- Tour de ") || log.startsWith("--- Tour de ")) {
+        entryClass = 'log-entry log-turn-separator';
+        iconName = 'sports_score';
+        iconClass = 'log-icon-turn';
+        text = text.replace(/--- Tour de (.*?) ---/, '<strong>Tour de $1</strong>');
+    }
+    // 1.b Nouveau Round
+    else if (text.startsWith("--- NOUVEAU ROUND") || log.startsWith("--- NOUVEAU ROUND")) {
+        entryClass = 'log-entry log-round-separator';
+        iconName = 'sync';
+        iconClass = 'log-icon-round';
+        text = text.replace(/--- NOUVEAU ROUND (.*?) ---/, '<strong>Nouveau Round $1</strong>');
+    }
+    // 1.c Fin de combat
+    else if (text.includes("=== FIN DU COMBAT ===") || log.includes("=== FIN DU COMBAT ===")) {
+        entryClass = 'log-entry log-turn-separator';
+        iconName = 'flag';
+        iconClass = 'log-icon-turn';
+        text = '<strong>=== Fin du Combat ===</strong>';
+    }
+    // 2. Challenges & Quêtes
+    else if (text.includes("Challenge réussi") || log.includes("Challenge réussi")) {
+        entryClass = 'log-entry log-challenge-success';
+        iconName = 'check_circle';
+        iconClass = 'log-icon-challenge-success';
+    } else if (text.includes("Challenge échoué") || log.includes("Challenge échoué")) {
+        entryClass = 'log-entry log-challenge-fail';
+        iconName = 'cancel';
+        iconClass = 'log-icon-challenge-fail';
+    } else if (text.includes("Challenge en cours") || log.includes("Challenge en cours") || text.includes("Challenge :")) {
+        entryClass = 'log-entry log-challenge-info';
+        if (text.includes("Or")) {
+            iconName = 'monetization_on';
+            iconClass = 'log-icon-gold';
+        } else if (text.includes("XP")) {
+            iconName = 'star';
+            iconClass = 'log-icon-xp';
+        } else if (text.includes("PV") || text.includes("soin")) {
+            iconName = 'favorite';
+            iconClass = 'log-icon-hp';
+        } else if (text.includes("loot")) {
+            iconName = 'redeem';
+            iconClass = 'log-icon-gift';
+        } else {
+            iconName = 'flag';
+            iconClass = 'log-icon-challenge-info';
+        }
+    }
+    // 3. Victoire / Succès
+    else if (text.includes("terminé ce donjon") || text.includes("Félicitations")) {
+        entryClass = 'log-entry log-victory';
+        iconName = 'celebration';
+        iconClass = 'log-icon-victory';
+    } else if (text.includes("Succès") || text.includes("Titre")) {
+        entryClass = 'log-entry log-achievement';
+        iconName = 'emoji_events';
+        iconClass = 'log-icon-trophy';
+    }
+    // 4. Mort / Défaite
+    else if (text.includes("succombe") || text.includes("terrassé") || text.includes("est mort") || text.includes("mort") || text.includes("est vaincu")) {
+        entryClass = 'log-entry log-death';
+        iconName = 'skull';
+        iconClass = 'log-icon-death';
+    }
+    // 5. Esquive / Bloque / Rate
+    else if (text.includes("esquive") || text.includes("rate") || text.includes("bloque") || text.includes("immunisé")) {
+        entryClass = 'log-entry log-miss';
+        iconName = 'shield';
+        iconClass = 'log-icon-miss';
+    }
+    // 6. Soins & Régénération PV
+    else if (text.includes("soigné") || (text.includes("récupère") && text.includes("PV")) || (text.includes("régénère") && text.includes("PV"))) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'favorite';
+        iconClass = 'log-icon-hp';
+        text = text.replace(/(\d+) PV/g, '<span class="log-val-hp">$1 PV</span>');
+    }
+    // 7. Mana gains
+    else if (text.toLowerCase().includes("mana") && (text.includes("récupère") || text.includes("régénère") || text.includes("vole"))) {
+        entryClass = 'log-entry log-heal-mana';
+        iconName = 'water_drop';
+        iconClass = 'log-icon-mana';
+        text = text.replace(/(\d+) (?:points de )?[mM]ana/g, '<span class="log-val-mana">$1 Mana</span>');
+        text = text.replace(/Mana actuelle : (\d+)/g, 'Mana actuelle : <span class="log-val-mana">$1</span>');
+    }
+    // 8. Mana pertes
+    else if (text.includes("perd") && text.includes("Mana")) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'water_drop';
+        iconClass = 'log-icon-mana-loss';
+        text = text.replace(/perd (\d+) (?:points de )?[mM]ana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
+    }
+    // 9. Dégâts infligés
+    else if (text.includes("inflige") && text.includes("dégâts")) {
+        if (text.includes("Coup Critique")) {
+            entryClass = 'log-entry log-damage-crit';
+            iconName = 'crisis_alert';
+            iconClass = 'log-icon-crit';
+            text = text.replace(/inflige (\d+) dégâts(.*?)(?=\s|\(|<|$)/g, 'inflige <span class="log-val-crit">$1</span> dégâts$2');
+            text = text.replace("Coup Critique", '<span class="log-crit-text">Coup Critique</span>');
+        } else if (text.includes("magiques")) {
+            entryClass = 'log-entry log-damage-magic';
+            iconName = 'auto_awesome';
+            iconClass = 'log-icon-magic';
+            text = text.replace(/inflige (\d+) dégâts magiques/g, 'inflige <span class="log-val-magic">$1</span> dégâts <span class="log-val-magic">magiques</span>');
+        } else if (text.includes("physiques")) {
+            entryClass = 'log-entry log-damage-physic';
+            iconName = 'swords';
+            iconClass = 'log-icon-physic';
+            text = text.replace(/inflige (\d+) dégâts physiques/g, 'inflige <span class="log-val-physic">$1</span> dégâts <span class="log-val-physic">physiques</span>');
+        } else if (text.includes("bruts")) {
+            entryClass = 'log-entry log-damage-brut';
+            iconName = 'gpp_bad';
+            iconClass = 'log-icon-brut';
+            text = text.replace(/inflige (\d+) dégâts bruts/g, 'inflige <span class="log-val-brut">$1</span> dégâts <span class="log-val-brut">bruts</span>');
+        } else {
+            entryClass = 'log-entry log-damage-normal';
+            iconName = 'swords';
+            iconClass = 'log-icon-dmg';
+            text = text.replace(/inflige (\d+) dégâts/g, 'inflige <span class="log-val-dmg">$1</span> dégâts');
+        }
+    }
+    // 10. Dégâts subis
+    else if (text.includes("subit") && text.includes("dégâts")) {
+        if (text.includes("magiques") || text.includes("MAGIC")) {
+            entryClass = 'log-entry log-damage-magic';
+            iconName = 'auto_awesome';
+            iconClass = 'log-icon-magic';
+            text = text.replace(/subit (\d+) dégâts( magiques| \(MAGIC\))/g, 'subit <span class="log-val-magic">$1</span> dégâts$2');
+        } else if (text.includes("physiques") || text.includes("PHYSIC")) {
+            entryClass = 'log-entry log-damage-physic';
+            iconName = 'swords';
+            iconClass = 'log-icon-physic';
+            text = text.replace(/subit (\d+) dégâts( physiques| \(PHYSIC\))/g, 'subit <span class="log-val-physic">$1</span> dégâts$2');
+        } else if (text.includes("bruts") || text.includes("BRUT")) {
+            entryClass = 'log-entry log-damage-brut';
+            iconName = 'gpp_bad';
+            iconClass = 'log-icon-brut';
+            text = text.replace(/subit (\d+) dégâts( bruts| \(BRUT\))/g, 'subit <span class="log-val-brut">$1</span> dégâts$2');
+        } else if (text.includes("INCOMPRESSIBLE")) {
+            entryClass = 'log-entry log-damage-incompressible';
+            iconName = 'heart_broken';
+            iconClass = 'log-icon-incompressible';
+            text = text.replace(/subit (\d+) dégâts \(INCOMPRESSIBLE\)/g, 'subit <span class="log-val-incompressible">$1</span> dégâts (<span class="log-val-incompressible">INCOMPRESSIBLE</span>)');
+        } else if (text.includes("Brûlure") || text.includes("brûlure")) {
+            entryClass = 'log-entry log-damage-burn';
+            iconName = 'local_fire_department';
+            iconClass = 'log-icon-burn';
+            text = text.replace(/subit (\d+) dégâts de [Bb]rûlure/g, 'subit <span class="log-val-burn">$1</span> dégâts de <span class="log-val-burn">Brûlure</span>');
+        } else if (text.includes("Poison") || text.includes("poison")) {
+            entryClass = 'log-entry log-damage-poison';
+            iconName = 'coronavirus';
+            iconClass = 'log-icon-poison';
+            text = text.replace(/subit (\d+) dégâts de [Pp]oison/g, 'subit <span class="log-val-poison">$1</span> dégâts de <span class="log-val-poison">Poison</span>');
+        } else {
+            entryClass = 'log-entry log-damage-normal';
+            iconName = 'swords';
+            iconClass = 'log-icon-dmg';
+            text = text.replace(/subit (\d+) dégâts/g, 'subit <span class="log-val-dmg">$1</span> dégâts');
+        }
+    }
+    // 11. Perte de PV directe
+    else if (text.includes("perd") && text.includes("PV")) {
+        entryClass = 'log-entry log-damage-incompressible';
+        iconName = 'heart_broken';
+        iconClass = 'log-icon-incompressible';
+        text = text.replace(/perd (\d+) PV/g, 'perd <span class="log-val-incompressible">$1</span> <span class="log-val-incompressible">PV</span>');
+    }
+    // 12. Bouclier / Sûreté
+    else if (text.includes("bouclier") || text.includes("Bouclier") || text.includes("sûreté")) {
+        entryClass = 'log-entry log-shield';
+        iconName = 'shield';
+        iconClass = 'log-icon-shield';
+    }
+    // 12.b Effets de Buff / Débuff
+    else if (text.includes("reçoit un effet") || text.includes("perd l'effet")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'auto_awesome';
+        iconClass = 'log-icon-spell';
+    }
+    // 13. Sorts / Canalisation / Invocation
+    else if (text.includes("lance") || text.includes("canalise") || text.includes("invoque")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'auto_fix_high';
+        iconClass = 'log-icon-spell';
+    }
+    // 14. Purification
+    else if (text.includes("purifié") || text.includes("purifie")) {
+        entryClass = 'log-entry log-purify';
+        iconName = 'health_and_safety';
+        iconClass = 'log-icon-purify';
+    }
+    // 15. Consommable
+    else if (text.includes("consomme")) {
+        entryClass = 'log-entry log-consumable';
+        iconName = 'restaurant';
+        iconClass = 'log-icon-consumable';
+    }
+    // 16. Objet détruit
+    else if (text.includes("détruit")) {
+        entryClass = 'log-entry log-discard';
+        iconName = 'delete';
+        iconClass = 'log-icon-discard';
+    }
+    // 17. Mécanisme
+    else if (text.includes("Mécanisme")) {
+        entryClass = 'log-entry log-mechanism';
+        iconName = 'build';
+        iconClass = 'log-icon-mechanism';
+    }
+    // 18. Récompenses Or / XP / Gift
+    else if (text.includes("Or supplémentaires") || (text.includes("Or") && (text.includes("octroie") || text.includes("gagne")))) {
+        entryClass = 'log-entry log-reward-gold';
+        iconName = 'monetization_on';
+        iconClass = 'log-icon-gold';
+    } else if (text.includes("XP Spiritualité") || text.includes("XP normal") || text.includes("XP")) {
+        entryClass = 'log-entry log-reward-xp';
+        iconName = 'star';
+        iconClass = 'log-icon-xp';
+    } else if (text.includes("Récompense") || text.includes("cadeau")) {
+        entryClass = 'log-entry log-reward-gift';
+        iconName = 'redeem';
+        iconClass = 'log-icon-gift';
+    } else if (text.includes("Karma") || text.includes("Karmique")) {
+        entryClass = 'log-entry log-karma';
+        iconName = 'balance';
+        iconClass = 'log-karma-harmony';
+    }
+
+    // Players & Enemies highlighting
+    if (Array.isArray(players)) {
+        players.forEach(p => {
+            text = text.replace(new RegExp(`\\b${p.name}\\b`, 'g'), `<span class="log-player-name">${p.name}</span>`);
+        });
+    }
+    if (Array.isArray(enemies)) {
+        enemies.forEach(e => {
+            text = text.replace(new RegExp(`\\b${e.name}\\b`, 'g'), `<span class="log-enemy-name">${e.name}</span>`);
+        });
+    }
+
+    const getStatClass = (statName) => {
+        const lower = statName.toLowerCase();
+        let cssClass = 'log-val-stat';
+        if (lower.includes("vie") || lower.includes("pv") || lower.includes("soin")) cssClass = 'log-val-hp';
+        else if (lower.includes("mana")) cssClass = 'log-val-mana';
+        else if (lower.includes("init")) cssClass = 'log-val-init';
+        else if (lower.includes("vitesse")) cssClass = 'log-val-speed';
+        else if (lower.includes("critique")) cssClass = 'log-val-crit';
+        else if (lower.includes("armure")) cssClass = 'log-val-armor';
+        else if (lower.includes("résistance")) cssClass = 'log-val-resist';
+        else if (lower.includes("bouclier")) cssClass = 'log-val-shield';
+        else if (lower.includes("magique") || lower.includes("puissance")) cssClass = 'log-val-magic';
+        else if (lower.includes("physique") || lower.includes("force")) cssClass = 'log-val-physic';
+        else if (lower.includes("brut")) cssClass = 'log-val-brut';
+        else if (lower.includes("incompressible")) cssClass = 'log-val-incompressible';
+        return cssClass;
+    };
+
+    // Buffs & Gains
+    text = text.replace(/\+(\d+) de ([a-zA-Zéèàçûîôâê]+)/gi, function (match, amount, statName) {
+        const cssClass = getStatClass(statName);
+        return `+<span class="${cssClass}">${amount}</span> de <span class="${cssClass}">${statName}</span>`;
+    });
+
+    // Passifs spécifiques
+    text = text.replace(/\+(\d+)% d'armure/gi, '+<span class="log-val-armor">$1%</span> d\'<span class="log-val-armor">armure</span>');
+    text = text.replace(/\+(\d+)% de résistance magique/gi, '+<span class="log-val-resist">$1%</span> de <span class="log-val-resist">résistance magique</span>');
+    text = text.replace(/\-(\d+)% sur le coût des sorts/gi, '-<span class="log-val-mana">$1%</span> sur le <span class="log-val-mana">coût des sorts</span>');
+    text = text.replace(/\+(\d+) Vitesse/gi, '+<span class="log-val-speed">$1</span> <span class="log-val-speed">Vitesse</span>');
+
+    // Passifs Voies & Spiritualités
+    text = text.replace(/🔥 \[Destruction\]/g, '<span class="log-badge-destr">🔥 [Destruction]</span>');
+    text = text.replace(/chaleur/gi, '<span class="log-badge-heat">chaleur</span>');
+    text = text.replace(/🌱 \[Création\]/g, '<span class="log-badge-creation">🌱 [Création]</span>');
+    text = text.replace(/✨ \[Création\]/g, '<span class="log-badge-creation">✨ [Création]</span>');
+    text = text.replace(/bourgeon/gi, '<span class="log-badge-creation">bourgeon</span>');
+    text = text.replace(/instantané/gi, '<span class="log-badge-instant">instantané</span>');
+
+    // Sûreté
+    text = text.replace(/stocke (\d+) points de sûreté/gi, 'stocke <span class="log-val-shield">$1</span> <span class="log-val-shield">points de sûreté</span>');
+    text = text.replace(/\(Sûreté\)/g, '(<span class="log-val-shield">Sûreté</span>)');
+    text = text.replace(/\(Sûreté passive\)/g, '(<span class="log-val-shield">Sûreté passive</span>)');
+    text = text.replace(/\+(\d+)% de critique/gi, '+<span class="log-val-crit">$1%</span> de <span class="log-val-crit">critique</span>');
+
+    // Raison
+    text = text.replace(/de la Raison/g, 'de la <span class="log-val-magic">Raison</span>');
+    text = text.replace(/\(Raison\)/g, '(<span class="log-val-magic">Raison</span>)');
+    text = text.replace(/cumuls de Vitesse/g, 'cumuls de <span class="log-val-speed">Vitesse</span>');
+
+    // Violence
+    text = text.replace(/stacks de Violence/g, 'stacks de <span class="log-val-brut">Violence</span>');
+
+    // Karma
+    text = text.replace(/✨ Harmonie Karmique/gi, '<span class="log-karma-harmony">✨ Harmonie Karmique</span>');
+    text = text.replace(/✨ Le Karma/gi, '<span class="log-karma-harmony">✨ Le Karma</span>');
+    text = text.replace(/✨ Équilibre Karmique Parfait atteint !/gi, '<span class="log-karma-harmony">✨ Équilibre Karmique Parfait atteint !</span>');
+    text = text.replace(/🌑 Le Karma/gi, '<span class="log-karma-dark">🌑 Le Karma</span>');
+    text = text.replace(/🌕 Le Karma/gi, '<span class="log-karma-light">🌕 Le Karma</span>');
+    text = text.replace(/🌗 Le Karma/gi, '<span class="log-karma-mid">🌗 Le Karma</span>');
+    text = text.replace(/🌗 Acte de rééquilibrage/gi, '<span class="log-karma-mid">🌗 Acte de rééquilibrage</span>');
+    text = text.replace(/💥 Le Karma/gi, '<span class="log-karma-boom">💥 Le Karma</span>');
+    text = text.replace(/⏳ Le Karma/gi, '<span class="log-karma-time">⏳ Le Karma</span>');
+    text = text.replace(/⚖️/gi, '<span class="log-karma-balance">⚖️</span>');
+
+    // Jauge et Fractions
+    text = text.replace(/(\d+)\/100/g, '<span class="log-val-fraction">$1/100</span>');
+    text = text.replace(/Jauge: ([\-\d]+)/gi, 'Jauge: <span class="log-val-gauge">$1</span>');
+
+    // Effets sur la durée
+    text = text.replace(/Soins sur la durée/g, '<span class="log-val-hp">Soins sur la durée</span>');
+    text = text.replace(/Régénération de mana sur la durée/g, '<span class="log-val-mana">Régénération de mana sur la durée</span>');
+    text = text.replace(/Dégâts sur la durée/g, '<span class="log-val-dmg">Dégâts sur la durée</span>');
+
+    text = text.replace(/\(Critique\)/g, '<span class="log-crit-text">(Critique)</span>');
+    // Convert legacy (fixe: X, mult: Y) or (modificateur: Y) to clean (+XX%, +YY)
+    text = text.replace(/\(fixe:\s*([\-\+\d\.]+),\s*mult:\s*([\-\+\d\.]+)\)/g, (match, flatStr, multStr) => {
+        const flat = parseFloat(flatStr) || 0;
+        const mult = parseFloat(multStr) || 0;
+        const parts = [];
+        if (flat !== 0) {
+            parts.push((flat > 0 ? '+' : '') + flat);
+        }
+        if (mult !== 0) {
+            const pct = Math.round(mult * 1000) / 10;
+            const formattedPct = (pct > 0 ? '+' : '') + pct + '%';
+            parts.push(formattedPct);
+        }
+        return parts.length > 0 ? `(${parts.join(', ')})` : '';
+    });
+    text = text.replace(/\(modificateur\s*:\s*([\-\+\d\.]+)\)/g, (match, multStr) => {
+        const mult = parseFloat(multStr) || 0;
+        if (mult === 0) return '';
+        const pct = Math.round(mult * 1000) / 10;
+        return `(${pct > 0 ? '+' : ''}${pct}%)`;
+    });
+
+    // Effet sur stat avec valeurs (+50%, +10, etc.)
+    text = text.replace(/effet sur (.+?)\s*\(([\+\-\d\.\,\s\%]+)\)/g, function (match, statName, valuesPart) {
+        const formattedValues = valuesPart.replace(/([\+\-]?\d+(?:\.\d+)?%?)/g, '<span class="log-val-fix">$1</span>');
+        return `effet sur <span class="${getStatClass(statName)}">${statName}</span> (${formattedValues})`;
+    });
+
+    // Fallback pour effet sur sans parenthèses ou autres formats
+    text = text.replace(/effet sur (.*?)(?=\s+pour|\s*$)/g, function (match, statName) {
+        if (statName.includes('<span')) return match;
+        return `effet sur <span class="${getStatClass(statName)}">${statName}</span>`;
+    });
+    text = text.replace(/perd l'effet sur (.*?)(?=\s*$)/g, function (match, statName) {
+        if (statName.includes('<span')) return match;
+        return `perd l'effet sur <span class="${getStatClass(statName)}">${statName}</span>`;
+    });
+
+    text = text.replace(/fixe: ([\-\+\d\.]+)/g, 'fixe: <span class="log-val-fix">$1</span>');
+    text = text.replace(/mult: ([\-\+\d\.]+)/g, 'mult: <span class="log-val-fix">$1</span>');
+
+    // Replace all inline emojis with Google Icons
+    for (const item of LOG_INLINE_EMOJIS) {
+        text = text.replace(item.regex, `<span class="material-symbols-outlined log-inline-icon ${item.cls}">${item.icon}</span>`);
+    }
+
+    div.className = entryClass;
+    div.innerHTML = `<span class="material-symbols-outlined log-entry-icon ${iconClass}">${iconName}</span><span class="log-entry-text">${text}</span>`;
+    return div;
+}
+
 export function updateUI(data) {
     if (ui.hideGlobalTooltip) {
         ui.hideGlobalTooltip(true);
@@ -555,9 +1006,8 @@ export function updateUI(data) {
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'yellow';
-                    el.innerText = `[DEBUG] Player ${fId} HP: ${forcedHp} -> ${p.healthCurrent}`;
+                    el.className = 'log-entry log-debug-warning';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} HP: ${forcedHp} -&gt; ${p.healthCurrent}</span>`;
                     log.prepend(el);
                 }
 
@@ -567,9 +1017,8 @@ export function updateUI(data) {
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'orange';
-                    el.innerText = `[DEBUG] Player ${fId} skipped HP anim (same val: ${forcedHp})`;
+                    el.className = 'log-entry log-debug-warning';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
                     log.prepend(el);
                 }
             } else if (forcedHp === null) {
@@ -577,9 +1026,8 @@ export function updateUI(data) {
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'red';
-                    el.innerText = `[DEBUG] Player ${fId} skipped HP anim (forcedHp is NULL)`;
+                    el.className = 'log-entry log-debug-error';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (forcedHp is NULL)</span>`;
                     log.prepend(el);
                 }
             }
@@ -2150,205 +2598,12 @@ export function updateUI(data) {
     const oldScrollTop = logContainer.scrollTop;
     logContainer.innerHTML = '';
 
-    data.combatLog.forEach(log => {
-        const div = document.createElement('div');
-        let text = log;
-        let isUseless = false;
-
-        data.players.forEach(p => {
-            // Un peu de regex pour ne pas remplacer dans les attributs HTML si p.name correspond
-            text = text.replace(new RegExp(`\\b${p.name}\\b`, 'g'), `<span class="log-player-name">${p.name}</span>`);
+    if (data.combatLog && Array.isArray(data.combatLog)) {
+        data.combatLog.forEach(log => {
+            const entryEl = createCombatLogEntryElement(log, data.players, data.enemies);
+            logContainer.appendChild(entryEl);
         });
-
-        if (data.enemies) {
-            data.enemies.forEach(e => {
-                text = text.replace(new RegExp(`\\b${e.name}\\b`, 'g'), `<span class="log-enemy-name">${e.name}</span>`);
-            });
-        }
-
-        // 1. Turn Separator
-        if (text.startsWith("--- Tour de ")) {
-            div.className = 'log-entry log-turn-separator';
-            text = text.replace(/--- Tour de (.*?) ---/, '🏁 <strong>Tour de $1</strong>');
-        }
-        // 2. Damage (Crit or Normal)
-        else if (text.includes("inflige") && text.includes("dégâts")) {
-            if (text.includes("Coup Critique")) {
-                div.className = 'log-entry log-damage-crit';
-                // Couvre 'dégâts', 'dégâts magiques', etc. derrière le chiffre
-                text = text.replace(/inflige (\d+) dégâts(.*?)(?=\s|\(|<|$)/g, 'inflige <span class="log-val-crit">$1</span> dégâts$2');
-                text = text.replace("Coup Critique", '<span class="log-crit-text">Coup Critique</span>');
-            } else if (text.includes("magiques")) {
-                div.className = 'log-entry log-damage-magic';
-                text = text.replace(/inflige (\d+) dégâts magiques/g, 'inflige <span class="log-val-magic">$1</span> dégâts <span class="log-val-magic">magiques</span>');
-            } else if (text.includes("physiques")) {
-                div.className = 'log-entry log-damage-physic';
-                text = text.replace(/inflige (\d+) dégâts physiques/g, 'inflige <span class="log-val-physic">$1</span> dégâts <span class="log-val-physic">physiques</span>');
-            } else if (text.includes("bruts")) {
-                div.className = 'log-entry log-damage-brut';
-                text = text.replace(/inflige (\d+) dégâts bruts/g, 'inflige <span class="log-val-brut">$1</span> dégâts <span class="log-val-brut">bruts</span>');
-            } else {
-                div.className = 'log-entry log-damage-normal';
-                text = text.replace(/inflige (\d+) dégâts/g, 'inflige <span class="log-val-dmg">$1</span> dégâts');
-            }
-        }
-        // 3. Subit des dégâts (Dot, pièges...)
-        else if (text.includes("subit") && text.includes("dégâts")) {
-            if (text.includes("magiques") || text.includes("MAGIC")) {
-                div.className = 'log-entry log-damage-magic';
-                text = text.replace(/subit (\d+) dégâts( magiques| \(MAGIC\))/g, 'subit <span class="log-val-magic">$1</span> dégâts$2');
-            } else if (text.includes("physiques") || text.includes("PHYSIC")) {
-                div.className = 'log-entry log-damage-physic';
-                text = text.replace(/subit (\d+) dégâts( physiques| \(PHYSIC\))/g, 'subit <span class="log-val-physic">$1</span> dégâts$2');
-            } else if (text.includes("bruts") || text.includes("BRUT")) {
-                div.className = 'log-entry log-damage-brut';
-                text = text.replace(/subit (\d+) dégâts( bruts| \(BRUT\))/g, 'subit <span class="log-val-brut">$1</span> dégâts$2');
-            } else if (text.includes("INCOMPRESSIBLE")) {
-                div.className = 'log-entry log-damage-incompressible';
-                text = text.replace(/subit (\d+) dégâts \(INCOMPRESSIBLE\)/g, 'subit <span class="log-val-incompressible">$1</span> dégâts (<span class="log-val-incompressible">INCOMPRESSIBLE</span>)');
-            } else if (text.includes("Brûlure") || text.includes("brûlure")) {
-                div.className = 'log-entry log-damage-burn';
-                text = text.replace(/subit (\d+) dégâts de [Bb]rûlure/g, 'subit <span class="log-val-burn">$1</span> dégâts de <span class="log-val-burn">Brûlure</span>');
-            } else if (text.includes("Poison") || text.includes("poison")) {
-                div.className = 'log-entry log-damage-poison';
-                text = text.replace(/subit (\d+) dégâts de [Pp]oison/g, 'subit <span class="log-val-poison">$1</span> dégâts de <span class="log-val-poison">Poison</span>');
-            } else {
-                div.className = 'log-entry log-damage-normal';
-                text = text.replace(/subit (\d+) dégâts/g, 'subit <span class="log-val-dmg">$1</span> dégâts');
-            }
-        }
-        else if (text.includes("perd") && text.includes("PV")) {
-            div.className = 'log-entry log-damage-incompressible';
-            text = text.replace(/perd (\d+) PV/g, 'perd <span class="log-val-incompressible">$1</span> <span class="log-val-incompressible">PV</span>');
-        }
-        else if (text.includes("perd") && text.includes("Mana")) {
-            div.className = 'log-entry log-damage-magic';
-            text = text.replace(/perd (\d+) Mana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
-        }
-        // 4. Healing (HP)
-        else if (text.includes("soigné") || (text.includes("récupère") && text.includes("PV"))) {
-            div.className = 'log-entry log-heal-hp';
-            text = text.replace(/(\d+) PV/g, '<span class="log-val-hp">$1 PV</span>');
-        }
-        // 5. Healing (Mana)
-        else if (text.toLowerCase().includes("mana") && (text.includes("récupère") || text.includes("régénère"))) {
-            div.className = 'log-entry log-heal-mana';
-            text = text.replace(/(\d+) (?:points de )?[mM]ana/g, '<span class="log-val-mana">$1 Mana</span>');
-            // Gérer aussi "Mana actuelle : X" pour cette ligne
-            text = text.replace(/Mana actuelle : (\d+)/g, 'Mana actuelle : <span class="log-val-mana">$1</span>');
-        }
-        // 6. Deaths
-        else if (text.includes("succombe") || text.includes("terrassé") || text.includes("mort") || text.includes("est vaincu")) {
-            div.className = 'log-entry log-death';
-        }
-        // 7. Dodge / Miss
-        else if (text.includes("esquive") || text.includes("rate") || text.includes("bloque")) {
-            div.className = 'log-entry log-miss';
-        }
-        // 8. Default
-        else {
-            div.className = 'log-entry log-generic';
-        }
-
-        // Global value replacements
-        text = text.replace(/Init: (\d+)/g, 'Init: <span class="log-val-init">$1</span>');
-        text = text.replace(/Vitesse: (\d+)/g, 'Vitesse: <span class="log-val-speed">$1</span>');
-        text = text.replace(/PV restants : (\d+)/g, 'PV restants : <span class="log-val-hp">$1</span>');
-        text = text.replace(/Vie actuelle : (\d+)/g, 'Vie actuelle : <span class="log-val-hp">$1</span>');
-        text = text.replace(/soigné de (\d+) points/g, 'soigné de <span class="log-val-hp">$1</span> points');
-        text = text.replace(/reçoit un bouclier de (\d+)/g, 'reçoit un <span class="log-val-shield">bouclier</span> de <span class="log-val-shield">$1</span>');
-
-        const getStatClass = (statName) => {
-            let cssClass = 'log-val-stat'; // Default generic stat color
-            const lower = statName.toLowerCase();
-            if (lower.includes("brûlure")) cssClass = 'log-val-burn';
-            else if (lower.includes("poison")) cssClass = 'log-val-poison';
-            else if (lower.includes("vitesse")) cssClass = 'log-val-speed';
-            else if (lower.includes("critique")) cssClass = 'log-val-crit';
-            else if (lower.includes("mana")) cssClass = 'log-val-mana';
-            else if (lower.includes("vie") || lower.includes("soins")) cssClass = 'log-val-hp';
-            else if (lower.includes("armure")) cssClass = 'log-val-armor';
-            else if (lower.includes("résistance")) cssClass = 'log-val-resist';
-            else if (lower.includes("bouclier")) cssClass = 'log-val-shield';
-            else if (lower.includes("magique") || lower.includes("puissance")) cssClass = 'log-val-magic';
-            else if (lower.includes("physique") || lower.includes("force")) cssClass = 'log-val-physic';
-            else if (lower.includes("brut")) cssClass = 'log-val-brut';
-            else if (lower.includes("incompressible")) cssClass = 'log-val-incompressible';
-            return cssClass;
-        };
-
-        // Buffs & Gains
-        text = text.replace(/\+(\d+) de ([a-zA-Zéèàçûîôâê]+)/gi, function (match, amount, statName) {
-            const cssClass = getStatClass(statName);
-            return `+<span class="${cssClass}">${amount}</span> de <span class="${cssClass}">${statName}</span>`;
-        });
-
-        // Passifs spécifiques
-        text = text.replace(/\+(\d+)% d'armure/gi, '+<span class="log-val-armor">$1%</span> d\'<span class="log-val-armor">armure</span>');
-        text = text.replace(/\+(\d+)% de résistance magique/gi, '+<span class="log-val-resist">$1%</span> de <span class="log-val-resist">résistance magique</span>');
-        text = text.replace(/\-(\d+)% sur le coût des sorts/gi, '-<span class="log-val-mana">$1%</span> sur le <span class="log-val-mana">coût des sorts</span>');
-        text = text.replace(/\+(\d+) Vitesse/gi, '+<span class="log-val-speed">$1</span> <span class="log-val-speed">Vitesse</span>');
-
-        // Passifs Voies & Spiritualités (Mots clés et Phrases)
-        // Destruction
-        text = text.replace(/🔥 \[Destruction\]/g, '<span style="color:#ef4444;font-weight:bold;">🔥 [Destruction]</span>');
-        text = text.replace(/chaleur/gi, '<span style="color:#f97316;font-weight:bold;">chaleur</span>');
-
-        // Création
-        text = text.replace(/🌱 \[Création\]/g, '<span style="color:#10b981;font-weight:bold;">🌱 [Création]</span>');
-        text = text.replace(/✨ \[Création\]/g, '<span style="color:#10b981;font-weight:bold;">✨ [Création]</span>');
-        text = text.replace(/bourgeon/gi, '<span style="color:#10b981;font-weight:bold;">bourgeon</span>');
-        text = text.replace(/instantané/gi, '<span style="color:#a855f7;font-weight:bold;">instantané</span>');
-
-        // Sûreté
-        text = text.replace(/stocke (\d+) points de sûreté/gi, 'stocke <span class="log-val-shield">$1</span> <span class="log-val-shield">points de sûreté</span>');
-        text = text.replace(/\(Sûreté\)/g, '(<span class="log-val-shield">Sûreté</span>)');
-        text = text.replace(/\(Sûreté passive\)/g, '(<span class="log-val-shield">Sûreté passive</span>)');
-        text = text.replace(/\+(\d+)% de critique/gi, '+<span class="log-val-crit">$1%</span> de <span class="log-val-crit">critique</span>');
-
-        // Raison
-        text = text.replace(/de la Raison/g, 'de la <span class="log-val-magic">Raison</span>');
-        text = text.replace(/\(Raison\)/g, '(<span class="log-val-magic">Raison</span>)');
-        text = text.replace(/cumuls de Vitesse/g, 'cumuls de <span class="log-val-speed">Vitesse</span>');
-
-        // Violence
-        text = text.replace(/stacks de Violence/g, 'stacks de <span class="log-val-brut">Violence</span>');
-
-        // Karma (Spiritualité)
-        text = text.replace(/✨ Harmonie Karmique/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Harmonie Karmique</span>');
-        text = text.replace(/✨ Le Karma/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Le Karma</span>');
-        text = text.replace(/✨ Équilibre Karmique Parfait atteint !/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Équilibre Karmique Parfait atteint !</span>');
-        text = text.replace(/🌑 Le Karma/gi, '<span style="color:#64748b;font-weight:bold;">🌑 Le Karma</span>');
-        text = text.replace(/🌕 Le Karma/gi, '<span style="color:#fcd34d;font-weight:bold;">🌕 Le Karma</span>');
-        text = text.replace(/🌗 Le Karma/gi, '<span style="color:#a1a1aa;font-weight:bold;">🌗 Le Karma</span>');
-        text = text.replace(/🌗 Acte de rééquilibrage/gi, '<span style="color:#a1a1aa;font-weight:bold;">🌗 Acte de rééquilibrage</span>');
-        text = text.replace(/💥 Le Karma/gi, '<span style="color:#ef4444;font-weight:bold;">💥 Le Karma</span>');
-        text = text.replace(/⏳ Le Karma/gi, '<span style="color:#f59e0b;font-weight:bold;">⏳ Le Karma</span>');
-        text = text.replace(/⚖️/gi, '<span style="color:#d946ef;font-weight:bold;">⚖️</span>');
-
-        // Jauge et Fractions
-        text = text.replace(/(\d+)\/100/g, '<span style="color:#ef4444;font-weight:bold;">$1/100</span>');
-        text = text.replace(/Jauge: ([\-\d]+)/gi, 'Jauge: <span style="color:#d946ef;font-weight:bold;">$1</span>');
-
-        // Effets sur la durée (traductions)
-        text = text.replace(/Soins sur la durée/g, '<span class="log-val-hp">Soins sur la durée</span>');
-        text = text.replace(/Régénération de mana sur la durée/g, '<span class="log-val-mana">Régénération de mana sur la durée</span>');
-        text = text.replace(/Dégâts sur la durée/g, '<span class="log-val-dmg">Dégâts sur la durée</span>');
-
-        text = text.replace(/\(Critique\)/g, '<span class="log-crit-text">(Critique)</span>');
-        text = text.replace(/fixe: ([\-\+\d\.]+)/g, 'fixe: <span style="color:#fbbf24;font-weight:bold;">$1</span>');
-        text = text.replace(/mult: ([\-\+\d\.]+)/g, 'mult: <span style="color:#fbbf24;font-weight:bold;">$1</span>');
-
-        // Tous les effets de buffs/debuffs
-        text = text.replace(/effet sur (.*?) \(/g, function (match, statName) {
-            return `effet sur <span class="${getStatClass(statName)}">${statName}</span> (`;
-        });
-
-        if (!isUseless) {
-            div.innerHTML = text;
-            logContainer.appendChild(div);
-        }
-    });
+    }
 
     if (isAtBottom) {
         logContainer.scrollTop = logContainer.scrollHeight;
@@ -2738,7 +2993,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
             icon: 'local_fire_department', color: '#f97316', value: `${heat}`,
             title: `Chaleur : ${heat}/100`, dangerClass,
             topBadge: regenBadge,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#f97316;">🔥 Chaleur (Destruction)</div><div class="text-xs" style="color:#cbd5e1;">${heat}/100 — Augmente les dégâts de feu. À 100, surcharge !</div>${heatTooltipEffects}`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f97316;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">local_fire_department</span><span>Chaleur (Destruction)</span></div><div class="text-xs" style="color:#cbd5e1;">${heat}/100 — Augmente les dégâts de feu. À 100, surcharge !</div>${heatTooltipEffects}`
         });
     }
 
@@ -2749,9 +3004,9 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         }
         let dangerClass = suretePoints >= 100 ? ' passive-orb-pulse' : '';
         passiveOrbs.push({
-            icon: 'security', color: '#14b8a6', value: `${suretePoints}`,
+            icon: 'water_drop', color: '#00e5cc', value: `${suretePoints}`,
             title: `Sûreté : ${suretePoints}/100`, dangerClass,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#14b8a6;">🛡️ Points de Sûreté (Sûreté)</div><div class="text-xs" style="color:#cbd5e1;">${suretePoints}/100${suretePoints >= 100 ? ' — <span style="color:#14b8a6; font-weight:bold;">100 points atteints ! Bonus consommés au prochain sort.</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#00e5cc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">water_drop</span><span>Points de Sûreté (Sûreté)</span></div><div class="text-xs" style="color:#cbd5e1;">${suretePoints}/100${suretePoints >= 100 ? ' — <span style="color:#00e5cc; font-weight:bold;">100 points atteints ! Bonus consommés au prochain sort.</span>' : ''}</div>`
         });
     }
 
@@ -2766,12 +3021,12 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'storm', color: '#dc2626', value: `${insp}`,
             title: `Inspiration : ${insp}/7`, dangerClass: inspDanger,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#dc2626;">⚡ Inspiration (Violence)</div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
         });
         passiveOrbs.push({
             icon: 'air', color: '#d946ef', value: `${exp}`,
             title: `Expiration : ${exp}/7`, dangerClass: expDanger,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#d946ef;">💨 Expiration (Violence)</div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
         });
     }
 
@@ -2783,7 +3038,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'speed', color: '#eab308', value: `${raisonStacks}`,
             title: `Cumuls Vitesse : ${raisonStacks}`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#eab308;">⚡ Vitesse (Raison)</div><div class="text-xs" style="color:#cbd5e1;">Cumuls de vitesse actuels : ${raisonStacks}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#eab308;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">speed</span><span>Vitesse (Raison)</span></div><div class="text-xs" style="color:#cbd5e1;">Cumuls de vitesse actuels : ${raisonStacks}</div>`
         });
     }
 
@@ -2797,13 +3052,13 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
             { avail: lowHpAvail, label: '< 50% PV', desc: '+20% dégâts phys. (cible < 50% PV)' },
             { avail: debuffAvail, label: 'Débuff', desc: '+15% dégâts phys. (cible avec débuff)' }
         ];
-        const dotIcons = dots.map(d => `<span style="width:8px; height:8px; border-radius:50%; background:${d.avail ? '#c084fc' : '#4b5563'}; display:inline-block; box-shadow:${d.avail ? '0 0 4px #c084fc' : 'none'};"></span>`).join('');
-        const tooltipLines = dots.map(d => `<div class="text-xs" style="color:${d.avail ? '#c084fc' : '#6b7280'}; display:flex; align-items:center; gap:0.3rem;">${d.avail ? '✓' : '✗'} ${d.desc}</div>`).join('');
+        const dotIcons = dots.map(d => `<span style="width:8px; height:8px; border-radius:50%; background:${d.avail ? '#ed5677' : '#4b5563'}; display:inline-block; box-shadow:${d.avail ? '0 0 4px #ed5677' : 'none'};"></span>`).join('');
+        const tooltipLines = dots.map(d => `<div class="text-xs" style="color:${d.avail ? '#ed5677' : '#6b7280'}; display:flex; align-items:center; gap:0.3rem;">${d.avail ? '✓' : '✗'} ${d.desc}</div>`).join('');
 
         passiveOrbs.push({
-            icon: 'bolt', color: '#c084fc', value: dotIcons,
+            icon: 'visibility_off', color: '#ed5677', value: dotIcons,
             title: `Trahison`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#c084fc;">🗡️ Buffs Trahison</div>${tooltipLines}`,
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#ed5677;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">visibility_off</span><span>Buffs Trahison</span></div>${tooltipLines}`,
             isCustomValue: true
         });
     }
@@ -2813,7 +3068,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'yard', color: '#10b981', value: `${buds}`,
             title: `Bourgeons : ${buds}`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#10b981;">🌱 Graines (Création)</div><div class="text-xs" style="color:#cbd5e1;">Bourgeons actuels : ${buds}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#10b981;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">yard</span><span>Bourgeons (Création)</span></div><div class="text-xs" style="color:#cbd5e1;">Bourgeons actuels : ${buds}</div>`
         });
     }
 
@@ -2827,22 +3082,22 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         let kColor, kIcon, kText, kTooltip, kDanger = '';
         if (karmaLocked) {
             kColor = '#f87171'; kIcon = 'block'; kText = `${karmaLockedDuration}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#f87171;">💔 Karma Brisé</div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
             kDanger = ' passive-orb-pulse';
         } else if (karmaHarmony) {
-            kColor = '#cbd5e1'; kIcon = 'brightness_medium'; kText = '☯';
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#cbd5e1;">☯ Karma en Harmonie</div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
+            kColor = '#cbd5e1'; kIcon = 'all_inclusive'; kText = '∞';
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
         } else if (karmaGauge < 0) {
             kColor = '#c084fc'; kIcon = 'dark_mode'; kText = `${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#c084fc;">🌙 Karma Ténèbres</div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
             if (karmaGauge <= -3) kDanger = ' passive-orb-pulse';
         } else if (karmaGauge > 0) {
             kColor = '#fde047'; kIcon = 'light_mode'; kText = `+${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#fde047;">☀️ Karma Lumière</div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
             if (karmaGauge >= 3) kDanger = ' passive-orb-pulse';
         } else {
-            kColor = '#9ca3af'; kIcon = 'all_inclusive'; kText = '0';
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#9ca3af;">⚖️ Karma Neutre</div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
+            kColor = '#9ca3af'; kIcon = 'balance'; kText = '0';
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
         }
         passiveOrbs.push({ icon: kIcon, color: kColor, value: kText, title: 'Karma', dangerClass: kDanger, tooltip: kTooltip });
     }
@@ -2855,7 +3110,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const eColor = canCast ? '#38bdf8' : '#ef4444';
         const eIcon = canCast ? 'blur_on' : 'block';
         const eText = canCast ? '✓' : '✗';
-        const eTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:${eColor};">${canCast ? '💫 Éveillé' : '🚫 Bloqué'} (Esprit)</div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
         passiveOrbs.push({ icon: eIcon, color: eColor, value: eText, title: canCast ? 'Éveillé' : 'Bloqué', dangerClass: '', tooltip: eTooltip });
     }
 
@@ -2867,7 +3122,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const tColor = canCast ? '#c084fc' : '#ef4444';
         const tIcon = canCast ? 'nightlight_round' : 'block';
         const tText = canCast ? '✓' : '✗';
-        const tTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:${tColor};">${canCast ? '🌑 Assombri' : '🚫 Bloqué'} (Ténèbres)</div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
         passiveOrbs.push({ icon: tIcon, color: tColor, value: tText, title: canCast ? 'Assombri' : 'Bloqué', dangerClass: '', tooltip: tTooltip });
     }
 
@@ -2877,7 +3132,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'hand_bones', color: '#fda4af', value: `${turns}`,
             title: `Âme Détachée : ${turns} tour(s)`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#fda4af;">💀 Âme Détachée</div><div class="text-xs" style="color:#cbd5e1;">+5 Dégâts Phys. et +30% Dégâts Phys.<br/>Reste ${turns} tour(s)</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fda4af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">hand_bones</span><span>Âme Détachée</span></div><div class="text-xs" style="color:#cbd5e1;">+5 Dégâts Phys. et +30% Dégâts Phys.<br/>Reste ${turns} tour(s)</div>`
         });
     }
 
@@ -3318,9 +3573,8 @@ export function renderEnemies(enemies, turnMap = null) {
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'yellow';
-                el.innerText = `[DEBUG] Enemy ${fId} HP: ${forcedHp} -> ${pMonster.healthCurrent}`;
+                el.className = 'log-entry log-debug-warning';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} HP: ${forcedHp} -&gt; ${pMonster.healthCurrent}</span>`;
                 log.prepend(el);
             }
 
@@ -3330,9 +3584,8 @@ export function renderEnemies(enemies, turnMap = null) {
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'orange';
-                el.innerText = `[DEBUG] Enemy ${fId} skipped HP anim (same val: ${forcedHp})`;
+                el.className = 'log-entry log-debug-warning';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
                 log.prepend(el);
             }
         } else if (forcedHp === null) {
@@ -3340,9 +3593,8 @@ export function renderEnemies(enemies, turnMap = null) {
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'red';
-                el.innerText = `[DEBUG] Enemy ${fId} skipped HP anim (forcedHp is NULL)`;
+                el.className = 'log-entry log-debug-error';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (forcedHp is NULL)</span>`;
                 log.prepend(el);
             }
         }

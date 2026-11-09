@@ -404,10 +404,6 @@ class SpellAvailabilityService {
                             "Brèche spirituelle (" + Math.abs(hpLossPct) + "%)",
                             "-" + hpLoss + " PV subis",
                             false));
-                    healModifiers.add(new SpellCostModifierDTO(
-                            "Brèche spirituelle (" + Math.abs(hpLossPct) + "% mana)",
-                            "+" + hpLoss + " PV",
-                            false));
                 }
             }
 

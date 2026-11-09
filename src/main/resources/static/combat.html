@@ -128,7 +128,10 @@
                 <span class="font-outfit font-medium text-sm">Journal de combat</span>
             </button>
             <div class="combat-log mt-3" id="combatLog" style="display: none;">
-                <div class="log-entry">Chargement du combat...</div>
+                <div class="log-entry log-generic">
+                    <span class="material-symbols-outlined log-entry-icon log-icon-generic animate-spin">progress_activity</span>
+                    <span class="log-entry-text">Chargement du combat...</span>
+                </div>
             </div>
         </div>
 
@@ -394,8 +397,8 @@
 
     <!-- Hero Equipment Tooltip -->
     <div id="heroEquipmentTooltip"
-        style="display:none; position:fixed; z-index:9999; background:linear-gradient(135deg, rgba(15,23,41,0.95), rgba(26,39,68,0.95)); border:1px solid rgba(56,189,248,0.3); border-radius:0.75rem; padding:1rem; min-width:300px; width: max-content; max-width:800px; box-shadow:0 10px 25px rgba(0,0,0,0.5); backdrop-filter:blur(8px); pointer-events:none;">
-        <div id="heroEquipmentTooltipContent" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+        style="display:none; position:fixed; z-index:9999; background:linear-gradient(135deg, rgba(15,23,41,0.96), rgba(26,39,68,0.96)); border:1px solid rgba(56,189,248,0.3); border-radius:0.75rem; padding:0.65rem 0.8rem; min-width:320px; width: max-content; max-width: min(720px, calc(100vw - 24px)); box-shadow:0 10px 25px rgba(0,0,0,0.5); backdrop-filter:blur(8px); pointer-events:auto;">
+        <div id="heroEquipmentTooltipContent" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
     </div>
 
     <!-- Popover Émotes -->

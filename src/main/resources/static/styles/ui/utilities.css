@@ -191,6 +191,7 @@
 /* Specific UI Badges & Icons */
 .material-symbols-outlined.icon-sm {
     font-size: 0.9rem;
+    line-height: 1;
 }
 
 .material-symbols-outlined.icon-md {

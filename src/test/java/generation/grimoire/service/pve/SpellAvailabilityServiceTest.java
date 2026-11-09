@@ -765,8 +765,8 @@ class SpellAvailabilityServiceTest {
         // 2. REPTILE : ceil(120 * 0.85) = 102
         // 3. DAMAGE_TAKEN_PHYSIC (+25%) : 102 * 1.25 = 127.5
         // 4. Armure 100 (réduction 50%) : (int)(127.5 * 0.5) = 63
-        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV
-        assertThat(preview.calculatedValue()).isEqualTo(43);
+        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV (total infligé = 63)
+        assertThat(preview.calculatedValue()).isEqualTo(63);
         assertThat(preview.hpDamage()).isEqualTo(43);
         assertThat(preview.shieldAbsorbed()).isEqualTo(20);
     }
@@ -913,5 +913,84 @@ class SpellAvailabilityServiceTest {
         assertThat(enemy0Preview.isAreaOfEffect()).isTrue();
         assertThat(enemy0Preview.minHpDamage()).isEqualTo(50);
         assertThat(enemy0Preview.maxHpDamage()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("Devrait calculer les dégâts totaux infligés incluant l'absorption du bouclier et le bonus contre bouclier")
+    void shouldComputeRealDamageInflictedIncludingShieldAbsorptionAndBonusToShield() {
+        // Ennemi avec 100 PV et 20 de bouclier
+        Personnage e = new Personnage();
+        e.setId(301L);
+        e.setName("Ennemi Bouclier");
+        e.setHealthMax(100);
+        e.setHealthCurrent(100);
+        e.addShield(20, 2, "TestShield");
+
+        generation.grimoire.model.pve.ActiveMonster m = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m.setAsPersonnage(e);
+        session.setEnemies(List.of(m));
+
+        // Sort 1: 10 dégâts physiques fixes
+        Spell spell1 = createSpell(701L, "Attaque Faible", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamageFixedEffect eff1 =
+                new generation.grimoire.entity.spell.type.effect.DamageFixedEffect();
+        eff1.setId(701L);
+        eff1.setDamageType(generation.grimoire.enumeration.DamageType.PHYSIC);
+        eff1.setDamage(10);
+        eff1.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+        spell1.setEffects(new java.util.LinkedHashSet<>(List.of(eff1)));
+
+        // Cas avec bonus de dégâts sur bouclier (+100%)
+        Personnage casterBonus = new Personnage();
+        casterBonus.setId(2L);
+        casterBonus.setName("Héros Briseur");
+        casterBonus.setHealthMax(100);
+        casterBonus.setHealthCurrent(100);
+        casterBonus.setManaMax(100);
+        casterBonus.setManaCurrent(100);
+
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect bonusShieldDmg =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        bonusShieldDmg.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_GIVEN_PHYSIC_TO_SHIELD);
+        bonusShieldDmg.setModifier(1.0); // +100%
+        bonusShieldDmg.setDuration(5);
+        casterBonus.setActiveBuffs(new java.util.ArrayList<>(List.of(bonusShieldDmg)));
+
+        Donjon donjon = new Donjon();
+        donjon.setId(1L);
+        donjon.setSalles(List.of(new Salle()));
+        CombatSession sessionBonus = new CombatSession("test-bonus", donjon, new ArrayList<>(List.of(casterBonus)));
+        sessionBonus.setFinished(false);
+        sessionBonus.getTurnOrder().clear();
+        sessionBonus.getTurnOrder().add(new InitiativeEntry(true, 0, 10, 10, 0));
+        sessionBonus.setCurrentTurnIndex(0);
+
+        Personnage targetWeakShield = new Personnage();
+        targetWeakShield.setId(302L);
+        targetWeakShield.setName("Cible 4 Shield 10 HP");
+        targetWeakShield.setHealthMax(10);
+        targetWeakShield.setHealthCurrent(10);
+        targetWeakShield.addShield(4, 2, "PetiteGarde");
+
+        generation.grimoire.model.pve.ActiveMonster mWeak = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        mWeak.setAsPersonnage(targetWeakShield);
+        sessionBonus.setEnemies(List.of(mWeak));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell1));
+
+        // 1. Sort sur cible avec bouclier normal : 10 dégâts vs 20 bouclier -> total infligé = 10 (10 absorbé, 0 PV)
+        spellAvailabilityService.compute(session);
+        var preview1 = session.getSpellAvailability().get(0).getEffectPreviews().get(0);
+        assertThat(preview1.calculatedValue()).isEqualTo(10);
+        assertThat(preview1.shieldAbsorbed()).isEqualTo(10);
+        assertThat(preview1.hpDamage()).isEqualTo(0);
+
+        // 2. Sort sur cible avec bonus +100% vs bouclier : 10 dégâts vs 4 bouclier et 10 PV
+        // 4 bouclier brisés consomment 2 dégâts base. Reste 8 dégâts pour les PV. Total infligé = 4 + 8 = 12.
+        spellAvailabilityService.compute(sessionBonus);
+        var previewBonus = sessionBonus.getSpellAvailability().get(0).getEffectPreviews().get(0);
+        assertThat(previewBonus.calculatedValue()).isEqualTo(12);
+        assertThat(previewBonus.shieldAbsorbed()).isEqualTo(4);
+        assertThat(previewBonus.hpDamage()).isEqualTo(8);
     }
 }

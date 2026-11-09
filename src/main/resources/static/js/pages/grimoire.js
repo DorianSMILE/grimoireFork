@@ -775,8 +775,8 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                 const shieldAbs = preview && preview.shieldAbsorbed ? preview.shieldAbsorbed : 0;
                 const extraBrut = preview && preview.extraBrutDamage ? preview.extraBrutDamage : 0;
 
-                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minHpDamage !== preview.maxHpDamage;
-                const valStr = isAoeDiff ? `${preview.minHpDamage}-${preview.maxHpDamage}` : `${val}`;
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
 
                 let shieldStr = '';
                 const maxShield = preview && preview.maxShieldAbsorbed != null ? preview.maxShieldAbsorbed : shieldAbs;
@@ -786,9 +786,7 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                         ? `${minShield}-${maxShield}`
                         : `${shieldAbs || maxShield}`;
                     const shieldIconHtml = `<span class="material-symbols-outlined text-base align-middle eff-color-blue">security</span>`;
-                    shieldStr = (val > 0 || (preview && preview.maxHpDamage > 0))
-                        ? ` <span class="text-slate-400">(+ <span class="calc-val-highlight eff-color-blue">${sStr}</span> ${shieldIconHtml} bouclier)</span>`
-                        : ` <span class="text-slate-400">(<span class="calc-val-highlight eff-color-blue">${sStr}</span> ${shieldIconHtml} absorbés)</span>`;
+                    shieldStr = ` <span class="text-slate-400">(<span class="calc-val-highlight eff-color-blue">${sStr}</span> ${shieldIconHtml} absorbé)</span>`;
                 }
 
                 let extraBrutStr = '';

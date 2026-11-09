@@ -772,7 +772,8 @@ class SpellAvailabilityService {
             dmg = dfe.applyEquipmentModifiers(dmg, caster, recipient, dt);
             int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
             SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
-            return new SpellEffectPreviewDTO(index, dfe.getId(), res.hpDamage(), 0, false,
+            int totalDamage = res.hpDamage() + res.shieldAbsorbed();
+            return new SpellEffectPreviewDTO(index, dfe.getId(), totalDamage, 0, false,
                     res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamagePercentageEffect dpe) {
@@ -787,7 +788,8 @@ class SpellAvailabilityService {
             dmg = dpe.applyEquipmentModifiers(dmg, caster, recipient, dt);
             int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
             SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
-            return new SpellEffectPreviewDTO(index, dpe.getId(), res.hpDamage(), 0, true,
+            int totalDamage = res.hpDamage() + res.shieldAbsorbed();
+            return new SpellEffectPreviewDTO(index, dpe.getId(), totalDamage, 0, true,
                     res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamageOverTimeEffect dot) {

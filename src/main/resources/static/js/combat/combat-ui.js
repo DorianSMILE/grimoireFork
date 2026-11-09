@@ -2573,7 +2573,7 @@ export function getBossBuffsHtml(c) {
     }
 
     if (c.passiveStates['BOSS_BUFF_HP']) html += makeBadge(c.passiveStates['BOSS_BUFF_HP'], '#10b981', '16, 185, 129', 'favorite', `+${c.passiveStates['BOSS_BUFF_HP']}% PV`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_HP']}% de points de vie maximum supplémentaires.`);
-    if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) html += makeBadge(c.passiveStates['BOSS_BUFF_SHIELD'], '#38bdf8', '56, 189, 248', 'shield', `+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.`, `Le Boss commence le combat avec un bouclier égal à ${c.passiveStates['BOSS_BUFF_SHIELD']}% de ses PV max.`);
+    if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) html += makeBadge(c.passiveStates['BOSS_BUFF_SHIELD'], '#38bdf8', '56, 189, 248', 'security', `+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.`, `Le Boss commence le combat avec un bouclier égal à ${c.passiveStates['BOSS_BUFF_SHIELD']}% de ses PV max.`);
     if (c.passiveStates['BOSS_BUFF_ARMOR'] && hasArmorBuff) html += makeBadge(c.passiveStates['BOSS_BUFF_ARMOR'], '#8b5cf6', '139, 92, 246', 'security', `+${c.passiveStates['BOSS_BUFF_ARMOR']} Arm.`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_ARMOR']} points d'Armure.`);
     if (c.passiveStates['BOSS_BUFF_RESIST'] && hasResistBuff) html += makeBadge(c.passiveStates['BOSS_BUFF_RESIST'], '#d946ef', '217, 70, 239', 'health_and_safety', `+${c.passiveStates['BOSS_BUFF_RESIST']} Rés.`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_RESIST']} points de Résistance magique.`);
     if (c.passiveStates['BOSS_BUFF_BURN']) html += makeBadge(c.passiveStates['BOSS_BUFF_BURN'], '#ef4444', '239, 68, 68', 'local_fire_department', `Brûlure`, `Inflige l'altération Brûlure à la cible lors d'une attaque réussie.`);

@@ -592,10 +592,11 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
             let effectivePreviews = previews;
             let targetLabelExtra = '';
 
+            const isAreaOfEffect = ['ALL_ENEMIES', 'ALL_COMBATANTS', 'ALL_ALLIES'].includes(target);
             const isHostileTarget = !target || ['TARGET', 'ALL_ENEMIES', 'ALL_COMBATANTS'].includes(target);
             const isAllyTarget = target === 'ALLY';
 
-            if (isAllyTarget && window.pageState && window.pageState.selectedAllyIndex !== -1 && window.pageState.selectedAllyIndex !== null) {
+            if (isAllyTarget && !isAreaOfEffect && window.pageState && window.pageState.selectedAllyIndex !== -1 && window.pageState.selectedAllyIndex !== null) {
                 const allyIdx = window.pageState.selectedAllyIndex;
                 if (avail && avail.allyPreviews && avail.allyPreviews[allyIdx]) {
                     effectivePreviews = avail.allyPreviews[allyIdx].effectPreviews || previews;
@@ -612,7 +613,7 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                 if (avail && avail.enemyPreviews && avail.enemyPreviews[targetIdx]) {
                     effectivePreviews = avail.enemyPreviews[targetIdx].effectPreviews || previews;
                 }
-                if (isHostileTarget) {
+                if (isHostileTarget && !isAreaOfEffect) {
                     const enemyObj = window.pageState.currentSessionData?.enemies?.[targetIdx];
                     if (enemyObj && !enemyObj.dead) {
                         const enemyName = enemyObj.base?.name || enemyObj.asPersonnage?.name || '';
@@ -773,35 +774,60 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.damage || 0);
                 const shieldAbs = preview && preview.shieldAbsorbed ? preview.shieldAbsorbed : 0;
                 const extraBrut = preview && preview.extraBrutDamage ? preview.extraBrutDamage : 0;
+
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minHpDamage !== preview.maxHpDamage;
+                const valStr = isAoeDiff ? `${preview.minHpDamage}-${preview.maxHpDamage}` : `${val}`;
+
                 let shieldStr = '';
-                if (shieldAbs > 0) {
-                    shieldStr = val > 0
-                        ? ` <span class="text-slate-400">(+ <span class="calc-val-highlight eff-color-blue">${shieldAbs}</span> 🛡️ bouclier)</span>`
-                        : ` <span class="text-slate-400">(<span class="calc-val-highlight eff-color-blue">${shieldAbs}</span> 🛡️ absorbés)</span>`;
+                const maxShield = preview && preview.maxShieldAbsorbed != null ? preview.maxShieldAbsorbed : shieldAbs;
+                const minShield = preview && preview.minShieldAbsorbed != null ? preview.minShieldAbsorbed : shieldAbs;
+                if (maxShield > 0 || shieldAbs > 0) {
+                    const sStr = (preview && preview.isAreaOfEffect && minShield !== maxShield)
+                        ? `${minShield}-${maxShield}`
+                        : `${shieldAbs || maxShield}`;
+                    const shieldIconHtml = `<span class="material-symbols-outlined text-base align-middle eff-color-blue">security</span>`;
+                    shieldStr = (val > 0 || (preview && preview.maxHpDamage > 0))
+                        ? ` <span class="text-slate-400">(+ <span class="calc-val-highlight eff-color-blue">${sStr}</span> ${shieldIconHtml} bouclier)</span>`
+                        : ` <span class="text-slate-400">(<span class="calc-val-highlight eff-color-blue">${sStr}</span> ${shieldIconHtml} absorbés)</span>`;
                 }
-                const extraBrutStr = extraBrut > 0
-                    ? ` <span class="text-slate-400">+ <span class="calc-val-highlight dt-text-brut">${extraBrut}</span> <span class="font-bold dt-text-brut">Bruts</span></span>`
-                    : '';
-                detailsStr = `➔ inflige <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}${shieldStr}${extraBrutStr}`;
+
+                let extraBrutStr = '';
+                const maxBrut = preview && preview.maxExtraBrutDamage != null ? preview.maxExtraBrutDamage : extraBrut;
+                const minBrut = preview && preview.minExtraBrutDamage != null ? preview.minExtraBrutDamage : extraBrut;
+                if (maxBrut > 0 || extraBrut > 0) {
+                    const ebStr = (preview && preview.isAreaOfEffect && minBrut !== maxBrut)
+                        ? `${minBrut}-${maxBrut}`
+                        : `${extraBrut || maxBrut}`;
+                    extraBrutStr = ` <span class="text-slate-400">+ <span class="calc-val-highlight dt-text-brut">${ebStr}</span> <span class="font-bold dt-text-brut">Bruts</span></span>`;
+                }
+
+                detailsStr = `➔ inflige <span class="calc-val-highlight ${dtColorClass}">${valStr}</span> Dégâts ${dtHtml}${shieldStr}${extraBrutStr}`;
             } else if (['HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.healAmount || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const isNeg = val < 0 || (e.healAmount || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
+                    const absValStr = isAoeDiff ? `${Math.abs(preview.minCalculatedValue)}-${Math.abs(preview.maxCalculatedValue)}` : `${Math.abs(val)}`;
                     detailsStr = target === 'CASTER'
-                        ? `➔ coûte <span class="calc-val-highlight eff-color-pink">${Math.abs(val)}</span> PV`
-                        : `➔ retire <span class="calc-val-highlight eff-color-pink">${Math.abs(val)}</span> PV`;
+                        ? `➔ coûte <span class="calc-val-highlight eff-color-pink">${absValStr}</span> PV`
+                        : `➔ retire <span class="calc-val-highlight eff-color-pink">${absValStr}</span> PV`;
                 } else {
-                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-emerald">${val}</span> PV`;
+                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-emerald">${valStr}</span> PV`;
                 }
             } else if (t === 'AME_DETACHEE') {
                 detailsStr = `➔ <span class="calc-val-highlight eff-color-rose">+5</span> Dégâts Phys. et <span class="calc-val-highlight eff-color-rose">+30%</span> Dégâts Phys. (3 tours)`;
             } else if (['BuffDebuff', 'BUFF_DEBUFF', 'POISON', 'BURN'].includes(t)) {
                 const parts = [];
                 if (preview) {
+                    const isAoeDiff = preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
                     const flatVal = preview.calculatedValue || 0;
                     const pctMod = preview.calculatedPercentModifier || 0;
-                    if (flatVal !== 0 || preview.sourceResolvedToFlat) {
-                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${flatVal > 0 ? '+' : ''}${flatVal}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
+                    if (flatVal !== 0 || preview.sourceResolvedToFlat || isAoeDiff) {
+                        const flatValStr = isAoeDiff
+                            ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}`
+                            : `${flatVal > 0 ? '+' : ''}${flatVal}`;
+                        parts.push(`<span class="calc-val-highlight ${statColorClass}">${flatValStr}</span> ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
                     if (pctMod !== 0) {
                         parts.push(`<span class="calc-val-highlight ${statColorClass}">${pctMod > 0 ? '+' : ''}${pctMod}%</span> en ${ui.formatStat(e.statAffected || e.effectType)}`);
@@ -820,49 +846,65 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                 detailsStr = `➔ ${parts.join(' et ')}${durStr}`;
             } else if (['DamageOverTime', 'DOT'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedDamagePerTick || e.damage || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ DoT de <span class="calc-val-highlight ${dtColorClass}">${val}</span> Dégâts ${dtHtml}/tour${durStr}`;
+                detailsStr = `➔ DoT de <span class="calc-val-highlight ${dtColorClass}">${valStr}</span> Dégâts ${dtHtml}/tour${durStr}`;
             } else if (['HealOverTime', 'HOT', 'HEAL_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedHealPerTick || e.healAmount || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ HoT de <span class="calc-val-highlight eff-color-emerald">${val}</span> PV/tour${durStr}`;
+                detailsStr = `➔ HoT de <span class="calc-val-highlight eff-color-emerald">${valStr}</span> PV/tour${durStr}`;
             } else if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.manaAmount || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const isNeg = val < 0 || (e.manaAmount || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
+                    const absValStr = isAoeDiff ? `${Math.abs(preview.minCalculatedValue)}-${Math.abs(preview.maxCalculatedValue)}` : `${Math.abs(val)}`;
                     detailsStr = target === 'CASTER'
-                        ? `➔ coûte <span class="calc-val-highlight eff-color-sky">${Math.abs(val)}</span> Mana`
-                        : `➔ retire <span class="calc-val-highlight eff-color-sky">${Math.abs(val)}</span> Mana`;
+                        ? `➔ coûte <span class="calc-val-highlight eff-color-sky">${absValStr}</span> Mana`
+                        : `➔ retire <span class="calc-val-highlight eff-color-sky">${absValStr}</span> Mana`;
                 } else {
-                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-sky">${val}</span> Mana`;
+                    detailsStr = `➔ rend <span class="calc-val-highlight eff-color-sky">${valStr}</span> Mana`;
                 }
             } else if (['ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedManaPerTick || e.manaAmount || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ MoT de <span class="calc-val-highlight eff-color-sky">${val}</span> Mana/tour${durStr}`;
+                detailsStr = `➔ MoT de <span class="calc-val-highlight eff-color-sky">${valStr}</span> Mana/tour${durStr}`;
             } else if (['Purge', 'PURGE', 'DISPEL'].includes(t)) {
                 detailsStr = `➔ dissipe les altérations`;
             } else if (['Shield', 'SHIELD'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.fixedValue || e.flatValue || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                detailsStr = `➔ Bouclier de <span class="calc-val-highlight eff-color-blue">${val}</span>${durStr}`;
+                detailsStr = `➔ Bouclier de <span class="calc-val-highlight eff-color-blue">${valStr}</span>${durStr}`;
             } else if (['Heat', 'HEAT', 'HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.amount || e.flatValue || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
+                const valStr = isAoeDiff ? `${preview.minCalculatedValue}-${preview.maxCalculatedValue}` : `${val}`;
                 const isNeg = val < 0 || (e.amount || e.flatValue || 0) < 0 || (e.percentage || 0) < 0;
                 if (isNeg) {
-                    detailsStr = `➔ consomme <span class="calc-val-highlight eff-color-orange">${Math.abs(val)}</span> Chaleur`;
+                    const absValStr = isAoeDiff ? `${Math.abs(preview.minCalculatedValue)}-${Math.abs(preview.maxCalculatedValue)}` : `${Math.abs(val)}`;
+                    detailsStr = `➔ consomme <span class="calc-val-highlight eff-color-orange">${absValStr}</span> Chaleur`;
                 } else {
-                    detailsStr = `➔ génère <span class="calc-val-highlight eff-color-orange">${val}</span> Chaleur`;
+                    detailsStr = `➔ génère <span class="calc-val-highlight eff-color-orange">${valStr}</span> Chaleur`;
                 }
             } else if (t === 'BUD') {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.amount || e.flatValue || 1);
                 detailsStr = `➔ génère <span class="calc-val-highlight eff-color-emerald">${val}</span> Bourgeon(s)`;
             } else if (['HeatOverTime', 'HEAT_OVER_TIME'].includes(t)) {
                 const val = preview && preview.calculatedValue !== undefined ? preview.calculatedValue : (e.flatValue || e.fixedValue || 0);
+                const isAoeDiff = preview && preview.isAreaOfEffect && preview.minCalculatedValue !== preview.maxCalculatedValue;
                 const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
                 const isConsuming = val < 0 || (e.flatValue || e.fixedValue || 0) < 0 || (e.percentage || 0) < 0;
                 const verb = isConsuming ? 'Consomme' : 'Génère';
-                detailsStr = `➔ Tick Chaleur : ${verb} <span class="calc-val-highlight eff-color-orange">${Math.abs(val)}</span>/tour${durStr}`;
+                const valStr = isAoeDiff ? `${Math.abs(preview.minCalculatedValue)}-${Math.abs(preview.maxCalculatedValue)}` : `${Math.abs(val)}`;
+                detailsStr = `➔ Tick Chaleur : ${verb} <span class="calc-val-highlight eff-color-orange">${valStr}</span>/tour${durStr}`;
             }
 
             const keyBadge = e.requiredChoiceKey != null ? `<span class="badge-pill badge-amber-flat" title="S'active uniquement si l'option choisie au cast est ${e.requiredChoiceKey}">Option ${e.requiredChoiceKey}</span>` : '';

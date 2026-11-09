@@ -13,7 +13,7 @@ public enum CombatSignalAction {
 
     // Pings sur Héros
     HEAL("Soin", "Demande de soins d'urgence", "favorite", "💚", "#10b981", CombatSignalType.HERO_PING),
-    SHIELD("Bouclier", "Demande d'un bouclier de protection", "shield", "🛡️", "#38bdf8", CombatSignalType.HERO_PING),
+    SHIELD("Bouclier", "Demande d'un bouclier de protection", "security", "🛡️", "#38bdf8", CombatSignalType.HERO_PING),
     BUFF("Renfort", "Demande d'un bonus ou amélioration", "auto_awesome", "✨", "#c084fc", CombatSignalType.HERO_PING),
 
     // Émotes générales

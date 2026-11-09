@@ -27,8 +27,8 @@ public class CombatInterceptor implements HandlerInterceptor {
         // Exclude specific URIs
         if (uri.startsWith("/api/combat/") || uri.startsWith("/api/pve/combat/") || uri.startsWith("/api/pve/multi/") || uri.startsWith("/api/auth/")
                 || uri.startsWith("/api/meta/") || uri.startsWith("/api/alchemy/recipes") || uri.startsWith("/api/achievements/") || uri.startsWith("/api/anomalies")
-                || uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/") || uri.startsWith("/styles/") || uri.startsWith("/favicon")
-                || uri.equals("/combat.html") || uri.equals("/error")) {
+                || uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/") || uri.startsWith("/styles/") || uri.startsWith("/app/") || uri.startsWith("/favicon")
+                || uri.equals("/login") || uri.equals("/combat.html") || uri.equals("/error")) {
             return true;
         }
 

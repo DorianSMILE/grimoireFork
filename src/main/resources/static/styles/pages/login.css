@@ -1,13 +1,20 @@
-body {
+#root {
+    width: 100%;
+    min-height: 100vh;
+}
+
+.auth-page {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    width: 100%;
     margin: 0;
     background: radial-gradient(circle at 50% 50%, #1e1b4b, #0f172a);
     color: var(--text);
     font-family: 'Inter', sans-serif;
     overflow: hidden;
+    position: relative;
 }
 
 .auth-container {

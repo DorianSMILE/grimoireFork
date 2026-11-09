@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/meta/**").permitAll()
                 .requestMatchers("/api/pve/combat/debug/**").permitAll()
-                .requestMatchers("/js/**", "/styles/**", "/images/**", "/sons/**", "/favicon.ico", "/favicon.svg", "/*.html", "/").permitAll()
+                .requestMatchers("/js/**", "/styles/**", "/images/**", "/sons/**", "/app/**", "/login", "/favicon.ico", "/favicon.svg", "/*.html", "/").permitAll()
 
                 // --- Admin uniquement : CRUD entités de jeu ---
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

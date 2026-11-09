@@ -12,6 +12,7 @@ const activeCombatId = localStorage.getItem('activeCombatId');
 if (activeCombatId && 
     !window.location.pathname.includes('/combat.html') && 
     !window.location.pathname.includes('/login.html') && 
+    window.location.pathname !== '/login' &&
     !window.location.pathname.includes('/register.html') &&
     !isDungeonsPage) {
     console.warn('Active combat session found in localStorage, redirecting to combat page.');
@@ -34,7 +35,7 @@ const isAuthPage = currentPath.includes('/login.html') || currentPath.includes('
 if (!isAuthPage) {
     const isLikely = localStorage.getItem('isLikelyLoggedIn') === 'true';
     if (!isLikely || !accessToken) {
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     }
 } else {
     const isLikely = localStorage.getItem('isLikelyLoggedIn') === 'true';
@@ -146,7 +147,7 @@ window.globalFetch = async function (url, options = {}) {
                     localStorage.removeItem('isLikelyLoggedIn');
                     if (!window.isRedirectingToLogin) {
                         window.isRedirectingToLogin = true;
-                        window.location.href = '/login.html';
+                        window.location.href = '/login';
                     }
                     await new Promise(() => {}); // Halt execution
                 }
@@ -204,7 +205,7 @@ window.globalFetch = async function (url, options = {}) {
                 localStorage.removeItem('isLikelyLoggedIn');
                 if (!window.isRedirectingToLogin) {
                     window.isRedirectingToLogin = true;
-                    window.location.href = '/login.html';
+                    window.location.href = '/login';
                 }
                 await new Promise(() => {}); // Halt execution
             }
@@ -394,7 +395,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
         window.isAdmin = false;
         window.dispatchEvent(new Event('authLoaded'));
         container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login.html">
+            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
             <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
@@ -416,6 +417,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
             // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
             if (!window.location.pathname.includes('/combat.html') &&
                 !window.location.pathname.includes('/login.html') &&
+                window.location.pathname !== '/login' &&
                 !window.location.pathname.includes('/register.html') &&
                 !isDungeonsPage &&
                 data.activeCombatSessionId) {
@@ -486,7 +488,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
         window.isAdmin = false;
         window.dispatchEvent(new Event('authLoaded'));
         container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login.html">
+            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
             <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
@@ -514,10 +516,10 @@ window.logout = async function () {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('activeCombatId');
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     } catch (e) {
         console.error("Logout failed", e);
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     }
 };
 

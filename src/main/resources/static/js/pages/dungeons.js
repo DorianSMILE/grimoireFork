@@ -254,7 +254,8 @@ function buildLootDropdownHtml(lootItems) {
 
             return `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem; cursor:help;"
                          onmouseenter="window.showGlobalTooltip && window.showGlobalTooltip(this)"
-                         onmouseleave="window.hideGlobalTooltip && window.hideGlobalTooltip()"
+                         onmouseleave="window.hideGlobalTooltip && window.hideGlobalTooltip(true)"
+                         data-child-tooltip="true"
                          data-tooltip-html="${(window.getEquipmentTooltipHTML ? window.getEquipmentTooltipHTML(eq) : '').replace(/"/g, '&quot;')}">
                 <span class="material-symbols-outlined text-[1.1rem] ${slotInfo.extraClass || ''}" style="color:${slotInfo.color || rarityColor};">${slotInfo.icon}</span>
                 <span style="color:${rarityColor}; font-weight:500; font-size:0.9rem;">${dropIndicatorHtml}${eq.name}</span>
@@ -294,7 +295,8 @@ function buildAnomalyDropdownHtml(anomalyNames) {
         const slotColor = typeof window.getSpiritualiteColor === 'function' ? window.getSpiritualiteColor(an.spiritualite) : '#d946ef';
         return `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem; cursor:help;"
                      onmouseenter="window.showGlobalTooltip && window.showGlobalTooltip(this)"
-                     onmouseleave="window.hideGlobalTooltip && window.hideGlobalTooltip()"
+                     onmouseleave="window.hideGlobalTooltip && window.hideGlobalTooltip(true)"
+                     data-child-tooltip="true"
                      data-tooltip-html="${(window.getAnomalyTooltipHTML ? window.getAnomalyTooltipHTML(an, true) : '').replace(/"/g, '&quot;')}">
             <span class="material-symbols-outlined text-[1.1rem]" style="color:${slotColor};">${slotIcon}</span>
             <span style="color:${slotColor}; font-weight:500; font-size:0.9rem;">${an.name}</span>
@@ -860,6 +862,7 @@ async function loadDungeons() {
                             shieldEl._hideT = setTimeout(() => {
                                 const dropEl = shieldEl.querySelector('.dungeon-card-loot-dropdown');
                                 if (dropEl) dropEl.style.display = 'none';
+                                if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
                             }, 150);
                         });
 
@@ -870,7 +873,10 @@ async function loadDungeons() {
                             dropEl.innerHTML = buildLootDropdownHtml(lootItems);
                             dropEl.addEventListener('mouseenter', () => clearTimeout(shieldEl._hideT));
                             dropEl.addEventListener('mouseleave', () => {
-                                shieldEl._hideT = setTimeout(() => { dropEl.style.display = 'none'; }, 150);
+                                shieldEl._hideT = setTimeout(() => {
+                                    dropEl.style.display = 'none';
+                                    if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
+                                }, 150);
                             });
                         }
                     }
@@ -896,6 +902,7 @@ async function loadDungeons() {
                             starEl._hideT = setTimeout(() => {
                                 const dropEl = starEl.querySelector('.dungeon-card-loot-dropdown');
                                 if (dropEl) dropEl.style.display = 'none';
+                                if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
                             }, 150);
                         });
 
@@ -906,7 +913,10 @@ async function loadDungeons() {
                             dropEl.innerHTML = buildAnomalyDropdownHtml(anomalyNames);
                             dropEl.addEventListener('mouseenter', () => clearTimeout(starEl._hideT));
                             dropEl.addEventListener('mouseleave', () => {
-                                starEl._hideT = setTimeout(() => { dropEl.style.display = 'none'; }, 150);
+                                starEl._hideT = setTimeout(() => {
+                                    dropEl.style.display = 'none';
+                                    if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
+                                }, 150);
                             });
                         }
                     }
@@ -1435,7 +1445,7 @@ window.inspectCharacter = async function(id) {
             const rarityColor = colorMap[rarityName] || '#f8fafc';
             const tooltipData = window.getEquipmentTooltipHTML ? window.getEquipmentTooltipHTML(eq) : eq.name;
             equipList.innerHTML += `
-                <div class="equip-slot tooltip-trigger" style="border-left: 3px solid ${rarityColor}; cursor: help;" onmouseenter="if(window.showGlobalTooltip) window.showGlobalTooltip(this)" onmouseleave="if(window.hideGlobalTooltip) window.hideGlobalTooltip()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
+                <div class="equip-slot tooltip-trigger" style="border-left: 3px solid ${rarityColor}; cursor: help;" onmouseenter="if(window.showGlobalTooltip) window.showGlobalTooltip(this)" onmouseleave="if(window.hideGlobalTooltip) window.hideGlobalTooltip(true)" data-child-tooltip="true" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}">
                     <div class="equip-slot-icon"><span class="material-symbols-outlined ${slotInfo.extraClass}" style="color: ${slotInfo.color};">${slotInfo.icon}</span></div>
                     <div class="equip-slot-content">
                         <div class="text-sm" style="color: ${rarityColor}; font-weight: 600;">${eq.name} ${window.getEffectInfoIconHtml ? window.getEffectInfoIconHtml(eq.specialEffect) : ''}</div>

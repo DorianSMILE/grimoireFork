@@ -1,4 +1,5 @@
-import { pageState } from './combat-state.js';
+import { pageState } from './combat-state.js?v=1786180000235';
+import { appendCustomCombatLogElement } from './combat-ui.js?v=1786180000235';
 import { fetchCombatSignalsConfig, postCombatSignal } from '../services/api.js';
 
 let signalsConfig = null;
@@ -180,7 +181,7 @@ function appendSignalLog(signal) {
 
     entry.appendChild(iconSpan);
     entry.appendChild(textSpan);
-    logContainer.prepend(entry);
+    appendCustomCombatLogElement(entry);
 }
 
 /**
@@ -205,8 +206,8 @@ function showMobPingVisual(targetIndex, actionName, badge, label, sender) {
     overlay.className = `fighter-ping-overlay ${overlayType}`;
 
     const badgeEl = document.createElement('span');
-    badgeEl.className = 'fighter-ping-badge';
-    badgeEl.textContent = badge || '⚔️';
+    badgeEl.className = 'fighter-ping-badge material-symbols-outlined';
+    badgeEl.textContent = badge || 'swords';
 
     const labelEl = document.createElement('span');
     labelEl.className = 'fighter-ping-label';
@@ -247,8 +248,8 @@ function showHeroPingVisual(targetIndex, actionName, badge, label, sender) {
     overlay.className = `fighter-ping-overlay ping-type-${actionName.toLowerCase()}`;
 
     const badgeEl = document.createElement('span');
-    badgeEl.className = 'fighter-ping-badge';
-    badgeEl.textContent = badge || '🛡️';
+    badgeEl.className = 'fighter-ping-badge material-symbols-outlined';
+    badgeEl.textContent = badge || 'security';
 
     const labelEl = document.createElement('span');
     labelEl.className = 'fighter-ping-label';
@@ -347,8 +348,8 @@ function showEmoteVisual(actionName, badge, label, sender) {
     bubble.className = `combat-speech-bubble emote-${actionName.toLowerCase()}`;
 
     const badgeEl = document.createElement('span');
-    badgeEl.className = 'bubble-badge';
-    badgeEl.textContent = badge || '💬';
+    badgeEl.className = 'bubble-badge material-symbols-outlined';
+    badgeEl.textContent = badge || 'chat';
 
     const labelEl = document.createElement('span');
     labelEl.className = 'bubble-label';
@@ -415,8 +416,8 @@ export async function toggleEmotesPopover(anchorBtn) {
             btn.setAttribute('title', action.description);
 
             const badgeSpan = document.createElement('span');
-            badgeSpan.className = 'combat-emote-choice-badge';
-            badgeSpan.textContent = action.badge || '💬';
+            badgeSpan.className = 'combat-emote-choice-badge material-symbols-outlined';
+            badgeSpan.textContent = action.icon || action.badge || 'chat';
 
             const labelSpan = document.createElement('span');
             labelSpan.className = 'combat-emote-choice-label';
@@ -485,8 +486,8 @@ export async function showFighterPingMenu(e, type, targetIndex, targetName) {
             btn.setAttribute('title', action.description);
 
             const badgeSpan = document.createElement('span');
-            badgeSpan.className = 'ping-item-badge';
-            badgeSpan.textContent = action.badge;
+            badgeSpan.className = 'ping-item-badge material-symbols-outlined';
+            badgeSpan.textContent = action.icon || action.badge || 'crisis_alert';
 
             const textSpan = document.createElement('span');
             textSpan.className = 'ping-item-label';

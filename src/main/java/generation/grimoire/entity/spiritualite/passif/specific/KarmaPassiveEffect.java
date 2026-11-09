@@ -41,13 +41,13 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                 e.getCosts()[0] = 0;
                 e.getCosts()[1] = 0;
                 e.getCosts()[2] = 0;
-                System.out.println("✨ Esprit Karmique (Illumination imminente) : Le sort est gratuit !");
+                System.out.println("Esprit Karmique (Illumination imminente) : Le sort est gratuit !");
             } else if (gauge > 0) { // Esprit state
                 double reduction = gauge * 0.1; // 10% par niveau, max 30% (gauge=3)
                 e.getCosts()[0] = (int) (e.getCosts()[0] * (1.0 - reduction));
                 e.getCosts()[1] = (int) (e.getCosts()[1] * (1.0 - reduction));
                 e.getCosts()[2] = (int) (e.getCosts()[2] * (1.0 - reduction));
-                System.out.println("✨ Esprit Karmique : -" + (int) (reduction * 100) + "% sur le coût du sort !");
+                System.out.println("Esprit Karmique : -" + (int) (reduction * 100) + "% sur le coût du sort !");
             }
         } else if (event instanceof SpellCostPaidEvent e) {
             Personnage caster = e.getSource();
@@ -62,7 +62,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                     int manaBonus = (int) (caster.getManaMax() * 0.03);
                     caster.heal(healBonus);
                     caster.restoreMana(manaBonus);
-                    System.out.println("✨ Harmonie Karmique : " + caster.getName() + " restaure " + healBonus
+                    System.out.println("Harmonie Karmique : " + caster.getName() + " restaure " + healBonus
                             + " PV et " + manaBonus + " Mana.");
                 } else if (gauge < 0) {
                     // Ténèbres state
@@ -75,7 +75,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                             }
                         }
                     }
-                    System.out.println("✨ Ténèbres Karmiques : +" + (int) (dmgBonus * 100)
+                    System.out.println("Ténèbres Karmiques : +" + (int) (dmgBonus * 100)
                             + "% de dégâts (Phy/Mag) sur ce sort !");
                 }
             }
@@ -96,12 +96,12 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                     lockedDuration--;
                     if (lockedDuration <= 0) {
                         System.out.println(
-                                "✨ Le Karma de " + caster.getName() + " est rétabli par un sort d'Harmonie !");
+                                "Le Karma de " + caster.getName() + " est rétabli par un sort d'Harmonie !");
                         caster.setPassiveState("karma_locked", 0);
                         caster.setPassiveState("karma_gauge", 0);
                         caster.setPassiveState("karma_locked_duration", 0);
                     } else {
-                        System.out.println("⏳ Le Karma de " + caster.getName() + " s'apaise. Tours restants : "
+                        System.out.println("Le Karma de " + caster.getName() + " s'apaise. Tours restants : "
                                 + lockedDuration);
                         caster.setPassiveState("karma_locked_duration", lockedDuration);
                     }
@@ -113,26 +113,26 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
 
             if (isOffensive) {
                 gauge--;
-                System.out.println("🌑 Le Karma penche vers les Ténèbres (Bonus dégats). Jauge: " + gauge);
+                System.out.println("Le Karma penche vers les Ténèbres (Bonus dégats). Jauge: " + gauge);
             } else if (isProtective) {
                 gauge++;
-                System.out.println("🌕 Le Karma penche vers l'Esprit (Coût réduit). Jauge: " + gauge);
+                System.out.println("Le Karma penche vers l'Esprit (Coût réduit). Jauge: " + gauge);
             } else if (isRestorative) {
                 if (gauge > 0) {
                     gauge--;
-                    System.out.println("🌗 Le Karma se rééquilibre vers l'Ombre. Jauge: " + gauge);
+                    System.out.println("Le Karma se rééquilibre vers l'Ombre. Jauge: " + gauge);
                 } else if (gauge < 0) {
                     gauge++;
-                    System.out.println("🌗 Le Karma se rééquilibre vers la Lumière. Jauge: " + gauge);
+                    System.out.println("Le Karma se rééquilibre vers la Lumière. Jauge: " + gauge);
                 } else {
-                    System.out.println("🌗 Acte de rééquilibrage, le Karma est déjà neutre. Jauge: " + gauge);
+                    System.out.println("Acte de rééquilibrage, le Karma est déjà neutre. Jauge: " + gauge);
                 }
             }
 
             if (gauge <= -4 || gauge >= 4) {
                 if (gauge <= -4) {
                     System.out.println(
-                            "💥 Le Karma est corrompu par les ténèbres. La voie du Karma est verrouillée pour 6 tours (+50% de dégâts sur ce sort) !");
+                            "Le Karma est corrompu par les ténèbres. La voie du Karma est verrouillée pour 6 tours (+50% de dégâts sur ce sort) !");
                     boolean logged50 = false;
                     for (generation.grimoire.entity.SpellEffect eff : spell.getEffects()) {
                         if (eff instanceof generation.grimoire.entity.spell.type.effect.DamageEffect de) {
@@ -141,7 +141,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                                 de.setAmplificationMultiplier(de.getAmplificationMultiplier() * 1.5);
                                 if (!logged50) {
                                     System.out.println(
-                                            "✨ Amplification appliquée : +50% de dégâts (" + de.getDamageType() + ")");
+                                            "Amplification appliquée : +50% de dégâts (" + de.getDamageType() + ")");
                                     logged50 = true;
                                 }
                             }
@@ -149,7 +149,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                     }
                 } else {
                     System.out.println(
-                            "💥 Le Karma est aveuglé par la lumière. La voie du Karma est verrouillée pour 6 tours (Ce sort a été gratuit) !");
+                            "Le Karma est aveuglé par la lumière. La voie du Karma est verrouillée pour 6 tours (Ce sort a été gratuit) !");
 
                     generation.grimoire.entity.spell.type.effect.BuffDebuffEffect armorBuff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
                     armorBuff.setStatAffected(generation.grimoire.enumeration.StatType.ARMURE);
@@ -170,7 +170,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
             } else {
                 caster.setPassiveState("karma_gauge", gauge);
                 if (gauge == 0) {
-                    System.out.println("✨ Équilibre Karmique Parfait atteint ! (karma_harmony = 1)");
+                    System.out.println("Équilibre Karmique Parfait atteint ! (karma_harmony = 1)");
                     caster.setPassiveState("karma_harmony", 1);
                 } else {
                     caster.setPassiveState("karma_harmony", 0);
@@ -192,7 +192,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
             lockedDuration--;
             if (lockedDuration <= 0) {
                 System.out.println(
-                        "✨ Le Karma de " + personnage.getName() + " s'est dissipé et est maintenant rétabli !");
+                        "Le Karma de " + personnage.getName() + " s'est dissipé et est maintenant rétabli !");
                 personnage.setPassiveState("karma_locked", 0);
                 personnage.setPassiveState("karma_gauge", 0);
                 personnage.setPassiveState("karma_locked_duration", 0);
@@ -202,7 +202,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
         } else {
             int gauge = personnage.getPassiveState("karma_gauge", 0);
             if (gauge == 0) {
-                System.out.println("⚖️ " + personnage.getName() + " est en parfaite harmonie karmique.");
+                System.out.println(personnage.getName() + " est en parfaite harmonie karmique.");
             }
         }
     }
@@ -219,7 +219,7 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
                 if (caster.getPassiveState("karma_locked", 0) == 1) {
                     if (spell.getKarmaAlignment() != generation.grimoire.enumeration.KarmaAlignment.RESTORATIVE
                             && (spell.getNom() == null || !spell.getNom().toLowerCase().contains("harmonie"))) {
-                        System.out.println("🚫 " + caster.getName()
+                        System.out.println(caster.getName()
                                 + " ne peut plus lancer de sorts du Karma (Voie verrouillée par Corruption/Illumination).");
                         return false;
                     }

@@ -1,25 +1,103 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000234';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000234';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000234';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000234';
+import { pageState } from './combat-state.js?v=1786180000235';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000235';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000235';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000235';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { showFighterPingMenu } from './combat-signals.js';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000235';
 import { renderHeroCombatSprite } from './combat-sprites.js';
+
+function isCombatLogOpen(logContainer) {
+    return Boolean(logContainer && !logContainer.classList.contains('is-hidden'));
+}
+
+export function scrollCombatLogToBottom(logContainer = document.getElementById('combatLog')) {
+    if (!logContainer) return;
+    pageState.isLogPinnedToBottom = true;
+    if (!isCombatLogOpen(logContainer)) return;
+    pageState.isProgrammaticLogScroll = true;
+    logContainer.scrollTop = logContainer.scrollHeight;
+    requestAnimationFrame(() => {
+        if (isCombatLogOpen(logContainer) && pageState.isLogPinnedToBottom) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        pageState.isProgrammaticLogScroll = false;
+    });
+}
+
+function ensureCombatLogScrollListener(logContainer) {
+    if (!logContainer || logContainer.dataset.scrollBound === 'true') return;
+    logContainer.dataset.scrollBound = 'true';
+
+    logContainer.addEventListener('scroll', () => {
+        if (!isCombatLogOpen(logContainer) || pageState.isProgrammaticLogScroll) return;
+        const distanceFromBottom = logContainer.scrollHeight - logContainer.clientHeight - logContainer.scrollTop;
+        pageState.isLogPinnedToBottom = distanceFromBottom <= 8;
+    }, { passive: true });
+}
+
+function markLogEntryEntering(entryEl, staggerIndex = 0) {
+    entryEl.classList.add('is-entering');
+    if (staggerIndex > 0) {
+        const staggerStep = Math.min(staggerIndex, 4);
+        entryEl.classList.add(`log-stagger-${staggerStep}`);
+    }
+    const cleanupAnim = () => {
+        entryEl.classList.remove('is-entering', 'log-stagger-1', 'log-stagger-2', 'log-stagger-3', 'log-stagger-4');
+    };
+    entryEl.addEventListener('transitionend', cleanupAnim, { once: true });
+    setTimeout(cleanupAnim, 600);
+}
+
+export function appendCustomCombatLogElement(entryEl) {
+    const logContainer = document.getElementById('combatLog');
+    if (!logContainer || !entryEl) return;
+
+    ensureCombatLogScrollListener(logContainer);
+    const logOpen = isCombatLogOpen(logContainer);
+    const shouldStickToBottom = pageState.isLogPinnedToBottom !== false;
+    const savedScrollTop = logContainer.scrollTop;
+
+    if (logOpen) {
+        markLogEntryEntering(entryEl, 0);
+    }
+    logContainer.appendChild(entryEl);
+
+    if (logOpen) {
+        if (shouldStickToBottom) {
+            scrollCombatLogToBottom(logContainer);
+        } else {
+            pageState.isProgrammaticLogScroll = true;
+            logContainer.scrollTop = savedScrollTop;
+            pageState.isProgrammaticLogScroll = false;
+        }
+    }
+}
 
 window.toggleCombatLog = function() {
     const log = document.getElementById('combatLog');
     const btn = document.getElementById('combatLogToggleBtn');
     const wrapper = document.getElementById('combatLogContainerWrapper');
-    if (log.style.display === 'none') {
-        log.style.display = 'block';
+    if (!log || !btn || !wrapper) return;
+    ensureCombatLogScrollListener(log);
+    if (log.classList.contains('is-hidden')) {
+        log.classList.remove('is-hidden');
         btn.classList.remove('rounded-full');
         btn.classList.add('rounded-t-lg', 'border-b-0');
         wrapper.classList.remove('retracted');
+        scrollCombatLogToBottom(log);
+        const onTransitionEnd = (e) => {
+            if (e.target !== wrapper) return;
+            wrapper.removeEventListener('transitionend', onTransitionEnd);
+            if (isCombatLogOpen(log) && pageState.isLogPinnedToBottom) {
+                scrollCombatLogToBottom(log);
+            }
+        };
+        wrapper.addEventListener('transitionend', onTransitionEnd);
     } else {
-        log.style.display = 'none';
+        log.classList.add('is-hidden');
         btn.classList.remove('rounded-t-lg', 'border-b-0');
         btn.classList.add('rounded-full');
         wrapper.classList.add('retracted');
@@ -315,7 +393,27 @@ export const LOG_INLINE_EMOJIS = [
     { regex: /🌑/g, icon: 'dark_mode', cls: 'log-karma-dark' },
     { regex: /🌕/g, icon: 'light_mode', cls: 'log-karma-light' },
     { regex: /🌗/g, icon: 'contrast', cls: 'log-karma-mid' },
-    { regex: /⚖️/g, icon: 'balance', cls: 'log-karma-harmony' }
+    { regex: /⚖️/g, icon: 'balance', cls: 'log-karma-harmony' },
+    { regex: /🦇/g, icon: 'blur_on', cls: 'log-icon-mana-loss' },
+    { regex: /🐛|🦠/g, icon: 'coronavirus', cls: 'log-icon-poison' },
+    { regex: /🐺/g, icon: 'track_changes', cls: 'log-icon-crit' },
+    { regex: /😈/g, icon: 'psychology_alt', cls: 'log-icon-brut' },
+    { regex: /🧬/g, icon: 'biotech', cls: 'log-icon-magic' },
+    { regex: /🦎/g, icon: 'shield', cls: 'log-icon-shield' },
+    { regex: /🪞/g, icon: 'change_circle', cls: 'log-icon-shield' },
+    { regex: /🩸|🧛/g, icon: 'bloodtype', cls: 'log-icon-hp' },
+    { regex: /👻/g, icon: 'psychology', cls: 'log-icon-magic' },
+    { regex: /🥀|💔/g, icon: 'heart_broken', cls: 'log-icon-incompressible' },
+    { regex: /🧪/g, icon: 'science', cls: 'log-icon-consumable' },
+    { regex: /🌌|🌊/g, icon: 'water', cls: 'log-icon-magic' },
+    { regex: /😊/g, icon: 'sentiment_very_satisfied', cls: 'log-icon-hp' },
+    { regex: /😢/g, icon: 'sentiment_dissatisfied', cls: 'log-icon-mana' },
+    { regex: /😡/g, icon: 'sentiment_very_dissatisfied', cls: 'log-icon-burn' },
+    { regex: /👏/g, icon: 'emoji_events', cls: 'log-icon-trophy' },
+    { regex: /👋/g, icon: 'waving_hand', cls: 'log-icon-time' },
+    { regex: /🤔/g, icon: 'psychology', cls: 'log-icon-magic' },
+    { regex: /😱/g, icon: 'sentiment_worried', cls: 'log-icon-warn' },
+    { regex: /🙏/g, icon: 'volunteer_activism', cls: 'log-icon-hp' }
 ];
 
 export const LEADING_EMOJI_ICON_MAP = [
@@ -346,7 +444,11 @@ export const LEADING_EMOJI_ICON_MAP = [
     { regex: /^👼\s*/u, icon: 'health_and_safety', entryCls: 'log-heal-hp', iconCls: 'log-icon-hp' },
     { regex: /^⚠️\s*/u, icon: 'warning', entryCls: 'log-generic', iconCls: 'log-icon-warn' },
     { regex: /^🚫\s*/u, icon: 'block', entryCls: 'log-miss', iconCls: 'log-icon-miss' },
-    { regex: /^🛠️\s*/u, icon: 'build', entryCls: 'log-mechanism', iconCls: 'log-icon-mechanism' }
+    { regex: /^🛠️\s*/u, icon: 'build', entryCls: 'log-mechanism', iconCls: 'log-icon-mechanism' },
+    { regex: /^🦇\s*/u, icon: 'blur_on', entryCls: 'log-mana-loss', iconCls: 'log-icon-mana-loss' },
+    { regex: /^(?:🐛|🦠)\s*/u, icon: 'coronavirus', entryCls: 'log-damage-poison', iconCls: 'log-icon-poison' },
+    { regex: /^🐺\s*/u, icon: 'track_changes', entryCls: 'log-damage-physic', iconCls: 'log-icon-crit' },
+    { regex: /^😈\s*/u, icon: 'psychology_alt', entryCls: 'log-damage-brut', iconCls: 'log-icon-brut' }
 ];
 
 export function createCombatLogEntryElement(log, players = [], enemies = []) {
@@ -454,9 +556,9 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
         text = text.replace(/Mana actuelle : (\d+)/g, 'Mana actuelle : <span class="log-val-mana">$1</span>');
     }
     // 8. Mana pertes
-    else if (text.includes("perd") && text.includes("Mana")) {
+    else if (text.toLowerCase().includes("mana") && (text.includes("perd") || text.includes("perte"))) {
         entryClass = 'log-entry log-mana-loss';
-        iconName = 'water_drop';
+        iconName = 'blur_on';
         iconClass = 'log-icon-mana-loss';
         text = text.replace(/perd (\d+) (?:points de )?[mM]ana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
     }
@@ -596,6 +698,69 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
         iconName = 'balance';
         iconClass = 'log-karma-harmony';
     }
+    // 19. Comportements & Passifs monstres
+    else if (text.includes("(Corrupteur)")) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'blur_on';
+        iconClass = 'log-icon-mana-loss';
+        text = text.replace(/perd (\d+) (?:points de )?[mM]ana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
+    } else if (text.includes("(Prédateur)")) {
+        entryClass = 'log-entry log-damage-physic';
+        iconName = 'track_changes';
+        iconClass = 'log-icon-crit';
+    } else if (text.includes("(Leader)")) {
+        entryClass = 'log-entry log-reward-gold';
+        iconName = 'crown';
+        iconClass = 'log-icon-trophy';
+    } else if (text.includes("(Assassin)")) {
+        entryClass = 'log-entry log-damage-crit';
+        iconName = 'crisis_alert';
+        iconClass = 'log-icon-crit';
+    } else if (text.includes("(Brutal)")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'fitness_center';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("(Sadique)")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'psychology_alt';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("Ange Gardien")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'health_and_safety';
+        iconClass = 'log-icon-hp';
+    } else if (text.includes("Capillarité")) {
+        entryClass = 'log-entry log-heal-mana';
+        iconName = 'water_drop';
+        iconClass = 'log-icon-mana';
+    } else if (text.includes("Épines") || text.includes("Miroir Épineux")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'change_circle';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("Vol de vie") || text.includes("(Vampire)")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'bloodtype';
+        iconClass = 'log-icon-hp';
+    } else if (text.includes("Défaillance")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'warning';
+        iconClass = 'log-icon-warn';
+    } else if (text.includes("Sang Brûlant")) {
+        entryClass = 'log-entry log-damage-burn';
+        iconName = 'local_fire_department';
+        iconClass = 'log-icon-burn';
+    } else if (text.includes("Oppression Magique")) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'blur_on';
+        iconClass = 'log-icon-mana-loss';
+    } else if (text.includes("(Reptile)")) {
+        entryClass = 'log-entry log-shield';
+        iconName = 'shield';
+        iconClass = 'log-icon-shield';
+    } else if (text.includes("(Mort-vivant)")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'skull';
+        iconClass = 'log-icon-death';
+    }
 
     // Players & Enemies highlighting
     if (Array.isArray(players)) {
@@ -640,10 +805,9 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
     text = text.replace(/\+(\d+) Vitesse/gi, '+<span class="log-val-speed">$1</span> <span class="log-val-speed">Vitesse</span>');
 
     // Passifs Voies & Spiritualités
-    text = text.replace(/🔥 \[Destruction\]/g, '<span class="log-badge-destr">🔥 [Destruction]</span>');
+    text = text.replace(/(?:🔥\s*)?\[Destruction\]/g, '<span class="log-badge-destr"><span class="material-symbols-outlined log-inline-icon log-icon-burn">local_fire_department</span> [Destruction]</span>');
     text = text.replace(/chaleur/gi, '<span class="log-badge-heat">chaleur</span>');
-    text = text.replace(/🌱 \[Création\]/g, '<span class="log-badge-creation">🌱 [Création]</span>');
-    text = text.replace(/✨ \[Création\]/g, '<span class="log-badge-creation">✨ [Création]</span>');
+    text = text.replace(/(?:🌱|✨\s*)?\[Création\]/g, '<span class="log-badge-creation"><span class="material-symbols-outlined log-inline-icon log-icon-creation">psychology</span> [Création]</span>');
     text = text.replace(/bourgeon/gi, '<span class="log-badge-creation">bourgeon</span>');
     text = text.replace(/instantané/gi, '<span class="log-badge-instant">instantané</span>');
 
@@ -662,16 +826,16 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
     text = text.replace(/stacks de Violence/g, 'stacks de <span class="log-val-brut">Violence</span>');
 
     // Karma
-    text = text.replace(/✨ Harmonie Karmique/gi, '<span class="log-karma-harmony">✨ Harmonie Karmique</span>');
-    text = text.replace(/✨ Le Karma/gi, '<span class="log-karma-harmony">✨ Le Karma</span>');
-    text = text.replace(/✨ Équilibre Karmique Parfait atteint !/gi, '<span class="log-karma-harmony">✨ Équilibre Karmique Parfait atteint !</span>');
-    text = text.replace(/🌑 Le Karma/gi, '<span class="log-karma-dark">🌑 Le Karma</span>');
-    text = text.replace(/🌕 Le Karma/gi, '<span class="log-karma-light">🌕 Le Karma</span>');
-    text = text.replace(/🌗 Le Karma/gi, '<span class="log-karma-mid">🌗 Le Karma</span>');
-    text = text.replace(/🌗 Acte de rééquilibrage/gi, '<span class="log-karma-mid">🌗 Acte de rééquilibrage</span>');
-    text = text.replace(/💥 Le Karma/gi, '<span class="log-karma-boom">💥 Le Karma</span>');
-    text = text.replace(/⏳ Le Karma/gi, '<span class="log-karma-time">⏳ Le Karma</span>');
-    text = text.replace(/⚖️/gi, '<span class="log-karma-balance">⚖️</span>');
+    text = text.replace(/(?:✨\s*)?Harmonie Karmique/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">balance</span> Harmonie Karmique</span>');
+    text = text.replace(/(?:✨\s*)?Équilibre Karmique Parfait atteint !/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">auto_awesome</span> Équilibre Karmique Parfait atteint !</span>');
+    text = text.replace(/🌑\s*Le Karma/gi, '<span class="log-karma-dark"><span class="material-symbols-outlined log-inline-icon log-karma-dark">dark_mode</span> Le Karma</span>');
+    text = text.replace(/🌕\s*Le Karma/gi, '<span class="log-karma-light"><span class="material-symbols-outlined log-inline-icon log-karma-light">light_mode</span> Le Karma</span>');
+    text = text.replace(/🌗\s*Le Karma/gi, '<span class="log-karma-mid"><span class="material-symbols-outlined log-inline-icon log-karma-mid">contrast</span> Le Karma</span>');
+    text = text.replace(/🌗\s*Acte de rééquilibrage/gi, '<span class="log-karma-mid"><span class="material-symbols-outlined log-inline-icon log-karma-mid">contrast</span> Acte de rééquilibrage</span>');
+    text = text.replace(/💥\s*Le Karma/gi, '<span class="log-karma-boom"><span class="material-symbols-outlined log-inline-icon log-icon-crit">flash_on</span> Le Karma</span>');
+    text = text.replace(/⏳\s*Le Karma/gi, '<span class="log-karma-time"><span class="material-symbols-outlined log-inline-icon log-icon-time">hourglass_top</span> Le Karma</span>');
+    text = text.replace(/(?:✨\s*)?Le Karma/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">auto_awesome</span> Le Karma</span>');
+    text = text.replace(/⚖️/gi, '<span class="log-karma-balance"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">balance</span></span>');
 
     // Jauge et Fractions
     text = text.replace(/(\d+)\/100/g, '<span class="log-val-fraction">$1/100</span>');
@@ -724,10 +888,29 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
     text = text.replace(/fixe: ([\-\+\d\.]+)/g, 'fixe: <span class="log-val-fix">$1</span>');
     text = text.replace(/mult: ([\-\+\d\.]+)/g, 'mult: <span class="log-val-fix">$1</span>');
 
+    // Nettoyage des logs résiduels ou inutiles (ex: réduction de 0%, Vitesse: 0, Reste: 0)
+    text = text.replace(/,\s*réduction de 0%/gi, '');
+    text = text.replace(/\s*\(réduction de 0%\)/gi, '');
+    text = text.replace(/\s*\(Vitesse:\s*0\)/gi, '');
+    text = text.replace(/\s*\(dégâts bruts consommés\s*:\s*\d+\)/gi, '');
+    text = text.replace(/\.?\s*Reste\s*:\s*0\s+absorption\./gi, '.');
+
+    // Formatage des détails de combat
+    text = text.replace(/réduction de (\d+)%/gi, 'réduction de <span class="log-val-shield">$1%</span>');
+    text = text.replace(/amplification de (\d+)%/gi, 'amplification de <span class="log-val-crit">$1%</span>');
+    text = text.replace(/absorbés par les boucliers\s*:\s*(\d+)/gi, 'absorbés par les boucliers : <span class="log-val-shield">$1</span>');
+    text = text.replace(/PV restants\s*:\s*(\d+)/gi, 'PV restants : <span class="log-val-hp">$1</span>');
+    text = text.replace(/Vie actuelle\s*:\s*(\d+)/gi, 'Vie actuelle : <span class="log-val-hp">$1</span>');
+    text = text.replace(/Init:\s*(\d+)/gi, 'Init: <span class="log-val-init">$1</span>');
+    text = text.replace(/\(Vitesse:\s*([\+\-]?\d+)\)/gi, '(<span class="log-val-speed">Vitesse: $1</span>)');
+
     // Replace all inline emojis with Google Icons
     for (const item of LOG_INLINE_EMOJIS) {
         text = text.replace(item.regex, `<span class="material-symbols-outlined log-inline-icon ${item.cls}">${item.icon}</span>`);
     }
+
+    // Strip any remaining unmapped emojis
+    text = text.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').replace(/\s{2,}/g, ' ').trim();
 
     div.className = entryClass;
     div.innerHTML = `<span class="material-symbols-outlined log-entry-icon ${iconClass}">${iconName}</span><span class="log-entry-text">${text}</span>`;
@@ -961,7 +1144,7 @@ export function updateUI(data) {
             }
             let timerHtml = '';
             if (pageState.isMulti && isActive && data.turnStartTime) {
-                timerHtml = `<div class="turn-timer-badge" id="timerBadge_${index}" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 14px; border-radius: 8px; font-weight: bold; box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;">⏳ Calcul...</div>`;
+                timerHtml = `<div class="turn-timer-badge" id="timerBadge_${index}" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 14px; border-radius: 8px; font-weight: bold; box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 1rem;">hourglass_top</span> Calcul...</div>`;
             }
             const fId = div.dataset.fighterId;
             let forcedHp = null;
@@ -1008,7 +1191,7 @@ export function updateUI(data) {
                     const el = document.createElement('div');
                     el.className = 'log-entry log-debug-warning';
                     el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} HP: ${forcedHp} -&gt; ${p.healthCurrent}</span>`;
-                    log.prepend(el);
+                    // Debug log disabled to keep combat log scroll intact
                 }
 
                 animateGaugeJS(hpBar, hpTextEl, forcedHp, p.healthCurrent, p.healthMax, 800);
@@ -1019,7 +1202,7 @@ export function updateUI(data) {
                     const el = document.createElement('div');
                     el.className = 'log-entry log-debug-warning';
                     el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
-                    log.prepend(el);
+                    // Debug log disabled to keep combat log scroll intact
                 }
             } else if (forcedHp === null) {
                 // DEBUG
@@ -1028,7 +1211,7 @@ export function updateUI(data) {
                     const el = document.createElement('div');
                     el.className = 'log-entry log-debug-error';
                     el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (forcedHp is NULL)</span>`;
-                    log.prepend(el);
+                    // Debug log disabled to keep combat log scroll intact
                 }
             }
             if (forcedMana !== null && forcedMana !== p.manaCurrent) {
@@ -1045,7 +1228,7 @@ export function updateUI(data) {
                     }
                     if (hpLabel) {
                         let labelText = `${actualHp} / ${p.healthMax}`;
-                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} 🛡️)`;
+                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} Bouclier)`;
                         hpLabel.textContent = labelText;
                     }
                 }, 800);
@@ -1065,7 +1248,7 @@ export function updateUI(data) {
             let remaining = Math.max(0, maxTime - elapsed);
 
             document.querySelectorAll('.turn-timer-badge').forEach(badge => {
-                badge.textContent = `⏳ ${remaining}s`;
+                badge.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1rem;">hourglass_top</span> ${remaining}s`;
                 if (remaining <= 10) {
                     if (window.combatIsMyTurn) {
                         const turnId = `${data.turnNumber}-${data.currentTurnIndex}`;
@@ -2594,21 +2777,64 @@ export function updateUI(data) {
 
     // Logs
     const logContainer = document.getElementById('combatLog');
-    const isAtBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 50;
-    const oldScrollTop = logContainer.scrollTop;
-    logContainer.innerHTML = '';
+    if (logContainer) {
+        ensureCombatLogScrollListener(logContainer);
+        const incomingLogs = Array.isArray(data.combatLog) ? data.combatLog : [];
+        const prevLogs = Array.isArray(pageState.renderedCombatLogs) ? pageState.renderedCombatLogs : [];
+        const currentSessionKey = `${data.sessionId || pageState.sessionId || ''}`;
 
-    if (data.combatLog && Array.isArray(data.combatLog)) {
-        data.combatLog.forEach(log => {
-            const entryEl = createCombatLogEntryElement(log, data.players, data.enemies);
-            logContainer.appendChild(entryEl);
-        });
-    }
+        let isReset = (
+            pageState.renderedLogSessionId !== currentSessionKey ||
+            prevLogs.length === 0 ||
+            incomingLogs.length < prevLogs.length
+        );
+        if (!isReset) {
+            for (let i = 0; i < prevLogs.length; i++) {
+                if (incomingLogs[i] !== prevLogs[i]) {
+                    isReset = true;
+                    break;
+                }
+            }
+        }
 
-    if (isAtBottom) {
-        logContainer.scrollTop = logContainer.scrollHeight;
-    } else {
-        logContainer.scrollTop = oldScrollTop;
+        const logOpen = isCombatLogOpen(logContainer);
+        const shouldStickToBottom = isReset ? true : (pageState.isLogPinnedToBottom !== false);
+        const savedScrollTop = logContainer.scrollTop;
+
+        if (isReset) {
+            logContainer.innerHTML = '';
+            incomingLogs.forEach(log => {
+                const entryEl = createCombatLogEntryElement(log, data.players, data.enemies);
+                logContainer.appendChild(entryEl);
+            });
+            pageState.renderedCombatLogs = incomingLogs.slice();
+            pageState.renderedLogSessionId = currentSessionKey;
+            pageState.isLogPinnedToBottom = true;
+            if (logOpen) {
+                scrollCombatLogToBottom(logContainer);
+            }
+        } else if (incomingLogs.length > prevLogs.length) {
+            const newEntriesCount = incomingLogs.length - prevLogs.length;
+            for (let i = prevLogs.length; i < incomingLogs.length; i++) {
+                const entryEl = createCombatLogEntryElement(incomingLogs[i], data.players, data.enemies);
+                if (logOpen) {
+                    const batchIdx = newEntriesCount > 1 ? (i - prevLogs.length) : 0;
+                    markLogEntryEntering(entryEl, batchIdx);
+                }
+                logContainer.appendChild(entryEl);
+            }
+            pageState.renderedCombatLogs = incomingLogs.slice();
+
+            if (logOpen) {
+                if (shouldStickToBottom) {
+                    scrollCombatLogToBottom(logContainer);
+                } else {
+                    pageState.isProgrammaticLogScroll = true;
+                    logContainer.scrollTop = savedScrollTop;
+                    pageState.isProgrammaticLogScroll = false;
+                }
+            }
+        }
     }
 
     // Check finish
@@ -2769,17 +2995,17 @@ export function getBossChallengesHtml(activeChallenges) {
         let iconName = '';
         
         if (chall.failed) {
-            statusHtml = '<div class="text-error font-bold mt-2">❌ Challenge Échoué</div>';
+            statusHtml = '<div class="text-error font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">cancel</span> Challenge Échoué</div>';
             badgeStyle = 'border-color: rgba(239, 68, 68, 0.4); color: #ef4444; background: rgba(239, 68, 68, 0.1); text-decoration: line-through;';
             iconStyle = 'text-error';
             iconName = 'cancel';
         } else if (chall.completed) {
-            statusHtml = '<div class="text-success font-bold mt-2">✨ Challenge Réussi</div>';
+            statusHtml = '<div class="text-success font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">check_circle</span> Challenge Réussi</div>';
             badgeStyle = 'border-color: rgba(16, 185, 129, 0.4); color: #10b981; background: rgba(16, 185, 129, 0.1);';
             iconStyle = 'text-success';
             iconName = 'check_circle';
         } else {
-            statusHtml = '<div class="text-success font-bold mt-2">✅ Challenge En cours</div>';
+            statusHtml = '<div class="text-success font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">military_tech</span> Challenge En cours</div>';
             badgeStyle = 'border-color: rgba(245, 158, 11, 0.4); color: #f59e0b; background: rgba(245, 158, 11, 0.1);';
             iconStyle = 'text-warning';
             iconName = 'military_tech';
@@ -3300,7 +3526,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
     } else if (rMana < 0) {
         manaRegenBadge = `<span title="Perd ${-rMana} Mana au début du tour (Famine)" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined text-sm">water_drop</span>${rMana} MP/t</span>`;
     }
-    let avatarHtml = isHero ? '🧙‍♂️' : (isBossSolo ? '<span class="fighter-avatar-boss">👑</span>' : '👹');
+    let avatarHtml = isHero ? '<span class="material-symbols-outlined fighter-avatar-hero">person</span>' : (isBossSolo ? '<span class="fighter-avatar-boss material-symbols-outlined text-amber-400">crown</span>' : '<span class="material-symbols-outlined fighter-avatar-monster text-rose-400">skull</span>');
     if (isHero && c.voie && c.voie.nom) {
         const vNom = c.voie.nom.toLowerCase();
         let avatarName = '';
@@ -3575,7 +3801,7 @@ export function renderEnemies(enemies, turnMap = null) {
                 const el = document.createElement('div');
                 el.className = 'log-entry log-debug-warning';
                 el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} HP: ${forcedHp} -&gt; ${pMonster.healthCurrent}</span>`;
-                log.prepend(el);
+                // Debug log disabled to keep combat log scroll intact
             }
 
             animateGaugeJS(hpBar, hpTextEl, forcedHp, pMonster.healthCurrent, pMonster.healthMax, 800);
@@ -3586,7 +3812,7 @@ export function renderEnemies(enemies, turnMap = null) {
                 const el = document.createElement('div');
                 el.className = 'log-entry log-debug-warning';
                 el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
-                log.prepend(el);
+                // Debug log disabled to keep combat log scroll intact
             }
         } else if (forcedHp === null) {
             // DEBUG
@@ -3595,7 +3821,7 @@ export function renderEnemies(enemies, turnMap = null) {
                 const el = document.createElement('div');
                 el.className = 'log-entry log-debug-error';
                 el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (forcedHp is NULL)</span>`;
-                log.prepend(el);
+                // Debug log disabled to keep combat log scroll intact
             }
         }
         if (forcedMana !== null && forcedMana !== pMonster.manaCurrent) {

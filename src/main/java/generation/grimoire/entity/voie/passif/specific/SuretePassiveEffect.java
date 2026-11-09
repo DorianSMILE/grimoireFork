@@ -64,7 +64,7 @@ public class SuretePassiveEffect extends VoiePassiveEffect {
         int pointsGained = (int) Math.round(manaPaid * 0.35);
         storedPoints = Math.min(MAX_POINTS, storedPoints + pointsGained);
         caster.setPassiveState(STATE_SURETE_POINTS, storedPoints);
-        System.out.println("🛡️ [Sûreté] " + caster.getName() + " stocke " + pointsGained + " pts (35% de " + manaPaid
+        System.out.println("[Sûreté] " + caster.getName() + " stocke " + pointsGained + " pts (35% de " + manaPaid
                 + " mana). Total: " + storedPoints + "/" + MAX_POINTS);
     }
 
@@ -106,7 +106,7 @@ public class SuretePassiveEffect extends VoiePassiveEffect {
         }
 
         if (hasAllyHeal) {
-            System.out.println("✨ [Sûreté] +50% de soins réalisés sur " + spell.getNom() + " (alliés) !");
+            System.out.println("[Sûreté] +50% de soins réalisés sur " + spell.getNom() + " (alliés) !");
         }
 
         if (touchesEnemy) {
@@ -137,7 +137,7 @@ public class SuretePassiveEffect extends VoiePassiveEffect {
                 debuffPhys.setDuration(2);
                 enemy.getActiveBuffs().add(debuffPhys);
 
-                System.out.println("❄️ [Sûreté] Débuffs appliqués sur " + enemy.getName()
+                System.out.println("[Sûreté] Débuffs appliqués sur " + enemy.getName()
                         + " : +20% dégâts magiques & physiques subis (2 tours).");
             }
         }
@@ -148,7 +148,7 @@ public class SuretePassiveEffect extends VoiePassiveEffect {
             buffPower.setModifier(0.20);
             buffPower.setDuration(3);
             caster.getActiveBuffs().add(buffPower);
-            System.out.println("🌊 [Sûreté] Buff appliqué sur " + caster.getName() + " : +20% Puissance (3 tours).");
+            System.out.println("[Sûreté] Buff appliqué sur " + caster.getName() + " : +20% Puissance (3 tours).");
         }
     }
 

@@ -294,12 +294,6 @@ class SpellAvailabilityService {
         );
     }
 
-    private ComputedSpellCosts computeSpellCostsForTargets(Spell spell, Personnage p, Personnage target, Personnage ally) {
-        return computeSpellCostsForTargets(spell, p, target, ally,
-                target != null ? List.of(target) : List.of(),
-                ally != null ? List.of(ally) : List.of());
-    }
-
     private ComputedSpellCosts computeSpellCostsForTargets(
             Spell spell, Personnage p, Personnage target, Personnage ally,
             List<Personnage> allAliveEnemies, List<Personnage> allAliveAllies) {
@@ -437,13 +431,6 @@ class SpellAvailabilityService {
                 heatModifiers,
                 effectPreviews
         );
-    }
-
-    private List<SpellEffectPreviewDTO> computeSpellEffectPreviews(
-            Spell spell, Personnage caster, Personnage defaultEnemyTarget, Personnage defaultAllyTarget) {
-        return computeSpellEffectPreviews(spell, caster, defaultEnemyTarget, defaultAllyTarget,
-                defaultEnemyTarget != null ? List.of(defaultEnemyTarget) : List.of(),
-                defaultAllyTarget != null ? List.of(defaultAllyTarget) : List.of());
     }
 
     private List<SpellEffectPreviewDTO> computeSpellEffectPreviews(

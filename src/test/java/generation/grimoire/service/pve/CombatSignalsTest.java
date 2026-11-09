@@ -113,7 +113,7 @@ class CombatSignalsTest {
         assertNotNull(dto);
         assertEquals(CombatSignalType.EMOTE, dto.type());
         assertEquals(CombatSignalAction.HAPPY, dto.action());
-        assertTrue(dto.formattedMessage().contains("Dorian : 😊 Content"));
+        assertTrue(dto.formattedMessage().contains("Dorian : Content"));
         assertTrue(session.getCombatLog().contains(dto.formattedMessage()));
     }
 }

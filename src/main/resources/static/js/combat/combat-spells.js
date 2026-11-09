@@ -1,5 +1,5 @@
-import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000234';
-import { updateUI } from './combat-ui.js?v=1786180000234';
+import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000235';
+import { updateUI } from './combat-ui.js?v=1786180000235';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
@@ -245,10 +245,10 @@ export function confirmCombatCast(index, type) {
         const promptEl = document.getElementById('castPromptText');
         if (statusEl) {
             const parts = [];
-            if (hasEnemy) parts.push('✅ Ennemi sélectionné');
-            else parts.push('⬜ Sélectionnez un ennemi');
-            if (hasAlly) parts.push('✅ Allié sélectionné');
-            else parts.push('⬜ Sélectionnez un allié');
+            if (hasEnemy) parts.push('<span class="material-symbols-outlined text-xs text-green-400">check_circle</span> Ennemi sélectionné');
+            else parts.push('<span class="material-symbols-outlined text-xs text-slate-400">radio_button_unchecked</span> Sélectionnez un ennemi');
+            if (hasAlly) parts.push('<span class="material-symbols-outlined text-xs text-green-400">check_circle</span> Allié sélectionné');
+            else parts.push('<span class="material-symbols-outlined text-xs text-slate-400">radio_button_unchecked</span> Sélectionnez un allié');
             statusEl.innerHTML = parts.join(' &nbsp;Â·&nbsp; ');
         }
 

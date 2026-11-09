@@ -7,24 +7,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum CombatSignalAction {
     // Pings sur Monstre
-    ATTACK("Attaquer", "Attaquer cette cible en priorité", "swords", "⚔️", "#ef4444", CombatSignalType.MOB_PING),
-    FEAR("Danger", "Attention danger / menace sur cette cible", "warning", "⚠️", "#f59e0b", CombatSignalType.MOB_PING),
-    IGNORE("Ignorer", "Ignorer cette cible / ne pas attaquer", "block", "🚫", "#94a3b8", CombatSignalType.MOB_PING),
+    ATTACK("Attaquer", "Attaquer cette cible en priorité", "swords", "swords", "#ef4444", CombatSignalType.MOB_PING),
+    FEAR("Danger", "Attention danger / menace sur cette cible", "warning", "warning", "#f59e0b", CombatSignalType.MOB_PING),
+    IGNORE("Ignorer", "Ignorer cette cible / ne pas attaquer", "block", "block", "#94a3b8", CombatSignalType.MOB_PING),
 
     // Pings sur Héros
-    HEAL("Soin", "Demande de soins d'urgence", "favorite", "💚", "#10b981", CombatSignalType.HERO_PING),
-    SHIELD("Bouclier", "Demande d'un bouclier de protection", "security", "🛡️", "#38bdf8", CombatSignalType.HERO_PING),
-    BUFF("Renfort", "Demande d'un bonus ou amélioration", "auto_awesome", "✨", "#c084fc", CombatSignalType.HERO_PING),
+    HEAL("Soin", "Demande de soins d'urgence", "favorite", "favorite", "#10b981", CombatSignalType.HERO_PING),
+    SHIELD("Bouclier", "Demande d'un bouclier de protection", "security", "security", "#38bdf8", CombatSignalType.HERO_PING),
+    BUFF("Renfort", "Demande d'un bonus ou amélioration", "auto_awesome", "auto_awesome", "#c084fc", CombatSignalType.HERO_PING),
 
     // Émotes générales
-    HAPPY("Content", "Exprime la joie", "sentiment_very_satisfied", "😊", "#22c55e", CombatSignalType.EMOTE),
-    SAD("Triste", "Exprime la tristesse", "sentiment_dissatisfied", "😢", "#38bdf8", CombatSignalType.EMOTE),
-    ANGRY("Colère", "Exprime la frustration ou colère", "sentiment_very_dissatisfied", "😡", "#ef4444", CombatSignalType.EMOTE),
-    GG("Bien joué", "Félicite l'allié", "emoji_events", "👏", "#eab308", CombatSignalType.EMOTE),
-    HELLO("Salut", "Salue l'autre joueur", "waving_hand", "👋", "#38bdf8", CombatSignalType.EMOTE),
-    THINKING("Réflexion", "Indique qu'on réfléchit à sa stratégie", "psychology", "🤔", "#a855f7", CombatSignalType.EMOTE),
-    SURPRISED("Panique", "Au secours ou panique", "sentiment_worried", "😱", "#f97316", CombatSignalType.EMOTE),
-    THANKS("Merci", "Remercie l'autre joueur", "volunteer_activism", "🙏", "#ec4899", CombatSignalType.EMOTE);
+    HAPPY("Content", "Exprime la joie", "sentiment_very_satisfied", "sentiment_very_satisfied", "#22c55e", CombatSignalType.EMOTE),
+    SAD("Triste", "Exprime la tristesse", "sentiment_dissatisfied", "sentiment_dissatisfied", "#38bdf8", CombatSignalType.EMOTE),
+    ANGRY("Colère", "Exprime la frustration ou colère", "sentiment_very_dissatisfied", "sentiment_very_dissatisfied", "#ef4444", CombatSignalType.EMOTE),
+    GG("Bien joué", "Félicite l'allié", "emoji_events", "emoji_events", "#eab308", CombatSignalType.EMOTE),
+    HELLO("Salut", "Salue l'autre joueur", "waving_hand", "waving_hand", "#38bdf8", CombatSignalType.EMOTE),
+    THINKING("Réflexion", "Indique qu'on réfléchit à sa stratégie", "psychology", "psychology", "#a855f7", CombatSignalType.EMOTE),
+    SURPRISED("Panique", "Au secours ou panique", "sentiment_worried", "sentiment_worried", "#f97316", CombatSignalType.EMOTE),
+    THANKS("Merci", "Remercie l'autre joueur", "volunteer_activism", "volunteer_activism", "#ec4899", CombatSignalType.EMOTE);
 
     private final String label;
     private final String description;

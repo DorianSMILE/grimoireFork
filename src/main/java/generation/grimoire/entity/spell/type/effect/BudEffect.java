@@ -33,7 +33,7 @@ public class BudEffect extends SpellEffect {
         if (currentBuds > MAX_BUDS) {
             currentBuds = MAX_BUDS;
         }
-        System.out.println("🌱 [Création] " + caster.getName() + " génère " + amount + " bourgeon(s) (" + currentBuds + "/" + MAX_BUDS + ").");
+        System.out.println("[Création] " + caster.getName() + " génère " + amount + " bourgeon(s) (" + currentBuds + "/" + MAX_BUDS + ").");
         caster.setPassiveState("creation_buds", currentBuds);
     }
 }

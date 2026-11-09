@@ -70,7 +70,7 @@ public class CreationPassiveEffect extends VoiePassiveEffect {
         int buds = p.getPassiveState(STATE_BUDS, 0);
         if (buds > 0) {
             p.setPassiveState(STATE_BUDS, buds - 1);
-            System.out.println("🌱 [Création] " + p.getName() + " consomme un bourgeon (" + (buds - 1) + " restant(s)).");
+            System.out.println("[Création] " + p.getName() + " consomme un bourgeon (" + (buds - 1) + " restant(s)).");
         }
         p.setPassiveState(STATE_USED_THIS_TURN, 1);
     }
@@ -84,7 +84,7 @@ public class CreationPassiveEffect extends VoiePassiveEffect {
         if (hasBuds(caster) && canUsePassiveThisTurn(caster)) {
             int spellAction = resolveSpellAction(spell, event.getCurrentType());
             if (spellAction == 2) {
-                System.out.println("✨ [Création] " + caster.getName() + " transforme le sort banal " + spell.getNom() + " en sort instantané (bourgeon).");
+                System.out.println("[Création] " + caster.getName() + " transforme le sort banal " + spell.getNom() + " en sort instantané (bourgeon).");
                 event.setCurrentType(SpellCastingType.INSTANTANE);
             }
         }
@@ -99,7 +99,7 @@ public class CreationPassiveEffect extends VoiePassiveEffect {
             if (spellAction == 1) {
                 event.getCosts()[0] = 0; // mana cost
                 event.getCosts()[1] = 0; // heal cost
-                System.out.println("✨ [Création] " + caster.getName() + " lance " + spell.getNom() + " gratuitement grâce à un bourgeon.");
+                System.out.println("[Création] " + caster.getName() + " lance " + spell.getNom() + " gratuitement grâce à un bourgeon.");
             }
         }
     }
@@ -135,7 +135,7 @@ public class CreationPassiveEffect extends VoiePassiveEffect {
         if (p.getPassiveState(STATE_INITIALIZED, 0) == 0) {
             p.setPassiveState(STATE_BUDS, 1);
             p.setPassiveState(STATE_INITIALIZED, 1);
-            System.out.println("🌱 [Création] " + p.getName() + " commence avec 1 bourgeon.");
+            System.out.println("[Création] " + p.getName() + " commence avec 1 bourgeon.");
         }
         // Reset du flag de consommation
         p.setPassiveState(STATE_USED_THIS_TURN, 0);

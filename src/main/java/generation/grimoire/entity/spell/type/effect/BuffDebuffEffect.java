@@ -118,7 +118,7 @@ return clone;
         if (statAffected == StatType.BURN || statAffected == StatType.POISON) {
             if (checkCriticalHit(caster)) {
                 totalFlatToApply = (int) Math.round(totalFlatToApply * getCriticalMultiplier(caster, true));
-                System.out.println("✨ Coup Critique sur le DoT (" + statAffected + ") !");
+                System.out.println("Coup Critique sur le DoT (" + statAffected + ") !");
             }
         }
 

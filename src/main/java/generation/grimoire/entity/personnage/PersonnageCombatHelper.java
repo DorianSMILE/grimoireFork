@@ -29,7 +29,7 @@ public class PersonnageCombatHelper {
         int regenPct = p.getPassiveState("REGENERATION", 0);
         if (regenPct > 0) {
             int regenAmount = (int) Math.ceil(p.getTotalHealthMax() * (regenPct / 100.0));
-            System.out.println("🌱 " + p.getName() + " régénère " + regenAmount + " PV grâce à Régénération.");
+            System.out.println(p.getName() + " régénère " + regenAmount + " PV grâce à Régénération.");
             p.healRegen(regenAmount);
         }
 
@@ -45,7 +45,7 @@ public class PersonnageCombatHelper {
             if (totalHpRegen > 0) {
                 p.healRegen(totalHpRegen);
             } else if (totalHpRegen < 0) {
-                System.out.println("💔 " + p.getName() + " perd " + (-totalHpRegen) + " PV à cause de sa régénération de PV par tour (négative).");
+                System.out.println(p.getName() + " perd " + (-totalHpRegen) + " PV à cause de sa régénération de PV par tour (négative).");
                 p.takeDamage(-totalHpRegen, DamageType.INCOMPRESSIBLE);
             }
 
@@ -57,10 +57,10 @@ public class PersonnageCombatHelper {
             }
 
             if (totalManaRegen > 0) {
-                System.out.println("💧 " + p.getName() + " régénère " + totalManaRegen + " Mana par tour.");
+                System.out.println(p.getName() + " régénère " + totalManaRegen + " Mana par tour.");
                 p.setManaCurrent(p.getManaCurrent() + totalManaRegen);
             } else if (totalManaRegen < 0) {
-                System.out.println("🥀 " + p.getName() + " perd " + (-totalManaRegen) + " Mana à cause de sa régénération de Mana par tour (négative).");
+                System.out.println(p.getName() + " perd " + (-totalManaRegen) + " Mana à cause de sa régénération de Mana par tour (négative).");
                 p.setManaCurrent(Math.max(0, p.getManaCurrent() + totalManaRegen));
             }
 
@@ -87,7 +87,7 @@ public class PersonnageCombatHelper {
                 resBuff.setSourceName("Défaillance");
                 p.getActiveBuffs().add(resBuff);
 
-                System.out.println("⚠️ [Défaillance] " + p.getName() + " subit un malus de " + pct + "% d'Armure et de Résistance pour 2 tours.");
+                System.out.println("[Défaillance] " + p.getName() + " subit un malus de " + pct + "% d'Armure et de Résistance pour 2 tours.");
             }
 
             int burningBloodVal = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CURSED_BURNING_BLOOD);
@@ -105,7 +105,7 @@ public class PersonnageCombatHelper {
                 burnBuff.setSourceName("Sang Brûlant");
                 p.getActiveBuffs().add(burnBuff);
 
-                System.out.println("🔥 [Sang Brûlant] " + p.getName() + " reçoit une Brûlure de " + burnDamage + " dégâts pour 3 tours.");
+                System.out.println("[Sang Brûlant] " + p.getName() + " reçoit une Brûlure de " + burnDamage + " dégâts pour 3 tours.");
             }
         }
     }
@@ -130,7 +130,7 @@ public class PersonnageCombatHelper {
 
         if (p.getMonsterType() == generation.grimoire.enumeration.MonsterType.REPTILE && damageType == DamageType.PHYSIC) {
             damage = (int) Math.ceil(damage * 0.85);
-            System.out.println("🦎 " + p.getName() + " réduit les dégâts physiques subis de 15% (Reptile).");
+            System.out.println(p.getName() + " réduit les dégâts physiques subis de 15% (Reptile).");
         }
 
         double effectiveArmor = p.getArmor() + p.getStatFlatBonus(StatType.ARMURE);
@@ -206,7 +206,7 @@ public class PersonnageCombatHelper {
                     p.setManaCurrent(p.getManaCurrent() - manaDrained);
                     effectiveDamage -= manaDrained;
                     caster.setManaCurrent(caster.getManaCurrent() + manaDrained);
-                    System.out.println("💧 Capillarité : " + caster.getName() + " vole " + manaDrained + " Mana à " + p.getName() + " (dégâts réduits de " + manaDrained + ").");
+                    System.out.println("Capillarité : " + caster.getName() + " vole " + manaDrained + " Mana à " + p.getName() + " (dégâts réduits de " + manaDrained + ").");
                 }
             }
         }
@@ -260,7 +260,7 @@ public class PersonnageCombatHelper {
             if (manaAbsorb > 0) {
                 p.setManaCurrent(p.getManaCurrent() - manaAbsorb);
                 remainingDamage -= manaAbsorb;
-                System.out.println("🛡️ Bouclier de Mana absorbe " + manaAbsorb + " dégâts.");
+                System.out.println("Bouclier de Mana absorbe " + manaAbsorb + " dégâts.");
             }
         }
 
@@ -298,9 +298,14 @@ public class PersonnageCombatHelper {
                             shieldDamageFlat = Math.max(0, shieldDamageFlat - absorbed);
 
                             if (absorbed > 0) {
-                                System.out.println("🛡️ Le bouclier (" + shield.getSourceName() + ") absorbe " + absorbed
-                                        + " dégâts (dégâts bruts consommés : " + rawConsumedInt + "). Reste : "
-                                        + shield.getAmount() + " absorption.");
+                                String consumedPart = (rawConsumedInt != absorbed)
+                                        ? " (dégâts bruts consommés : " + rawConsumedInt + ")"
+                                        : "";
+                                String restePart = shield.getAmount() > 0
+                                        ? ". Reste : " + shield.getAmount() + " absorption."
+                                        : ".";
+                                System.out.println("Le bouclier (" + shield.getSourceName() + ") absorbe " + absorbed
+                                        + " dégâts" + consumedPart + restePart);
                             }
                             if (remainingDamage <= 0) {
                                 remainingDamage = 0;
@@ -325,7 +330,7 @@ public class PersonnageCombatHelper {
                 if (revivedHp > p.getTotalHealthMax()) revivedHp = p.getTotalHealthMax();
 
                 p.setHealthCurrent(revivedHp);
-                System.out.println("👼 Ange Gardien activé ! Le personnage survit avec " + revivedHp + " PV.");
+                System.out.println("Ange Gardien activé ! Le personnage survit avec " + revivedHp + " PV.");
             }
         }
         
@@ -336,10 +341,9 @@ public class PersonnageCombatHelper {
         }
 
         if (bypassDamage > 0) {
-            System.out.println("🛡️ Perce-Bouclier / Bouclier Percé : " + bypassDamage + " dégâts passent en dessous du bouclier.");
+            System.out.println("Perce-Bouclier / Bouclier Percé : " + bypassDamage + " dégâts passent en dessous du bouclier.");
         }
 
-        String shieldText = absorbedByShields > 0 ? "absorbés par les boucliers : " + absorbedByShields + ", " : "";
         String typeStr = "";
         if (damageType != null) {
             switch(damageType) {
@@ -350,11 +354,17 @@ public class PersonnageCombatHelper {
             }
         }
 
+        java.util.List<String> details = new java.util.ArrayList<>();
+        if (absorbedByShields > 0) {
+            details.add("absorbés par les boucliers : " + absorbedByShields);
+        }
         int pct = (int) Math.round(reductionFactor * 100);
-        String reductionStr = pct >= 0 ? "réduction de " + pct + "%" : "amplification de " + Math.abs(pct) + "%";
+        if (pct != 0) {
+            details.add(pct > 0 ? "réduction de " + pct + "%" : "amplification de " + Math.abs(pct) + "%");
+        }
+        String detailsPart = details.isEmpty() ? "" : " (" + String.join(", ", details) + ")";
 
-        System.out.println(p.getName() + " subit " + effectiveDamage + " dégâts" + typeStr + " (" +
-                shieldText + reductionStr + "), " +
+        System.out.println(p.getName() + " subit " + effectiveDamage + " dégâts" + typeStr + detailsPart + ", " +
                 "PV restants : " + p.getHealthCurrent());
 
         if (caster != null && totalDamageToHealth > 0) {
@@ -366,20 +376,20 @@ public class PersonnageCombatHelper {
                 eff.setFlatValue(-freezeAmount);
                 eff.setDuration(freezeDuration);
                 p.getActiveBuffs().add(eff);
-                System.out.println("❄️ " + caster.getName() + " gèle " + p.getName() + " ! (-" + freezeAmount + " Vitesse)");
+                System.out.println(caster.getName() + " gèle " + p.getName() + " ! (-" + freezeAmount + " Vitesse)");
             }
             if (damageType == DamageType.PHYSIC || damageType == DamageType.MAGIC) {
                 if (p.getMonsterType() == generation.grimoire.enumeration.MonsterType.EPINE) {
                     int epineDmg = (int) Math.ceil(totalDamageToHealth * 0.10);
                     if (epineDmg > 0) {
-                        System.out.println("🌵 Épines (Monstre) renvoie " + epineDmg + " dégâts !");
+                        System.out.println("Épines (Monstre) renvoie " + epineDmg + " dégâts !");
                         caster.takeDamage(epineDmg, DamageType.BRUT);
                     }
                 }
                 int reflectPct = p.getPassiveState("DAMAGE_REFLECTION", 0);
                 if (reflectPct > 0) {
                     int reflectDmg = (int) Math.ceil(totalDamageToHealth * (reflectPct / 100.0));
-                    System.out.println("🪞 Miroir Épineux renvoie " + reflectDmg + " dégâts !");
+                    System.out.println("Miroir Épineux renvoie " + reflectDmg + " dégâts !");
                     caster.takeDamage(reflectDmg, DamageType.BRUT);
                 }
             }
@@ -387,7 +397,7 @@ public class PersonnageCombatHelper {
                 int thornsPct = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.THORNS);
                 if (thornsPct > 0) {
                     int thornsDmg = (int) Math.ceil(totalDamageToHealth * (thornsPct / 100.0));
-                    System.out.println("🌵 Épines renvoie " + thornsDmg + " dégâts !");
+                    System.out.println("Épines renvoie " + thornsDmg + " dégâts !");
                     caster.takeDamage(thornsDmg, DamageType.BRUT);
                 }
             }
@@ -397,7 +407,7 @@ public class PersonnageCombatHelper {
                 int totalLifesteal = lifestealPct + auraLifesteal;
                 if (totalLifesteal > 0) {
                     int healAmount = (int) Math.ceil(totalDamageToHealth * (totalLifesteal / 100.0));
-                    System.out.println("🩸 Vol de vie : l'attaquant récupère " + healAmount + " PV.");
+                    System.out.println("Vol de vie : l'attaquant récupère " + healAmount + " PV.");
                     caster.heal(healAmount);
                 }
             }
@@ -442,14 +452,14 @@ public class PersonnageCombatHelper {
             int brutDmg = (int) Math.ceil(baseDamage * 0.10);
             if (brutDmg > 0) {
                 target.takeDamage(brutDmg, DamageType.BRUT, p);
-                System.out.println("🔥 " + p.getName() + " inflige " + brutDmg + " dégâts bruts supplémentaires (Démon).");
+                System.out.println(p.getName() + " inflige " + brutDmg + " dégâts bruts supplémentaires (Démon).");
             }
         }
 
         if (p.getMonsterType() == generation.grimoire.enumeration.MonsterType.VAMPIRE) {
             int healAmount = (int) Math.ceil(baseDamage * 0.20);
             if (healAmount > 0) {
-                System.out.println("🧛 " + p.getName() + " tente de voler " + healAmount + " PV (Vampire).");
+                System.out.println(p.getName() + " tente de voler " + healAmount + " PV (Vampire).");
                 p.heal(healAmount);
             }
         }
@@ -460,7 +470,7 @@ public class PersonnageCombatHelper {
             eff.setFlatValue(-5);
             eff.setDuration(3);
             target.getActiveBuffs().add(eff);
-            System.out.println("👻 " + target.getName() + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
+            System.out.println(target.getName() + " perd 5 Résistance Magique pour 3 tours ! (Ectoplasme)");
         }
     }
 
@@ -485,7 +495,7 @@ public class PersonnageCombatHelper {
                 int shieldAmount = (int) (surplus * (overhealPct / 100.0));
                 if (shieldAmount > 0) {
                     p.addShield(shieldAmount, 2, "Bouclier vital");
-                    System.out.println("🛡️ " + p.getName() + " convertit " + surplus + " PV de surplus en " + shieldAmount + " de Bouclier !");
+                    System.out.println(p.getName() + " convertit " + surplus + " PV de surplus en " + shieldAmount + " de Bouclier !");
                 }
             }
         } else {
@@ -494,13 +504,15 @@ public class PersonnageCombatHelper {
         if (p.getHealthCurrent() < 0) {
             p.setHealthCurrent(0);
         }
-        System.out.println(p.getName() + " est soigné de " + finalHeal + " points. Vie actuelle : " + p.getHealthCurrent());
+        if (finalHeal > 0) {
+            System.out.println(p.getName() + " est soigné de " + finalHeal + " points. Vie actuelle : " + p.getHealthCurrent());
+        }
 
         if (!isNativeRegen) {
             boolean removedPoison = p.getActiveBuffs().removeIf(b -> b.getStatAffected() == StatType.POISON && (b.getFlatValue() > 0 || b.getModifier() > 0));
             boolean removedPoisonDot = p.getActiveDamageOverTimeEffects().removeIf(dot -> Boolean.TRUE.equals(dot.getPoison()));
             if (removedPoison || removedPoisonDot) {
-                System.out.println("💧 Le soin a purifié le Poison sur " + p.getName() + " !");
+                System.out.println("Le soin a purifié le Poison sur " + p.getName() + " !");
             }
         }
     }
@@ -511,7 +523,7 @@ public class PersonnageCombatHelper {
             double totalBurnMult = Math.max(0, p.getStatBuffMultiplier(StatType.BURN));
             int effectiveBurn = (int) Math.round(totalBurnFlat * totalBurnMult);
             if (effectiveBurn > 0) {
-                System.out.println("🔥 " + p.getName() + " subit " + effectiveBurn + " dégâts de Brûlure !");
+                System.out.println(p.getName() + " subit " + effectiveBurn + " dégâts de Brûlure !");
                 p.takeDamage(effectiveBurn, DamageType.MAGIC, null, true);
             }
         }
@@ -521,7 +533,7 @@ public class PersonnageCombatHelper {
             double totalPoisonMult = Math.max(0, p.getStatBuffMultiplier(StatType.POISON));
             int effectivePoison = (int) Math.round(totalPoisonFlat * totalPoisonMult);
             if (effectivePoison > 0) {
-                System.out.println("☠️ " + p.getName() + " subit " + effectivePoison + " dégâts de Poison !");
+                System.out.println(p.getName() + " subit " + effectivePoison + " dégâts de Poison !");
                 p.takeDamage(effectivePoison, DamageType.BRUT);
             }
         }

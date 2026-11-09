@@ -672,7 +672,7 @@ public class CombatService {
                     if (p != null) {
                         long maxTurnTime = session.getCurrentTurnTimeLimit();
                         if ((now - start) > maxTurnTime) {
-                            session.addLog("⏳ Le temps imparti pour " + p.getName() + " s'est écoulé ! Son tour passe automatiquement.");
+                            session.addLog("Le temps imparti pour " + p.getName() + " s'est écoulé ! Son tour passe automatiquement.");
                             session.reducePlayerTurnTimeLimit(p.getId(), 30000);
                             endTurn(session.getSessionId(), true);
                             broadcastIfMulti(session);

@@ -250,18 +250,18 @@ public class CombatRoomService {
                 if (heroCount > c.getValue()) {
                     c.setFailed(true);
                     session.addLog(
-                            "❌ Challenge échoué (Max " + c.getValue() + " Héros) : L'équipe est trop nombreuse.");
+                            "Challenge échoué (Max " + c.getValue() + " Héros) : L'équipe est trop nombreuse.");
                 } else {
-                    session.addLog("✅ Challenge en cours : Terminer avec " + c.getValue() + " héros ou moins.");
+                    session.addLog("Challenge en cours : Terminer avec " + c.getValue() + " héros ou moins.");
                 }
             } else if ("MAX_TURNS".equals(c.getType())) {
-                session.addLog("✅ Challenge en cours : Terminer le combat en " + c.getValue() + " tours maximum.");
+                session.addLog("Challenge en cours : Terminer le combat en " + c.getValue() + " tours maximum.");
             } else if ("MAX_HP_LOSS_PCT".equals(c.getType())) {
-                session.addLog("✅ Challenge en cours : Ne perdre aucun héros en dessous de " + (100 - c.getValue())
+                session.addLog("Challenge en cours : Ne perdre aucun héros en dessous de " + (100 - c.getValue())
                         + "% de ses PV.");
             } else if ("MIN_HP_LOSS_PCT".equals(c.getType())) {
                 session.addLog(
-                        "✅ Challenge en cours : Finir le combat avec moins de " + (100 - c.getValue()) + "% PV.");
+                        "Challenge en cours : Finir le combat avec moins de " + (100 - c.getValue()) + "% PV.");
             }
         }
     }
@@ -744,7 +744,7 @@ public class CombatRoomService {
 
                 AppUser u = p.getUser();
                 if (u != null) {
-                    StringBuilder sb = new StringBuilder("🛠️ Mécanisme désamorcé ! ");
+                    StringBuilder sb = new StringBuilder("Mécanisme désamorcé ! ");
                     if (hpLoss > 0 || manaLoss > 0) {
                         sb.append("Vos héros sacrifient ");
                         if (hpLoss > 0) sb.append(hpLoss).append(" PV");
@@ -1087,16 +1087,16 @@ public class CombatRoomService {
 
             if (healHp > 0) {
                 target.setHealthCurrent(Math.min(target.getHealthMax(), target.getHealthCurrent() + healHp));
-                session.addLog("🍔 " + target.getName() + " consomme " + itemName + " et récupère " + healHp + " PV.");
+                session.addLog(target.getName() + " consomme " + itemName + " et récupère " + healHp + " PV.");
             }
             if (healMana > 0) {
                 target.setManaCurrent(Math.min(target.getManaMax(), target.getManaCurrent() + healMana));
                 session.addLog(
-                        "🧪 " + target.getName() + " consomme " + itemName + " et récupère " + healMana + " Mana.");
+                        target.getName() + " consomme " + itemName + " et récupère " + healMana + " Mana.");
             }
             if (healHp == 0 && healMana == 0 && toConsume.getConsumableDurationTurns() == 0) {
                 session.addLog(
-                        "🎒 " + target.getName() + " consomme " + itemName + " mais cela n'a aucun effet.");
+                        target.getName() + " consomme " + itemName + " mais cela n'a aucun effet.");
             }
             
             // Apply buffs if duration is set
@@ -1173,7 +1173,7 @@ target.getActiveBuffs().add(effect);
                 }
                 
                 if (buffApplied) {
-                    session.addLog("✨ " + target.getName() + " consomme " + itemName + " et reçoit un bonus pour " + toConsume.getConsumableDurationTurns() + " tours.");
+                    session.addLog(target.getName() + " consomme " + itemName + " et reçoit un bonus pour " + toConsume.getConsumableDurationTurns() + " tours.");
                 }
             }
         } else {
@@ -1202,7 +1202,7 @@ target.getActiveBuffs().add(effect);
 
         session.getActiveConsumables().remove(toDelete);
         equipmentRepository.delete(toDelete);
-        session.addLog("🗑️ Un objet a été détruit (" + toDelete.getName() + ").");
+        session.addLog("Un objet a été détruit (" + toDelete.getName() + ").");
         return session;
     }
 
@@ -1413,7 +1413,7 @@ target.getActiveBuffs().add(effect);
                 }
 
                 if (anyFirstClear) {
-                    session.addLog("🎉 Félicitations, vous avez terminé ce donjon pour la première fois !");
+                    session.addLog("Félicitations, vous avez terminé ce donjon pour la première fois !");
                 }
 
                 for (generation.grimoire.entity.personnage.Personnage p : session.getPlayers()) {

@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE } from './combat-socket.js?v=1786180000234';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000234';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000234';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000234';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000234';
+import { initMultiSSE } from './combat-socket.js?v=1786180000235';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000235';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000235';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000235';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000235';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000235';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -71,6 +71,10 @@ window.pageState = window.pageState || {
 export const pageState = window.pageState;
 
 pageState.lastCombatLogCount = 0;
+pageState.renderedCombatLogs = [];
+pageState.renderedLogSessionId = null;
+pageState.isLogPinnedToBottom = true;
+pageState.isProgrammaticLogScroll = false;
 
 pageState.previousPlayerXP = {};
 

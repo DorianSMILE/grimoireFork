@@ -25,6 +25,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(@NonNull ViewControllerRegistry registry) {
         // Routes SPA React migrées
+        registry.addRedirectViewController("/", "/grimoire");
+        registry.addViewController("/grimoire").setViewName("forward:/app/index.html");
         registry.addViewController("/login").setViewName("forward:/app/index.html");
         registry.addViewController("/register").setViewName("forward:/app/index.html");
     }

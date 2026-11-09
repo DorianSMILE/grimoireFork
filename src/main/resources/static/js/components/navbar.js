@@ -10,7 +10,7 @@ function injectSpeculationRules() {
             {
                 source: 'list',
                 urls: [
-                    '/',
+                    '/grimoire',
                     '/armory.html',
                     '/dungeons.html',
                     '/vault.html',
@@ -73,7 +73,7 @@ class AppNavbar extends HTMLElement {
             </div>
             <div class="header-actions">
                 
-                <a href="/" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}">
+                <a href="/grimoire" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">auto_awesome</span> Grimoire
                 </a>
                 <a href="/armory.html" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}" style="position:relative;">

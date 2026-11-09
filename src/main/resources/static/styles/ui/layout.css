@@ -44,6 +44,48 @@ header{
             width: 100%;
         }
 
+.grimoire-main.single-col {
+    grid-template-columns: 1fr !important;
+}
+
+.init-hidden.init-hidden {
+    display: none;
+}
+
+.spell-type-filter-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.spell-type-filter-icons {
+    pointer-events: none;
+}
+
+.spell-type-icon-bolt {
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+}
+
+.spell-type-icon-banal {
+    bottom: 2px;
+    left: 2px;
+    font-size: 16px;
+}
+
+.spell-type-icon-canalise {
+    bottom: 2px;
+    right: 2px;
+    font-size: 17px;
+}
+
+.filter-search-input:focus {
+    border-color: var(--primary);
+}
+
 @media (max-width: 1024px){
             .grimoire-main {
                 grid-template-columns: 1fr;

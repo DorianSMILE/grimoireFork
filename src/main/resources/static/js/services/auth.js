@@ -276,8 +276,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (_) {}
 
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
+    const isReactAuthRoute = window.location.pathname === '/login' || window.location.pathname === '/register';
+    const loginForm = !isReactAuthRoute ? document.getElementById('loginForm') : null;
+    const registerForm = !isReactAuthRoute ? document.getElementById('registerForm') : null;
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {

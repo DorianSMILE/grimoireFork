@@ -33,6 +33,10 @@ export function setAccessToken(token: string | null | undefined): void {
   } else {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
   }
+  const win = window as Window & { setAccessToken?: (t: string | null) => void };
+  if (typeof win.setAccessToken === 'function') {
+    win.setAccessToken(isValidToken(token) ? token : null);
+  }
 }
 
 export function isAlreadyAuthenticated(): boolean {

@@ -644,6 +644,7 @@
 .global-tooltip.effect-fixed-tooltip {
     z-index: 9999999;
     pointer-events: none;
+    overflow: visible;
 }
 
 .global-tooltip.tooltip-border-mana {

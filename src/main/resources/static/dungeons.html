@@ -181,7 +181,7 @@
                             </div>
                             <div class="relative flex items-center justify-center" style="z-index: 50;"
      onmouseenter="clearTimeout(this.hideTimer); const d = document.getElementById('prepLootDropdown'); if(d && d.innerHTML.trim() !== '') d.style.display='flex';"
-     onmouseleave="this.hideTimer = setTimeout(() => { const d = document.getElementById('prepLootDropdown'); if(d) d.style.display='none'; window.hideGlobalTooltip && window.hideGlobalTooltip(); }, 150);">
+     onmouseleave="this.hideTimer = setTimeout(() => { const d = document.getElementById('prepLootDropdown'); if(d) d.style.display='none'; window.hideGlobalTooltip && window.hideGlobalTooltip(true); }, 150);">
     <div id="prepLootTooltipTrigger" style="display:none;" 
          class="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center cursor-help transition-all hover:bg-amber-500/20">
         <span class="material-symbols-outlined text-[1rem]">shield</span>
@@ -394,8 +394,9 @@
     </div>
 
     <!-- Hero Equipment Tooltip -->
-    <div id="heroEquipmentTooltip" style="display:none; position:fixed; z-index:9999; background:linear-gradient(135deg, rgba(15,23,41,0.95), rgba(26,39,68,0.95)); border:1px solid rgba(56,189,248,0.3); border-radius:0.75rem; padding:1rem; min-width:250px; max-width:300px; box-shadow:0 10px 25px rgba(0,0,0,0.5); backdrop-filter:blur(8px); pointer-events:none;">
-        <div id="heroEquipmentTooltipContent" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+    <div id="heroEquipmentTooltip"
+        style="display:none; position:fixed; z-index:9999; background:linear-gradient(135deg, rgba(15,23,41,0.96), rgba(26,39,68,0.96)); border:1px solid rgba(56,189,248,0.3); border-radius:0.75rem; padding:0.65rem 0.8rem; min-width:320px; width: max-content; max-width: min(720px, calc(100vw - 24px)); box-shadow:0 10px 25px rgba(0,0,0,0.5); backdrop-filter:blur(8px); pointer-events:auto;">
+        <div id="heroEquipmentTooltipContent" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
     </div>
 
     <script defer src="/js/services/auth.js?v=26" type="module"></script>

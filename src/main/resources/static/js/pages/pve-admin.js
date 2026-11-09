@@ -784,7 +784,7 @@ function renderRooms() {
                                 <span class="material-symbols-outlined text-green-400 text-lg" >favorite</span>
                                 <span>+ PV Max (%)</span>
                             </div>
-                            <div class="combobox-item buff-combobox-item" onclick="selectBuffType(${rIndex}, 'SHIELD_PCT', 'Bouclier (% PV)', 'shield', 'text-blue-400')">
+                            <div class="combobox-item buff-combobox-item" onclick="selectBuffType(${rIndex}, 'SHIELD_PCT', 'Bouclier (% PV)', 'security', 'text-blue-400')">
                                 <span class="material-symbols-outlined text-blue-400 text-lg" >shield</span>
                                 <span>Bouclier (% PV)</span>
                             </div>
@@ -1716,7 +1716,7 @@ function renderRooms() {
                                                 <span class="material-symbols-outlined text-green-400 text-lg" >favorite</span>
                                                 <span>+ PV Max (%)</span>
                                             </div>
-                                            <div class="combobox-item buff-combobox-item" onclick="selectDoorBossBuffType(${rIndex}, ${oIndex}, 'SHIELD_PCT', 'Bouclier (% PV)', 'shield', 'text-blue-400')">
+                                            <div class="combobox-item buff-combobox-item" onclick="selectDoorBossBuffType(${rIndex}, ${oIndex}, 'SHIELD_PCT', 'Bouclier (% PV)', 'security', 'text-blue-400')">
                                                 <span class="material-symbols-outlined text-blue-400 text-lg" >shield</span>
                                                 <span>Bouclier (% PV)</span>
                                             </div>

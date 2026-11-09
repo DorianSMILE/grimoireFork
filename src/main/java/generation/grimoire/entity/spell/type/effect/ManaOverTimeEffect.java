@@ -42,9 +42,9 @@ public class ManaOverTimeEffect extends ManaEffect {
             target.restoreMana(fixedManaPerTick);
             duration--;
             if (fixedManaPerTick >= 0) {
-                System.out.println("✨ " + target.getName() + " récupère " + fixedManaPerTick + " Mana grâce à une régénération sur la durée (MoT).");
+                System.out.println(target.getName() + " récupère " + fixedManaPerTick + " Mana grâce à une régénération sur la durée (MoT).");
             } else {
-                System.out.println("🌀 " + target.getName() + " perd " + (-fixedManaPerTick) + " Mana à cause d'un effet sur la durée (MoT).");
+                System.out.println(target.getName() + " perd " + (-fixedManaPerTick) + " Mana à cause d'un effet sur la durée (MoT).");
             }
         }
     }
@@ -81,7 +81,7 @@ public class ManaOverTimeEffect extends ManaEffect {
 
         if (checkCriticalHit(caster)) {
             totalMana = (int) (totalMana * this.getCriticalMultiplier(caster, false));
-            System.out.println("✨ Coup Critique sur le MoT !");
+            System.out.println("Coup Critique sur le MoT !");
         }
 
         clone.setFixedManaPerTick(totalMana);

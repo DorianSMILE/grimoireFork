@@ -676,9 +676,9 @@ public class AchievementService {
         );
 
         if (unlocked && session != null) {
-            session.addLog("🏆 Succès secret débloqué : " + title.trim() + " !");
+            session.addLog("Succès secret débloqué : " + title.trim() + " !");
             if (room.getCustomAchievementRewardTitle() != null && !room.getCustomAchievementRewardTitle().isBlank()) {
-                session.addLog("👑 Titre débloqué : « " + room.getCustomAchievementRewardTitle().trim() + " » !");
+                session.addLog("Titre débloqué : « " + room.getCustomAchievementRewardTitle().trim() + " » !");
             }
         }
     }

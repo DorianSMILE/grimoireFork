@@ -112,7 +112,7 @@ public class SpellService {
 
         String castError = caster.canCast(toCast);
         if (castError != null) {
-            log.warn("🚫 {}", castError);
+            log.warn("{}", castError);
             return null;
         }
 
@@ -163,7 +163,7 @@ public class SpellService {
                 if (allEnemies != null) {
                     recipients.addAll(allEnemies);
                     if (allEnemies.size() > 1) {
-                        log.debug("💥 [Zone d'Effet] Le sort se propage à l'ensemble des ennemis !");
+                        log.debug("[Zone d'Effet] Le sort se propage à l'ensemble des ennemis !");
                     }
                 }
             }
@@ -232,7 +232,7 @@ public class SpellService {
             caster.setChannelingChoiceKey(null);
         }
 
-        log.debug("🌀 [Canalisation] Résolution des effets pour le Tour {} de {}", currentTurn, channeledSpell.getNom());
+        log.debug("[Canalisation] Résolution des effets pour le Tour {} de {}", currentTurn, channeledSpell.getNom());
         return channeledSpell;
     }
 
@@ -284,7 +284,7 @@ public class SpellService {
             case ALL_ENEMIES -> {
                 if (target != null) {
                     recipients.add(target);
-                    log.debug("💥 [Zone d'Effet] Le sort se propage à l'ensemble des ennemis !");
+                    log.debug("[Zone d'Effet] Le sort se propage à l'ensemble des ennemis !");
                 }
             }
             case ALL_COMBATANTS -> {
@@ -344,7 +344,7 @@ public class SpellService {
                 }
             }
             if (targetsSpecificThisTurn) {
-                log.debug("🌀 {} interrompt sa canalisation au T{} : la cible est morte !", caster.getName(), currentTurn);
+                log.debug("{} interrompt sa canalisation au T{} : la cible est morte !", caster.getName(), currentTurn);
                 caster.cancelChanneling();
                 return;
             }
@@ -361,7 +361,7 @@ public class SpellService {
                 }
             }
             if (targetsAllyThisTurn) {
-                log.debug("🌀 {} interrompt sa canalisation au T{} : l'allié ciblé est mort !", caster.getName(), currentTurn);
+                log.debug("{} interrompt sa canalisation au T{} : l'allié ciblé est mort !", caster.getName(), currentTurn);
                 caster.cancelChanneling();
                 return;
             }
@@ -484,7 +484,7 @@ public class SpellService {
                 int heal = (int) (actualManaCost * vitalArcanePct / 100.0);
                 if (heal > 0) {
                     caster.heal(heal);
-                    log.debug("✨ Arcane Vitale soigne {} de {} PV.", caster.getName(), heal);
+                    log.debug("Arcane Vitale soigne {} de {} PV.", caster.getName(), heal);
                 }
             }
         }

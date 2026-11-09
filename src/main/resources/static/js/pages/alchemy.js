@@ -333,6 +333,7 @@ function getItemStyle(name, defaultType) {
 
 function renderCauldron(r, preserveInput = false) {
     const container = document.getElementById('cauldronPanel');
+    const prevCrafterVal = document.getElementById('crafterSelect')?.value || null;
     pageState.customSelectSetups = [];
 
     const isSecret = r.rewardType === 'UNLOCK_FEATURE' || r.rewardType === 'SECRET' || (r.rewardName && r.rewardName.toLowerCase().includes('secret'));
@@ -500,7 +501,12 @@ function renderCauldron(r, preserveInput = false) {
                         </div>
                     </div>
                 `;
-        fetchUserCharacters(false);
+        pageState.customSelectSetups.push(async () => {
+            if (!pageState.userCharacters || pageState.userCharacters.length === 0) {
+                await fetchUserCharacters(false);
+            }
+            renderCrafterSelect(prevCrafterVal);
+        });
     }
 
     let resultLabel = "Résultat Attendu";
@@ -580,23 +586,7 @@ function renderCauldron(r, preserveInput = false) {
             `;
             const crafterWrapper = document.getElementById('crafterSelectWrapper');
             if (crafterWrapper && (r.costSpiritXp > 0 || r.rewardType === 'GIVE_SPIRIT_XP')) {
-                const currentSel = document.getElementById('crafterSelect');
-                const prevVal = currentSel ? currentSel.value : null;
                 crafterWrapper.innerHTML = crafterSelectHTML;
-                if (prevVal && pageState.userCharacters) {
-                    const cContainer = document.getElementById('crafterSelectContainer');
-                    if (cContainer) {
-                        let options = [{ value: '', html: '-- Choisir un personnage --', selected: false }];
-                        pageState.userCharacters.forEach(c => {
-                            options.push({
-                                value: c.id,
-                                html: `<div class="flex justify-between items-center w-full"><span class="text-sky-400 font-medium">${c.name}</span> <span class="text-slate-400 text-xs bg-black/30 px-2 py-1 rounded border border-white/5">XP Spirit : <strong class="text-amber-500">${c.spiritualiteExperience || 0}</strong></span></div>`,
-                                selected: String(c.id) === String(prevVal)
-                            });
-                        });
-                        buildCustomSelect(cContainer, options, '', 'crafterSelect');
-                    }
-                }
             }
             pageState.customSelectSetups.forEach(setup => setup());
             return;
@@ -672,28 +662,49 @@ function buildCustomSelect(containerDiv, options, hiddenInputClass, hiddenInputI
 
 // Global custom-select logic is handled by window.initGlobalCustomSelect() in ui.js
 
-async function fetchUserCharacters(forceRefresh = true) { if (!forceRefresh && pageState.userCharacters && pageState.userCharacters.length > 0) { const container = document.getElementById('crafterSelectContainer'); if (container) { let options = [{ value: '', html: '-- Choisir un personnage --', selected: true }]; pageState.userCharacters.forEach(c => { options.push({ value: c.id, html: `<div class="flex justify-between items-center w-full"><span class="text-sky-400 font-medium">${c.name}</span> <span class="text-slate-400 text-xs bg-black/30 px-2 py-1 rounded border border-white/5">XP Spirit : <strong class="text-amber-500">${c.spiritualiteExperience || 0}</strong></span></div>`, selected: false }); }); buildCustomSelect(container, options, '', 'crafterSelect'); } return; }
+function renderCrafterSelect(selectedValue = null) {
+    const container = document.getElementById('crafterSelectContainer');
+    if (!container) return;
+
+    if (!pageState.userCharacters || pageState.userCharacters.length === 0) {
+        container.innerHTML = '<div class="p-1 text-muted text-xs">Aucun personnage disponible.</div>';
+        return;
+    }
+
+    const hasSelected = selectedValue && pageState.userCharacters.some(c => String(c.id) === String(selectedValue));
+    const effectiveSelectedVal = hasSelected ? String(selectedValue) : '';
+
+    let options = [{
+        value: '',
+        html: '-- Choisir un personnage --',
+        selected: !hasSelected
+    }];
+
+    pageState.userCharacters.forEach(c => {
+        options.push({
+            value: c.id,
+            html: `<div class="flex justify-between items-center w-full"><span class="text-sky-400 font-medium">${c.name}</span> <span class="text-slate-400 text-xs bg-black/30 px-2 py-1 rounded border border-white/5">XP Spirit : <strong class="text-amber-500">${c.spiritualiteExperience || 0}</strong></span></div>`,
+            selected: hasSelected && String(c.id) === effectiveSelectedVal
+        });
+    });
+
+    buildCustomSelect(container, options, '', 'crafterSelect');
+}
+
+async function fetchUserCharacters(forceRefresh = false) {
+    if (!forceRefresh && pageState.userCharacters && pageState.userCharacters.length > 0) {
+        return pageState.userCharacters;
+    }
     try {
         const res = await globalFetch('/api/personnages');
         if (res && res.ok) {
-            const chars = await res.json();
-            pageState.userCharacters = chars;
-            const container = document.getElementById('crafterSelectContainer');
-            if (container) {
-                let options = [{ value: '', html: '-- Choisir un personnage --', selected: true }];
-                chars.forEach(c => {
-                    options.push({
-                        value: c.id,
-                        html: `<div class="flex justify-between items-center w-full"><span class="text-sky-400 font-medium">${c.name}</span> <span class="text-slate-400 text-xs bg-black/30 px-2 py-1 rounded border border-white/5">XP Spirit : <strong class="text-amber-500">${c.spiritualiteExperience || 0}</strong></span></div>`,
-                        selected: false
-                    });
-                });
-                buildCustomSelect(container, options, '', 'crafterSelect');
-            }
+            pageState.userCharacters = await res.json();
+            return pageState.userCharacters;
         }
     } catch (e) {
-        console.warn(e);
+        console.warn("Erreur chargement personnages:", e);
     }
+    return pageState.userCharacters || [];
 }
 
 async function craftSelected() {
@@ -873,7 +884,10 @@ async function craftSelected() {
                     .catch(e => console.error(e));
             });
         }
-        await fetchUserInventory();
+        await Promise.all([
+            fetchUserInventory(),
+            fetchUserCharacters(true)
+        ]);
         setTimeout(() => {
             renderCauldron(pageState.selectedRecipe);
             const msgObj = document.getElementById('craftMessage');

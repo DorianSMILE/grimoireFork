@@ -521,6 +521,9 @@ public class Personnage {
     }
 
     public void restoreMana(int manaAmount) {
+        if (manaAmount <= 0) {
+            return;
+        }
         this.manaCurrent += manaAmount;
         if (this.manaCurrent > this.getTotalManaMax()) {
             this.manaCurrent = this.getTotalManaMax();
@@ -581,9 +584,13 @@ public class Personnage {
         buffDebuff.setModifier(modifier);
         activeBuffs.add(buffDebuff);
 
+        int flat = buffDebuff.getFlatValue();
+        double mod = modifier != null ? modifier : 0.0;
+        String details = BuffDebuffEffect.formatEffectDetails(flat, mod);
+        String detailsPart = details.isEmpty() ? "" : " " + details;
+
         System.out.println(name + " reçoit un effet sur " + buffDebuff.getStatAffected()
-                + " (modificateur : " + modifier
-                + ") pour " + buffDebuff.getDuration() + " tours.");
+                + detailsPart + " pour " + buffDebuff.getDuration() + " tours.");
     }
 
     /**
@@ -921,14 +928,18 @@ public class Personnage {
             case MANA -> {
                 int before = manaCurrent;
                 manaCurrent = Math.min(manaMax, Math.max(0, manaCurrent + flatValue));
-                System.out.println(name + " voit sa mana passer de " + before + " à " + manaCurrent);
+                if (before != manaCurrent) {
+                    System.out.println(name + " voit sa mana passer de " + before + " à " + manaCurrent);
+                }
             }
             default -> {
                 // Toutes les autres stats numériques
                 adjustStat(statType, flatValue);
-                System.out.println(name + " voit sa stat " + statType
-                        + (flatValue >= 0 ? " augmenter de " : " diminuer de ")
-                        + Math.abs(flatValue));
+                if (flatValue != 0) {
+                    System.out.println(name + " voit sa stat " + statType
+                            + (flatValue >= 0 ? " augmenter de " : " diminuer de ")
+                            + Math.abs(flatValue));
+                }
             }
         }
     }

@@ -69,9 +69,7 @@ public DamageOverTimeEffect() {
             duration--;
 
             String effectName = (poison != null && poison) ? "poison" : ((burn != null && burn) ? "brûlure" : "damage over time (DoT)");
-            String icon = (poison != null && poison) ? "🧪" : ((burn != null && burn) ? "🔥" : "🩸");
-
-            System.out.println(icon + " " + target.getName() + " subit " + fixedDamagePerTick
+            System.out.println(target.getName() + " subit " + fixedDamagePerTick
                     + " dégâts (" + damageType + ") de " + effectName + ".");
         }
     }
@@ -116,7 +114,7 @@ public DamageOverTimeEffect() {
 
         if (checkCriticalHit(caster)) {
             totalDamage = (int) (totalDamage * this.getCriticalMultiplier(caster, true));
-            System.out.println("✨ Coup Critique sur le DoT !");
+            System.out.println("Coup Critique sur le DoT !");
         }
 
         double reducedDamage = applyEquipmentModifiers(totalDamage, caster, target, clone.getDamageType());

@@ -43,10 +43,10 @@ if (duration > 0) {
             if (currentHeat > 100) {
                 currentHeat = 100;
             }
-            System.out.println("🔥 [Destruction-Tick] " + target.getName() + " accumule de la chaleur (+" + amount + " -> " + currentHeat + "/100), tours restants: " + (duration - 1));
+            System.out.println("[Destruction-Tick] " + target.getName() + " accumule de la chaleur (+" + amount + " -> " + currentHeat + "/100), tours restants: " + (duration - 1));
             if (currentHeat >= 100) {
                 target.triggerFreeSpell();
-                System.out.println("🔥 [Destruction] " + target.getName() + " a atteint 100 de chaleur ! Le prochain sort sera gratuit.");
+                System.out.println("[Destruction] " + target.getName() + " a atteint 100 de chaleur ! Le prochain sort sera gratuit.");
             }
             target.setPassiveState("destruction_heat", currentHeat);
             duration--;

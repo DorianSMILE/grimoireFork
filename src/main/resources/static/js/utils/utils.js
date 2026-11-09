@@ -314,9 +314,26 @@ function getEquipmentTooltipHTML(eq) {
         { key: 'consumableBonusArmorFlat', label: 'Armure', icon: 'shield', color: '#60a5fa', isPercent: false },
         { key: 'consumableBonusResistanceFlat', label: 'Résistance', icon: 'shield', color: '#34d399', isPercent: false }
     ];
-    let statsHtml = statsDef
-        .filter(s => eq[s.key] && eq[s.key] !== 0)
-        .map(s => {
+    const activeStats = statsDef.filter(s => eq[s.key] && eq[s.key] !== 0);
+    let statsHtml = '';
+    if (activeStats.length >= 6) {
+        statsHtml = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 0.8rem; margin-bottom: 0.3rem;">` +
+            activeStats.map(s => {
+                const val = eq[s.key];
+                const isMalus = val < 0;
+                const sign = val > 0 ? '+' : '';
+                const suffix = s.isPercent ? '%' : '';
+                return `<div class="flex-between" style="gap: 0.6rem;">
+                    <div class="flex-center text-muted" style="gap: 0.3rem;">
+                        <span class="material-symbols-outlined" style="color:${isMalus ? '#ef4444' : s.color}; font-size: 0.95rem;">${s.icon}</span>
+                        ${s.label}
+                    </div>
+                    <span style="font-weight: 600; color: ${isMalus ? '#ef4444' : '#fff'};">${sign}${val}${suffix}</span>
+                </div>`;
+            }).join('') +
+            `</div>`;
+    } else {
+        statsHtml = activeStats.map(s => {
             const val = eq[s.key];
             const isMalus = val < 0;
             const sign = val > 0 ? '+' : '';
@@ -329,6 +346,7 @@ function getEquipmentTooltipHTML(eq) {
                 <span style="font-weight: 600; color: ${isMalus ? '#ef4444' : '#fff'};">${sign}${val}${suffix}</span>
             </div>`;
         }).join('');
+    }
 
     let effectHtml = '';
     if (eq.specialEffect && eq.specialEffect !== 'NONE') {

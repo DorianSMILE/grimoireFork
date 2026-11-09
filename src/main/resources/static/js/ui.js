@@ -615,21 +615,41 @@ export function showGlobalTooltip(el) {
     if (!tooltip) {
         tooltip = document.createElement('div');
         tooltip.id = 'globalFixedTooltip';
-        tooltip.className = 'global-tooltip is-interactive';
+        tooltip.className = 'global-tooltip';
         document.body.appendChild(tooltip);
+    }
+
+    const parentDropdown = el.closest ? el.closest('.dungeon-card-loot-dropdown, #prepLootDropdown, [data-dropdown]') : null;
+    const isChildTooltip = !!(
+        parentDropdown ||
+        el.hasAttribute('data-child-tooltip') ||
+        (el.closest && el.closest('[data-child-tooltip]')) ||
+        el.classList.contains('equip-slot') ||
+        (el.closest && el.closest('.equip-slot')) ||
+        el.getAttribute('data-tooltip-position') === 'side'
+    );
+
+    if (isChildTooltip) {
+        tooltip.classList.remove('is-interactive');
+        tooltip.style.pointerEvents = 'none';
+        tooltip.dataset.isChild = 'true';
     } else {
         tooltip.classList.add('is-interactive');
+        tooltip.style.pointerEvents = '';
+        delete tooltip.dataset.isChild;
     }
 
     if (!tooltip.dataset.hoverBound) {
         tooltip.dataset.hoverBound = 'true';
         tooltip.addEventListener('mouseenter', () => {
+            if (tooltip.dataset.isChild === 'true') return;
             if (tooltip.hideTimeout) {
                 clearTimeout(tooltip.hideTimeout);
                 tooltip.hideTimeout = null;
             }
         });
         tooltip.addEventListener('mouseleave', () => {
+            if (tooltip.dataset.isChild === 'true') return;
             hideGlobalTooltip();
         });
     }
@@ -668,25 +688,52 @@ export function showGlobalTooltip(el) {
     const tooltipHeight = tooltip.offsetHeight;
     const tooltipWidth = tooltip.offsetWidth;
 
-    const preferTop = el.getAttribute('data-tooltip-position') === 'top'
-        || el.hasAttribute('data-prefer-top')
-        || el.classList.contains('combat-spell-card');
     let topPos;
-    if (preferTop) {
-        topPos = rect.top - tooltipHeight - 8;
-        if (topPos < 10) topPos = rect.bottom + 8;
-    } else {
-        topPos = rect.bottom + 8;
-        if (topPos + tooltipHeight > window.innerHeight) {
-            topPos = rect.top - tooltipHeight - 8;
-        }
-    }
-    if (topPos < 10) topPos = 10;
+    let leftPos;
 
-    let leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
-    if (leftPos < 10) leftPos = 10;
-    if (leftPos + tooltipWidth > window.innerWidth - 10) {
-        leftPos = window.innerWidth - tooltipWidth - 10;
+    if (isChildTooltip) {
+        const anchorRect = parentDropdown ? parentDropdown.getBoundingClientRect() : rect;
+        const spaceLeft = anchorRect.left;
+        const spaceRight = window.innerWidth - anchorRect.right;
+
+        if (spaceLeft >= tooltipWidth + 12) {
+            leftPos = anchorRect.left - tooltipWidth - 8;
+        } else if (spaceRight >= tooltipWidth + 12) {
+            leftPos = anchorRect.right + 8;
+        } else if (spaceLeft >= spaceRight) {
+            leftPos = Math.max(10, anchorRect.left - tooltipWidth - 8);
+        } else {
+            leftPos = Math.min(window.innerWidth - tooltipWidth - 10, anchorRect.right + 8);
+        }
+
+        topPos = rect.top;
+        if (topPos + tooltipHeight > window.innerHeight - 10) {
+            topPos = window.innerHeight - tooltipHeight - 10;
+        }
+        if (topPos < 10) topPos = 10;
+    } else {
+        const preferTop = el.getAttribute('data-tooltip-position') === 'top'
+            || el.hasAttribute('data-prefer-top')
+            || el.classList.contains('combat-spell-card');
+        if (preferTop) {
+            topPos = rect.top - tooltipHeight - 8;
+            if (topPos < 10) topPos = rect.bottom + 8;
+        } else {
+            topPos = rect.bottom + 8;
+            if (topPos + tooltipHeight > window.innerHeight) {
+                topPos = rect.top - tooltipHeight - 8;
+            }
+        }
+        if (topPos < 10) topPos = 10;
+        if (topPos + tooltipHeight > window.innerHeight - 10) {
+            topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
+        }
+
+        leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
+        if (leftPos < 10) leftPos = 10;
+        if (leftPos + tooltipWidth > window.innerWidth - 10) {
+            leftPos = window.innerWidth - tooltipWidth - 10;
+        }
     }
 
     tooltip.style.top = topPos + 'px';
@@ -702,11 +749,15 @@ export function hideGlobalTooltip(immediate = false) {
     }
     if (immediate === true) {
         tooltip.classList.remove('is-visible');
+        tooltip.style.pointerEvents = '';
+        delete tooltip.dataset.isChild;
         hideEffectTooltip();
         return;
     }
     tooltip.hideTimeout = setTimeout(() => {
         tooltip.classList.remove('is-visible');
+        tooltip.style.pointerEvents = '';
+        delete tooltip.dataset.isChild;
         hideEffectTooltip();
     }, 150);
 }
@@ -1079,6 +1130,9 @@ export function showEffectTooltip(el, text) {
         leftPos = window.innerWidth - tooltipWidth - 10;
     }
     if (topPos < 10) topPos = 10;
+    if (topPos + tooltipHeight > window.innerHeight - 10) {
+        topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
+    }
 
     tooltip.style.top = topPos + 'px';
     tooltip.style.left = leftPos + 'px';

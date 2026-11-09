@@ -1,5 +1,5 @@
-import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000234';
-import { updateUI } from './combat-ui.js?v=1786180000234';
+import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000235';
+import { updateUI } from './combat-ui.js?v=1786180000235';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
@@ -464,7 +464,7 @@ export function resetCombatTimeoutWarning(finished) {
             }, 1000);
 
         } else {
-            alert("⚠️ Attention : Le combat expirera dans 1 minute pour inactivité !");
+            alert("Attention : Le combat expirera dans 1 minute pour inactivité !");
         }
     }, 540000); // 9 minutes
 }

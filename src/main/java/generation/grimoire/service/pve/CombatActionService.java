@@ -158,7 +158,7 @@ class CombatActionService {
                     boolean isCrit = ((int) (Math.random() * 100) + 1) <= totalCrit;
 
                     if (isCrit) {
-                        System.out.println("💥 Coup Critique déclenché par " + p.getName() + " !");
+                        System.out.println("Coup Critique déclenché par " + p.getName() + " !");
                         double critMult = 1.5;
                         int bonus = p.getSpecialEffectValue(generation.grimoire.enumeration.EquipmentEffectType.CRIT_DAMAGE);
                         if (bonus > 0) {

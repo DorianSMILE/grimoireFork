@@ -11,15 +11,29 @@ const pageState = {
 
 
 
-window.addEventListener('authLoaded', async () => {
+async function applyAlchemyAdminAuthState() {
+    const contentEl = document.getElementById('alchemyAdminContent');
+    const warningEl = document.getElementById('alchemyAdminWarning');
+    if (!document.getElementById('recipeForm')) return;
+    if (!window.currentUser) return;
+
     if (window.initAppMeta) await window.initAppMeta();
+
     if (!window.isAdmin) {
-        document.body.innerHTML = "<h2 style='color:red;text-align:center;margin-top:50px;'>Accès Refusé : Réservé aux Admins</h2>";
+        if (warningEl) warningEl.classList.remove('hidden');
+        if (contentEl) contentEl.classList.add('hidden');
+        setTimeout(() => { window.location.href = '/'; }, 2000);
         return;
     }
-    await Promise.all([loadItems(), loadRecipes()]);
 
-});
+    if (warningEl) warningEl.classList.add('hidden');
+    if (contentEl) contentEl.classList.remove('hidden');
+    const adminLink = document.getElementById('adminAlchemyLink');
+    if (adminLink) adminLink.style.display = 'inline-flex';
+
+    await Promise.all([loadItems(), loadRecipes()]);
+    window.renderRecipesList();
+}
 
 async function loadItems() {
     try {
@@ -456,9 +470,7 @@ window.renderRecipesList = function () {
     });
 }
 
-document.getElementById('rewardType').addEventListener('change', updateRewardNameInput);
-
-document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+async function handleRecipeFormSubmit(e) {
     e.preventDefault();
     const msg = document.getElementById('formMsg');
     msg.innerText = "Sauvegarde...";
@@ -501,7 +513,7 @@ document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             body: JSON.stringify(recipe)
         });
         if (res && res.ok) {
-            msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !"; loadRecipes();
+            msg.innerText = editId ? "Recette mise à jour !" : "Recette créée avec succès !";
             msg.style.color = "#10b981";
             document.getElementById('recipeForm').reset();
             document.getElementById('recipeId').value = "";
@@ -510,7 +522,14 @@ document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             document.getElementById('reqAnomaliesList').innerHTML = '';
             document.getElementById('reqConsumablesList').innerHTML = '';
             document.getElementById('cancelEditBtn').classList.add('hidden');
-        
+            document.getElementById('rewardType').value = "GIVE_ANOMALY";
+            const rewardTypeWrapper = document.getElementById('rewardType').closest('.custom-select-wrapper');
+            if (rewardTypeWrapper) {
+                const opt = rewardTypeWrapper.querySelector(`.custom-option[data-value="GIVE_ANOMALY"]`);
+                if (opt) rewardTypeWrapper.querySelector('.cs-label').innerHTML = opt.innerHTML;
+            }
+            updateRewardNameInput();
+            loadRecipes();
         } else {
             const err = await res.text();
             msg.innerText = "Erreur: " + err;
@@ -520,7 +539,7 @@ document.getElementById('recipeForm').addEventListener('submit', async (e) => {
         msg.innerText = "Erreur réseau.";
         msg.style.color = "#ef4444";
     }
-});
+}
 
 async function deleteRecipe(id) {
     const confirmed = await window.showModal({
@@ -632,6 +651,55 @@ window.cancelEdit = function () {
     updateRewardNameInput();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+window.addRequirement = addRequirement;
+window.deleteRecipe = deleteRecipe;
+
+window.initAlchemyAdminPage = async function () {
+    window.addRequirement = addRequirement;
+    window.deleteRecipe = deleteRecipe;
+
+    const rewardTypeInput = document.getElementById('rewardType');
+    if (rewardTypeInput && !rewardTypeInput.dataset.changeBound) {
+        rewardTypeInput.dataset.changeBound = 'true';
+        rewardTypeInput.addEventListener('change', updateRewardNameInput);
+    }
+
+    const filterRewardTypeInput = document.getElementById('filterRewardType');
+    if (filterRewardTypeInput && !filterRewardTypeInput.dataset.changeBound) {
+        filterRewardTypeInput.dataset.changeBound = 'true';
+        filterRewardTypeInput.addEventListener('change', () => window.renderRecipesList());
+    }
+
+    const recipeForm = document.getElementById('recipeForm');
+    if (recipeForm && !recipeForm.dataset.submitBound) {
+        recipeForm.dataset.submitBound = 'true';
+        recipeForm.addEventListener('submit', handleRecipeFormSubmit);
+    }
+
+    if (window.initAppMeta) await window.initAppMeta();
+
+    window.removeEventListener('authLoaded', applyAlchemyAdminAuthState);
+    window.addEventListener('authLoaded', applyAlchemyAdminAuthState);
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else if (window.currentUser !== undefined) {
+        await applyAlchemyAdminAuthState();
+    }
+};
+
+window.cleanupAlchemyAdminPage = function () {
+    window.removeEventListener('authLoaded', applyAlchemyAdminAuthState);
+    document.getElementById('debug_items_count')?.remove();
+    if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('recipeForm')) {
+        window.initAlchemyAdminPage();
+    }
+});
 
 
 

@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { ArmoryPage } from './pages/ArmoryPage';
+import { AlchemyAdminPage } from './pages/AlchemyAdminPage';
 import { AlchemyPage } from './pages/AlchemyPage';
 import { DungeonsPage } from './pages/DungeonsPage';
 import { GrimoirePage } from './pages/GrimoirePage';
@@ -38,6 +39,8 @@ const SPA_ROUTES = new Set([
   '/shop-admin.html',
   '/pve-admin',
   '/pve-admin.html',
+  '/alchemy-admin',
+  '/alchemy-admin.html',
   '/login',
   '/login.html',
   '/register',
@@ -99,6 +102,8 @@ export function App() {
         <Route path="/shop-admin.html" element={<Navigate to="/shop-admin" replace />} />
         <Route path="/pve-admin" element={<PveAdminPage />} />
         <Route path="/pve-admin.html" element={<Navigate to="/pve-admin" replace />} />
+        <Route path="/alchemy-admin" element={<AlchemyAdminPage />} />
+        <Route path="/alchemy-admin.html" element={<Navigate to="/alchemy-admin" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

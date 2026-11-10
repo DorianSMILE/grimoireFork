@@ -93,6 +93,10 @@ declare global {
     addRoom?: (type: string) => void;
     cancelDungeonEdit?: () => void;
     renderDungeonsList?: () => void;
+    initAlchemyAdminPage?: () => Promise<void>;
+    cleanupAlchemyAdminPage?: () => void;
+    addRequirement?: (type: 'anomalie' | 'consumable', selectedName?: string, qty?: number) => void;
+    cancelEdit?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

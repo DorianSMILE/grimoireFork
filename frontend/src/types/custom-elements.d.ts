@@ -76,6 +76,9 @@ declare global {
     craftSelected?: () => Promise<void>;
     initHuntingPage?: () => Promise<void>;
     cleanupHuntingPage?: () => void;
+    initShopAdminPage?: () => Promise<void>;
+    cleanupShopAdminPage?: () => void;
+    openCreateUpgradeModal?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

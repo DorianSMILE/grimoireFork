@@ -6,7 +6,7 @@ window.pageState = pageState;
 
 // ===== Custom Select Logic =====
 document.addEventListener('change', (e) => {
-    if (!document.getElementById('vaultGrid')) return;
+    if (!document.getElementById('searchItemName')) return;
     if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'hidden') {
         const hiddenInput = e.target;
         if (hiddenInput.id === 'eqRarity') {
@@ -162,7 +162,7 @@ window.deleteAnomalie = function (idsStr) {
     });
 }
 
-window.deleteEquipment = function (idsStr) {
+function vaultDeleteEquipment(idsStr) {
     const ids = String(idsStr).split(',');
     const maxQty = ids.length;
     const firstId = Number(ids[0]);
@@ -713,7 +713,7 @@ window.onAnomalieMagicToggleChange = function (inputEl) {
 };
 
 async function applyVaultAuthState() {
-    if (!document.getElementById('vaultGrid')) return;
+    if (!document.getElementById('searchItemName')) return;
 
     const vaultMain = document.querySelector('.vault-main');
     const authLocked = document.getElementById('vaultAuthLocked');
@@ -766,6 +766,12 @@ async function applyVaultAuthState() {
 window.initVaultPage = async function () {
     window.pageState = pageState;
     window.filterVault = filterVault;
+    window.deleteEquipment = vaultDeleteEquipment;
+    window.openCreateEqModal = vaultOpenCreateEqModal;
+    window.closeCreateEqModal = vaultCloseCreateEqModal;
+    window.editEquipment = vaultEditEquipment;
+    window.submitEquipment = vaultSubmitEquipment;
+    window.updateWeightUI = updateWeightUI;
 
     if (!window.api) {
         const apiMod = await import('/js/services/api.js');
@@ -833,7 +839,7 @@ window.cleanupVaultPage = function () {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('vaultGrid')) {
+    if (document.getElementById('searchItemName')) {
         window.initVaultPage();
     }
 });
@@ -846,7 +852,7 @@ window.addEventListener('authLoaded', async () => {
 
 
 
-window.openCreateEqModal = function () {
+function vaultOpenCreateEqModal() {
     pageState.editingEquipmentId = null;
     document.getElementById('equipModalTitle').innerHTML = 'Forger un objet';
     document.getElementById('submitEquipmentBtn').innerHTML = '<span class="material-symbols-outlined icon-md">add</span> Forger';
@@ -854,15 +860,17 @@ window.openCreateEqModal = function () {
     document.getElementById('equipCreateModal').classList.add('show');
     updateWeightUI();
 }
+window.openCreateEqModal = vaultOpenCreateEqModal;
 
-window.closeCreateEqModal = function () {
+function vaultCloseCreateEqModal() {
     document.getElementById('equipCreateModal').classList.remove('show');
     resetEqForm();
 }
+window.closeCreateEqModal = vaultCloseCreateEqModal;
 
 
 
-window.editEquipment = function (id) {
+function vaultEditEquipment(id) {
     pageState.editingEquipmentId = id;
     const eq = pageState.allEquipments.find(e => e.id === id);
     if (!eq) return;
@@ -1009,6 +1017,7 @@ window.editEquipment = function (id) {
     updateWeightUI();
     document.getElementById('equipCreateModal').classList.add('show');
 }
+window.editEquipment = vaultEditEquipment;
 
 
 window.openCreateAnomalieModal = function () {
@@ -1140,7 +1149,7 @@ window.submitAnomalie = async function () {
     }
 };
 
-window.submitEquipment = async function () {
+async function vaultSubmitEquipment() {
     const name = document.getElementById('eqName').value.trim();
     const slot = document.getElementById('eqSlot').value;
     if (!name) { showNotif('Nom de l\'équipement obligatoire.', true); return; }
@@ -1219,7 +1228,7 @@ window.submitEquipment = async function () {
             return;
         }
 
-        closeCreateEqModal();
+        vaultCloseCreateEqModal();
         showNotif(pageState.editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
         await loadEquipments();
     } catch (e) {
@@ -1227,10 +1236,11 @@ window.submitEquipment = async function () {
         showNotif('Erreur réseau', true);
     }
 }
+window.submitEquipment = vaultSubmitEquipment;
 
 
 
-window.updateWeightUI = async function () {
+async function updateWeightUI() {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;

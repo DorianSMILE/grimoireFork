@@ -100,7 +100,7 @@ class AppNavbar extends HTMLElement {
                     <span id="navHuntingBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
                 
-                <a href="/shop-admin.html" id="adminShopLink" class="top-nav-link nav-admin ${activePage === 'shop-admin' ? 'active' : ''}" style="display: none;">
+                <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin ${activePage === 'shop-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">settings</span> Admin Boutique
                 </a>
                 <a href="/pve-admin.html" id="adminPvELink" class="top-nav-link nav-admin ${activePage === 'pve-admin' ? 'active' : ''}" style="display: none;">

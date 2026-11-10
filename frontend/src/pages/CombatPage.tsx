@@ -18,7 +18,7 @@ export function CombatPage() {
         await importDynamic('/js/services/auth.js?v=27');
         if (cancelled) return;
 
-        await importDynamic('/js/combat/combat-state.js?v=1786180000237');
+        await importDynamic('/js/combat/combat-state.js?v=1786180000239');
         if (cancelled) return;
 
         if (typeof window.initCombatPage === 'function') {
@@ -247,7 +247,7 @@ export function CombatPage() {
                   className="action-btn treasure hidden"
                   id="btnOpenChest"
                   type="button"
-                  onClick={() => window.openChest?.(false)}
+                  onClick={() => window.openChest?.()}
                 >
                   <span className="material-symbols-outlined">lock_open</span> Ouvrir le coffre
                 </button>
@@ -263,8 +263,9 @@ export function CombatPage() {
                 <button
                   className="action-btn info hidden"
                   id="btnContinueEvent"
+                  data-next-room-btn="true"
+                  data-orig-text="Continuer"
                   type="button"
-                  onClick={() => window.nextRoom?.()}
                 >
                   Continuer
                 </button>
@@ -337,6 +338,9 @@ export function CombatPage() {
             ></div>
             <button
               className="action-btn bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+              id="btnVictoryContinue"
+              data-next-room-btn="true"
+              data-orig-text="Continuer l'exploration"
               type="button"
               onClick={() => window.nextRoom?.()}
             >

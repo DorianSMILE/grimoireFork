@@ -180,3 +180,168 @@
     }
 }
 
+/* =====================================================
+   AFFINITY CLASSES & SPELL CARD SEMANTIC HELPERS
+   ===================================================== */
+.affinity-raison { --spell-color: #3b82f6; --spell-rgb: 59, 130, 246; }
+.affinity-surete { --spell-color: #00e5cc; --spell-rgb: 0, 229, 204; }
+.affinity-trahison { --spell-color: #ed5677; --spell-rgb: 237, 86, 119; }
+.affinity-consolidation { --spell-color: #99674c; --spell-rgb: 153, 103, 76; }
+.affinity-conviction { --spell-color: #b74c0b; --spell-rgb: 183, 76, 11; }
+.affinity-creation { --spell-color: #10b981; --spell-rgb: 16, 185, 129; }
+.affinity-destruction { --spell-color: #ff0000; --spell-rgb: 255, 0, 0; }
+.affinity-violence { --spell-color: #a70740; --spell-rgb: 167, 7, 64; }
+.affinity-esprit { --spell-color: #38bdf8; --spell-rgb: 56, 189, 248; }
+.affinity-tenebres { --spell-color: #c084fc; --spell-rgb: 192, 132, 252; }
+.affinity-karma { --spell-color: #e7d198; --spell-rgb: 231, 209, 152; }
+.affinity-spirit-default { --spell-color: #a78bfa; --spell-rgb: 167, 139, 250; }
+.affinity-mutation { --spell-color: #e879f9; --spell-rgb: 232, 121, 249; }
+.affinity-default { --spell-color: #94a3b8; --spell-rgb: 148, 163, 184; }
+
+.spell-card .spell-name {
+    color: var(--spell-color, var(--primary));
+}
+
+.spell-card.is-locked {
+    opacity: 0.6;
+    filter: grayscale(60%);
+    pointer-events: none;
+}
+
+.editing-preview-container .spell-admin-actions {
+    display: none;
+}
+
+.affinity-badge {
+    color: var(--spell-color);
+    border-color: rgba(var(--spell-rgb), 0.3);
+    background: rgba(var(--spell-rgb), 0.05);
+}
+
+.affinity-tooltip-header {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--spell-color);
+}
+
+.affinity-tooltip-desc {
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+.affinity-tooltip-passive {
+    color: #e2e8f0;
+}
+
+.affinity-tooltip-bolt {
+    font-size: 0.95rem;
+    color: var(--spell-color);
+}
+
+.affinity-tooltip-pre {
+    white-space: pre-wrap;
+}
+
+.badge-icon-sm {
+    font-size: 1.05rem;
+}
+
+.badge-icon-md {
+    font-size: 1.1rem;
+}
+
+.lvl-badge-1 {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #f8fafc;
+    font-weight: 500;
+}
+
+.lvl-badge-2 {
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    font-weight: 600;
+}
+
+.lvl-badge-3 {
+    background: rgba(var(--spell-rgb), 0.25);
+    border: 1px solid rgba(var(--spell-rgb), 0.6);
+    color: var(--spell-color);
+    font-weight: 700;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.lvl-badge-4 {
+    background: rgba(var(--spell-rgb), 0.4);
+    border: 1px solid var(--spell-color);
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 0 5px var(--spell-color);
+    box-shadow: 0 0 12px rgba(var(--spell-rgb), 0.5);
+}
+
+.lvl-badge-5 {
+    background: linear-gradient(135deg, var(--spell-color), rgba(var(--spell-rgb), 0.6));
+    border: 1px solid #fff;
+    color: #fff;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 20px rgba(var(--spell-rgb), 0.8);
+}
+
+.rank-tooltip-title {
+    font-weight: 700;
+    color: var(--spell-color);
+}
+
+.spell-channeling-meta {
+    color: #a78bfa;
+}
+
+.spell-description-quote {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.eff-icon-base {
+    font-size: 1.1rem;
+}
+
+.eff-icon-stat {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    margin-left: -0.1rem;
+}
+
+.eff-icon-ds {
+    font-size: 1rem;
+}
+
+.spell-effects-calculated-wrapper {
+    position: relative;
+    padding-right: 1.8rem;
+}
+
+.spell-tooltip-raw-help-btn {
+    position: absolute;
+    top: 0.4rem;
+    right: 0;
+    cursor: help;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 20;
+}
+
+.spell-tooltip-raw-help-btn:hover {
+    opacity: 1;
+}
+
+.spell-tooltip-raw-help-icon {
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+

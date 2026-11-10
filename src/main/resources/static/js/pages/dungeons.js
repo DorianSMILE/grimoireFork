@@ -510,6 +510,7 @@ window.initDungeonsPage = async function () {
     }
     const prepInterface = document.getElementById('prepInterface');
     if (prepInterface) {
+        prepInterface.classList.add('init-hidden');
         prepInterface.style.display = 'none';
     }
 
@@ -558,11 +559,13 @@ async function loadDungeons() {
 
             if (dungeons.length === 0) {
                 document.getElementById('noDungeonsMsg').style.display = 'block';
+                tabsHeader.classList.add('init-hidden');
                 tabsHeader.style.display = 'none';
                 document.getElementById('loadingDungeonsMsg').style.display = 'none';
                 return;
             } else {
                 document.getElementById('noDungeonsMsg').style.display = 'none';
+                tabsHeader.classList.remove('init-hidden');
                 tabsHeader.style.display = 'flex';
                 document.getElementById('loadingDungeonsMsg').style.display = 'none';
             }
@@ -1648,7 +1651,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     if (tooltipTrigger) {
         if (lootItems.length === 0) {
             tooltipTrigger.style.display = 'none';
-            tooltipTrigger.classList.add('hidden');
+            tooltipTrigger.classList.add('hidden', 'init-hidden');
             tooltipTrigger.classList.remove('flex');
             tooltipTrigger.removeAttribute('data-tooltip-html');
         } else {
@@ -1658,7 +1661,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
             if (dropdown) dropdown.innerHTML = tooltipContent;
 
             tooltipTrigger.style.display = 'flex';
-            tooltipTrigger.classList.remove('hidden');
+            tooltipTrigger.classList.remove('hidden', 'init-hidden');
             tooltipTrigger.classList.add('flex');
         }
     }
@@ -1696,8 +1699,15 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     renderConsumablesList();
 
-    document.getElementById('dungeonsContent').style.display = 'none';
-    document.getElementById('prepInterface').style.display = 'block';
+    const dungeonsContent = document.getElementById('dungeonsContent');
+    if (dungeonsContent) {
+        dungeonsContent.style.display = 'none';
+    }
+    const prepInterface = document.getElementById('prepInterface');
+    if (prepInterface) {
+        prepInterface.classList.remove('init-hidden');
+        prepInterface.style.display = 'block';
+    }
     if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
         setTimeout(() => { if (window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') window.GrimoireTutorial.goToStepByName('DUNGEON_SELECT_HERO'); }, 80);
     }
@@ -1708,8 +1718,16 @@ window.closePrepInterface = function () {
         return;
     }
     window._isStartingCombat = false;
-    document.getElementById('prepInterface').style.display = 'none';
-    document.getElementById('dungeonsContent').style.display = 'block';
+    const prepInterface = document.getElementById('prepInterface');
+    if (prepInterface) {
+        prepInterface.classList.add('init-hidden');
+        prepInterface.style.display = 'none';
+    }
+    const dungeonsContent = document.getElementById('dungeonsContent');
+    if (dungeonsContent) {
+        dungeonsContent.classList.remove('init-hidden');
+        dungeonsContent.style.display = 'block';
+    }
     pageState.currentDungeonId = null;
     pageState.selectedCharIds = [];
     pageState.selectedConsumableIds = [];
@@ -1954,8 +1972,10 @@ window.createCoopLobby = async function () {
         if (costWarning && costAmount) {
             if (window.currentDungeonEntryCost > 0) {
                 costAmount.textContent = window.currentDungeonEntryCost;
+                costWarning.classList.remove('init-hidden');
                 costWarning.style.display = 'block';
             } else {
+                costWarning.classList.add('init-hidden');
                 costWarning.style.display = 'none';
             }
         }
@@ -1968,6 +1988,7 @@ window.createCoopLobby = async function () {
         const preview = document.getElementById('lobbyGuestPreview');
         if (preview) {
             preview.innerHTML = '';
+            preview.classList.add('init-hidden');
             preview.style.display = 'none';
         }
 
@@ -2025,6 +2046,7 @@ function closeLobbyOverlay() {
     const preview = document.getElementById('lobbyGuestPreview');
     if (preview) {
         preview.innerHTML = '';
+        preview.classList.add('init-hidden');
         preview.style.display = 'none';
     }
 }
@@ -2140,6 +2162,7 @@ function onGuestUpdate(data) {
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">${consHtml}</div>
         </div>
     `;
+    section.classList.remove('init-hidden');
     section.style.display = 'block';
 }
 

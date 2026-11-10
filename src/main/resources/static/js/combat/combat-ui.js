@@ -1,12 +1,12 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000235';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000235';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000235';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000235';
+import { pageState } from './combat-state.js?v=1786180000239';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000239';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000239';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { showFighterPingMenu } from './combat-signals.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000239';
 import { renderHeroCombatSprite } from './combat-sprites.js';
 
 function isCombatLogOpen(logContainer) {
@@ -984,6 +984,7 @@ export function updateUI(data) {
     if (data && data.multi !== undefined) {
         pageState.isMulti = (data.multi === true);
     }
+    pageState.pendingSseData = null;
 
     // Auto-select first alive target if current is null or dead
     if (data.enemies && data.enemies.length > 0) {
@@ -1488,8 +1489,12 @@ export function updateUI(data) {
             document.getElementById('enemiesContainer').innerHTML = ''; // Clear enemies
 
             // Reset les textes originaux des boutons pour ne pas garder ceux de la salle précédente
-            document.querySelectorAll('button[onclick*="nextRoom"]').forEach(btn => {
-                delete btn.dataset.origText;
+            document.querySelectorAll('#btnVictoryContinue, #btnContinueEvent, button[data-next-room-btn="true"], button[onclick*="nextRoom"]').forEach(btn => {
+                if (btn.id === 'btnVictoryContinue') {
+                    btn.dataset.origText = "Continuer l'exploration";
+                } else {
+                    btn.dataset.origText = 'Continuer';
+                }
             });
 
             const overlay = document.getElementById('eventOverlay');
@@ -1512,6 +1517,8 @@ export function updateUI(data) {
             // Reset default onclick to prevent previous events (like PORTE_ETRANGE) from overriding it
             if (btnCont) {
                 btnCont.onclick = nextRoom;
+                btnCont.textContent = 'Continuer';
+                btnCont.dataset.origText = 'Continuer';
             }
 
             const actionContainer = document.getElementById('eventActionContainer');
@@ -1519,6 +1526,8 @@ export function updateUI(data) {
                 actionContainer.querySelectorAll('.dynamic-key-btn').forEach(b => b.remove());
                 const oldKeys = document.getElementById('keysContainer');
                 if (oldKeys) oldKeys.remove();
+                const oldChestWait = document.getElementById('chestWaitingStatus');
+                if (oldChestWait) oldChestWait.remove();
             }
 
 
@@ -1528,7 +1537,7 @@ export function updateUI(data) {
 
                 // Clear old styles first
                 btn.style.opacity = '1';
-                btn.classList.remove('bg-green-600', 'text-white', 'opacity-50');
+                btn.classList.remove('bg-green-600', 'text-white', 'opacity-50', 'is-choice-selected');
 
                 // Remove previous counter if exists
                 const existingCounter = btn.querySelector('.ready-counter');
@@ -1542,7 +1551,7 @@ export function updateUI(data) {
                 }
 
                 if (isChosen) {
-                    btn.classList.add('bg-green-600', 'text-white');
+                    btn.classList.add('bg-green-600', 'text-white', 'is-choice-selected');
                     btn.classList.remove('bg-dark-surface', 'bg-dark-hover'); // in case it has these
                 } else if (myChoice) {
                     // if they chose something else, dim this button
@@ -1550,7 +1559,7 @@ export function updateUI(data) {
                 }
             }
 
-            const activeUsersCount = new Set((data.players || []).filter(p => p.healthCurrent > 0 && p.ownerUsername).map(p => p.ownerUsername)).size;
+            const activeUsersCount = getActiveUsersCount(data);
             const readyUsersCount = data.playerRoomChoices ? Object.keys(data.playerRoomChoices).length : 0;
             if (data.currentRoom.type === 'TREASURE') {
                 icon.textContent = data.roomEventCompleted ? 'lock_open' : 'lock';
@@ -1729,17 +1738,8 @@ export function updateUI(data) {
 
                     lootContainer.classList.add('hidden'); lootContainer.classList.remove('flex');
 
-                    let openVotes = 0;
-                    if (data.playerRoomChoices) {
-                        for (let user in data.playerRoomChoices) {
-                            if (data.playerRoomChoices[user].actionType === 'OPEN') {
-                                openVotes++;
-                            }
-                        }
-                    }
-
                     const isMainChosen = myChoice && myChoice.actionType === 'OPEN';
-                    applyChoiceStyle(btnOpen, isMainChosen, activeUsersCount > 1, openVotes, activeUsersCount);
+                    applyChoiceStyle(btnOpen, isMainChosen, activeUsersCount > 1, readyUsersCount, activeUsersCount);
 
                     const actionContainer = document.getElementById('eventActionContainer');
                     if (actionContainer && btnCont) {
@@ -1852,6 +1852,18 @@ export function updateUI(data) {
                         });
                         const btnKey = document.getElementById('btnOpenChestKey');
                         if (btnKey) btnKey.classList.add('hidden');
+
+                        if (activeUsersCount > 1 && readyUsersCount > 0) {
+                            const waitDiv = document.createElement('div');
+                            waitDiv.id = 'chestWaitingStatus';
+                            waitDiv.className = myChoice
+                                ? 'text-center w-full mt-2 text-sm text-sky-medium animate-pulse'
+                                : 'text-center w-full mt-2 text-sm text-amber-400 animate-pulse';
+                            waitDiv.textContent = myChoice
+                                ? `En attente des autres joueurs... (${readyUsersCount}/${activeUsersCount})`
+                                : `Votre allié est prêt (${readyUsersCount}/${activeUsersCount})`;
+                            actionContainer.appendChild(waitDiv);
+                        }
                     }
                 }
             } else if (data.currentRoom.type === 'EVENT') {
@@ -2003,7 +2015,8 @@ export function updateUI(data) {
                                     btn.classList.remove('disabled');
                                 }
 
-                                const first = eligible[0];
+                                const first = eligible.find(a => String(a.id) === String(pageState.selectedAltarAnomalyId)) || eligible[0];
+                                pageState.selectedAltarAnomalyId = first.id;
                                 let firstCatIcon = first.category ? (getCategoryIcon(first.category)) : 'star';
                                 let selectHtml = `
                                 <div class="custom-select-wrapper" id="altarAnomalySelectWrapper" style="max-width: 350px; margin: 0 auto; z-index: 100;">
@@ -2017,7 +2030,7 @@ export function updateUI(data) {
                                 `;
                                 eligible.forEach(a => {
                                     let catIcon = a.category ? (getCategoryIcon(a.category)) : 'star';
-                                    selectHtml += `<div class="custom-option" onclick="document.getElementById('altarAnomalySelectLabel').innerHTML = this.innerHTML; document.getElementById('altarAnomalySelect').value = '${a.id}'; document.getElementById('altarAnomalySelectWrapper').classList.remove('open'); if(window.updateAltarDropChance) window.updateAltarDropChance(${a.level || 1});"><span class="material-symbols-outlined cs-icon" style="color: ${spColor};">${catIcon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1}) (Stock: ${a.stock || 1})</span></div>`;
+                                    selectHtml += `<div class="custom-option" onclick="document.getElementById('altarAnomalySelectLabel').innerHTML = this.innerHTML; document.getElementById('altarAnomalySelect').value = '${a.id}'; if(window.pageState) window.pageState.selectedAltarAnomalyId = '${a.id}'; document.getElementById('altarAnomalySelectWrapper').classList.remove('open'); if(window.updateAltarDropChance) window.updateAltarDropChance(${a.level || 1});"><span class="material-symbols-outlined cs-icon" style="color: ${spColor};">${catIcon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1}) (Stock: ${a.stock || 1})</span></div>`;
                                 });
                                 selectHtml += `
                                     </div>
@@ -2090,10 +2103,7 @@ export function updateUI(data) {
                         let passSelectedStyle = '';
                         let waitingHtml = '';
 
-                        let totalUsers = 1;
-                        if (data.players && data.players.length > 0) {
-                            totalUsers = new Set(data.players.map(p => p.ownerUsername)).size;
-                        }
+                        let totalUsers = getActiveUsersCount(data);
 
                         let acceptVotes = 0;
                         let passVotes = 0;
@@ -2117,8 +2127,10 @@ export function updateUI(data) {
                                     acceptSelectedStyle = 'box-shadow: 0 0 15px rgba(168, 85, 247, 0.6); background: rgba(168, 85, 247, 0.25) !important; border-color: rgba(168, 85, 247, 0.8) !important;';
                                 }
                                 if (isMulti) {
-                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs...</div>`;
+                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs... (${acceptVotes + passVotes}/${totalUsers})</div>`;
                                 }
+                            } else if (isMulti && (acceptVotes + passVotes) > 0) {
+                                waitingHtml = `<div class="text-center w-full mt-2 text-sm text-amber-400 animate-pulse">Votre allié a fait son choix (${acceptVotes + passVotes}/${totalUsers})</div>`;
                             }
                         }
 
@@ -2548,10 +2560,7 @@ export function updateUI(data) {
                         const hasRope = ropes.length > 0;
 
                         // Multi-player voting state
-                        let totalUsers = 1;
-                        if (data.players && data.players.length > 0) {
-                            totalUsers = new Set(data.players.filter(p => p.healthCurrent > 0 && p.ownerUsername).map(p => p.ownerUsername)).size;
-                        }
+                        let totalUsers = getActiveUsersCount(data);
                         const isMulti = totalUsers > 1;
 
                         let ropeVotes = 0;
@@ -2575,6 +2584,7 @@ export function updateUI(data) {
                             }
 
                             const myChoice = data.playerRoomChoices[pageState.currentUsername];
+                            const totalTrapVotes = ropeVotes + disarmVotes + acceptVotes;
                             if (myChoice) {
                                 if (myChoice.actionType === 'ROPE') {
                                     ropeSelectedClass = 'is-selected';
@@ -2584,8 +2594,10 @@ export function updateUI(data) {
                                     acceptSelectedClass = 'is-selected';
                                 }
                                 if (isMulti) {
-                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs...</div>`;
+                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs... (${totalTrapVotes}/${totalUsers})</div>`;
                                 }
+                            } else if (isMulti && totalTrapVotes > 0) {
+                                waitingHtml = `<div class="text-center w-full mt-2 text-sm text-amber-400 animate-pulse">Votre allié a choisi une option (${totalTrapVotes}/${totalUsers})</div>`;
                             }
                         }
 
@@ -2735,6 +2747,7 @@ export function updateUI(data) {
                         btnOpen.classList.add('hidden');
                         btnCont.classList.remove('hidden');
                         btnCont.textContent = 'Passer la porte';
+                        btnCont.dataset.origText = 'Passer la porte';
                         btnCont.onclick = openStrangeDoor;
                         lootContainer.classList.add('hidden'); lootContainer.classList.remove('flex');
 
@@ -2937,27 +2950,48 @@ function renderActiveChallenges(data) {
     }
 }
 
-function updateNextRoomButtons(data) {
-    if (!data.multi) return;
-
+function getActiveUsersCount(data) {
+    if (!data || !Array.isArray(data.players)) return 1;
     const activeUsers = new Set();
-    if (data.players) {
-        data.players.forEach(p => {
-            if (p.healthCurrent > 0 && !(data.fledUsernames && data.fledUsernames.includes(p.ownerUsername))) {
-                if (p.ownerUsername) activeUsers.add(p.ownerUsername);
+    data.players.forEach(p => {
+        if (p.healthCurrent > 0 && !(data.fledUsernames && data.fledUsernames.includes(p.ownerUsername))) {
+            if (p.ownerUsername) activeUsers.add(p.ownerUsername);
+        }
+    });
+    return Math.max(1, activeUsers.size);
+}
+
+function updateNextRoomButtons(data) {
+    const totalActive = getActiveUsersCount(data);
+    const isMultiSession = Boolean(data && (data.multi || data.isMulti || pageState.isMulti || totalActive > 1));
+    const buttons = document.querySelectorAll('#btnVictoryContinue, #btnContinueEvent, button[data-next-room-btn="true"], button[onclick*="nextRoom"]');
+
+    if (!isMultiSession || totalActive <= 1) {
+        buttons.forEach(btn => {
+            const origText = btn.dataset.origText || btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
+            if (origText && !origText.startsWith('En attente')) {
+                btn.textContent = origText;
             }
+            btn.disabled = false;
+            btn.classList.remove('waiting-ready', 'disabled');
+            btn.style.opacity = '1';
         });
+        return;
     }
-    const totalActive = activeUsers.size;
-    if (totalActive <= 1) return; // Only show for 2+ active players
 
     const readyUsers = data.readyForNextRoomUsers || [];
     const readyCount = readyUsers.length;
-    const isMeReady = readyUsers.includes(pageState.currentUsername);
+    const isMeReady = Boolean(pageState.currentUsername && readyUsers.includes(pageState.currentUsername));
 
-    document.querySelectorAll('button[onclick*="nextRoom"]').forEach(btn => {
-        let origText = btn.dataset.origText || btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
-        btn.dataset.origText = origText;
+    buttons.forEach(btn => {
+        let origText = btn.dataset.origText;
+        if (!origText || origText.startsWith('En attente')) {
+            const cleaned = btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
+            origText = (!cleaned || cleaned.startsWith('En attente'))
+                ? (btn.id === 'btnVictoryContinue' ? "Continuer l'exploration" : 'Continuer')
+                : cleaned;
+            btn.dataset.origText = origText;
+        }
 
         let newText = isMeReady ? `En attente (${readyCount}/${totalActive})` : `${origText} (${readyCount}/${totalActive})`;
         btn.textContent = newText;

@@ -29,7 +29,7 @@ export function GrimoirePage() {
 
     async function bootGrimoire() {
       const authUrl = '/js/services/auth.js?v=27';
-      const appUrl = '/js/app.js?v=9';
+      const appUrl = '/js/app.js?v=10';
       await import(/* @vite-ignore */ authUrl);
       if (typeof window.initGrimoirePage !== 'function') {
         await import(/* @vite-ignore */ appUrl);
@@ -333,7 +333,7 @@ export function GrimoirePage() {
             </div>
           </div>
 
-          <div className="form-row gap-4 init-hidden" id="monsterAffinityRow">
+          <div className="form-row flex gap-4 init-hidden" id="monsterAffinityRow">
             <div className="form-group flex-1">
               <label
                 className="flex items-center gap-1"
@@ -357,26 +357,26 @@ export function GrimoirePage() {
               className="hidden"
               onChange={() => window.updateViolenceLabel?.()}
             />
-            <div className="violence-segmented-control gap-2 grid grid-cols-2 bg-black/40 border border-glass rounded-xl">
+            <div className="violence-segmented-control gap-2 grid grid-cols-2 bg-black/40 border border-glass rounded-xl p-1">
               <button
-                className="flex items-center gap-1 bg-transparent border border-transparent rounded-lg py-3 px-2 flex-col cursor-pointer transition-all"
+                className="violence-option-btn active flex items-center gap-1 rounded-lg py-3 px-2 flex-col bg-cyan-500/20 border border-cyan-500 text-cyan-400 cursor-pointer transition-all"
                 type="button"
                 id="btnInspiration"
                 onClick={() => window.setViolenceType?.(true)}
               >
-                <span className="material-symbols-outlined text-2xl transition-transform">
+                <span className="material-symbols-outlined text-2xl">
                   storm
                 </span>
                 <span className="font-semibold text-md">Inspiration</span>
                 <span className="text-sm opacity-80">+Critique</span>
               </button>
               <button
-                className="flex items-center gap-1 bg-transparent border border-transparent rounded-lg py-3 px-2 flex-col cursor-pointer transition-all"
+                className="violence-option-btn flex items-center gap-1 rounded-lg py-3 px-2 flex-col bg-transparent border border-transparent text-muted cursor-pointer transition-all"
                 type="button"
                 id="btnExpiration"
                 onClick={() => window.setViolenceType?.(false)}
               >
-                <span className="material-symbols-outlined text-2xl transition-transform">
+                <span className="material-symbols-outlined text-2xl">
                   air
                 </span>
                 <span className="font-semibold text-md">Expiration</span>
@@ -388,36 +388,36 @@ export function GrimoirePage() {
           {/* Options spécifiques pour la Spiritualité Karma */}
           <div className="form-group mt-4 init-hidden" id="karmaConfig">
             <input type="hidden" id="karmaAlignment" defaultValue="NONE" />
-            <div className="karma-segmented-control gap-2 grid grid-cols-3 bg-black/40 border border-glass rounded-xl">
+            <div className="karma-segmented-control gap-2 grid grid-cols-3 bg-black/40 border border-glass rounded-xl p-1">
               <button
-                className="flex items-center gap-1 bg-transparent border border-transparent rounded-lg py-3 px-2 flex-col cursor-pointer transition-all"
+                className="karma-option-btn flex items-center gap-1 rounded-lg py-3 px-2 flex-col bg-transparent border border-transparent text-muted cursor-pointer transition-all"
                 type="button"
                 id="btnKarmaOffensive"
                 onClick={() => window.setKarmaAlignment?.('OFFENSIVE')}
               >
-                <span className="material-symbols-outlined text-2xl transition-transform">
+                <span className="material-symbols-outlined text-2xl">
                   dark_mode
                 </span>
                 <span className="font-semibold text-sm">Ténèbres</span>
               </button>
               <button
-                className="flex items-center gap-1 bg-transparent border border-transparent rounded-lg py-3 px-2 flex-col cursor-pointer transition-all"
+                className="karma-option-btn flex items-center gap-1 rounded-lg py-3 px-2 flex-col bg-transparent border border-transparent text-muted cursor-pointer transition-all"
                 type="button"
                 id="btnKarmaRestorative"
                 onClick={() => window.setKarmaAlignment?.('RESTORATIVE')}
               >
-                <span className="material-symbols-outlined text-2xl transition-transform">
+                <span className="material-symbols-outlined text-2xl">
                   brightness_medium
                 </span>
                 <span className="font-semibold text-sm">Harmonie</span>
               </button>
               <button
-                className="flex items-center gap-1 bg-transparent border border-transparent rounded-lg py-3 px-2 flex-col cursor-pointer transition-all"
+                className="karma-option-btn flex items-center gap-1 rounded-lg py-3 px-2 flex-col bg-transparent border border-transparent text-muted cursor-pointer transition-all"
                 type="button"
                 id="btnKarmaProtective"
                 onClick={() => window.setKarmaAlignment?.('PROTECTIVE')}
               >
-                <span className="material-symbols-outlined text-2xl transition-transform">
+                <span className="material-symbols-outlined text-2xl">
                   light_mode
                 </span>
                 <span className="font-semibold text-sm">Lumière</span>
@@ -427,6 +427,7 @@ export function GrimoirePage() {
 
           <hr className="my-2 border-glass" />
 
+          {/* Section Dynamique des Effets */}
           <div className="form-group">
             <label className="mb-1 font-semibold">
               Ajouter une ligne d&apos;effet au sort :
@@ -723,7 +724,6 @@ export function GrimoirePage() {
               />
             </div>
 
-            {/* Section Filtrage par Voie (Boutons uniques) */}
             <div>
               <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
                 <span className="material-symbols-outlined text-purple text-md">
@@ -737,7 +737,6 @@ export function GrimoirePage() {
               ></div>
             </div>
 
-            {/* Section Filtrage par Spiritualité et Mutation */}
             <div className="flex gap-4 flex-wrap items-start">
               <div className="flex-1">
                 <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">

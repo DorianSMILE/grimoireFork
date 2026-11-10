@@ -5,21 +5,20 @@
 
 ---
 
-## 1. Architecture de Migration (Pattern *Strangler Fig*)
+## 1. Architecture de la SPA React (Migration 100% Complétée)
 
-La migration s'effectue **page par page** sans interruption de service ni duplication du backend :
+Les **16 pages** de Grimoire sont désormais migrées dans la SPA React sans interruption de service ni duplication du backend :
 
-- **Code source React** : isolé dans le dossier `frontend/` (`React 19` + `TypeScript` + `react-router-dom`).
+- **Code source React** : centralisé dans `frontend/` (`React 19` + `TypeScript` + `react-router-dom`).
 - **Build de production Spring Boot (`:8080`)** :
   - `npm --prefix frontend run build` compile l'application React dans `src/main/resources/static/app/` (`base: '/app/'`).
-  - Les ressources Vanilla existantes (`src/main/resources/static/styles/`, `js/`, `images/`, `sons/`, `*.html`) restent intactes.
-  - `WebMvcConfig.java` et `SecurityConfig.java` pré-enregistrent toutes les routes SPA cibles (`/grimoire`, `/armory`, `/dungeons`, `/login`, `/register`, etc.) vers `forward:/app/index.html`.
-  - Les anciens fichiers HTML (`login.html`, `register.html`, `index.html`, `armory.html`, `dungeons.html`) sont conservés sous forme de micro-redirections vers les nouvelles URLs propres (`/login`, `/register`, `/grimoire`, `/armory`, `/dungeons`) pour garantir zéro lien cassé depuis les pages non migrées.
+  - Les feuilles de style, assets et modules métier (`src/main/resources/static/styles/`, `js/`, `images/`, `sons/`) sont servis par Spring Boot.
+  - `SpaForwardController.java` et `SecurityConfig.java` routent toutes les URLs SPA (`/grimoire`, `/armory`, `/dungeons`, `/vault`, `/shop`, `/alchemy`, `/hunting`, `/shop-admin`, `/pve-admin`, `/alchemy-admin`, `/secrets`, `/dungeon-stats`, `/achievements`, `/combat`, `/login`, `/register`) vers `forward:/app/index.html` en neutralisant les en-têtes conditionnels (`If-None-Match` / `If-Modified-Since`) et en forçant `Cache-Control: no-store` pour éviter tout `HTTP 304` vide au rechargement navigateur.
+  - Les anciens fichiers `*.html` (`login.html`, `register.html`, `index.html`, `armory.html`, `dungeons.html`, `combat.html`, etc.) redirigent automatiquement vers leurs nouvelles URLs propres sans `.html`.
 - **Serveur de développement HMR (`:5173`)** :
-  - `vite.config.ts` proxifie automatiquement `/api`, `/styles`, `/js`, `/images`, `/sons` ainsi que toutes les pages `*.html` non encore migrées vers `http://localhost:8080`.
-- **Navigation hybride transparente** :
-  - Entre deux pages migrées en React : navigation **SPA instantanée** sans rechargement (via `<Link>` ou `SpaLinkInterceptor` dans `App.tsx` qui intercepte aussi les clics dans `<app-navbar>`).
-  - Entre une page React et une page Vanilla : navigation classique partageant le même `localStorage` (`accessToken`, `isLikelyLoggedIn`, `activeCombatId`) et le cookie `refresh_token`.
+  - `vite.config.ts` proxifie `/api`, `/styles`, `/js`, `/images`, `/sons` vers `http://localhost:8080`.
+- **Navigation SPA unifiée** :
+  - Toutes les transitions entre les 16 pages s'effectuent en **SPA instantanée** sans rechargement complet (via `<Link>`, `useNavigate` ou `SpaLinkInterceptor` dans `App.tsx` qui intercepte également les clics internes de `<app-navbar>`).
 
 ---
 
@@ -59,33 +58,31 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ## 4. Retour d'Expérience & Correctifs Appliqués
 
-Lors de la migration des 3 premières pages (`/login`, `/register`, `/grimoire`), les points suivants ont été résolus et servent de standard pour la suite :
+Au fil de la migration complète des 16 pages, les points critiques suivants ont été résolus et constituent le standard du projet :
 
 1. **Conteneur `#root` en plein écran** :
    - `body` étant en `display: flex; flex-direction: column`, `#root` doit avoir `width: 100%; min-height: 100vh;` (`login.css`) pour éviter que les pages centrées ne se réduisent à la largeur de leur carte centrale.
-2. **Visibilité initiale et spécificité CSS (Zéro `style=` inline)** :
-   - Pour masquer un panneau par défaut sans attribut `style="display:none"`, utiliser `.is-hidden` (`display: none !important;`) ou `.init-hidden.init-hidden` (`layout.css`, spécificité `(0,2,0)`) afin de surpasser `.panel { display: flex }` ou `.form-row { display: grid }`.
-3. **Collision `window.isAdmin`** :
+2. **Prévention des réponses `304 Not Modified` vides au F5 (`SpaForwardController.java`)** :
+   - Lors d'un `forward:/app/index.html`, `ResourceHttpRequestHandler` de Spring Boot comparait l'ETag de `/app/index.html` avec l'en-tête `If-None-Match` du navigateur et renvoyait parfois un `304` sans corps sur les routes SPA. `SpaForwardController` enveloppe la requête via `HttpServletRequestWrapper` pour ignorer `If-None-Match` / `If-Modified-Since` et définit `Cache-Control: no-cache, no-store, must-revalidate`.
+3. **Visibilité initiale et spécificité CSS (Zéro `style=` inline)** :
+   - `.is-hidden.is-hidden` (`display: none !important;`) est réservé aux éléments dont la visibilité est basculée par classe CSS (`classList.add/remove('is-hidden')`).
+   - `.init-hidden` (`display: none;` sans `!important`) permet de masquer initialement un élément en JSX tout en laissant les scripts JS legacy (`el.style.display = 'block'` + `classList.remove('init-hidden')`) l'afficher dynamiquement (ex: `#prepInterface` et `#dungeonsTabs` dans `/dungeons`).
+4. **Collision `window.isAdmin`** :
    - `auth.js` stocke un booléen dans `window.isAdmin`, tandis que `api.js` exporte une fonction `isAdmin(user)`. Ne jamais faire `Object.assign(window, api)` sans exclure `isAdmin`, sinon `window.isAdmin` devient une fonction (*truthy*) et active l'interface administrateur chez les joueurs normaux.
-4. **Ordre d'initialisation des métadonnées (`initMeta`)** :
+5. **Ordre d'initialisation des métadonnées (`initMeta`)** :
    - Toujours exécuter `await constants.initMeta()` (`/api/meta/all`) **avant** de construire les listes déroulantes ou les cartes de sorts afin que `GLOBAL_SRC_LABELS` (`CASTER_HEALTH_MAX` → `PV Max Lanc.`) et `GLOBAL_STAT_LABELS` soient remplis.
+6. **Suivi des validations Co-op `(1/2)` en Combat (`/combat`)** :
+   - En mode multijoueur, toutes les actions nécessitant la validation des deux joueurs (continuer après victoire, ouvrir/passer un coffre, choisir une option de rencontre/piège/altération/porte étrange, passer la salle du marchand) affichent l'indicateur `(readyCount/totalCount)` en temps réel via SSE (`playerReadyNextRoom` et `playerRoomChoices`), avec mise en évidence du bouton choisi (`.is-choice-selected`) et bannière d'état de l'allié.
+7. **Classes d'affinité sémantiques des cartes de sorts (`filters.js` & `spell-cards.css`)** :
+   - Les couleurs de voies, spiritualités et mutations sont portées par les classes `.affinity-*` et `.lvl-badge-*` (`getVoieAffinityClass`, `getSpiritAffinityClass`, `getSpellAffinityClass` exportées par `js/utils/filters.js`), éliminant les attributs `style=` inline dans le rendu du Grimoire et des infobulles de combat.
 
 ---
 
-## 5. Procédure Standard pour Migrer la Prochaine Page
+## 5. Commandes de Build & Synchronisation
 
-Pour chaque nouvelle page `/nom-page` (ex: `/secrets` ou `/achievements`) :
+Après toute modification dans `frontend/` ou dans `src/main/resources/static/` :
 
-1. **Composant React** : Créer `frontend/src/pages/NomPage.tsx` sans attribut `style=` inline.
-2. **Routeur React (`frontend/src/App.tsx`)** :
-   - Ajouter `<Route path="/nom-page" element={<NomPage />} />` et `<Route path="/nom-page.html" element={<Navigate to="/nom-page" replace />} />`.
-   - Ajouter `'/nom-page'` et `'/nom-page.html'` dans `SPA_ROUTES`.
-3. **Proxy Vite (`frontend/vite.config.ts`)** :
-   - Ajouter `nom-page\\.html` dans l'exclusion de la regex proxy HTML.
-4. **Spring Boot (`WebMvcConfig.java` & `SecurityConfig.java`)** :
-   - Ajouter `registry.addViewController("/nom-page").setViewName("forward:/app/index.html");`.
-   - Autoriser `"/nom-page"` dans `SecurityConfig.java` (et `CombatInterceptor.java` si nécessaire).
-5. **Redirection legacy** :
-   - Remplacer `src/main/resources/static/nom-page.html` par la redirection vers `/nom-page` et mettre à jour le lien dans `navbar.js`.
-6. **Build & Vérification** :
-   - Exécuter `npm --prefix frontend run build` puis `.\mvnw.cmd resources:resources`.
+```powershell
+npm --prefix frontend run build
+.\mvnw.cmd resources:resources
+```

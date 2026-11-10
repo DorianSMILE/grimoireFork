@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000235';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000235';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000235';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000235';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000235';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000239';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000239';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000239';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000239';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000239';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -101,12 +101,17 @@ export function setButtonsProcessing(isProc) {
             btn.disabled = true;
             btn.classList.add('disabled');
         } else {
-            if (!btn.classList.contains('waiting-ready')) {
+            if (!btn.classList.contains('waiting-ready') && !btn.classList.contains('is-disabled')) {
                 btn.disabled = false;
                 btn.classList.remove('disabled');
             }
         }
     });
+    if (!isProc && pageState.pendingSseData) {
+        const pending = pageState.pendingSseData;
+        pageState.pendingSseData = null;
+        updateUI(pending);
+    }
 }
 
 window.showGlobalTooltip = ui.showGlobalTooltip;

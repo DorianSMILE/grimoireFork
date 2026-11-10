@@ -18,7 +18,7 @@ export function DungeonsPage() {
     async function bootDungeons() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=27';
-      const dungeonsUrl = '/js/pages/dungeons.js?v=20';
+      const dungeonsUrl = '/js/pages/dungeons.js?v=21';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -239,7 +239,7 @@ export function DungeonsPage() {
                   >
                     <div
                       id="prepLootTooltipTrigger"
-                      className="init-hidden w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center cursor-help transition-all hover:bg-amber-500/20"
+                      className="hidden w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 items-center justify-center cursor-help transition-all hover:bg-amber-500/20"
                     >
                       <span className="material-symbols-outlined text-[1rem]">shield</span>
                     </div>

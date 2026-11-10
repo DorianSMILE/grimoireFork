@@ -20,16 +20,16 @@ export function toggleSpellTargetType() {
     const monsterRow = document.getElementById('monsterAffinityRow');
 
     if (!isMonster) {
-        heroRow.style.display = 'flex';
-        monsterRow.style.display = 'none';
+        if (heroRow) heroRow.style.display = 'flex';
+        if (monsterRow) monsterRow.style.display = 'none';
         const mutationSelect = document.getElementById('mutationSelect');
         if (mutationSelect && mutationSelect.value !== "") {
             mutationSelect.value = "";
             mutationSelect.dispatchEvent(new Event('change'));
         }
     } else {
-        heroRow.style.display = 'none';
-        monsterRow.style.display = 'flex';
+        if (heroRow) heroRow.style.display = 'none';
+        if (monsterRow) monsterRow.style.display = 'flex';
         const voieSelect = document.getElementById('voieSelect');
         const spiritSelect = document.getElementById('spiritSelect');
         if (voieSelect && voieSelect.value !== "") {
@@ -86,10 +86,11 @@ export function updateRankTitle() {
     }
 
     if (rankName) {
-        display.classList.remove('hidden');
+        display.classList.remove('init-hidden', 'hidden');
+        display.style.display = 'block';
         display.innerHTML = `<span class="material-symbols-outlined text-success align-middle text-lg mr-1">workspace_premium</span>Titre : <span class="text-white">"${rankName}"</span> <span class="text-xs text-muted">(${sourceNom})</span>`;
     } else {
-        display.classList.add('hidden');
+        display.style.display = 'none';
         display.innerHTML = '';
     }
 }
@@ -122,7 +123,7 @@ export function updateSpecialVoieConfig() {
 
     const heatCostCard = document.getElementById('heatCostCard');
     if (heatCostCard) {
-        heatCostCard.style.display = isDestruction ? 'block' : 'none';
+        heatCostCard.style.display = isDestruction ? 'flex' : 'none';
         if (!isDestruction) {
             document.getElementById('heatCost').value = 0;
             document.getElementById('percentHeatCost').value = 0;
@@ -131,7 +132,7 @@ export function updateSpecialVoieConfig() {
 
     const seedCostCard = document.getElementById('seedCostCard');
     if (seedCostCard) {
-        seedCostCard.style.display = isCreation ? 'block' : 'none';
+        seedCostCard.style.display = isCreation ? 'flex' : 'none';
         if (!isCreation) {
             document.getElementById('seedCost').value = 0;
         }
@@ -161,7 +162,7 @@ export function updateSpecialVoieConfig() {
 
     const violenceConfig = document.getElementById('violenceConfig');
     if (violenceConfig) {
-        violenceConfig.style.display = isViolence ? 'block' : 'none';
+        violenceConfig.style.display = isViolence ? 'flex' : 'none';
         updateViolenceLabel();
     }
 }
@@ -184,7 +185,7 @@ export function updateSpecialSpiritConfig() {
 
     const karmaConfig = document.getElementById('karmaConfig');
     if (karmaConfig) {
-        karmaConfig.style.display = isKarma ? 'block' : 'none';
+        karmaConfig.style.display = isKarma ? 'flex' : 'none';
         updateKarmaLabel();
     }
 
@@ -213,37 +214,25 @@ export function updateViolenceLabel() {
     if (!btnInsp || !btnExp) return;
 
     if (isInsp) {
-        // Inspiration Active (Red Theme)
-        btnInsp.style.background = 'linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.3) 100%)';
-        btnInsp.style.border = '1px solid rgba(220, 38, 38, 0.4)';
-        btnInsp.style.boxShadow = '0 0 12px rgba(220, 38, 38, 0.2)';
-        btnInsp.style.color = '#ef4444';
-        btnInsp.style.opacity = '1';
-        btnInsp.querySelector('.material-symbols-outlined').style.transform = 'scale(1.15)';
+        btnInsp.style.background = 'rgba(6, 182, 212, 0.2)';
+        btnInsp.style.borderColor = '#06b6d4';
+        btnInsp.style.color = '#22d3ee';
+        btnInsp.style.boxShadow = '0 0 15px rgba(6, 182, 212, 0.15)';
 
-        // Expiration Inactive
         btnExp.style.background = 'transparent';
-        btnExp.style.border = '1px solid transparent';
-        btnExp.style.boxShadow = 'none';
+        btnExp.style.borderColor = 'transparent';
         btnExp.style.color = 'var(--text-muted)';
-        btnExp.style.opacity = '0.6';
-        btnExp.querySelector('.material-symbols-outlined').style.transform = 'scale(1)';
+        btnExp.style.boxShadow = 'none';
     } else {
-        // Expiration Active (Purple Theme)
-        btnExp.style.background = 'linear-gradient(135deg, rgba(217, 70, 239, 0.15) 0%, rgba(192, 38, 211, 0.3) 100%)';
-        btnExp.style.border = '1px solid rgba(217, 70, 239, 0.4)';
-        btnExp.style.boxShadow = '0 0 12px rgba(217, 70, 239, 0.2)';
-        btnExp.style.color = '#d946ef';
-        btnExp.style.opacity = '1';
-        btnExp.querySelector('.material-symbols-outlined').style.transform = 'scale(1.15) rotate(10deg)';
-
-        // Inspiration Inactive
         btnInsp.style.background = 'transparent';
-        btnInsp.style.border = '1px solid transparent';
-        btnInsp.style.boxShadow = 'none';
+        btnInsp.style.borderColor = 'transparent';
         btnInsp.style.color = 'var(--text-muted)';
-        btnInsp.style.opacity = '0.6';
-        btnInsp.querySelector('.material-symbols-outlined').style.transform = 'scale(1)';
+        btnInsp.style.boxShadow = 'none';
+
+        btnExp.style.background = 'rgba(249, 115, 22, 0.2)';
+        btnExp.style.borderColor = '#f97316';
+        btnExp.style.color = '#fb923c';
+        btnExp.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.15)';
     }
 }
 
@@ -269,37 +258,32 @@ export function updateKarmaLabel() {
 
     if (!btnOff || !btnRes || !btnPro) return;
 
-    // Reset all
-    [btnOff, btnRes, btnPro].forEach(btn => {
+    const resetBtn = (btn) => {
         btn.style.background = 'transparent';
-        btn.style.border = '1px solid transparent';
-        btn.style.boxShadow = 'none';
+        btn.style.borderColor = 'transparent';
         btn.style.color = 'var(--text-muted)';
-        btn.style.opacity = '0.6';
-        btn.querySelector('.material-symbols-outlined').style.transform = 'scale(1)';
-    });
+        btn.style.boxShadow = 'none';
+    };
+
+    resetBtn(btnOff);
+    resetBtn(btnRes);
+    resetBtn(btnPro);
 
     if (alignment === 'OFFENSIVE') {
-        btnOff.style.background = 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(126, 34, 206, 0.3) 100%)';
-        btnOff.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-        btnOff.style.boxShadow = '0 0 12px rgba(147, 51, 234, 0.2)';
-        btnOff.style.color = '#c084fc';
-        btnOff.style.opacity = '1';
-        btnOff.querySelector('.material-symbols-outlined').style.transform = 'scale(1.15)';
+        btnOff.style.background = 'rgba(139, 92, 246, 0.25)';
+        btnOff.style.borderColor = '#8b5cf6';
+        btnOff.style.color = '#c4b5fd';
+        btnOff.style.boxShadow = '0 0 15px rgba(139, 92, 246, 0.2)';
     } else if (alignment === 'RESTORATIVE') {
-        btnRes.style.background = 'linear-gradient(135deg, rgba(100, 116, 139, 0.15) 0%, rgba(71, 85, 105, 0.3) 100%)';
-        btnRes.style.border = '1px solid rgba(100, 116, 139, 0.4)';
-        btnRes.style.boxShadow = '0 0 12px rgba(100, 116, 139, 0.2)';
-        btnRes.style.color = '#cbd5e1';
-        btnRes.style.opacity = '1';
-        btnRes.querySelector('.material-symbols-outlined').style.transform = 'scale(1.15)';
+        btnRes.style.background = 'rgba(148, 163, 184, 0.25)';
+        btnRes.style.borderColor = '#94a3b8';
+        btnRes.style.color = '#f1f5f9';
+        btnRes.style.boxShadow = '0 0 15px rgba(148, 163, 184, 0.2)';
     } else if (alignment === 'PROTECTIVE') {
-        btnPro.style.background = 'linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.3) 100%)';
-        btnPro.style.border = '1px solid rgba(234, 179, 8, 0.4)';
-        btnPro.style.boxShadow = '0 0 12px rgba(234, 179, 8, 0.2)';
-        btnPro.style.color = '#fde047';
-        btnPro.style.opacity = '1';
-        btnPro.querySelector('.material-symbols-outlined').style.transform = 'scale(1.15)';
+        btnPro.style.background = 'rgba(253, 224, 71, 0.25)';
+        btnPro.style.borderColor = '#fde047';
+        btnPro.style.color = '#fef08a';
+        btnPro.style.boxShadow = '0 0 15px rgba(253, 224, 71, 0.2)';
     }
 }
 
@@ -757,29 +741,31 @@ export function renderEffects() {
                     `;
         }
 
-        let typeBadgeStyle = 'background: rgba(255,255,255,0.05); color: #fff; border-color: var(--glass-border);';
+        let typeBadgeStyle = '';
         if (['FIXED_DAMAGE', 'PERCENTAGE_DAMAGE'].includes(eff.effectType)) {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.4)); color: #fca5a5; border: 1px solid #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(239, 68, 68, 0.2); color: #fca5a5;';
         } else if (['FIXED_HEAL', 'PERCENTAGE_HEAL', 'HOT'].includes(eff.effectType)) {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(4, 120, 87, 0.4)); color: #6ee7b7; border: 1px solid #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(16, 185, 129, 0.2); color: #6ee7b7;';
         } else if (['FIXED_MANA', 'PERCENTAGE_MANA', 'MOT'].includes(eff.effectType)) {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(2, 132, 199, 0.4)); color: #7dd3fc; border: 1px solid #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(14, 165, 233, 0.2); color: #7dd3fc;';
         } else if (eff.effectType === 'BUFF_DEBUFF') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(180, 83, 9, 0.4)); color: #fde68a; border: 1px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(245, 158, 11, 0.2); color: #fcd34d;';
         } else if (eff.effectType === 'POISON') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(132, 204, 22, 0.25), rgba(77, 124, 15, 0.4)); color: #d9f99d; border: 1px solid #84cc16; box-shadow: 0 0 12px rgba(132, 204, 22, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(16, 185, 129, 0.2); color: #6ee7b7;';
         } else if (eff.effectType === 'BURN') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(154, 52, 18, 0.4)); color: #fed7aa; border: 1px solid #ea580c; box-shadow: 0 0 12px rgba(234, 88, 12, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(249, 115, 22, 0.2); color: #fdba74;';
         } else if (eff.effectType === 'DOT') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(194, 65, 12, 0.4)); color: #fdba74; border: 1px solid #f97316; box-shadow: 0 0 12px rgba(249, 115, 22, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(168, 85, 247, 0.2); color: #d8b4fe;';
         } else if (eff.effectType === 'PURGE') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(52, 211, 153, 0.5)); color: #a7f3d0; border: 1px solid #34d399; box-shadow: 0 0 12px rgba(52, 211, 153, 0.4); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(6, 182, 212, 0.2); color: #67e8f9;';
         } else if (eff.effectType === 'SHIELD') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(8, 145, 178, 0.4)); color: #a5f3fc; border: 1px solid #06b6d4; box-shadow: 0 0 12px rgba(6, 182, 212, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(59, 130, 246, 0.2); color: #93c5fd;';
         } else if (['HEAT_FIXED', 'HEAT_PERCENTAGE', 'HEAT_OVER_TIME'].includes(eff.effectType)) {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.4)); color: #fca5a5; border: 1px solid #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4);';
         } else if (eff.effectType === 'AME_DETACHEE') {
-            typeBadgeStyle = 'background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(190, 18, 60, 0.4)); color: #fda4af; border: 1px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.3); text-shadow: 0 0 5px rgba(0,0,0,0.8);';
+            typeBadgeStyle = 'background: rgba(244, 63, 94, 0.25); color: #fda4af; border: 1px solid rgba(244,63,94,0.4);';
+        } else if (eff.effectType === 'BUD') {
+            typeBadgeStyle = 'background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4);';
         }
 
         const deleteOrLinkedButton = `<button type="button" class="btn-danger" onclick="removeEffect('${eff.id}')">✖ Supprimer</button>`;
@@ -825,15 +811,15 @@ export function renderEffects() {
 
                         ${targetSelectorHtml}
 
-                            <!-- Option / Clé d'activation de la ligne d'effet -->
-                            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 border-dashed">
-                                <label class="text-xs text-amber-500 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-lg">key</span> S'active uniquement si l'Option de sort choisie est :</label>
-                                <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par défaut)" class="w-32 text-sm px-2 py-1 bg-glass text-white border-glass rounded" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
-                                <span class="text-muted text-xs">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
-                            </div>
+                        <!-- Option / Clé d'activation de la ligne d'effet -->
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 border-dashed">
+                            <label class="text-xs text-amber-500 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-lg">key</span> S'active uniquement si l'Option de sort choisie est :</label>
+                            <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par défaut)" class="w-32 text-sm px-2 py-1 bg-glass text-white border-glass rounded" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
+                            <span class="text-muted text-xs">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
+                        </div>
 
-                            <!-- Condition Âme Détachée -->
-                            ${(isTenebres && eff.effectType !== 'AME_DETACHEE') ? `
+                        <!-- Condition Âme Détachée -->
+                        ${(isTenebres && eff.effectType !== 'AME_DETACHEE') ? `
                         <div class="mt-3 flex-col gap-1 pt-2 border-t border-white/5 border-dashed">
                             <div class="flex-center justify-between">
                                 <label class="flex-center text-rose-300 font-semibold text-sm gap-1">
@@ -842,43 +828,44 @@ export function renderEffects() {
                                 ${(() => {
                     const r = eff.detachedSoulRequirement || 'NOT_AFFECTED';
                     return `
-                                    <div style="display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid rgba(255,255,255,0.1); width: 260px;">
-                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'NOT_AFFECTED')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'NOT_AFFECTED' ? '#fff' : 'var(--text-muted)'}; background: ${r === 'NOT_AFFECTED' ? 'rgba(255,255,255,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.2rem; width: 280px;">
+                                        <button type="button" class="text-xs text-center" style="padding: 0.35rem 0.2rem; border-radius: 6px; border: 1px solid ${r === 'NOT_AFFECTED' ? '#94a3b8' : 'transparent'}; background: ${r === 'NOT_AFFECTED' ? 'rgba(148, 163, 184, 0.25)' : 'transparent'}; color: ${r === 'NOT_AFFECTED' ? '#f8fafc' : 'var(--text-muted)'}; cursor: pointer; transition: all 0.2s; font-weight: ${r === 'NOT_AFFECTED' ? '600' : '400'};" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'NOT_AFFECTED')">
                                             Normal
-                                        </div>
-                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'REQUIRED')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'REQUIRED' ? '#10b981' : 'var(--text-muted)'}; background: ${r === 'REQUIRED' ? 'rgba(16,185,129,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                        </button>
+                                        <button type="button" class="text-xs text-center" style="padding: 0.35rem 0.2rem; border-radius: 6px; border: 1px solid ${r === 'REQUIRED' ? '#10b981' : 'transparent'}; background: ${r === 'REQUIRED' ? 'rgba(16, 185, 129, 0.25)' : 'transparent'}; color: ${r === 'REQUIRED' ? '#6ee7b7' : 'var(--text-muted)'}; cursor: pointer; transition: all 0.2s; font-weight: ${r === 'REQUIRED' ? '600' : '400'};" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'REQUIRED')">
                                             Requiert
-                                        </div>
-                                        <div class="text-xs text-center" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'FORBIDDEN')" style="flex: 1; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: ${r === 'FORBIDDEN' ? '#ef4444' : 'var(--text-muted)'}; background: ${r === 'FORBIDDEN' ? 'rgba(239,68,68,0.15)' : 'transparent'}; transition: all 0.2s;">
+                                        </button>
+                                        <button type="button" class="text-xs text-center" style="padding: 0.35rem 0.2rem; border-radius: 6px; border: 1px solid ${r === 'FORBIDDEN' ? '#f43f5e' : 'transparent'}; background: ${r === 'FORBIDDEN' ? 'rgba(244, 63, 94, 0.25)' : 'transparent'}; color: ${r === 'FORBIDDEN' ? '#fda4af' : 'var(--text-muted)'}; cursor: pointer; transition: all 0.2s; font-weight: ${r === 'FORBIDDEN' ? '600' : '400'};" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'FORBIDDEN')">
                                             Exclut
-                                        </div>
+                                        </button>
                                     </div>
                                     `;
                 })()}
-                    ` : ''}
-
-                            <!-- Tour(s) d'activation de l'effet dans la canalisation (uniquement si le sort est canalisé) -->
-                            ${isCanalise ? `
-                            <div class="flex-col gap-1 mt-2 pt-2 border-t border-white/5 border-dashed">
-                                <label class="text-xs text-purple-400 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-lg">cyclone</span> Activation par Tour de Canalisation :</label>
-                                <div class="flex flex-wrap items-center gap-1">
-                                    ${Array.from({ length: duration }, (_, i) => i + 1).map(turn => {
-                    const isActive = (eff.channelingTurns || []).includes(turn);
-                    const btnBg = isActive ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)';
-                    const btnColor = isActive ? '#fff' : 'var(--text-muted)';
-                    const btnBorder = isActive ? '1px solid #fff' : '1px solid var(--glass-border)';
-                    const btnShadow = isActive ? '0 0 8px var(--primary-glow)' : 'none';
-                    return `
-                                            <button class="text-xs" type="button" onclick="toggleEffectChannelingTurn('${eff.id}', ${turn})" style="padding: 0.3rem 0.6rem; border-radius: 4px; background: ${btnBg}; color: ${btnColor}; border: ${btnBorder}; box-shadow: ${btnShadow}; cursor: pointer; transition: all 0.2s;">
-                                                Tour ${turn}
-                                            </button>
-                                        `;
-                }).join('')}
-                                    <span class="text-muted text-xs ml-2">Sélectionnez les tours où cet effet se déclenche.</span>
-                                </div>
                             </div>
-                            ` : ''}
                         </div>
+                        ` : ''}
+
+                        <!-- Tour(s) d'activation de l'effet dans la canalisation (uniquement si le sort est canalisé) -->
+                        ${isCanalise ? `
+                        <div class="flex-col gap-1 mt-2 pt-2 border-t border-white/5 border-dashed">
+                            <label class="text-xs text-purple-400 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-lg">cyclone</span> Activation par Tour de Canalisation :</label>
+                            <div class="flex flex-wrap items-center gap-1">
+                                ${Array.from({ length: duration }, (_, i) => i + 1).map(turn => {
+                    const isActive = (eff.channelingTurns || []).includes(turn);
+                    const btnStyle = isActive
+                        ? 'background: rgba(168, 85, 247, 0.25); border-color: #a855f7; color: #e9d5ff; font-weight: 700; box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);'
+                        : 'background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.1); color: var(--text-muted);';
+                    return `
+                                        <button class="text-xs" type="button" onclick="toggleEffectChannelingTurn('${eff.id}', ${turn})"
+                                            style="padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid; cursor: pointer; transition: all 0.2s; ${btnStyle}">
+                                            Tour ${turn}
+                                        </button>
+                                    `;
+                }).join('')}
+                                <span class="text-muted text-xs ml-2">Sélectionnez les tours où cet effet se déclenche.</span>
+                            </div>
+                        </div>
+                        ` : ''}
 
                         <hr class="border-glass m-0">
 

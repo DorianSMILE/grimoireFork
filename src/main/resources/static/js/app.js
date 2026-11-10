@@ -3,8 +3,8 @@ import * as constants from './utils/constants.js';
 import * as api from './services/api.js';
 import * as particles from './components/particles.js';
 import * as animations from './components/animations.js';
-import * as filters from './utils/filters.js';
-import * as grimoire from './pages/grimoire.js';
+import * as filters from './utils/filters.js?v=2';
+import * as grimoire from './pages/grimoire.js?v=1786180000235';
 import * as forge from './pages/forge.js';
 import * as ui from './ui.js?v=2';
 

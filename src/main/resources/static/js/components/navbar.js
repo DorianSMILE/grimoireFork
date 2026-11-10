@@ -103,7 +103,7 @@ class AppNavbar extends HTMLElement {
                 <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin ${activePage === 'shop-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">settings</span> Admin Boutique
                 </a>
-                <a href="/pve-admin.html" id="adminPvELink" class="top-nav-link nav-admin ${activePage === 'pve-admin' ? 'active' : ''}" style="display: none;">
+                <a href="/pve-admin" id="adminPvELink" class="top-nav-link nav-admin ${activePage === 'pve-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">admin_panel_settings</span> Admin PvE
                 </a>
                 <a href="/alchemy-admin.html" id="adminAlchemyLink" class="top-nav-link nav-admin ${activePage === 'alchemy-admin' ? 'active' : ''}" style="display: none;">

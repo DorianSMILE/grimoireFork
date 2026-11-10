@@ -23,7 +23,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ---
 
-## 2. Avancement Global (10 / 15 pages migrées)
+## 2. Avancement Global (11 / 16 pages migrées)
 
 | Page | Ancienne URL | Nouvelle URL | Statut | Composant React | Notes techniques |
 | :--- | :--- | :--- | :---: | :--- | :--- |
@@ -37,12 +37,12 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Alchimie** | `/alchemy.html` | `/alchemy` | ✅ Migrée | `src/pages/AlchemyPage.tsx` | Grimoire de recettes, filtres par récompense/nouveauté, chaudron de transmutation, particules. |
 | **Tableau de Chasse** | `/hunting.html` | `/hunting` | ✅ Migrée | `src/pages/HuntingPage.tsx` | Quêtes journalières/hebdomadaires, classements, timers dynamiques, réclamation de paliers. |
 | **Admin Boutique** | `/shop-admin.html` | `/shop-admin` | ✅ Migrée | `src/pages/ShopAdminPage.tsx` | CRUD modèles d'équipements/consommables de boutique, coûts en anomalies, paliers d'amélioration. |
+| **Admin PvE** | `/pve-admin.html` | `/pve-admin` | ✅ Migrée | `src/pages/PveAdminPage.tsx` | CRUD monstres, mutations, donjons, salles, butin exclusif et secrets requis. |
 | **Mes Secrets** | `/secrets.html` | `/secrets` | ⏳ À migrer | — | Page simple (lecture secrets + réclamation récompenses). |
 | **Succès** | `/achievements.html` | `/achievements` | ⏳ À migrer | — | Page simple (filtres par catégorie, barres de progression, titres). |
 | **Statistiques PvE** | `/dungeon-stats.html` | `/dungeon-stats` | ⏳ À migrer | — | Tableaux et statistiques de performance en donjon. |
 | **Combat PvE** | `/combat.html` | `/combat` | ⏳ À migrer | — | Moteur de combat tour par tour, canvas/animations, signaux. |
 | **Admin Alchimie** | `/alchemy-admin.html` | `/alchemy-admin` | ⏳ À migrer | — | CRUD recettes et ingrédients d'alchimie. |
-| **Admin PvE** | `/pve-admin.html` | `/pve-admin` | ⏳ À migrer | — | CRUD monstres, mutations, donjons et simulations. |
 
 ---
 

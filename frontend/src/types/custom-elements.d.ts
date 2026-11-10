@@ -79,6 +79,20 @@ declare global {
     initShopAdminPage?: () => Promise<void>;
     cleanupShopAdminPage?: () => void;
     openCreateUpgradeModal?: () => void;
+    initPveAdminPage?: () => Promise<void>;
+    cleanupPveAdminPage?: () => void;
+    selectLevelOption?: (level: number | string, color: string) => void;
+    selectMonsterType?: (value: string, label: string, icon: string, color: string) => void;
+    selectMonsterBehavior?: (value: string, label: string, icon: string, color: string) => void;
+    cancelMonsterEdit?: () => void;
+    renderMonstersList?: () => void;
+    selectFilterLevelOption?: (level: number | string, label: string, color: string, icon: string) => void;
+    selectMonsterSecretOption?: (value: string, label: string, icon: string, color: string) => void;
+    selectSortOption?: (value: string, label: string, icon: string, color: string) => void;
+    cancelMutationEdit?: () => void;
+    addRoom?: (type: string) => void;
+    cancelDungeonEdit?: () => void;
+    renderDungeonsList?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

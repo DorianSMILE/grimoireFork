@@ -228,195 +228,193 @@ function sortMonstersBySecret(monsters) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
-    // Check if auth loaded
-    const checkAdmin = () => {
-        if (!window.currentUser) return;
-        if (!window.isAdmin) {
-            document.getElementById('adminWarning').classList.remove('hidden');
-            setTimeout(() => { window.location.href = '/'; }, 2000);
-            return;
-        }
-
-        document.getElementById('adminContent').classList.remove('hidden');
-        document.getElementById('adminPvELink').style.display = 'inline-flex';
-
-        loadMonsters();
-        loadEquipments();
-        loadAnomalies();
-        loadDungeons();
-        loadMutations();
-        loadMonsterMeta();
-    };
-
-    if (window.currentUser !== undefined) {
-        checkAdmin();
-    } else {
-        window.addEventListener('authLoaded', checkAdmin);
+async function applyPveAdminAuthState() {
+    const warningEl = document.getElementById('adminWarning');
+    const contentEl = document.getElementById('adminContent');
+    if (!warningEl || !contentEl) return;
+    if (!window.currentUser) return;
+    if (!window.isAdmin) {
+        warningEl.classList.remove('hidden');
+        setTimeout(() => { window.location.href = '/'; }, 2000);
+        return;
     }
 
-    document.getElementById('monsterForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const monstre = {
-            name: document.getElementById('mName').value,
-            description: document.getElementById('mDesc').value,
-            level: parseInt(document.getElementById('mLevel').value) || 1,
-            healthMax: parseInt(document.getElementById('mHp').value) || 0,
-            regenHp: parseInt(document.getElementById('mRegenHp').value) || 0,
-            startHpPct: parseInt(document.getElementById('mStartHpPct').value) || 0,
-            manaMax: parseInt(document.getElementById('mMana').value) || 0,
-            regenMana: parseInt(document.getElementById('mRegenMana').value) || 0,
-            startManaPct: parseInt(document.getElementById('mStartManaPct').value) || 0,
-            startShield: parseInt(document.getElementById('mStartShield').value) || 0,
-            startShieldDuration: parseInt(document.getElementById('mStartShieldDuration').value) || 0,
-            speed: parseInt(document.getElementById('mSpeed').value) || 0,
-            crit: parseInt(document.getElementById('mCrit').value) || 0,
-            strength: parseInt(document.getElementById('mStrength').value) || 0,
-            power: parseInt(document.getElementById('mPower').value) || 0,
-            armor: parseInt(document.getElementById('mArmor').value) || 0,
-            resistance: parseInt(document.getElementById('mResist').value) || 0,
-            rewardGold: parseInt(document.getElementById('mGold').value) || 0,
-            rewardExp: parseInt(document.getElementById('mXp').value) || 0,
-            monsterType: document.getElementById('mType').value,
-            behavior: document.getElementById('mBehavior').value,
-            nativeSecret: document.getElementById('mNativeSecret').value || null,
-            mutations: pageState.selectedMutationIds.map(id => ({ id: id }))
-        };
+    contentEl.classList.remove('hidden');
+    const adminLink = document.getElementById('adminPvELink');
+    if (adminLink) adminLink.style.display = 'inline-flex';
 
-        try {
-            let url = '/api/admin/pve/monsters';
-            let method = 'POST';
+    if (typeof window.initAppMeta === 'function') {
+        await window.initAppMeta();
+    }
 
-            if (pageState.editingMonsterId) {
-                url = `/api/admin/pve/monsters/${pageState.editingMonsterId}`;
-                method = 'PUT';
-            }
+    loadMonsters();
+    loadEquipments();
+    loadAnomalies();
+    loadDungeons();
+    loadMutations();
+    loadMonsterMeta();
+}
 
-            const res = await globalFetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(monstre)
-            });
-            if (res.ok) {
-                showNotif(pageState.editingMonsterId ? 'Monstre modifié avec succès' : 'Monstre créé avec succès');
-                window.cancelMonsterEdit();
-                loadMonsters();
-            } else {
-                showNotif("Erreur lors de l'enregistrement du monstre", true);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    });
+async function handleMonsterFormSubmit(e) {
+    e.preventDefault();
+    const monstre = {
+        name: document.getElementById('mName').value,
+        description: document.getElementById('mDesc').value,
+        level: parseInt(document.getElementById('mLevel').value) || 1,
+        healthMax: parseInt(document.getElementById('mHp').value) || 0,
+        regenHp: parseInt(document.getElementById('mRegenHp').value) || 0,
+        startHpPct: parseInt(document.getElementById('mStartHpPct').value) || 0,
+        manaMax: parseInt(document.getElementById('mMana').value) || 0,
+        regenMana: parseInt(document.getElementById('mRegenMana').value) || 0,
+        startManaPct: parseInt(document.getElementById('mStartManaPct').value) || 0,
+        startShield: parseInt(document.getElementById('mStartShield').value) || 0,
+        startShieldDuration: parseInt(document.getElementById('mStartShieldDuration').value) || 0,
+        speed: parseInt(document.getElementById('mSpeed').value) || 0,
+        crit: parseInt(document.getElementById('mCrit').value) || 0,
+        strength: parseInt(document.getElementById('mStrength').value) || 0,
+        power: parseInt(document.getElementById('mPower').value) || 0,
+        armor: parseInt(document.getElementById('mArmor').value) || 0,
+        resistance: parseInt(document.getElementById('mResist').value) || 0,
+        rewardGold: parseInt(document.getElementById('mGold').value) || 0,
+        rewardExp: parseInt(document.getElementById('mXp').value) || 0,
+        monsterType: document.getElementById('mType').value,
+        behavior: document.getElementById('mBehavior').value,
+        nativeSecret: document.getElementById('mNativeSecret').value || null,
+        mutations: pageState.selectedMutationIds.map(id => ({ id: id }))
+    };
 
-    document.getElementById('dungeonForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    try {
+        let url = '/api/admin/pve/monsters';
+        let method = 'POST';
 
-        if (pageState.selectedRooms.length === 0) {
-            showNotif("Veuillez ajouter au moins une salle au donjon.", true);
-            return;
+        if (pageState.editingMonsterId) {
+            url = `/api/admin/pve/monsters/${pageState.editingMonsterId}`;
+            method = 'PUT';
         }
 
-        for (let i = 0; i < pageState.selectedRooms.length; i++) {
-            const r = pageState.selectedRooms[i]; if (r.type === 'EVENT' && r.eventSubType === 'PORTE_ETRANGE') {
-                const total = (r.doorOutcomes || []).reduce((sum, o) => sum + o.probability, 0);
-                if (total > 100) {
-                    showNotif(`La salle ${i + 1} (Porte Étrange) a un total de probabilité de ${total}% (Maximum 100%).`, true);
-                    return;
+        const res = await globalFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(monstre)
+        });
+        if (res.ok) {
+            showNotif(pageState.editingMonsterId ? 'Monstre modifié avec succès' : 'Monstre créé avec succès');
+            window.cancelMonsterEdit();
+            loadMonsters();
+        } else {
+            showNotif("Erreur lors de l'enregistrement du monstre", true);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function handleDungeonFormSubmit(e) {
+    e.preventDefault();
+
+    if (pageState.selectedRooms.length === 0) {
+        showNotif("Veuillez ajouter au moins une salle au donjon.", true);
+        return;
+    }
+
+    for (let i = 0; i < pageState.selectedRooms.length; i++) {
+        const r = pageState.selectedRooms[i]; if (r.type === 'EVENT' && r.eventSubType === 'PORTE_ETRANGE') {
+            const total = (r.doorOutcomes || []).reduce((sum, o) => sum + o.probability, 0);
+            if (total > 100) {
+                showNotif(`La salle ${i + 1} (Porte Étrange) a un total de probabilité de ${total}% (Maximum 100%).`, true);
+                return;
+            }
+        }
+    }
+
+    const donjon = {
+        name: document.getElementById('dName').value,
+        description: document.getElementById('dDesc').value,
+        recommendedLevel: parseInt(document.getElementById('dLevel').value),
+        difficulty: parseInt(document.getElementById('dDifficulty').value) || 0,
+        maxHeroes: parseInt(document.getElementById('dMaxHeroes').value) || 1,
+        unlockCostGold: parseFloat(document.getElementById('dUnlockCost').value) || 0,
+        entryCostGold: parseFloat(document.getElementById('dEntryCost').value) || 0,
+        requiredSecret: document.getElementById('dRequiredSecret').value || null,
+        requiredSecretLevel: parseInt(document.getElementById('dRequiredSecretLevel').value) || 1,
+        salles: pageState.selectedRooms.map(r => {
+            const s = { id: r.id || null, type: r.type };
+            if (r.type === 'COMBAT') {
+                s.monsters = r.monsters.map(mId => ({ id: mId }));
+            } else if (r.type === 'BOSS') {
+                s.monsters = r.monsters.map(mId => ({ id: mId }));
+                s.globalBuffs = r.globalBuffs && r.globalBuffs.length > 0 ? JSON.stringify(r.globalBuffs) : null;
+                s.challenges = r.challenges && r.challenges.length > 0 ? JSON.stringify(r.challenges) : null;
+                s.bossRewardSpiritualXp = r.bossRewardSpiritualXp || 0;
+                s.bossRewardGold = r.bossRewardGold || 0;
+            } else if (r.type === 'TREASURE') {
+                s.treasureGold = r.treasureGold || 0;
+                s.treasureExp = r.treasureExp || 0;
+                if (r.lootTable) {
+                    s.lootTable = r.lootTable;
+                }
+            } else if (r.type === 'EVENT') {
+                s.eventSubType = r.eventSubType || 'ALTERATION';
+                s.eventText = r.eventText || "Événement mystérieux";
+                s.eventEffectAmount = r.eventEffectAmount || 0; // Legacy / Generic
+                s.alterationType = r.alterationType || 'VIE_XP';
+                s.alterationHpAmount = r.alterationHpAmount || 0;
+                s.alterationExpAmount = r.alterationExpAmount || 0;
+                s.alterationRewardType = r.alterationRewardType || 'SPIRITUAL_XP';
+                s.alterationSpiritualXpReward = r.alterationSpiritualXpReward || 0;
+                s.alterationSpecialItemReward = r.alterationSpecialItemReward || null;
+                s.alterationRequiredItem = r.alterationRequiredItem || null;
+                s.trapType = r.trapType || null;
+                s.trapAmount = r.trapAmount || 0;
+                s.trapHasRopeOption = r.trapHasRopeOption || false;
+                s.trapDamageHpPct = r.trapDamageHpPct || 0;
+                s.trapDamageManaPct = r.trapDamageManaPct || 0;
+                s.trapDamageHpFixed = r.trapDamageHpFixed || 0;
+                s.trapDamageManaFixed = r.trapDamageManaFixed || 0;
+                s.trapEffectType = (r.trapEffectType && typeof r.trapEffectType === 'object' && r.trapEffectType.name)
+                    ? r.trapEffectType.name
+                    : (r.trapEffectType || 'CUSTOM');
+                s.trapDebuffDuration = r.trapDebuffDuration !== undefined ? r.trapDebuffDuration : 2;
+                s.trapDebuffValue = r.trapDebuffValue !== undefined ? r.trapDebuffValue : 0;
+                s.trapDebuffSecondaryValue = r.trapDebuffSecondaryValue !== undefined ? r.trapDebuffSecondaryValue : 0;
+                s.doorOutcomes = r.doorOutcomes ? JSON.stringify(r.doorOutcomes) : null;
+                if (r.lootTable) {
+                    s.lootTable = r.lootTable;
                 }
             }
+            s.customAchievementTitle = r.customAchievementTitle || null;
+            s.customAchievementDesc = r.customAchievementDesc || null;
+            s.customAchievementIcon = r.customAchievementIcon || null;
+            s.customAchievementRewardTitle = r.customAchievementRewardTitle || null;
+            return s;
+        })
+    };
+
+    try {
+        let url = '/api/admin/pve/dungeons';
+        let method = 'POST';
+
+        if (pageState.editingDungeonId) {
+            url = `/api/admin/pve/dungeons/${pageState.editingDungeonId}`;
+            method = 'PUT';
         }
 
-        const donjon = {
-            name: document.getElementById('dName').value,
-            description: document.getElementById('dDesc').value,
-            recommendedLevel: parseInt(document.getElementById('dLevel').value),
-            difficulty: parseInt(document.getElementById('dDifficulty').value) || 0,
-            maxHeroes: parseInt(document.getElementById('dMaxHeroes').value) || 1,
-            unlockCostGold: parseFloat(document.getElementById('dUnlockCost').value) || 0,
-            entryCostGold: parseFloat(document.getElementById('dEntryCost').value) || 0,
-            requiredSecret: document.getElementById('dRequiredSecret').value || null,
-            requiredSecretLevel: parseInt(document.getElementById('dRequiredSecretLevel').value) || 1,
-            salles: pageState.selectedRooms.map(r => {
-                const s = { id: r.id || null, type: r.type };
-                if (r.type === 'COMBAT') {
-                    s.monsters = r.monsters.map(mId => ({ id: mId }));
-                } else if (r.type === 'BOSS') {
-                    s.monsters = r.monsters.map(mId => ({ id: mId }));
-                    s.globalBuffs = r.globalBuffs && r.globalBuffs.length > 0 ? JSON.stringify(r.globalBuffs) : null;
-                    s.challenges = r.challenges && r.challenges.length > 0 ? JSON.stringify(r.challenges) : null;
-                    s.bossRewardSpiritualXp = r.bossRewardSpiritualXp || 0;
-                    s.bossRewardGold = r.bossRewardGold || 0;
-                } else if (r.type === 'TREASURE') {
-                    s.treasureGold = r.treasureGold || 0;
-                    s.treasureExp = r.treasureExp || 0;
-                    if (r.lootTable) {
-                        s.lootTable = r.lootTable;
-                    }
-                } else if (r.type === 'EVENT') {
-                    s.eventSubType = r.eventSubType || 'ALTERATION';
-                    s.eventText = r.eventText || "Événement mystérieux";
-                    s.eventEffectAmount = r.eventEffectAmount || 0; // Legacy / Generic
-                    s.alterationType = r.alterationType || 'VIE_XP';
-                    s.alterationHpAmount = r.alterationHpAmount || 0;
-                    s.alterationExpAmount = r.alterationExpAmount || 0;
-                    s.alterationRewardType = r.alterationRewardType || 'SPIRITUAL_XP';
-                    s.alterationSpiritualXpReward = r.alterationSpiritualXpReward || 0;
-                    s.alterationSpecialItemReward = r.alterationSpecialItemReward || null;
-                    s.alterationRequiredItem = r.alterationRequiredItem || null;
-                    s.trapType = r.trapType || null;
-                    s.trapAmount = r.trapAmount || 0;
-                    s.trapHasRopeOption = r.trapHasRopeOption || false;
-                    s.trapDamageHpPct = r.trapDamageHpPct || 0;
-                    s.trapDamageManaPct = r.trapDamageManaPct || 0;
-                    s.trapDamageHpFixed = r.trapDamageHpFixed || 0;
-                    s.trapDamageManaFixed = r.trapDamageManaFixed || 0;
-                    s.trapEffectType = (r.trapEffectType && typeof r.trapEffectType === 'object' && r.trapEffectType.name)
-                        ? r.trapEffectType.name
-                        : (r.trapEffectType || 'CUSTOM');
-                    s.trapDebuffDuration = r.trapDebuffDuration !== undefined ? r.trapDebuffDuration : 2;
-                    s.trapDebuffValue = r.trapDebuffValue !== undefined ? r.trapDebuffValue : 0;
-                    s.trapDebuffSecondaryValue = r.trapDebuffSecondaryValue !== undefined ? r.trapDebuffSecondaryValue : 0;
-                    s.doorOutcomes = r.doorOutcomes ? JSON.stringify(r.doorOutcomes) : null;
-                    if (r.lootTable) {
-                        s.lootTable = r.lootTable;
-                    }
-                }
-                s.customAchievementTitle = r.customAchievementTitle || null;
-                s.customAchievementDesc = r.customAchievementDesc || null;
-                s.customAchievementIcon = r.customAchievementIcon || null;
-                s.customAchievementRewardTitle = r.customAchievementRewardTitle || null;
-                return s;
-            })
-        };
-
-        try {
-            let url = '/api/admin/pve/dungeons';
-            let method = 'POST';
-
-            if (pageState.editingDungeonId) {
-                url = `/api/admin/pve/dungeons/${pageState.editingDungeonId}`;
-                method = 'PUT';
-            }
-
-            const res = await globalFetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(donjon)
-            });
-            if (res.ok) {
-                showNotif(pageState.editingDungeonId ? 'Donjon modifié avec succès' : 'Donjon créé avec succès');
-                window.cancelDungeonEdit();
-                loadDungeons();
-            } else {
-                showNotif("Erreur lors de l'enregistrement du donjon", true);
-            }
-        } catch (err) {
-            console.error(err);
+        const res = await globalFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(donjon)
+        });
+        if (res.ok) {
+            showNotif(pageState.editingDungeonId ? 'Donjon modifié avec succès' : 'Donjon créé avec succès');
+            window.cancelDungeonEdit();
+            loadDungeons();
+        } else {
+            showNotif("Erreur lors de l'enregistrement du donjon", true);
         }
-    });
-});
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 window.addRoom = function (type) {
     if (type === 'COMBAT') {
@@ -2307,6 +2305,8 @@ async function loadMonsters() {
             const monsters = await res.json();
             pageState.allMonsters = sortMonstersBySecret(monsters);
             renderMonstersList();
+            renderRooms();
+            if (typeof window.renderDungeonsList === 'function') window.renderDungeonsList();
         }
     } catch (e) {
         console.error(e);
@@ -2314,8 +2314,9 @@ async function loadMonsters() {
 }
 
 async function loadAnomalies() {
-    pageState.allAnomalies = await api.loadAnomalies({ source: '/api/anomalies/all', deduplicate: true });
+    pageState.allAnomalies = await window.api.loadAnomalies({ source: '/api/anomalies/all', deduplicate: true });
     renderRooms();
+    if (typeof window.renderDungeonsList === 'function') window.renderDungeonsList();
 }
 
 async function loadEquipments() {
@@ -2337,6 +2338,8 @@ async function loadEquipments() {
 
             return a.name.localeCompare(b.name);
         });
+        renderRooms();
+        if (typeof window.renderDungeonsList === 'function') window.renderDungeonsList();
     } catch (e) {
         console.error(e);
     }
@@ -3204,9 +3207,13 @@ window.updateAltarField = function (rIndex, oIndex, field, value) {
     }
 };
 
+const originalShowNotif = window.showNotif;
 window.showNotif = function (message, isError = false) {
     const notif = document.getElementById('pveNotif');
-    if (!notif) return;
+    if (!notif) {
+        if (originalShowNotif) return originalShowNotif(message, isError);
+        return;
+    }
     notif.textContent = message;
     notif.classList.remove('error');
     if (isError) notif.classList.add('error');
@@ -3610,7 +3617,7 @@ window.cancelMutationEdit = () => {
     document.getElementById('mutationFormPanel').classList.remove('editing-glow');
 };
 
-document.getElementById('mutationForm')?.addEventListener('submit', async (e) => {
+async function handleMutationFormSubmit(e) {
     e.preventDefault();
     const mut = {
         nom: document.getElementById('mutName').value,
@@ -3632,7 +3639,7 @@ document.getElementById('mutationForm')?.addEventListener('submit', async (e) =>
             loadMutations();
         } else { showNotif("Erreur lors de l'enregistrement", true); }
     } catch (e) { showNotif("Erreur: " + e.message, true); }
-});
+}
 
 function renderMutationsSelector() {
     const container = document.getElementById('mMutationsContainer');
@@ -3716,64 +3723,142 @@ document.addEventListener('click', function (e) {
 
 // Global click listener for custom-select handled by ui.js
 
-// Intercept assignments to dRequiredSecret to update the UI
-const inputEl = document.getElementById('dRequiredSecret');
-if (inputEl) {
-    const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    Object.defineProperty(inputEl, 'value', {
-        set: function (val) {
-            originalSet.call(this, val);
-            const wrapper = this.closest('.custom-select-wrapper');
-            if (wrapper) {
-                const labelEl = wrapper.querySelector('.cs-label');
-                const options = wrapper.querySelectorAll('.custom-option');
-                let found = false;
-                options.forEach(opt => {
-                    if (opt.getAttribute('data-value') === (val || '')) {
-                        labelEl.innerHTML = opt.innerHTML;
-                        found = true;
+function bindSecretInputInterceptors() {
+    const inputEl = document.getElementById('dRequiredSecret');
+    if (inputEl && !inputEl.dataset.secretInterceptorBound) {
+        inputEl.dataset.secretInterceptorBound = 'true';
+        const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+        Object.defineProperty(inputEl, 'value', {
+            set: function (val) {
+                originalSet.call(this, val);
+                const wrapper = this.closest('.custom-select-wrapper');
+                if (wrapper) {
+                    const labelEl = wrapper.querySelector('.cs-label');
+                    const options = wrapper.querySelectorAll('.custom-option');
+                    let found = false;
+                    options.forEach(opt => {
+                        if (opt.getAttribute('data-value') === (val || '')) {
+                            labelEl.innerHTML = opt.innerHTML;
+                            found = true;
+                        }
+                    });
+                    if (!found && val) {
+                        labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-warning" >key</span> ${val}`;
+                    } else if (!val && !found) {
+                        labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted" >close</span> Aucun (Optionnel)`;
                     }
-                });
-                if (!found && val) {
-                    labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-warning" >key</span> ${val}`;
-                } else if (!val && !found) {
-                    labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted" >close</span> Aucun (Optionnel)`;
                 }
+            },
+            get: function () {
+                return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
             }
-        },
-        get: function () {
-            return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
-        }
-    });
+        });
+    }
+
+    const mInputEl = document.getElementById('mNativeSecret');
+    if (mInputEl && !mInputEl.dataset.secretInterceptorBound) {
+        mInputEl.dataset.secretInterceptorBound = 'true';
+        const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+        Object.defineProperty(mInputEl, 'value', {
+            set: function (val) {
+                originalSet.call(this, val);
+                const wrapper = this.closest('.custom-select-wrapper');
+                if (wrapper) {
+                    const labelEl = wrapper.querySelector('.cs-label');
+                    const options = wrapper.querySelectorAll('.custom-option');
+                    let found = false;
+                    options.forEach(opt => {
+                        if (opt.getAttribute('data-value') === (val || '')) {
+                            labelEl.innerHTML = opt.innerHTML;
+                            found = true;
+                        }
+                    });
+                    if (!found && val) {
+                        labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-warning" >explore</span> ${val}`;
+                    } else if (!val && !found) {
+                        labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted" >close</span> Aucun (Optionnel)`;
+                    }
+                }
+            },
+            get: function () {
+                return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
+            }
+        });
+    }
 }
 
-// Intercept assignments to mNativeSecret to update the UI
-const mInputEl = document.getElementById('mNativeSecret');
-if (mInputEl) {
-    const originalSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    Object.defineProperty(mInputEl, 'value', {
-        set: function (val) {
-            originalSet.call(this, val);
-            const wrapper = this.closest('.custom-select-wrapper');
-            if (wrapper) {
-                const labelEl = wrapper.querySelector('.cs-label');
-                const options = wrapper.querySelectorAll('.custom-option');
-                let found = false;
-                options.forEach(opt => {
-                    if (opt.getAttribute('data-value') === (val || '')) {
-                        labelEl.innerHTML = opt.innerHTML;
-                        found = true;
-                    }
-                });
-                if (!found && val) {
-                    labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-warning" >explore</span> ${val}`;
-                } else if (!val && !found) {
-                    labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted" >close</span> Aucun (Optionnel)`;
-                }
-            }
-        },
-        get: function () {
-            return Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(this);
-        }
-    });
-}
+window.renderRooms = renderRooms;
+window.editMonster = editMonster;
+window.deleteMonster = deleteMonster;
+window.moveDungeonOrder = moveDungeonOrder;
+window.editDungeon = editDungeon;
+window.deleteDungeon = deleteDungeon;
+
+window.initPveAdminPage = async function () {
+    pageState.editingMonsterId = null;
+    pageState.editingDungeonId = null;
+    pageState.editingMutationId = null;
+    pageState.selectedRooms = [];
+    pageState.selectedMutationIds = [];
+
+    window.renderRooms = renderRooms;
+    window.editMonster = editMonster;
+    window.deleteMonster = deleteMonster;
+    window.moveDungeonOrder = moveDungeonOrder;
+    window.editDungeon = editDungeon;
+    window.deleteDungeon = deleteDungeon;
+
+    const monsterForm = document.getElementById('monsterForm');
+    if (monsterForm && !monsterForm.dataset.submitBound) {
+        monsterForm.dataset.submitBound = 'true';
+        monsterForm.addEventListener('submit', handleMonsterFormSubmit);
+    }
+
+    const dungeonForm = document.getElementById('dungeonForm');
+    if (dungeonForm && !dungeonForm.dataset.submitBound) {
+        dungeonForm.dataset.submitBound = 'true';
+        dungeonForm.addEventListener('submit', handleDungeonFormSubmit);
+    }
+
+    const mutationForm = document.getElementById('mutationForm');
+    if (mutationForm && !mutationForm.dataset.submitBound) {
+        mutationForm.dataset.submitBound = 'true';
+        mutationForm.addEventListener('submit', handleMutationFormSubmit);
+    }
+
+    const dungeonSecretFilter = document.getElementById('dungeonSecretFilter');
+    if (dungeonSecretFilter && !dungeonSecretFilter.dataset.changeBound) {
+        dungeonSecretFilter.dataset.changeBound = 'true';
+        dungeonSecretFilter.addEventListener('change', () => window.renderDungeonsList());
+    }
+
+    const dungeonLevelFilter = document.getElementById('dungeonLevelFilter');
+    if (dungeonLevelFilter && !dungeonLevelFilter.dataset.changeBound) {
+        dungeonLevelFilter.dataset.changeBound = 'true';
+        dungeonLevelFilter.addEventListener('change', () => window.renderDungeonsList());
+    }
+
+    bindSecretInputInterceptors();
+
+    if (window.initAppMeta) await window.initAppMeta();
+
+    window.removeEventListener('authLoaded', applyPveAdminAuthState);
+    window.addEventListener('authLoaded', applyPveAdminAuthState);
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else if (window.currentUser !== undefined) {
+        await applyPveAdminAuthState();
+    }
+};
+
+window.cleanupPveAdminPage = function () {
+    window.removeEventListener('authLoaded', applyPveAdminAuthState);
+    if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('adminContent') && document.getElementById('monsterForm')) {
+        window.initPveAdminPage();
+    }
+});

@@ -23,7 +23,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ---
 
-## 2. Avancement Global (5 / 15 pages migrées)
+## 2. Avancement Global (6 / 15 pages migrées)
 
 | Page | Ancienne URL | Nouvelle URL | Statut | Composant React | Notes techniques |
 | :--- | :--- | :--- | :---: | :--- | :--- |
@@ -32,12 +32,12 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Grimoire & Forge** | `/` (`index.html`) | `/grimoire` | ✅ Migrée | `src/pages/GrimoirePage.tsx` | Redirection `/` → `/grimoire`, filtres multi-critères, animations Lvl-5, Forge admin. |
 | **Armurerie** | `/armory.html` | `/armory` | ✅ Migrée | `src/pages/ArmoryPage.tsx` | Gestion des personnages, équipement, toile des spécificités (`hero-spider.js`), tutoriel guidé. |
 | **Donjons** | `/dungeons.html` | `/dungeons` | ✅ Migrée | `src/pages/DungeonsPage.tsx` | Sélection d'équipe, cartes de donjons, sacoche, lobbys multijoueur SSE, tutoriel donjon. |
+| **Coffres (Vault)** | `/vault.html` | `/vault` | ✅ Migrée | `src/pages/VaultPage.tsx` | Inventaire de compte, filtres d'équipements/consommables/anomalies, création/édition admin, destruction. |
 | **Mes Secrets** | `/secrets.html` | `/secrets` | ⏳ À migrer | — | Page simple (lecture secrets + réclamation récompenses). |
 | **Succès** | `/achievements.html` | `/achievements` | ⏳ À migrer | — | Page simple (filtres par catégorie, barres de progression, titres). |
 | **Tableau de Chasse** | `/hunting.html` | `/hunting` | ⏳ À migrer | — | Quêtes journalières/hebdomadaires et classements. |
 | **Boutique** | `/shop.html` | `/shop` | ⏳ À migrer | — | Marchand, achats et verrouillage tutoriel. |
 | **Alchimie** | `/alchemy.html` | `/alchemy` | ⏳ À migrer | — | Chaudron, ingrédients et recettes découvertes. |
-| **Coffres (Vault)** | `/vault.html` | `/vault` | ⏳ À migrer | — | Inventaire de compte, filtres d'équipements, vente/enchantement. |
 | **Statistiques PvE** | `/dungeon-stats.html` | `/dungeon-stats` | ⏳ À migrer | — | Tableaux et statistiques de performance en donjon. |
 | **Combat PvE** | `/combat.html` | `/combat` | ⏳ À migrer | — | Moteur de combat tour par tour, canvas/animations, signaux. |
 | **Admin Boutique** | `/shop-admin.html` | `/shop-admin` | ⏳ À migrer | — | CRUD modèles d'équipements et anomalies. |

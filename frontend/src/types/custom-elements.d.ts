@@ -57,6 +57,17 @@ declare global {
     closeEntryModal?: () => void;
     showPrepLootDropdown?: (el: HTMLElement) => void;
     hidePrepLootDropdown?: (el: HTMLElement) => void;
+    initVaultPage?: () => Promise<void>;
+    cleanupVaultPage?: () => void;
+    filterVault?: () => void;
+    openCreateEqModal?: () => void;
+    closeCreateEqModal?: () => void;
+    openCreateAnomalieModal?: () => void;
+    closeCreateAnomalieModal?: () => void;
+    submitEquipment?: () => Promise<void>;
+    submitAnomalie?: () => Promise<void>;
+    onAnomalieMagicToggleChange?: (el?: HTMLInputElement) => void;
+    promptUnlockFeature?: (featureId: string, featureName: string, cost: number) => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

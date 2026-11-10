@@ -13,7 +13,7 @@ function injectSpeculationRules() {
                     '/grimoire',
                     '/armory',
                     '/dungeons',
-                    '/vault.html',
+                    '/vault',
                     '/shop.html',
                     '/alchemy.html',
                     '/hunting.html',
@@ -85,7 +85,7 @@ class AppNavbar extends HTMLElement {
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">swords</span> Donjons
                     <span id="navDungeonBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/vault.html" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
+                <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">money_bag</span> Coffres
                 </a>
                 <a href="/shop.html" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">

@@ -1,10 +1,12 @@
 const pageState = { allEquipments: [], equipmentToDelete: null, anomalieToDelete: null, editingEquipmentId: null, editingAnomalieId: null };
+window.pageState = pageState;
 
 // getSlotInfo, calculateWeight, showNotif, showModal → utils.js
 
 
 // ===== Custom Select Logic =====
 document.addEventListener('change', (e) => {
+    if (!document.getElementById('vaultGrid')) return;
     if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'hidden') {
         const hiddenInput = e.target;
         if (hiddenInput.id === 'eqRarity') {
@@ -689,47 +691,52 @@ function renderGrid(equipments) {
 }
 
 // Init
-window.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
-    // Listeners for Weight Calculation
-    const eqInputs = ['eqSlot', 'eqRarity', 'eqHp', 'eqMana', 'eqPower', 'eqStr', 'eqArmor', 'eqRes', 'eqSpeed', 'eqCrit', 'eqRegenHp', 'eqRegenMana', 'eqSpecialEffectValue', 'eqBaseWeight'];
-    eqInputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(updateWeightUI, 150); });
-            el.addEventListener('change', updateWeightUI);
+window.filterVault = filterVault;
+
+window.onAnomalieMagicToggleChange = function (inputEl) {
+    const el = inputEl || document.getElementById('anomalieMagicToggle');
+    if (!el) return;
+    const sliderBg = el.nextElementSibling;
+    if (sliderBg) {
+        sliderBg.style.backgroundColor = el.checked ? '#d946ef' : 'rgba(255, 255, 255, 0.1)';
+        if (sliderBg.children[0]) {
+            sliderBg.children[0].style.transform = el.checked ? 'translateX(16px)' : 'translateX(0)';
         }
-    });
+    }
+    const textEl = document.getElementById('anomalieMagicToggleText');
+    if (textEl) textEl.innerText = el.checked ? 'Magique' : 'Matériau';
+    const iconEl = document.getElementById('anomalieMagicToggleIcon');
+    if (iconEl) {
+        iconEl.innerText = el.checked ? 'star' : 'category';
+        iconEl.style.color = el.checked ? '#d946ef' : '#94a3b8';
+    }
+};
 
-    const categoryInput = document.getElementById('eqConsumableCategory');
-    if (categoryInput) {
-        categoryInput.addEventListener('change', () => {
-            const row = document.getElementById('eqKeyBonusRow');
-            if (row) {
-                if (categoryInput.value === 'CLE') {
-                    row.classList.remove('hidden');
-                } else {
-                    row.classList.add('hidden');
-                }
-            }
-        });
+async function applyVaultAuthState() {
+    if (!document.getElementById('vaultGrid')) return;
+
+    const vaultMain = document.querySelector('.vault-main');
+    const authLocked = document.getElementById('vaultAuthLocked');
+    const featureLocked = document.getElementById('vaultFeatureLocked');
+
+    if (!window.currentUser) {
+        if (vaultMain) vaultMain.classList.add('is-hidden');
+        if (authLocked) authLocked.classList.remove('hidden');
+        if (featureLocked) featureLocked.classList.add('hidden');
+        return;
     }
 
-    // Render create form slot select
-    const slotOptionsContainer = document.getElementById('eqSlotOptions');
-    if (slotOptionsContainer) {
-        const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
-        slotOptionsContainer.innerHTML = slots.map(s => {
-            const info = window.SLOT_LABELS[s];
-            return `<div class="custom-option" data-value="${s}">
-                <span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span>
-                ${info.label}
-            </div>`;
-        }).join('');
+    if (!window.currentUser.unlockedVault) {
+        if (vaultMain) vaultMain.classList.add('is-hidden');
+        if (authLocked) authLocked.classList.add('hidden');
+        if (featureLocked) featureLocked.classList.remove('hidden');
+        return;
     }
-});
 
-window.addEventListener('authLoaded', async () => {
+    if (vaultMain) vaultMain.classList.remove('is-hidden');
+    if (authLocked) authLocked.classList.add('hidden');
+    if (featureLocked) featureLocked.classList.add('hidden');
+
     const btnCreate = document.getElementById('btnCreateVaultEq');
     const btnCreateAnomalie = document.getElementById('btnCreateAnomalie');
     if (btnCreate) {
@@ -754,6 +761,85 @@ window.addEventListener('authLoaded', async () => {
     }
 
     await loadEquipments();
+}
+
+window.initVaultPage = async function () {
+    window.pageState = pageState;
+    window.filterVault = filterVault;
+
+    if (!window.api) {
+        const apiMod = await import('/js/services/api.js');
+        window.api = apiMod;
+    }
+
+    if (window.initAppMeta) await window.initAppMeta();
+
+    const eqInputs = ['eqSlot', 'eqRarity', 'eqHp', 'eqMana', 'eqPower', 'eqStr', 'eqArmor', 'eqRes', 'eqSpeed', 'eqCrit', 'eqRegenHp', 'eqRegenMana', 'eqSpecialEffectValue', 'eqBaseWeight'];
+    eqInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.vaultBound) {
+            el.dataset.vaultBound = 'true';
+            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(updateWeightUI, 150); });
+            el.addEventListener('change', updateWeightUI);
+        }
+    });
+
+    const categoryInput = document.getElementById('eqConsumableCategory');
+    if (categoryInput && !categoryInput.dataset.vaultBound) {
+        categoryInput.dataset.vaultBound = 'true';
+        categoryInput.addEventListener('change', () => {
+            const row = document.getElementById('eqKeyBonusRow');
+            if (row) {
+                if (categoryInput.value === 'CLE') {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    const toggleMagic = document.getElementById('anomalieMagicToggle');
+    if (toggleMagic && !toggleMagic.dataset.vaultBound) {
+        toggleMagic.dataset.vaultBound = 'true';
+        toggleMagic.addEventListener('change', function () {
+            window.onAnomalieMagicToggleChange(this);
+        });
+    }
+
+    const slotOptionsContainer = document.getElementById('eqSlotOptions');
+    if (slotOptionsContainer && window.SLOT_LABELS) {
+        const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
+        slotOptionsContainer.innerHTML = slots.map(s => {
+            const info = window.SLOT_LABELS[s];
+            return `<div class="custom-option" data-value="${s}">
+                <span class="material-symbols-outlined cs-icon ${info.extraClass || ''}" style="color: ${info.color};">${info.icon}</span>
+                ${info.label}
+            </div>`;
+        }).join('');
+    }
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else if (window.currentUser !== undefined) {
+        await applyVaultAuthState();
+    }
+};
+
+window.cleanupVaultPage = function () {
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('vaultGrid')) {
+        window.initVaultPage();
+    }
+});
+
+window.addEventListener('authLoaded', async () => {
+    await applyVaultAuthState();
 });
 
 // ===== Equipment Creation / Edition =====

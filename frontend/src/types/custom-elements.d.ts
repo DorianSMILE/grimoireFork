@@ -11,6 +11,10 @@ declare module 'react' {
         React.HTMLAttributes<HTMLElement> & { message?: string },
         HTMLElement
       >;
+      'app-modals': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
     }
   }
 }
@@ -97,6 +101,11 @@ declare global {
     cleanupAlchemyAdminPage?: () => void;
     addRequirement?: (type: 'anomalie' | 'consumable', selectedName?: string, qty?: number) => void;
     cancelEdit?: () => void;
+    initDungeonStatsPage?: () => Promise<void>;
+    cleanupDungeonStatsPage?: () => void;
+    toggleCustomSelect?: (id: string, event?: Event) => void;
+    selectDungeonFilter?: (filterKey: string, label: string, secretName?: string | null) => void;
+    resetTutorials?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

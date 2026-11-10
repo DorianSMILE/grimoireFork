@@ -18,7 +18,8 @@ function injectSpeculationRules() {
                     '/alchemy',
                     '/hunting',
                     '/achievements.html',
-                    '/secrets.html'
+                    '/secrets',
+                    '/dungeon-stats'
                 ],
                 eagerness: 'moderate'
             }

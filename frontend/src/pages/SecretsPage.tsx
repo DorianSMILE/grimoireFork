@@ -253,7 +253,7 @@ export function SecretsPage() {
               <span className="hub-tab-label">Secrets</span>
             </a>
             <a
-              href="/dungeon-stats.html"
+              href="/dungeon-stats"
               className="hub-tab-btn tab-stats"
               title="Statistiques PvE"
             >

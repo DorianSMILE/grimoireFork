@@ -437,7 +437,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
             const titleHtml = data.activeTitle ? `<span class="nav-active-title" title="Titre équipé : ${data.activeTitle}">« ${data.activeTitle} »</span>` : '';
             
             container.innerHTML = `
-                <a class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all" style="position:relative; flex-shrink: 0;" href="/secrets.html" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
+                <a class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all" style="position:relative; flex-shrink: 0;" href="/secrets" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
                     <span class="material-symbols-outlined text-lg text-success">account_circle</span>
                     <div class="nav-user-col">
                         <span class="nav-user-name">${data.username}</span>

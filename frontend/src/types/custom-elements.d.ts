@@ -68,6 +68,8 @@ declare global {
     submitAnomalie?: () => Promise<void>;
     onAnomalieMagicToggleChange?: (el?: HTMLInputElement) => void;
     promptUnlockFeature?: (featureId: string, featureName: string, cost: number) => void;
+    initShopPage?: () => Promise<void>;
+    cleanupShopPage?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('grimoire_html_cache_v9', '1');
             sessionStorage.removeItem('grimoire_app_meta_v1');
             sessionStorage.removeItem('grimoire_app_meta_v2');
-            ['/dungeons', '/armory', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+            ['/dungeons', '/armory', '/shop', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
                 fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
             });
         }
@@ -546,7 +546,7 @@ window.addEventListener('authLoaded', () => {
 
     document.querySelectorAll('.nav-vault').forEach(el => applyFeatureLock(el, hasVault, 'Coffres', 50, 'vault', '/vault'));
     document.querySelectorAll('.nav-alchemy').forEach(el => applyFeatureLock(el, hasAlchemy, 'Alchimie', 150, 'alchemy', '/alchemy.html'));
-    document.querySelectorAll('.nav-shop').forEach(el => applyFeatureLock(el, hasShop, 'Boutique', 75, 'shop', '/shop.html'));
+    document.querySelectorAll('.nav-shop').forEach(el => applyFeatureLock(el, hasShop, 'Boutique', 75, 'shop', '/shop'));
 
     const huntingBadge = document.getElementById('navHuntingBadge');
     if (huntingBadge) {

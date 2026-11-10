@@ -11,6 +11,7 @@ import { DungeonsPage } from './pages/DungeonsPage';
 import { GrimoirePage } from './pages/GrimoirePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ShopPage } from './pages/ShopPage';
 import { VaultPage } from './pages/VaultPage';
 
 const SPA_ROUTES = new Set([
@@ -23,6 +24,8 @@ const SPA_ROUTES = new Set([
   '/dungeons.html',
   '/vault',
   '/vault.html',
+  '/shop',
+  '/shop.html',
   '/login',
   '/login.html',
   '/register',
@@ -74,6 +77,8 @@ export function App() {
         <Route path="/dungeons.html" element={<Navigate to="/dungeons" replace />} />
         <Route path="/vault" element={<VaultPage />} />
         <Route path="/vault.html" element={<Navigate to="/vault" replace />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/shop.html" element={<Navigate to="/shop" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

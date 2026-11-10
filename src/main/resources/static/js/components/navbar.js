@@ -14,7 +14,7 @@ function injectSpeculationRules() {
                     '/armory',
                     '/dungeons',
                     '/vault',
-                    '/shop.html',
+                    '/shop',
                     '/alchemy.html',
                     '/hunting.html',
                     '/achievements.html',
@@ -88,7 +88,7 @@ class AppNavbar extends HTMLElement {
                 <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">money_bag</span> Coffres
                 </a>
-                <a href="/shop.html" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">
+                <a href="/shop" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">storefront</span> Boutique
                 </a>
                 <a href="/alchemy.html" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}" style="position:relative;">

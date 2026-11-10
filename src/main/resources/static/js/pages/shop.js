@@ -557,28 +557,10 @@ window.openBuyModal = function (id, isConsumable = false) {
                         window.checkAuthStatus(); // Met à jour l'or affiché
                     }
                     if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
-        const mainEl = document.querySelector('.vault-main');
-        if (mainEl) {
-            mainEl.classList.add('is-hidden');
-            const lockWrap = document.createElement('div');
-            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
-            const lockIcon = document.createElement('span');
-            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
-            lockIcon.textContent = 'lock';
-            const lockTitle = document.createElement('h1');
-            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
-            lockTitle.textContent = 'Boutique Verrouillée';
-            const lockMsg = document.createElement('p');
-            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
-            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
-            lockWrap.appendChild(lockIcon);
-            lockWrap.appendChild(lockTitle);
-            lockWrap.appendChild(lockMsg);
-            mainEl.parentNode.insertBefore(lockWrap, mainEl);
-        }
-        return;
-    }
-    loadShop(); // Met à jour l'affichage de la boutique (boutons Vendu)
+                        applyShopLockBanner();
+                        return;
+                    }
+                    loadShop(); // Met à jour l'affichage de la boutique (boutons Vendu)
                 } else {
                     showNotif(data.message || "Erreur lors de l'achat.", true);
                 }
@@ -631,39 +613,16 @@ function startPromoCountdown() {
         if (allExpired && countdownEls.length > 0) {
             clearInterval(promoCountdownInterval);
             if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
-        const mainEl = document.querySelector('.vault-main');
-        if (mainEl) {
-            mainEl.classList.add('is-hidden');
-            const lockWrap = document.createElement('div');
-            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
-            const lockIcon = document.createElement('span');
-            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
-            lockIcon.textContent = 'lock';
-            const lockTitle = document.createElement('h1');
-            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
-            lockTitle.textContent = 'Boutique Verrouillée';
-            const lockMsg = document.createElement('p');
-            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
-            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
-            lockWrap.appendChild(lockIcon);
-            lockWrap.appendChild(lockTitle);
-            lockWrap.appendChild(lockMsg);
-            mainEl.parentNode.insertBefore(lockWrap, mainEl);
-        }
-        return;
-    }
-    loadShop();
+                applyShopLockBanner();
+                return;
+            }
+            loadShop();
         }
     };
 
     updateTimer();
     promoCountdownInterval = setInterval(updateTimer, 1000);
 }
-
-window.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
-    // Attend que auth soit chargé pour fetch loadShop
-});
 
 function renderBlackMarket() {
     let container = document.getElementById('blackMarketContainer');
@@ -695,7 +654,6 @@ function renderBlackMarket() {
         html += generateLockedSlotHtml({ requiredLevel: "Marché Noir", hint: "Débloquez-le via les améliorations de boutique" });
     } else if (blackMarket) {
         blackMarket.isBlackMarket = true;
-        // Appliquer un style spécifique pour le marché noir (rouge sombre / ombres rouges)
         let standHtml = generateStandHtml(blackMarket);
         standHtml = standHtml.replace('class="shop-stand"', 'class="shop-stand" style="border-color: #7f1d1d !important; box-shadow: 0 0 15px rgba(220,38,38,0.3) !important; background: linear-gradient(135deg, rgba(127,29,29,0.2) 0%, rgba(127,29,29,0.05) 100%) !important;"');
         html += standHtml;
@@ -704,34 +662,72 @@ function renderBlackMarket() {
     container.innerHTML = html;
 }
 
-window.addEventListener('authLoaded', () => {
-    if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
-        const mainEl = document.querySelector('.vault-main');
-        if (mainEl) {
-            mainEl.classList.add('is-hidden');
-            const lockWrap = document.createElement('div');
-            lockWrap.className = 'flex flex-col items-center justify-center h-[70vh] text-center text-white';
-            const lockIcon = document.createElement('span');
-            lockIcon.className = 'material-symbols-outlined text-crit mb-4 text-[4rem]';
-            lockIcon.textContent = 'lock';
-            const lockTitle = document.createElement('h1');
-            lockTitle.className = 'mb-4 text-[2rem] font-outfit';
-            lockTitle.textContent = 'Boutique Verrouillée';
-            const lockMsg = document.createElement('p');
-            lockMsg.className = 'text-muted max-w-[420px] mb-8 text-[1.1rem]';
-            lockMsg.textContent = window.currentUser.shopLockMessage || 'Terminez plus de donjons libres avant de débloquer la boutique.';
-            lockWrap.appendChild(lockIcon);
-            lockWrap.appendChild(lockTitle);
-            lockWrap.appendChild(lockMsg);
-            mainEl.parentNode.insertBefore(lockWrap, mainEl);
+function applyShopLockBanner() {
+    const mainEl = document.querySelector('.vault-main');
+    if (mainEl) mainEl.classList.add('is-hidden');
+    const lockedBanner = document.getElementById('shopFeatureLocked');
+    if (lockedBanner) {
+        const msgEl = document.getElementById('shopLockMessage');
+        if (msgEl) {
+            msgEl.textContent = (window.currentUser && window.currentUser.shopLockMessage) || 'Terminez plus de donjons libres avant de débloquer la boutique.';
         }
-        return;
+        lockedBanner.classList.remove('is-hidden');
     }
-    loadShop();
+}
+
+async function applyShopAuthState() {
+    if (!document.getElementById('shopGrid')) return;
+
     const adminLink = document.getElementById('adminShopLink');
     if (adminLink) {
         adminLink.style.display = window.isAdmin ? 'inline-flex' : 'none';
     }
+
+    if (!window.isAdmin && window.currentUser && !window.currentUser.unlockedShop) {
+        applyShopLockBanner();
+        return;
+    }
+
+    const mainEl = document.querySelector('.vault-main');
+    if (mainEl) mainEl.classList.remove('is-hidden');
+    const lockedBanner = document.getElementById('shopFeatureLocked');
+    if (lockedBanner) lockedBanner.classList.add('is-hidden');
+
+    await loadShop();
+}
+
+window.initShopPage = async function () {
+    if (window.initAppMeta) await window.initAppMeta();
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else {
+        await applyShopAuthState();
+    }
+};
+
+window.cleanupShopPage = function () {
+    if (promoCountdownInterval) {
+        clearInterval(promoCountdownInterval);
+        promoCountdownInterval = null;
+    }
+    const bm = document.getElementById('blackMarketContainer');
+    if (bm) bm.remove();
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+    if (window.GrimoireTutorial && typeof window.GrimoireTutorial.stop === 'function') {
+        window.GrimoireTutorial.stop();
+    }
+};
+
+window.addEventListener('DOMContentLoaded', async () => {
+    if (document.getElementById('shopGrid')) {
+        await window.initShopPage();
+    }
+});
+
+window.addEventListener('authLoaded', () => {
+    applyShopAuthState();
 });
 
 

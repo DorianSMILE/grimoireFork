@@ -3612,3 +3612,34 @@ body {
         grid-column: span 2 !important;
     }
 }
+
+/* ===== Stacking Context & Foreground Enforcement for Victory / Event / Result Overlays ===== */
+.event-overlay {
+    z-index: 100000 !important;
+    visibility: hidden;
+}
+
+.event-overlay.show {
+    visibility: visible;
+}
+
+#combatVictoryOverlay > div:last-child,
+#eventModalWrapper {
+    z-index: 100010 !important;
+}
+
+#combatVictorySidePanelWrapper,
+#eventSidePanelWrapper {
+    z-index: 100005 !important;
+}
+
+.result-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 200000 !important;
+    visibility: hidden;
+}
+
+.result-overlay.show {
+    visibility: visible;
+}

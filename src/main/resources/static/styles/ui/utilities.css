@@ -3157,6 +3157,42 @@ button {
     flex: none !important;
 }
 
+.z-\[99999\] {
+    z-index: 99999 !important;
+}
+
+.left-1\/2 {
+    left: 50% !important;
+}
+
+.-translate-x-1\/2 {
+    transform: translateX(-50%) !important;
+}
+
+.-translate-x-1\/2.-translate-y-1\/2 {
+    transform: translate(-50%, -50%) !important;
+}
+
+.max-w-\[1000px\] {
+    max-width: 1000px !important;
+}
+
+.w-\[90\%\] {
+    width: 90% !important;
+}
+
+.min-h-\[400px\] {
+    min-height: 400px !important;
+}
+
+.max-h-\[95vh\] {
+    max-height: 95vh !important;
+}
+
+.md\:p-12 {
+    padding: 3rem !important;
+}
+
 
 /* Performance: offscreen rendering deferral */
 .cv-auto,

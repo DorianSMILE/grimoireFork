@@ -4726,6 +4726,19 @@ export function showResult(data) {
     const tipContainer = document.getElementById('resultTip');
     const tipText = document.getElementById('resultTipText');
 
+    // Masquer les overlays de salle / victoire intermédiaire et panneaux latéraux pour garantir le premier plan
+    const combatVictoryOverlay = document.getElementById('combatVictoryOverlay');
+    if (combatVictoryOverlay) combatVictoryOverlay.classList.remove('show');
+    const eventOverlay = document.getElementById('eventOverlay');
+    if (eventOverlay) eventOverlay.classList.remove('show');
+    const mainSidePanel = document.getElementById('combatMainSidePanelWrapper');
+    if (mainSidePanel) {
+        mainSidePanel.classList.add('-translate-x-full');
+        mainSidePanel.classList.remove('translate-x-0');
+    }
+    const heroStatsPanel = document.getElementById('eventOverlayHeroesStats');
+    if (heroStatsPanel) heroStatsPanel.style.display = 'none';
+
     if (data.playerWon) {
         title.textContent = "VICTOIRE";
         title.classList.add('text-success');
@@ -4755,7 +4768,7 @@ export function showResult(data) {
                 await (window.globalFetch || fetch)(`/api/pve/combat/${sId}/finish`, { method: 'POST' });
             } catch (_) {}
         }
-        window.location.href = '/dungeons.html';
+        window.location.href = '/dungeons';
     };
 
     const retryBtn = document.getElementById('retryDungeonBtn');
@@ -4763,7 +4776,7 @@ export function showResult(data) {
         const urlParams = new URLSearchParams(window.location.search);
         const dId = (data && data.dungeonId) || (pageState.currentSessionData && pageState.currentSessionData.dungeonId) || urlParams.get('dungeonId');
         if (dId) {
-            let targetUrl = `/dungeons.html?dungeonId=${dId}`;
+            let targetUrl = `/dungeons?dungeonId=${dId}`;
             const heroes = (data && data.players && data.players.length > 0)
                 ? data.players
                 : (pageState.currentSessionData && pageState.currentSessionData.players);

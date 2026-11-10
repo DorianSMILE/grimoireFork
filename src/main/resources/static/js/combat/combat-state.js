@@ -163,11 +163,11 @@ window.promptFlee = function () {
                     return;
                 }
                 localStorage.removeItem('activeCombatId');
-                window.location.href = '/dungeons.html';
+                window.location.href = '/dungeons';
             } catch (e) {
                 console.error(e);
                 localStorage.removeItem('activeCombatId');
-                window.location.href = '/dungeons.html';
+                window.location.href = '/dungeons';
             }
         }
     });
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await globalFetch(`/api/pve/combat/${directSessionId}/resume`, { method: 'POST' });
         if (!res.ok) {
             window.showNotif('Session introuvable ou expirée.', true);
-            window.location.href = '/dungeons.html';
+            window.location.href = '/dungeons';
             return;
         }
         const data = await res.json();
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!dungeonId || !characterIds) {
         if (typeof showNotif !== 'undefined') window.showNotif("Paramètres de combat manquants.", true);
         else ui.showNotif("Paramètres de combat manquants.", true);
-        window.location.href = '/dungeons.html';
+        window.location.href = '/dungeons';
         return;
     }
 
@@ -706,6 +706,11 @@ window.renderHeroStatsPanel = function () {
             </div>
         </div>`;
     });
+    const resultOverlay = document.getElementById('resultOverlay');
+    if (resultOverlay && resultOverlay.classList.contains('show')) {
+        statsDiv.style.display = 'none';
+        return;
+    }
     statsDiv.innerHTML = statsHtml;
     statsDiv.style.cssText = [
         'display: flex',
@@ -716,7 +721,7 @@ window.renderHeroStatsPanel = function () {
         'top: 16px',
         'margin-left: 30px',
         'width: 190px',
-        'z-index: 50',
+        'z-index: 20',
         'pointer-events: none',
     ].join('; ');
 

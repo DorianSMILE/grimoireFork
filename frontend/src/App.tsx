@@ -10,6 +10,7 @@ import { ArmoryPage } from './pages/ArmoryPage';
 import { AlchemyPage } from './pages/AlchemyPage';
 import { DungeonsPage } from './pages/DungeonsPage';
 import { GrimoirePage } from './pages/GrimoirePage';
+import { HuntingPage } from './pages/HuntingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ShopPage } from './pages/ShopPage';
@@ -29,6 +30,8 @@ const SPA_ROUTES = new Set([
   '/shop.html',
   '/alchemy',
   '/alchemy.html',
+  '/hunting',
+  '/hunting.html',
   '/login',
   '/login.html',
   '/register',
@@ -84,6 +87,8 @@ export function App() {
         <Route path="/shop.html" element={<Navigate to="/shop" replace />} />
         <Route path="/alchemy" element={<AlchemyPage />} />
         <Route path="/alchemy.html" element={<Navigate to="/alchemy" replace />} />
+        <Route path="/hunting" element={<HuntingPage />} />
+        <Route path="/hunting.html" element={<Navigate to="/hunting" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

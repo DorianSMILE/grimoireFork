@@ -3,23 +3,49 @@
 let currentUser = null;
 let refreshInterval = null;
 
-document.addEventListener('DOMContentLoaded', () => { if (window.currentUser !== undefined) { initHunting(); } else { const authHandler = () => { initHunting(); window.removeEventListener('authLoaded', authHandler); }; window.addEventListener('authLoaded', authHandler); } });
-
-let isHuntingInitialized = false;
-async function initHunting() {
-    if (isHuntingInitialized) return;
+async function applyHuntingAuthState() {
+    if (!document.getElementById('dailyCard')) return;
     if (!window.currentUser) {
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return;
     }
-    isHuntingInitialized = true;
     currentUser = window.currentUser.username;
     await loadAll();
 
-    // Refresh toutes les 30s
     if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = setInterval(loadAll, 30000);
+    refreshInterval = setInterval(() => {
+        if (document.getElementById('dailyCard')) {
+            loadAll();
+        }
+    }, 30000);
 }
+
+window.addEventListener('authLoaded', () => {
+    applyHuntingAuthState();
+});
+
+window.initHuntingPage = async function () {
+    if (window.initAppMeta) await window.initAppMeta();
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else {
+        await applyHuntingAuthState();
+    }
+};
+
+window.cleanupHuntingPage = function () {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+    Object.keys(dynamicTimers).forEach(k => {
+        clearInterval(dynamicTimers[k]);
+        delete dynamicTimers[k];
+    });
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+};
 
 async function loadAll() {
     await Promise.all([loadDaily(), loadWeekly()]);
@@ -35,6 +61,7 @@ async function loadDaily() {
         const data = await res.json();
 
         const card = document.getElementById('dailyCard');
+        if (!card) return;
         if (!data.quest) {
             card.innerHTML = '<div class="quest-card-loading"><span class="material-symbols-outlined">block</span> Aucune quête journalière active.</div>';
             return;
@@ -105,7 +132,8 @@ async function loadDaily() {
         // Previous daily
         const prevSection = document.getElementById('previousDailySection');
         const prevCard = document.getElementById('previousDailyCard');
-        if (data.previous && data.previous.quest) {
+        if (prevSection && prevCard && data.previous && data.previous.quest) {
+            prevSection.classList.remove('is-hidden');
             prevSection.style.display = 'block';
             const pQuest = data.previous.quest;
             const pLb = data.previous.leaderboard || [];
@@ -150,7 +178,8 @@ async function loadDaily() {
                 </div>
             `;
             bindClaimButton(prevCard, pQuest.id);
-        } else {
+        } else if (prevSection) {
+            prevSection.classList.add('is-hidden');
             prevSection.style.display = 'none';
         }
 
@@ -169,6 +198,7 @@ async function loadWeekly() {
         const data = await res.json();
 
         const card = document.getElementById('weeklyCard');
+        if (!card) return;
         if (!data.quest) {
             card.innerHTML = '<div class="quest-card-loading"><span class="material-symbols-outlined">block</span> Aucune quête hebdomadaire active.</div>';
             return;
@@ -235,7 +265,8 @@ async function loadWeekly() {
         // Previous weekly
         const prevSection = document.getElementById('previousWeeklySection');
         const prevCard = document.getElementById('previousWeeklyCard');
-        if (data.previous && data.previous.quest) {
+        if (prevSection && prevCard && data.previous && data.previous.quest) {
+            prevSection.classList.remove('is-hidden');
             prevSection.style.display = 'block';
             const pQuest = data.previous.quest;
             const pLb = data.previous.leaderboard || [];
@@ -267,7 +298,8 @@ async function loadWeekly() {
                 </div>
             `;
             bindClaimButton(prevCard, pQuest.id);
-        } else {
+        } else if (prevSection) {
+            prevSection.classList.add('is-hidden');
             prevSection.style.display = 'none';
         }
     } catch (e) {
@@ -320,7 +352,7 @@ function renderDungeonAccessButton(quest, type) {
         `;
     }
     return `
-        <a href="/dungeons.html?dungeonId=${quest.dungeonId}" class="btn-dungeon-access ${type}">
+        <a href="/dungeons?dungeonId=${quest.dungeonId}" class="btn-dungeon-access ${type}">
             <span class="material-symbols-outlined">swords</span>
             <span>Accéder au donjon</span>
         </a>

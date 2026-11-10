@@ -16,7 +16,7 @@ function injectSpeculationRules() {
                     '/vault',
                     '/shop',
                     '/alchemy',
-                    '/hunting.html',
+                    '/hunting',
                     '/achievements.html',
                     '/secrets.html'
                 ],
@@ -95,7 +95,7 @@ class AppNavbar extends HTMLElement {
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">science</span> Alchimie
                     <span id="navAlchemyBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/hunting.html" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}" style="position:relative;">
+                <a href="/hunting" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">trophy</span> Chasse
                     <span id="navHuntingBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>

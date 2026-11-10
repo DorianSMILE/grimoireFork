@@ -74,6 +74,8 @@ declare global {
     cleanupAlchemyPage?: () => void;
     renderRecipesList?: () => void;
     craftSelected?: () => Promise<void>;
+    initHuntingPage?: () => Promise<void>;
+    cleanupHuntingPage?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

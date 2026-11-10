@@ -9,34 +9,30 @@ const pageState = {
     customSelectSetups: []
 };
 
-window.addEventListener('authLoaded', async () => {
+let alchemyInitialFilterSet = false;
+
+async function applyAlchemyAuthState() {
+    const recipesList = document.getElementById('playerRecipesList');
+    if (!recipesList) return;
     if (window.initAppMeta) await window.initAppMeta();
+
+    const mainEl = document.getElementById('alchemyMain');
+    const authLocked = document.getElementById('alchemyAuthLocked');
+    const featureLocked = document.getElementById('alchemyFeatureLocked');
+
     if (!window.currentUser) {
-        document.querySelector('.alchemy-main').style.display = 'none';
-        document.querySelector('.alchemy-main').insertAdjacentHTML('beforebegin', `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: white;">
-                        <span class="material-symbols-outlined" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;">lock</span>
-                        <h1 style="font-size: 2rem; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">Veuillez vous connecter</h1>
-                        <p style="color: #94a3b8; max-width: 400px; margin-bottom: 2rem; font-size: 1.1rem;">
-                            Vous devez être connecté pour accéder à cette page.
-                        </p>
-                    </div>
-                `);
+        if (mainEl) mainEl.classList.add('is-hidden');
+        if (featureLocked) featureLocked.classList.add('is-hidden');
+        if (authLocked) authLocked.classList.remove('is-hidden');
     } else if (!window.currentUser.unlockedAlchemy) {
-        document.querySelector('.alchemy-layout').style.display = 'none';
-        document.querySelector('.alchemy-layout').insertAdjacentHTML('beforebegin', `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: white;">
-                        <span class="material-symbols-outlined" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;">lock</span>
-                        <h1 style="font-size: 2rem; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">Alchimie Bloquée</h1>
-                        <p style="color: #94a3b8; max-width: 400px; margin-bottom: 2rem; font-size: 1.1rem;">
-                            Vous devez débloquer l'Alchimie pour y accéder. L'accès coûte 150 or.
-                        </p>
-                        <button onclick="promptUnlockFeature('alchemy', 'Alchimie', 150)" style="background: #10b981; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); transition: all 0.2s;">
-                            Débloquer pour 150 <span class="material-symbols-outlined" style="font-size: 1.2rem; vertical-align: middle; color: #fcd34d;">monetization_on</span>
-                        </button>
-                    </div>
-                `);
+        if (mainEl) mainEl.classList.add('is-hidden');
+        if (authLocked) authLocked.classList.add('is-hidden');
+        if (featureLocked) featureLocked.classList.remove('is-hidden');
     } else {
+        if (authLocked) authLocked.classList.add('is-hidden');
+        if (featureLocked) featureLocked.classList.add('is-hidden');
+        if (mainEl) mainEl.classList.remove('is-hidden');
+
         Promise.all([
             fetchUserInventory(),
             fetchUserCharacters(),
@@ -46,9 +42,40 @@ window.addEventListener('authLoaded', async () => {
             renderRecipesList();
         }).catch(e => console.error("Erreur chargement alchimie:", e));
     }
+}
+
+window.addEventListener('authLoaded', () => {
+    applyAlchemyAuthState();
 });
 
-let alchemyInitialFilterSet = false;
+window.initAlchemyPage = async function () {
+    alchemyInitialFilterSet = false;
+    pageState.selectedRecipe = null;
+    pageState.customSelectSetups = [];
+
+    const filterInput = document.getElementById('filterRewardType');
+    if (filterInput && !filterInput.dataset.boundChange) {
+        filterInput.dataset.boundChange = 'true';
+        filterInput.addEventListener('change', () => {
+            renderRecipesList();
+        });
+    }
+
+    if (window.initGlobalCustomSelect) {
+        window.initGlobalCustomSelect();
+    }
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else {
+        await applyAlchemyAuthState();
+    }
+};
+
+window.cleanupAlchemyPage = function () {
+    document.querySelectorAll('.magic-particle').forEach(p => p.remove());
+};
+
 function setDefaultFilter() {
     if (!window.currentUser || !window.currentUser.seenAlchemyRecipes) return;
     if (alchemyInitialFilterSet) return;
@@ -970,3 +997,7 @@ window.normalizeCraftQuantity = function (input) {
     pageState.craftQuantity = val;
     renderCauldron(pageState.selectedRecipe, true);
 };
+
+window.renderRecipesList = renderRecipesList;
+window.craftSelected = craftSelected;
+

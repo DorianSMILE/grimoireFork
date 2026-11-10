@@ -70,6 +70,10 @@ declare global {
     promptUnlockFeature?: (featureId: string, featureName: string, cost: number) => void;
     initShopPage?: () => Promise<void>;
     cleanupShopPage?: () => void;
+    initAlchemyPage?: () => Promise<void>;
+    cleanupAlchemyPage?: () => void;
+    renderRecipesList?: () => void;
+    craftSelected?: () => Promise<void>;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

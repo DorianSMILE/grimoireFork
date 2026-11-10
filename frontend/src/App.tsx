@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { ArmoryPage } from './pages/ArmoryPage';
+import { AchievementsPage } from './pages/AchievementsPage';
 import { AlchemyAdminPage } from './pages/AlchemyAdminPage';
 import { AlchemyPage } from './pages/AlchemyPage';
 import { DungeonsPage } from './pages/DungeonsPage';
@@ -47,6 +48,8 @@ const SPA_ROUTES = new Set([
   '/secrets.html',
   '/dungeon-stats',
   '/dungeon-stats.html',
+  '/achievements',
+  '/achievements.html',
   '/login',
   '/login.html',
   '/register',
@@ -114,6 +117,8 @@ export function App() {
         <Route path="/secrets.html" element={<Navigate to="/secrets" replace />} />
         <Route path="/dungeon-stats" element={<DungeonStatsPage />} />
         <Route path="/dungeon-stats.html" element={<Navigate to="/dungeon-stats" replace />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
+        <Route path="/achievements.html" element={<Navigate to="/achievements" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

@@ -23,7 +23,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ---
 
-## 2. Avancement Global (14 / 16 pages migrées)
+## 2. Avancement Global (15 / 16 pages migrées)
 
 | Page | Ancienne URL | Nouvelle URL | Statut | Composant React | Notes techniques |
 | :--- | :--- | :--- | :---: | :--- | :--- |
@@ -41,7 +41,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Admin Alchimie** | `/alchemy-admin.html` | `/alchemy-admin` | ✅ Migrée | `src/pages/AlchemyAdminPage.tsx` | CRUD recettes et ingrédients d'alchimie (anomalies, consommables, équipements, secrets, XP Spirit). |
 | **Mes Secrets** | `/secrets.html` | `/secrets` | ✅ Migrée | `src/pages/SecretsPage.tsx` | Composant 100% React TypeScript, thèmes CSS sémantiques, réclamation récompenses avec animation d'or flottant. |
 | **Statistiques PvE** | `/dungeon-stats.html` | `/dungeon-stats` | ✅ Migrée | `src/pages/DungeonStatsPage.tsx` | KPIs, graphiques Chart.js (issues, voies, spiritualités), filtre par donjon/secret, historique des runs, reset tutoriels. |
-| **Succès** | `/achievements.html` | `/achievements` | ⏳ À migrer | — | Page simple (filtres par catégorie, barres de progression, titres). |
+| **Succès** | `/achievements.html` | `/achievements` | ✅ Migrée | `src/pages/AchievementsPage.tsx` | Progression globale, équipement de titre actif, filtres par catégorie, cartes de succès et mystères. |
 | **Combat PvE** | `/combat.html` | `/combat` | ⏳ À migrer | — | Moteur de combat tour par tour, canvas/animations, signaux. |
 
 ---

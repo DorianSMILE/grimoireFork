@@ -106,6 +106,9 @@ declare global {
     toggleCustomSelect?: (id: string, event?: Event) => void;
     selectDungeonFilter?: (filterKey: string, label: string, secretName?: string | null) => void;
     resetTutorials?: () => void;
+    initAchievementsPage?: () => Promise<void>;
+    cleanupAchievementsPage?: () => void;
+    handleEquipTitle?: () => Promise<void>;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

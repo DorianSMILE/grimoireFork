@@ -261,7 +261,7 @@ export function SecretsPage() {
               <span className="hub-tab-label">Stats</span>
             </a>
             <a
-              href="/achievements.html"
+              href="/achievements"
               className="hub-tab-btn tab-achievements"
               title="Succès & Titres"
             >

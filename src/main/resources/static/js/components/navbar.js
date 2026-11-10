@@ -17,7 +17,7 @@ function injectSpeculationRules() {
                     '/shop',
                     '/alchemy',
                     '/hunting',
-                    '/achievements.html',
+                    '/achievements',
                     '/secrets',
                     '/dungeon-stats'
                 ],

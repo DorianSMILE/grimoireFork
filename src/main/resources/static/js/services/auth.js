@@ -41,7 +41,7 @@ if (!isAuthPage) {
 } else {
     const isLikely = localStorage.getItem('isLikelyLoggedIn') === 'true';
     if (isLikely && isValidToken(accessToken)) {
-        window.location.replace('/armory.html');
+        window.location.replace('/armory');
     }
 }
 
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn("Could not check active combat session on login", e);
                     }
                     
-                    window.location.href = '/armory.html';
+                    window.location.href = '/armory';
                 }
             } catch (err) {
                 errorDiv.innerText = "Erreur de communication avec le serveur";
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     successDiv.innerText = data.message || "Inscription réussie ! Redirection vers l'armurerie...";
                     successDiv.style.display = 'block';
                     setTimeout(() => {
-                        window.location.href = '/armory.html';
+                        window.location.href = '/armory';
                     }, 1000);
                 }
             } catch (err) {

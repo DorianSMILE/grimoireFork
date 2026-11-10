@@ -6,11 +6,22 @@ import {
   Routes,
   useNavigate,
 } from 'react-router-dom';
+import { ArmoryPage } from './pages/ArmoryPage';
 import { GrimoirePage } from './pages/GrimoirePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 
-const SPA_ROUTES = new Set(['/', '/index.html', '/grimoire', '/login', '/login.html', '/register', '/register.html']);
+const SPA_ROUTES = new Set([
+  '/',
+  '/index.html',
+  '/grimoire',
+  '/armory',
+  '/armory.html',
+  '/login',
+  '/login.html',
+  '/register',
+  '/register.html',
+]);
 
 function SpaLinkInterceptor() {
   const navigate = useNavigate();
@@ -51,6 +62,8 @@ export function App() {
         <Route path="/" element={<Navigate to="/grimoire" replace />} />
         <Route path="/index.html" element={<Navigate to="/grimoire" replace />} />
         <Route path="/grimoire" element={<GrimoirePage />} />
+        <Route path="/armory" element={<ArmoryPage />} />
+        <Route path="/armory.html" element={<Navigate to="/armory" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

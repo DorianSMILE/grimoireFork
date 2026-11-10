@@ -33,5 +33,13 @@ declare global {
     cancelEditSpell?: () => void;
     showGlobalTooltip?: (el: HTMLElement) => void;
     hideGlobalTooltip?: (immediate?: boolean) => void;
+    initArmoryPage?: () => Promise<void>;
+    submitPersonnage?: () => Promise<void>;
+    resetForm?: () => void;
+    loadPersonnages?: () => Promise<void>;
+    filterPersonnages?: () => void;
+    closeEquipModal?: () => void;
+    closeSpecModal?: () => void;
+    GrimoireTutorial?: { stop?: () => void };
   }
 }

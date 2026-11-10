@@ -628,6 +628,7 @@ export async function showModal(options) {
     }
     return modal.show(options);
 }
+window.showModal = showModal;
 
 export function showGlobalTooltip(el) {
     if (!el) return;

@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { isAlreadyAuthenticated, loginApi } from '../services/api';
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -11,9 +12,9 @@ export function LoginPage() {
   useEffect(() => {
     document.title = 'Connexion — Grimoire';
     if (isAlreadyAuthenticated()) {
-      window.location.replace('/armory.html');
+      navigate('/armory', { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +35,7 @@ export function LoginPage() {
         return;
       }
 
-      window.location.href = '/armory.html';
+      navigate('/armory', { replace: true });
     } catch {
       setErrorMessage('Erreur de communication avec le serveur');
       setIsSubmitting(false);

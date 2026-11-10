@@ -19,15 +19,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(combatInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/styles/**", "/app/**", "/login", "/register", "/api/combat/**", "/api/pve/combat/**", "/api/pve/multi/**", "/api/auth/**", "/combat.html", "/error", "/api/anomalies/**");
+                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/styles/**", "/app/**", "/login", "/register", "/api/combat/**", "/api/pve/combat/**", "/api/pve/multi/**", "/api/auth/**", "/combat.html", "/combat", "/error", "/api/anomalies/**");
     }
 
     @Override
     public void addViewControllers(@NonNull ViewControllerRegistry registry) {
-        // Routes SPA React migrées
+        // Routes SPA React (migrées + cibles pour éviter de redémarrer Spring Boot à chaque page)
         registry.addRedirectViewController("/", "/grimoire");
-        registry.addViewController("/grimoire").setViewName("forward:/app/index.html");
-        registry.addViewController("/login").setViewName("forward:/app/index.html");
-        registry.addViewController("/register").setViewName("forward:/app/index.html");
+        String[] spaRoutes = {
+            "/grimoire", "/armory", "/login", "/register",
+            "/secrets", "/achievements", "/hunting", "/shop",
+            "/alchemy", "/vault", "/dungeon-stats", "/dungeons",
+            "/combat", "/shop-admin", "/alchemy-admin", "/pve-admin"
+        };
+        for (String route : spaRoutes) {
+            registry.addViewController(route).setViewName("forward:/app/index.html");
+        }
     }
 }

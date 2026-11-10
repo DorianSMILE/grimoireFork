@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { ArmoryPage } from './pages/ArmoryPage';
+import { DungeonsPage } from './pages/DungeonsPage';
 import { GrimoirePage } from './pages/GrimoirePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -17,6 +18,8 @@ const SPA_ROUTES = new Set([
   '/grimoire',
   '/armory',
   '/armory.html',
+  '/dungeons',
+  '/dungeons.html',
   '/login',
   '/login.html',
   '/register',
@@ -64,6 +67,8 @@ export function App() {
         <Route path="/grimoire" element={<GrimoirePage />} />
         <Route path="/armory" element={<ArmoryPage />} />
         <Route path="/armory.html" element={<Navigate to="/armory" replace />} />
+        <Route path="/dungeons" element={<DungeonsPage />} />
+        <Route path="/dungeons.html" element={<Navigate to="/dungeons" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login.html" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<RegisterPage />} />

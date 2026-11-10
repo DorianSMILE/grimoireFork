@@ -12,7 +12,7 @@ function injectSpeculationRules() {
                 urls: [
                     '/grimoire',
                     '/armory',
-                    '/dungeons.html',
+                    '/dungeons',
                     '/vault.html',
                     '/shop.html',
                     '/alchemy.html',
@@ -46,6 +46,7 @@ class AppNavbar extends HTMLElement {
             'grimoire': { icon: 'auto_awesome', cls: 'logo-grimoire', title: 'Grimoire', subtitle: 'Ne pas prononcer à voix haute le nom des sorts...' },
             'armory': { icon: 'shield', cls: 'logo-armory', title: 'Armurerie', subtitle: 'Préparez votre équipement...' },
             'dungeon': { icon: 'swords', cls: 'logo-dungeon', title: 'Donjons', subtitle: 'Préparez-vous au combat...' },
+            'dungeons': { icon: 'swords', cls: 'logo-dungeon', title: 'Donjons', subtitle: 'Préparez-vous au combat...' },
             'vault': { icon: 'money_bag', cls: 'logo-vault', title: 'Coffres', subtitle: 'Un butin bien mérité.' },
             'shop': { icon: 'storefront', cls: 'logo-shop', title: 'Boutique', subtitle: "Touché c'est acheté !" },
             'alchemy': { icon: 'science', cls: 'logo-alchemy', title: 'Alchimie', subtitle: 'Mélangez vos ingrédients...' },
@@ -80,7 +81,7 @@ class AppNavbar extends HTMLElement {
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">shield</span> Armurerie
                     <span id="navArmoryBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/dungeons.html" class="top-nav-link nav-dungeon ${activePage === 'dungeon' ? 'active' : ''}" style="position:relative;">
+                <a href="/dungeons" class="top-nav-link nav-dungeon ${activePage === 'dungeon' || activePage === 'dungeons' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">swords</span> Donjons
                     <span id="navDungeonBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>

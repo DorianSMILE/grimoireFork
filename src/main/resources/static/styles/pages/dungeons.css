@@ -983,3 +983,314 @@
 .border-emerald-500\/40 { border-color: rgba(16, 185, 129, 0.4); }
 .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.1); }
 .text-emerald-300 { color: rgb(110, 231, 183); }
+
+
+/* --- Scoped Prep Character Card & Lobby Styles --- */
+#prepCharList .char-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    overflow: visible;
+}
+
+#prepCharList .char-card::before {
+    content: none;
+}
+
+.lobby-short-code-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-copy-lobby-code {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 0.5rem;
+    color: #e2e8f0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-copy-lobby-code:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Prep Loot Dropdown & Anomalies Box --- */
+.prep-loot-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 8px;
+    min-width: 260px;
+    pointer-events: auto;
+    flex-direction: column;
+    z-index: 9999;
+}
+
+.prep-anomalies-box {
+    display: none;
+    background: rgba(217, 70, 239, 0.04);
+    border: 1px solid rgba(217, 70, 239, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* --- Join Co-op Lobby Modal --- */
+.join-lobby-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+}
+
+.join-lobby-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(2px);
+}
+
+.join-lobby-panel {
+    position: relative;
+    background: linear-gradient(135deg, #0f1629, #1a2744);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    border-radius: 1.5rem;
+    padding: 2rem 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 1002;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.join-lobby-header {
+    flex-shrink: 0;
+}
+
+.join-lobby-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.join-lobby-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.join-lobby-close-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.join-lobby-subtitle {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.join-lobby-code-row {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.join-lobby-code-input {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem;
+    color: #f8fafc;
+    font-size: 1.2rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    outline: none;
+}
+
+.btn-paste-lobby-code {
+    padding: 0 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.join-lobby-info-box {
+    display: none;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    border-radius: 0.75rem;
+}
+
+.join-lobby-error-msg {
+    color: #ef4444;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    display: none;
+}
+
+.join-lobby-chars-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.join-lobby-chars-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.join-lobby-footer {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-join-lobby-cancel {
+    flex: 1;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.btn-join-lobby-submit {
+    flex: 2;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    border: none;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.join-lobby-consumables-drawer {
+    display: none;
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: max-content;
+    max-height: 92vh;
+    border-radius: 1.5rem;
+    width: min(460px, 100%);
+    background: linear-gradient(180deg, #0f1629 0%, #111b35 100%);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+    z-index: 1003;
+}
+
+.join-lobby-consumables-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    flex-shrink: 0;
+}
+
+.join-lobby-consumables-title-row {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.join-lobby-consumables-weight {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.join-lobby-consumables-sub {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin: 0.5rem 0 0 0;
+}
+
+.join-lobby-consumables-body {
+    flex: 1;
+    padding: 1rem 1.5rem;
+}
+
+/* --- Hero Equipment Tooltip --- */
+.hero-equipment-tooltip {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: linear-gradient(135deg, rgba(15, 23, 41, 0.96), rgba(26, 39, 68, 0.96));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.8rem;
+    min-width: 320px;
+    width: max-content;
+    max-width: min(720px, calc(100vw - 24px));
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+}
+
+.hero-equipment-tooltip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}

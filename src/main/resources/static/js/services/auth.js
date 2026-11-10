@@ -3,8 +3,10 @@ window.initAppMeta = async function () {
     return initMeta();
 };
 
-const isDungeonsPage = window.location.pathname.includes('/dungeons.html');
-if (isDungeonsPage) {
+function isOnDungeonsPage() {
+    return window.location.pathname === '/dungeons' || window.location.pathname.includes('/dungeons.html');
+}
+if (isOnDungeonsPage()) {
     localStorage.removeItem('activeCombatId');
 }
 
@@ -15,7 +17,7 @@ if (activeCombatId &&
     window.location.pathname !== '/login' &&
     !window.location.pathname.includes('/register.html') &&
     window.location.pathname !== '/register' &&
-    !isDungeonsPage) {
+    !isOnDungeonsPage()) {
     console.warn('Active combat session found in localStorage, redirecting to combat page.');
     window.location.href = '/combat.html';
 }
@@ -170,7 +172,7 @@ window.globalFetch = async function (url, options = {}) {
             let isInCombat = errorMsg && errorMsg.toLowerCase().includes('combat');
 
             // If error message was generic (e.g. Spring Boot default "Forbidden"), query /api/pve/combat/current
-            if (!isInCombat && isValidToken(accessToken) && !url.includes('/api/pve/combat/') && !isDungeonsPage) {
+            if (!isInCombat && isValidToken(accessToken) && !url.includes('/api/pve/combat/') && !isOnDungeonsPage()) {
                 try {
                     const curRes = await fetch('/api/pve/combat/current', {
                         headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -185,7 +187,7 @@ window.globalFetch = async function (url, options = {}) {
                 } catch (e) {}
             }
 
-            if (isInCombat && !isDungeonsPage) {
+            if (isInCombat && !isOnDungeonsPage()) {
                 console.warn('Redirecting to combat page due to active combat session', url);
                 if (parsedData && parsedData.activeCombatSessionId) {
                     localStorage.setItem('activeCombatId', parsedData.activeCombatSessionId);
@@ -270,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('grimoire_html_cache_v9', '1');
             sessionStorage.removeItem('grimoire_app_meta_v1');
             sessionStorage.removeItem('grimoire_app_meta_v2');
-            ['/dungeons.html', '/armory.html', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+            ['/dungeons', '/armory', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
                 fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
             });
         }
@@ -422,7 +424,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
                 window.location.pathname !== '/login' &&
                 !window.location.pathname.includes('/register.html') &&
                 window.location.pathname !== '/register' &&
-                !isDungeonsPage &&
+                !isOnDungeonsPage() &&
                 data.activeCombatSessionId) {
                 console.warn("Active combat session found via /api/auth/me, redirecting to combat.html");
                 localStorage.setItem('activeCombatId', data.activeCombatSessionId);

@@ -17,8 +17,8 @@ export function ArmoryPage() {
 
     async function bootArmory() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=26';
-      const armoryUrl = '/js/pages/armory.js?v=111';
+      const authUrl = '/js/services/auth.js?v=27';
+      const armoryUrl = '/js/pages/armory.js?v=112';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

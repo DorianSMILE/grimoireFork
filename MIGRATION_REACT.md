@@ -13,8 +13,8 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 - **Build de production Spring Boot (`:8080`)** :
   - `npm --prefix frontend run build` compile l'application React dans `src/main/resources/static/app/` (`base: '/app/'`).
   - Les ressources Vanilla existantes (`src/main/resources/static/styles/`, `js/`, `images/`, `sons/`, `*.html`) restent intactes.
-  - `WebMvcConfig.java` redirige les routes propres migrées (`/grimoire`, `/armory`, `/login`, `/register`) vers `forward:/app/index.html`.
-  - Les anciens fichiers HTML (`login.html`, `register.html`, `index.html`, `armory.html`) sont conservés sous forme de micro-redirections vers les nouvelles URLs propres (`/login`, `/register`, `/grimoire`, `/armory`) pour garantir zéro lien cassé depuis les pages non migrées.
+  - `WebMvcConfig.java` et `SecurityConfig.java` pré-enregistrent toutes les routes SPA cibles (`/grimoire`, `/armory`, `/dungeons`, `/login`, `/register`, etc.) vers `forward:/app/index.html`.
+  - Les anciens fichiers HTML (`login.html`, `register.html`, `index.html`, `armory.html`, `dungeons.html`) sont conservés sous forme de micro-redirections vers les nouvelles URLs propres (`/login`, `/register`, `/grimoire`, `/armory`, `/dungeons`) pour garantir zéro lien cassé depuis les pages non migrées.
 - **Serveur de développement HMR (`:5173`)** :
   - `vite.config.ts` proxifie automatiquement `/api`, `/styles`, `/js`, `/images`, `/sons` ainsi que toutes les pages `*.html` non encore migrées vers `http://localhost:8080`.
 - **Navigation hybride transparente** :
@@ -23,7 +23,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ---
 
-## 2. Avancement Global (4 / 15 pages migrées)
+## 2. Avancement Global (5 / 15 pages migrées)
 
 | Page | Ancienne URL | Nouvelle URL | Statut | Composant React | Notes techniques |
 | :--- | :--- | :--- | :---: | :--- | :--- |
@@ -31,6 +31,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Inscription** | `/register.html` | `/register` | ✅ Migrée | `src/pages/RegisterPage.tsx` | Validation mots de passe, auto-login, thème émeraude `.auth-page-register`. |
 | **Grimoire & Forge** | `/` (`index.html`) | `/grimoire` | ✅ Migrée | `src/pages/GrimoirePage.tsx` | Redirection `/` → `/grimoire`, filtres multi-critères, animations Lvl-5, Forge admin. |
 | **Armurerie** | `/armory.html` | `/armory` | ✅ Migrée | `src/pages/ArmoryPage.tsx` | Gestion des personnages, équipement, toile des spécificités (`hero-spider.js`), tutoriel guidé. |
+| **Donjons** | `/dungeons.html` | `/dungeons` | ✅ Migrée | `src/pages/DungeonsPage.tsx` | Sélection d'équipe, cartes de donjons, sacoche, lobbys multijoueur SSE, tutoriel donjon. |
 | **Mes Secrets** | `/secrets.html` | `/secrets` | ⏳ À migrer | — | Page simple (lecture secrets + réclamation récompenses). |
 | **Succès** | `/achievements.html` | `/achievements` | ⏳ À migrer | — | Page simple (filtres par catégorie, barres de progression, titres). |
 | **Tableau de Chasse** | `/hunting.html` | `/hunting` | ⏳ À migrer | — | Quêtes journalières/hebdomadaires et classements. |
@@ -38,7 +39,6 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Alchimie** | `/alchemy.html` | `/alchemy` | ⏳ À migrer | — | Chaudron, ingrédients et recettes découvertes. |
 | **Coffres (Vault)** | `/vault.html` | `/vault` | ⏳ À migrer | — | Inventaire de compte, filtres d'équipements, vente/enchantement. |
 | **Statistiques PvE** | `/dungeon-stats.html` | `/dungeon-stats` | ⏳ À migrer | — | Tableaux et statistiques de performance en donjon. |
-| **Donjons** | `/dungeons.html` | `/dungeons` | ⏳ À migrer | — | Sélection d'équipe, cartes de donjons, lobbys multijoueur. |
 | **Combat PvE** | `/combat.html` | `/combat` | ⏳ À migrer | — | Moteur de combat tour par tour, canvas/animations, signaux. |
 | **Admin Boutique** | `/shop-admin.html` | `/shop-admin` | ⏳ À migrer | — | CRUD modèles d'équipements et anomalies. |
 | **Admin Alchimie** | `/alchemy-admin.html` | `/alchemy-admin` | ⏳ À migrer | — | CRUD recettes et ingrédients d'alchimie. |

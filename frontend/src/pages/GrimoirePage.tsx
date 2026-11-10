@@ -28,7 +28,7 @@ export function GrimoirePage() {
     let cancelled = false;
 
     async function bootGrimoire() {
-      const authUrl = '/js/services/auth.js?v=26';
+      const authUrl = '/js/services/auth.js?v=27';
       const appUrl = '/js/app.js?v=9';
       await import(/* @vite-ignore */ authUrl);
       if (typeof window.initGrimoirePage !== 'function') {

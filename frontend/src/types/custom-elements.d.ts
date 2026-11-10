@@ -40,6 +40,23 @@ declare global {
     filterPersonnages?: () => void;
     closeEquipModal?: () => void;
     closeSpecModal?: () => void;
+    initDungeonsPage?: () => Promise<void>;
+    cleanupDungeonsPage?: () => void;
+    openJoinLobbyModal?: () => Promise<void>;
+    closeJoinLobbyModal?: () => void;
+    closePrepInterface?: () => void;
+    toggleConsumableFilter?: (btn: HTMLElement, category: string) => void;
+    onCoopToggleChange?: () => void;
+    startCombat?: () => Promise<void>;
+    createCoopLobby?: () => Promise<void>;
+    cancelCoopLobby?: () => Promise<void>;
+    copyLobbyCode?: () => void;
+    pasteLobbyCode?: () => Promise<void>;
+    submitJoinLobby?: () => Promise<void>;
+    closeUnlockModal?: () => void;
+    closeEntryModal?: () => void;
+    showPrepLootDropdown?: (el: HTMLElement) => void;
+    hidePrepLootDropdown?: (el: HTMLElement) => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

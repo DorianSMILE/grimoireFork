@@ -236,7 +236,7 @@ async function submitPersonnage() {
             if (data.redirectToDungeonTutorial) {
                 if (window.GrimoireTutorial) window.GrimoireTutorial.stop();
                 if (window.currentUser) window.currentUser.tutorialPhase = 'DUNGEON';
-                setTimeout(() => { window.location.href = '/dungeons.html?tutorial=1'; }, 650);
+                setTimeout(() => { window.location.href = '/dungeons?tutorial=1'; }, 650);
                 return;
             }
             resetForm(); await loadPersonnages();

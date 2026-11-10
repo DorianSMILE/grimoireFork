@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => ({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '^/(?!index\\.html|login\\.html|register\\.html|armory\\.html).*\\.html$': {
+      '^/(?!index\\.html|login\\.html|register\\.html|armory\\.html|dungeons\\.html).*\\.html$': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

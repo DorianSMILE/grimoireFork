@@ -4747,6 +4747,7 @@ export function showResult(data) {
         if (tipContainer && tipText) {
             const randomTip = GAME_TIPS[Math.floor(Math.random() * GAME_TIPS.length)];
             tipText.innerHTML = randomTip;
+            tipContainer.classList.remove('is-hidden');
             tipContainer.style.display = 'block';
         }
     } else {
@@ -4754,7 +4755,10 @@ export function showResult(data) {
         title.classList.add('text-error');
         const goldLost = data.totalGoldLostOnDefeat || 0;
         desc.innerHTML = `Votre équipe a été anéantie.<br><span style="color:#fbbf24; font-weight:600; margin-top:0.5rem; display:block;">Pénalité : -${goldLost} Or</span>`;
-        if (tipContainer) tipContainer.style.display = 'none';
+        if (tipContainer) {
+            tipContainer.classList.add('is-hidden');
+            tipContainer.style.display = 'none';
+        }
     }
 
     localStorage.removeItem('activeCombatId');
@@ -4796,8 +4800,10 @@ export function showResult(data) {
                 }
                 window.location.href = targetUrl;
             };
+            retryBtn.classList.remove('is-hidden');
             retryBtn.style.display = 'inline-flex';
         } else {
+            retryBtn.classList.add('is-hidden');
             retryBtn.style.display = 'none';
         }
     }

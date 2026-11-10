@@ -37,12 +37,14 @@
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-body {
+body.is-combat-page,
+.combat-page-root {
     background: #050505;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     height: 100vh;
+    width: 100%;
 }
 
 .combat-header {
@@ -3642,4 +3644,82 @@ body {
 
 .result-overlay.show {
     visibility: visible;
+}
+
+/* ===== React SPA Combat Page Extracted Styles ===== */
+#combatMainSidePanelWrapper {
+    z-index: 1000;
+}
+
+#eventModalWrapper {
+    max-width: 1300px;
+    max-height: 95vh;
+}
+
+#eventModalContainer {
+    max-width: 1000px;
+}
+
+#combatSpellTypeFilterBtn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.csp-type-filter-icons {
+    pointer-events: none;
+}
+
+.csp-type-icon-instant {
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+}
+
+.csp-type-icon-banal {
+    bottom: 2px;
+    left: 2px;
+    font-size: 16px;
+}
+
+.csp-type-icon-channeled {
+    bottom: 2px;
+    right: 2px;
+    font-size: 17px;
+}
+
+#heroEquipmentTooltip {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: linear-gradient(135deg, rgba(15, 23, 41, 0.96), rgba(26, 39, 68, 0.96));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.8rem;
+    min-width: 320px;
+    width: max-content;
+    max-width: min(720px, calc(100vw - 24px));
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+}
+
+#heroEquipmentTooltipContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+#eventOverlayHeroesStats {
+    display: none;
+    position: fixed;
+    left: 332px;
+    top: 20px;
+    width: 190px;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 999;
+    pointer-events: none;
 }

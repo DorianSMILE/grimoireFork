@@ -4,12 +4,14 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from 'react-router-dom';
 import { ArmoryPage } from './pages/ArmoryPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { AlchemyAdminPage } from './pages/AlchemyAdminPage';
 import { AlchemyPage } from './pages/AlchemyPage';
+import { CombatPage } from './pages/CombatPage';
 import { DungeonsPage } from './pages/DungeonsPage';
 import { DungeonStatsPage } from './pages/DungeonStatsPage';
 import { GrimoirePage } from './pages/GrimoirePage';
@@ -50,6 +52,8 @@ const SPA_ROUTES = new Set([
   '/dungeon-stats.html',
   '/achievements',
   '/achievements.html',
+  '/combat',
+  '/combat.html',
   '/login',
   '/login.html',
   '/register',
@@ -87,42 +91,49 @@ function SpaLinkInterceptor() {
   return null;
 }
 
+function RedirectWithSearch({ to }: { to: string }) {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}${location.hash}`} replace />;
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <SpaLinkInterceptor />
       <Routes>
-        <Route path="/" element={<Navigate to="/grimoire" replace />} />
-        <Route path="/index.html" element={<Navigate to="/grimoire" replace />} />
+        <Route path="/" element={<RedirectWithSearch to="/grimoire" />} />
+        <Route path="/index.html" element={<RedirectWithSearch to="/grimoire" />} />
         <Route path="/grimoire" element={<GrimoirePage />} />
         <Route path="/armory" element={<ArmoryPage />} />
-        <Route path="/armory.html" element={<Navigate to="/armory" replace />} />
+        <Route path="/armory.html" element={<RedirectWithSearch to="/armory" />} />
         <Route path="/dungeons" element={<DungeonsPage />} />
-        <Route path="/dungeons.html" element={<Navigate to="/dungeons" replace />} />
+        <Route path="/dungeons.html" element={<RedirectWithSearch to="/dungeons" />} />
         <Route path="/vault" element={<VaultPage />} />
-        <Route path="/vault.html" element={<Navigate to="/vault" replace />} />
+        <Route path="/vault.html" element={<RedirectWithSearch to="/vault" />} />
         <Route path="/shop" element={<ShopPage />} />
-        <Route path="/shop.html" element={<Navigate to="/shop" replace />} />
+        <Route path="/shop.html" element={<RedirectWithSearch to="/shop" />} />
         <Route path="/alchemy" element={<AlchemyPage />} />
-        <Route path="/alchemy.html" element={<Navigate to="/alchemy" replace />} />
+        <Route path="/alchemy.html" element={<RedirectWithSearch to="/alchemy" />} />
         <Route path="/hunting" element={<HuntingPage />} />
-        <Route path="/hunting.html" element={<Navigate to="/hunting" replace />} />
+        <Route path="/hunting.html" element={<RedirectWithSearch to="/hunting" />} />
         <Route path="/shop-admin" element={<ShopAdminPage />} />
-        <Route path="/shop-admin.html" element={<Navigate to="/shop-admin" replace />} />
+        <Route path="/shop-admin.html" element={<RedirectWithSearch to="/shop-admin" />} />
         <Route path="/pve-admin" element={<PveAdminPage />} />
-        <Route path="/pve-admin.html" element={<Navigate to="/pve-admin" replace />} />
+        <Route path="/pve-admin.html" element={<RedirectWithSearch to="/pve-admin" />} />
         <Route path="/alchemy-admin" element={<AlchemyAdminPage />} />
-        <Route path="/alchemy-admin.html" element={<Navigate to="/alchemy-admin" replace />} />
+        <Route path="/alchemy-admin.html" element={<RedirectWithSearch to="/alchemy-admin" />} />
         <Route path="/secrets" element={<SecretsPage />} />
-        <Route path="/secrets.html" element={<Navigate to="/secrets" replace />} />
+        <Route path="/secrets.html" element={<RedirectWithSearch to="/secrets" />} />
         <Route path="/dungeon-stats" element={<DungeonStatsPage />} />
-        <Route path="/dungeon-stats.html" element={<Navigate to="/dungeon-stats" replace />} />
+        <Route path="/dungeon-stats.html" element={<RedirectWithSearch to="/dungeon-stats" />} />
         <Route path="/achievements" element={<AchievementsPage />} />
-        <Route path="/achievements.html" element={<Navigate to="/achievements" replace />} />
+        <Route path="/achievements.html" element={<RedirectWithSearch to="/achievements" />} />
+        <Route path="/combat" element={<CombatPage />} />
+        <Route path="/combat.html" element={<RedirectWithSearch to="/combat" />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/login.html" element={<Navigate to="/login" replace />} />
+        <Route path="/login.html" element={<RedirectWithSearch to="/login" />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/register.html" element={<Navigate to="/register" replace />} />
+        <Route path="/register.html" element={<RedirectWithSearch to="/register" />} />
       </Routes>
     </BrowserRouter>
   );

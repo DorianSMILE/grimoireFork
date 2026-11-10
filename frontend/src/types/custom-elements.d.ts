@@ -109,6 +109,20 @@ declare global {
     initAchievementsPage?: () => Promise<void>;
     cleanupAchievementsPage?: () => void;
     handleEquipTitle?: () => Promise<void>;
+    initCombatPage?: () => Promise<void>;
+    cleanupCombatPage?: () => void;
+    toggleMusic?: () => void;
+    changeMusicVolume?: (value: string | number) => void;
+    toggleSidePanel?: (prefix: string, tab: string) => void;
+    toggleCombatLog?: () => void;
+    openChest?: (useKey?: boolean) => Promise<void>;
+    nextRoom?: () => Promise<void>;
+    exitCombatToDungeons?: (e?: Event) => Promise<void>;
+    switchSpellTab?: (tab: string) => void;
+    toggleCombatSpellTypeFilter?: () => void;
+    initiateCombatCast?: (spellId: number | null) => void;
+    endTurn?: () => Promise<void>;
+    promptFlee?: () => void;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

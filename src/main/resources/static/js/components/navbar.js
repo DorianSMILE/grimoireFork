@@ -129,7 +129,7 @@ let lastUserActivity = Date.now();
 });
 
 setInterval(() => {
-    if (window.location.pathname.includes('combat.html')) return;
+    if (window.location.pathname.includes('/combat')) return;
     
     // Si inactivité >= 2 minutes
     if (Date.now() - lastUserActivity >= 120000) {

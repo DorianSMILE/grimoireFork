@@ -66,7 +66,7 @@ export async function resumeCombat(savedSessionId) {
             localStorage.removeItem('activeCombatId');
             if (typeof showNotif !== 'undefined') window.showNotif("Combat introuvable ou expiré.", true);
             else ui.showNotif("Combat introuvable ou expiré.", true);
-            window.location.href = '/dungeons.html';
+            window.location.href = '/dungeons';
             return;
         }
         const data = await res.json();
@@ -88,7 +88,7 @@ export async function resumeCombat(savedSessionId) {
     } catch (e) {
         console.error(e);
         localStorage.removeItem('activeCombatId');
-        window.location.href = '/dungeons.html';
+        window.location.href = '/dungeons';
     }
 }
 
@@ -115,7 +115,7 @@ export async function startCombat(characterIds, dungeonId, consumableIds) {
             } catch(e) {}
             if (typeof showNotif !== 'undefined') window.showNotif(errText, true);
             else ui.showNotif(errText, true);
-            window.location.href = '/dungeons.html';
+            window.location.href = '/dungeons';
             return;
         }
 
@@ -142,7 +142,7 @@ export async function startCombat(characterIds, dungeonId, consumableIds) {
         else if (window.ui) ui.showNotif(msg, true);
 
         setTimeout(() => {
-            window.location.href = '/dungeons.html';
+            window.location.href = '/dungeons';
         }, 3000);
     } finally {
         isStartingCombatInProgress = false;

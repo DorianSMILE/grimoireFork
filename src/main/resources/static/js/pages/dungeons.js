@@ -1740,7 +1740,7 @@ window.startCombat = async function () {
     }
 
     const charIdsStr = pageState.selectedCharIds.join(',');
-    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}&_t=${Date.now()}`;
+    let url = `/combat?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}&_t=${Date.now()}`;
     if (pageState.selectedConsumableIds.length > 0) {
         url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }
@@ -2004,7 +2004,7 @@ function onLobbyReady(lobby) {
     // Courte pause puis redirect vers combat.html en tant qu'hôte
     setTimeout(() => {
         closeLobbyOverlay();
-        window.location.href = `/combat.html?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
+        window.location.href = `/combat?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
     }, 1200);
 }
 
@@ -2805,7 +2805,7 @@ window.submitJoinLobby = async function () {
         const result = await joinRes.json();
 
         // 3. Redirect vers combat.html en tant que guest
-        window.location.href = `/combat.html?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;
+        window.location.href = `/combat?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;
     } catch (err) {
         console.error(err);
         window.showNotif(err.message || 'Erreur serveur.', true);

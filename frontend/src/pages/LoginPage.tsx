@@ -31,7 +31,7 @@ export function LoginPage() {
       }
 
       if (result.activeCombatSessionId) {
-        window.location.href = '/combat.html';
+        navigate('/combat', { replace: true });
         return;
       }
 

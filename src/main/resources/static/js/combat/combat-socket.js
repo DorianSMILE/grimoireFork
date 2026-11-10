@@ -32,6 +32,13 @@ export function processNewDeathLogs(combatLogs) {
 
 export let _multiSSE = null;
 
+export function closeMultiSSE() {
+    if (_multiSSE) {
+        _multiSSE.close();
+        _multiSSE = null;
+    }
+}
+
 export function initMultiSSE(sessionId) {
     if (_multiSSE) { _multiSSE.close(); _multiSSE = null; }
     _multiSSE = new EventSource(`/api/pve/combat/${sessionId}/events`);

@@ -12,14 +12,14 @@ if (isOnDungeonsPage()) {
 
 const activeCombatId = localStorage.getItem('activeCombatId');
 if (activeCombatId && 
-    !window.location.pathname.includes('/combat.html') && 
+    !window.location.pathname.includes('/combat') && 
     !window.location.pathname.includes('/login.html') && 
     window.location.pathname !== '/login' &&
     !window.location.pathname.includes('/register.html') &&
     window.location.pathname !== '/register' &&
     !isOnDungeonsPage()) {
     console.warn('Active combat session found in localStorage, redirecting to combat page.');
-    window.location.href = '/combat.html';
+    window.location.href = '/combat';
 }
 
 function isValidToken(token) {
@@ -192,7 +192,7 @@ window.globalFetch = async function (url, options = {}) {
                 if (parsedData && parsedData.activeCombatSessionId) {
                     localStorage.setItem('activeCombatId', parsedData.activeCombatSessionId);
                 }
-                window.location.href = '/combat.html';
+                window.location.href = '/combat';
                 await new Promise(() => {}); // Halt execution
             }
 
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('grimoire_html_cache_v9', '1');
             sessionStorage.removeItem('grimoire_app_meta_v1');
             sessionStorage.removeItem('grimoire_app_meta_v2');
-            ['/dungeons', '/armory', '/shop', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+            ['/dungeons', '/armory', '/shop', '/combat', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
                 fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
             });
         }
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const sessionData = await currentSessionRes.json();
                             if (sessionData && sessionData.sessionId) {
                                 localStorage.setItem('activeCombatId', sessionData.sessionId);
-                                window.location.href = '/combat.html';
+                                window.location.href = '/combat';
                                 return;
                             }
                         }
@@ -419,16 +419,16 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.dispatchEvent(new Event('authLoaded'));
 
             // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
-            if (!window.location.pathname.includes('/combat.html') &&
+            if (!window.location.pathname.includes('/combat') &&
                 !window.location.pathname.includes('/login.html') &&
                 window.location.pathname !== '/login' &&
                 !window.location.pathname.includes('/register.html') &&
                 window.location.pathname !== '/register' &&
                 !isOnDungeonsPage() &&
                 data.activeCombatSessionId) {
-                console.warn("Active combat session found via /api/auth/me, redirecting to combat.html");
+                console.warn("Active combat session found via /api/auth/me, redirecting to /combat");
                 localStorage.setItem('activeCombatId', data.activeCombatSessionId);
-                window.location.href = '/combat.html';
+                window.location.href = '/combat';
                 return;
             }
             

@@ -23,7 +23,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 
 ---
 
-## 2. Avancement Global (15 / 16 pages migrées)
+## 2. Avancement Global (16 / 16 pages migrées — 100%)
 
 | Page | Ancienne URL | Nouvelle URL | Statut | Composant React | Notes techniques |
 | :--- | :--- | :--- | :---: | :--- | :--- |
@@ -42,7 +42,7 @@ La migration s'effectue **page par page** sans interruption de service ni duplic
 | **Mes Secrets** | `/secrets.html` | `/secrets` | ✅ Migrée | `src/pages/SecretsPage.tsx` | Composant 100% React TypeScript, thèmes CSS sémantiques, réclamation récompenses avec animation d'or flottant. |
 | **Statistiques PvE** | `/dungeon-stats.html` | `/dungeon-stats` | ✅ Migrée | `src/pages/DungeonStatsPage.tsx` | KPIs, graphiques Chart.js (issues, voies, spiritualités), filtre par donjon/secret, historique des runs, reset tutoriels. |
 | **Succès** | `/achievements.html` | `/achievements` | ✅ Migrée | `src/pages/AchievementsPage.tsx` | Progression globale, équipement de titre actif, filtres par catégorie, cartes de succès et mystères. |
-| **Combat PvE** | `/combat.html` | `/combat` | ⏳ À migrer | — | Moteur de combat tour par tour, canvas/animations, signaux. |
+| **Combat PvE** | `/combat.html` | `/combat` | ✅ Migrée | `src/pages/CombatPage.tsx` | Moteur de combat tour par tour, multijoueur SSE, signaux/émotes, événements de salle, zéro style inline. |
 
 ---
 

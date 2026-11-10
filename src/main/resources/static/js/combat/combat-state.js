@@ -1,5 +1,5 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE } from './combat-socket.js?v=1786180000235';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000235';
 import { updateUI, renderSpells } from './combat-ui.js?v=1786180000235';
 import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000235';
 import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000235';
@@ -175,7 +175,32 @@ window.promptFlee = function () {
 
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+let _combatTutorialObserver = null;
+
+window.initCombatPage = async function () {
+    pageState.lastCombatLogCount = 0;
+    pageState.renderedCombatLogs = [];
+    pageState.renderedLogSessionId = null;
+    pageState.isLogPinnedToBottom = true;
+    pageState.isProgrammaticLogScroll = false;
+    pageState.previousPlayerXP = {};
+    pageState.previousPlayerSpiritXP = {};
+    pageState.isProcessing = false;
+    pageState.isFleeing = false;
+    pageState.hasAnimatedOpening = false;
+    pageState.currentSpellFilter = 'ALL';
+    pageState.selectedTargetIndex = null;
+    pageState.selectedAllyIndex = -1;
+    pageState.pendingCastSpellId = null;
+    pageState.pendingNeedsEnemy = false;
+    pageState.pendingNeedsAlly = false;
+    pageState.isMulti = false;
+    pageState.multiRole = null;
+    pageState.multiId = null;
+    pageState.sessionId = null;
+    pageState.currentSessionData = null;
+    pageState.combatEquipments = {};
+
     window.dungeonMusic = null;
 
     const tryPlayMusic = () => {
@@ -221,8 +246,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 };
                 tryStartCombatTutorial();
-                const obs = new MutationObserver(() => tryStartCombatTutorial());
-                obs.observe(enemiesEl, { childList: true });
+                if (_combatTutorialObserver) _combatTutorialObserver.disconnect();
+                _combatTutorialObserver = new MutationObserver(() => tryStartCombatTutorial());
+                _combatTutorialObserver.observe(enemiesEl, { childList: true });
             }
         }
     } catch (_) { }
@@ -280,7 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     savedCombatId = data.sessionId;
                     localStorage.setItem('activeCombatId', savedCombatId);
                     if (data.isMulti) {
-                        window.location.href = `/combat.html?sessionId=${data.sessionId}&multiId=${data.multiId}`;
+                        window.location.href = `/combat?sessionId=${data.sessionId}&multiId=${data.multiId}`;
                         return;
                     }
                 }
@@ -307,6 +333,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     startCombat(characterIds, dungeonId, consumableIds);
+};
+
+window.cleanupCombatPage = function () {
+    closeMultiSSE();
+    if (_combatTutorialObserver) {
+        _combatTutorialObserver.disconnect();
+        _combatTutorialObserver = null;
+    }
+    if (window.dungeonMusic) {
+        try { window.dungeonMusic.pause(); } catch (_) {}
+        window.dungeonMusic = null;
+    }
+    if (pageState.combatWarningTimer) {
+        clearTimeout(pageState.combatWarningTimer);
+        pageState.combatWarningTimer = null;
+    }
+    if (pageState.combatCountdownInterval) {
+        clearInterval(pageState.combatCountdownInterval);
+        pageState.combatCountdownInterval = null;
+    }
+    if (window.multiplayerTurnInterval) {
+        clearInterval(window.multiplayerTurnInterval);
+        window.multiplayerTurnInterval = null;
+    }
+    if (ui.hideGlobalTooltip) {
+        ui.hideGlobalTooltip(true);
+    }
+    if (window.hideHeroEquipmentTooltip) {
+        window.hideHeroEquipmentTooltip(true);
+    }
+    if (window.GrimoireTutorial && typeof window.GrimoireTutorial.stop === 'function') {
+        window.GrimoireTutorial.stop();
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('arena') && !window.__reactCombatMounted) {
+        window.initCombatPage();
+    }
 });
 
 window.addEventListener('beforeunload', function (e) {

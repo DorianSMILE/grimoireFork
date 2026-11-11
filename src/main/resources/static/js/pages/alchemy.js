@@ -49,6 +49,8 @@ window.addEventListener('authLoaded', () => {
 });
 
 window.initAlchemyPage = async function () {
+    window.renderRecipesList = renderRecipesList;
+    window.craftSelected = craftSelected;
     alchemyInitialFilterSet = false;
     pageState.selectedRecipe = null;
     pageState.customSelectSetups = [];
@@ -174,6 +176,7 @@ function canCraftRecipe(r) {
 
 function renderRecipesList() {
     const container = document.getElementById('playerRecipesList');
+    if (!container) return;
     container.innerHTML = '';
 
     const unlockedSecrets = window.currentUser?.unlockedSecrets || {};
@@ -298,7 +301,9 @@ function selectRecipe(recipe, element) {
     pageState.selectedRecipe = recipe;
     pageState.craftQuantity = 1;
     // Reset borders
-    Array.from(document.getElementById('playerRecipesList').children).forEach(c => {
+    const listEl = document.getElementById('playerRecipesList');
+    if (!listEl) return;
+    Array.from(listEl.children).forEach(c => {
         const isCraftable = c.dataset.craftable === 'true';
         c.className = `recipe-card bg-black/30 border ${isCraftable ? 'border-emerald-500/40 craftable-pulse' : 'border-white/10'} rounded-lg p-3 cursor-pointer hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300`;
         c.style.borderColor = '';
@@ -359,7 +364,9 @@ function getItemStyle(name, defaultType) {
 
 
 function renderCauldron(r, preserveInput = false) {
+    if (!r) return;
     const container = document.getElementById('cauldronPanel');
+    if (!container) return;
     const prevCrafterVal = document.getElementById('crafterSelect')?.value || null;
     pageState.customSelectSetups = [];
 
@@ -667,6 +674,7 @@ function renderCauldron(r, preserveInput = false) {
 }
 
 function buildCustomSelect(containerDiv, options, hiddenInputClass, hiddenInputId = '') {
+    if (!containerDiv) return;
     let selectedOption = options.find(o => o.selected) || options[0];
     let optionsHTML = '';
     options.forEach(o => {

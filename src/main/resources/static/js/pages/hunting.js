@@ -406,7 +406,8 @@ function renderClaimButton(quest, myEntry, type, rewardAnomalie = null) {
     if (rewardAnomalie) {
         const icon = window.getCategoryIcon ? window.getCategoryIcon(rewardAnomalie.category) : 'auto_awesome';
         const color = window.getSpiritualiteColor ? window.getSpiritualiteColor(rewardAnomalie.spiritualite) : '#a855f7';
-        const tooltipHtml = window.getAnomalyTooltipHTML(rewardAnomalie, rewardAnomalie.name).replace(/"/g, '&quot;');
+        const rawTooltip = window.getAnomalyTooltipHTML ? window.getAnomalyTooltipHTML(rewardAnomalie, rewardAnomalie.name) : (rewardAnomalie.name || '');
+        const tooltipHtml = (rawTooltip || '').replace(/"/g, '&quot;');
         anomalieHtml = `<div class="reward-anomalie-badge" style="border: 2px solid ${color}; color: ${color}; box-shadow: 0 0 10px ${color}40;" onmouseenter="if(window.showGlobalTooltip) window.showGlobalTooltip(this)" onmouseleave="if(window.hideGlobalTooltip) window.hideGlobalTooltip()" data-tooltip-html="${tooltipHtml}"><span class="material-symbols-outlined">${icon}</span></div>`;
     }
 
@@ -462,6 +463,7 @@ function renderClaimButton(quest, myEntry, type, rewardAnomalie = null) {
 }
 
 function bindClaimButton(container, questId) {
+    if (!container) return;
     const btns = container.querySelectorAll('.btn-claim.claimable');
     btns.forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -543,11 +545,19 @@ function updateTimer(elementId, endDateStr, prefix, offsetDays = 0, isDynamic = 
     }
 
     const tick = () => {
+        const currentEl = document.getElementById(elementId);
+        if (!currentEl) {
+            if (dynamicTimers[elementId]) {
+                clearInterval(dynamicTimers[elementId]);
+                delete dynamicTimers[elementId];
+            }
+            return;
+        }
         const now = new Date();
         const diff = end - now;
 
         if (diff <= 0) {
-            el.textContent = prefix + ' : bientôt…';
+            currentEl.textContent = prefix + ' : bientôt…';
             if (dynamicTimers[elementId]) {
                 clearInterval(dynamicTimers[elementId]);
                 delete dynamicTimers[elementId];
@@ -563,16 +573,16 @@ function updateTimer(elementId, endDateStr, prefix, offsetDays = 0, isDynamic = 
         if (isDynamic) {
             if (hoursTotal >= 24) {
                 const days = Math.floor(hoursTotal / 24);
-                el.textContent = `${prefix} ${days}j ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                currentEl.textContent = `${prefix} ${days}j ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             } else {
-                el.textContent = `${prefix} ${hoursTotal.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                currentEl.textContent = `${prefix} ${hoursTotal.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
         } else {
             if (hoursTotal >= 24) {
                 const days = Math.floor(hoursTotal / 24);
-                el.textContent = `${prefix} ${days}j ${hours}h`;
+                currentEl.textContent = `${prefix} ${days}j ${hours}h`;
             } else {
-                el.textContent = `${prefix} ${hoursTotal}h ${minutes}m`;
+                currentEl.textContent = `${prefix} ${hoursTotal}h ${minutes}m`;
             }
         }
     };

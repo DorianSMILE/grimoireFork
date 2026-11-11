@@ -1,6 +1,6 @@
 import { state } from './state.js';
 
-import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000242';
+import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000243';
 
 export function getVoieButtonColor(v) {
     const vNom = (v ? (typeof v === 'string' ? v : (v.nom || v.name || '')) : '').toLowerCase();
@@ -81,35 +81,25 @@ export function renderOriginButtons() {
     const voiesContainer = document.getElementById('filterVoiesButtonsContainer');
     const spiritsContainer = document.getElementById('filterSpiritsButtonsContainer');
 
-    // Voies – utilise la couleur dédiée à chaque voie
+    // Voies – utilise la classe d'affinité dédiée à chaque voie
     if (voiesContainer && state.metaData.voies) {
         voiesContainer.innerHTML = state.metaData.voies.map(v => {
             const isSel = state.selectedFilterVoieId === v.id;
             const hex = getVoieButtonColor(v);
-            const rgb = hexToRgb(hex);
-            const bg = isSel ? `rgba(${rgb}, 0.3)` : `rgba(${rgb}, 0.1)`;
-            const border = isSel ? hex : `rgba(${rgb}, 0.4)`;
-            const color = hex;
-            const shadow = isSel ? `box-shadow: 0 0 8px rgba(${rgb}, 0.4);` : '';
-            const opacity = isSel ? '1' : '0.85';
+            const affinityClass = getVoieAffinityClass(v);
             const icon = getVoieIcon(v.nom);
-            return `<button type="button" style="padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:6px;cursor:pointer;background:${bg};border:1px solid ${border};color:${color};font-weight:${isSel ? 'bold' : 'normal'};opacity:${opacity};transition:all 0.2s;display:inline-flex;align-items:center;gap:0.3rem;${shadow}" onclick="toggleFilterVoie(event, ${v.id}, '${hex}')"><span class="material-symbols-outlined" style="font-size:1.1em;">${icon}</span>${v.nom}</button>`;
+            return `<button type="button" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterVoie(event, ${v.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${v.nom}</button>`;
         }).join('');
     }
 
-    // Spiritualités – applique la couleur dédiée à chaque spiritualité
+    // Spiritualités – applique la classe d'affinité dédiée à chaque spiritualité
     if (spiritsContainer && state.metaData.spiritualites) {
         spiritsContainer.innerHTML = state.metaData.spiritualites.map(s => {
             const isSel = state.selectedFilterSpiritId === s.id;
             const hex = getSpiritButtonColor(s);
-            const rgb = hexToRgb(hex);
-            const bg = isSel ? `rgba(${rgb}, 0.3)` : `rgba(${rgb}, 0.1)`;
-            const border = isSel ? hex : `rgba(${rgb}, 0.4)`;
-            const color = hex;
-            const shadow = isSel ? `box-shadow: 0 0 8px rgba(${rgb}, 0.4);` : '';
-            const opacity = isSel ? '1' : '0.85';
+            const affinityClass = getSpiritAffinityClass(s);
             const icon = getSpiritIcon(s.nom);
-            return `<button type="button" style="padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:6px;cursor:pointer;background:${bg};border:1px solid ${border};color:${color};font-weight:${isSel ? 'bold' : 'normal'};opacity:${opacity};transition:all 0.2s;display:inline-flex;align-items:center;gap:0.3rem;${shadow}" onclick="toggleFilterSpirit(event, ${s.id}, '${hex}')"><span class="material-symbols-outlined" style="font-size:1.1em;">${icon}</span>${s.nom}</button>`;
+            return `<button type="button" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterSpirit(event, ${s.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${s.nom}</button>`;
         }).join('');
     }
 }

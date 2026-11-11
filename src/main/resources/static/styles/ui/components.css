@@ -716,6 +716,29 @@
     background: rgba(255, 255, 255, 0.03);
     transition: all 0.2s ease;
     white-space: nowrap;
+    position: relative;
+}
+
+.top-nav-link > .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.nav-badge {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: -8px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+.nav-badge.block {
+    display: inline-block;
 }
 
 .top-nav-link.nav-grimoire:hover,

@@ -630,6 +630,7 @@ function renderRooms() {
 
     const container = document.getElementById('selectedRoomsContainer');
     const emptyMsg = document.getElementById('emptyRoomsMsg');
+    if (!container || !emptyMsg) return;
 
     // Remove all room elements except the empty message
     const elements = container.querySelectorAll('.room-card');

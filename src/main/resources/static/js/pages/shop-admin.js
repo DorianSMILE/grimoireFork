@@ -85,7 +85,8 @@ async function loadEquipments() {
         renderVault();
     } catch (e) {
         console.error('Erreur chargement équipements:', e);
-        document.getElementById('vaultGrid').innerHTML = `<div class="vault-empty-state text-error"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
+        const grid = document.getElementById('vaultGrid');
+        if (grid) grid.innerHTML = `<div class="vault-empty-state text-error"><span class="material-symbols-outlined">error</span>Erreur de connexion.</div>`;
     }
 }
 
@@ -202,6 +203,7 @@ function renderVault() {
 
 function renderGrid(equipments) {
     const container = document.getElementById('vaultGrid');
+    if (!container) return;
 
     if (equipments.length === 0) {
         container.innerHTML = `

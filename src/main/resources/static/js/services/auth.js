@@ -47,13 +47,35 @@ if (!isAuthPage) {
     }
 }
 
+const AUTH_CACHE_KEY = 'grimoire_cached_user_v1';
+
+function hydrateCachedUser() {
+    if (window.currentUser) return window.currentUser;
+    if (localStorage.getItem('isLikelyLoggedIn') !== 'true') return null;
+    try {
+        const raw = localStorage.getItem(AUTH_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.username) {
+            window.currentUser = parsed;
+            window.isAdmin = Boolean(parsed.roles && parsed.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN'));
+            return parsed;
+        }
+    } catch (_) {}
+    return null;
+}
+
+hydrateCachedUser();
+
 window.setAccessToken = function (token) {
+    window._lastAuthFetchAt = 0;
     if (isValidToken(token)) {
         accessToken = token;
         localStorage.setItem('accessToken', token);
     } else {
         accessToken = null;
         localStorage.removeItem('accessToken');
+        localStorage.removeItem(AUTH_CACHE_KEY);
     }
 };
 
@@ -63,12 +85,8 @@ window.animateGoldValue = function(element, start, end, duration) {
     const range = end - start;
     let startTime = null;
 
-    const originalColor = element.style.color || '';
-    const originalTransform = element.style.transform || '';
-    
-    element.style.transition = 'color 0.2s ease, transform 0.1s ease';
-    element.style.color = isGain ? '#10b981' : '#ef4444';
-    element.style.transform = isGain ? 'scale(1.1)' : 'scale(0.9)';
+    element.classList.remove('is-gold-gain', 'is-gold-loss');
+    element.classList.add(isGain ? 'is-gold-gain' : 'is-gold-loss');
 
     function step(timestamp) {
         if (!startTime) startTime = timestamp;
@@ -84,8 +102,7 @@ window.animateGoldValue = function(element, start, end, duration) {
         } else {
             element.textContent = Number(end).toFixed(1);
             setTimeout(() => {
-                element.style.color = originalColor;
-                element.style.transform = originalTransform;
+                element.classList.remove('is-gold-gain', 'is-gold-loss');
             }, 200);
         }
     }
@@ -229,12 +246,18 @@ window.globalFetch = async function (url, options = {}) {
         if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) &&
             !url.includes('/api/achievements/acknowledge') &&
             !url.includes('/api/achievements/pending-notifications')) {
+            window._lastAuthFetchAt = 0;
             if (window._achievementDebounceTimer) clearTimeout(window._achievementDebounceTimer);
             window._achievementDebounceTimer = setTimeout(() => {
                 if (typeof window.checkAchievementNotifications === 'function') {
                     window.checkAchievementNotifications();
                 }
             }, 600);
+        } else if (method === 'GET') {
+            if ((url.includes('/api/pve/dungeons') && window.currentUser && window.currentUser.unseenDungeonsCount > 0) ||
+                (url.includes('/api/alchemy/recipes') && window.currentUser && window.currentUser.unseenAlchemyCount > 0)) {
+                window._lastAuthFetchAt = 0;
+            }
         }
 
         return res;
@@ -391,117 +414,107 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-window.checkAuthStatus = async function checkAuthStatus() {
-    const container = document.getElementById('authNavContainer');
-
+window.checkAuthStatus = async function checkAuthStatus(force = false) {
     if (localStorage.getItem('isLikelyLoggedIn') !== 'true') {
+        localStorage.removeItem(AUTH_CACHE_KEY);
         window.currentUser = null;
         window.isAdmin = false;
+        window._lastAuthFetchAt = 0;
+        if (typeof window.syncNavbarWithUser === 'function') {
+            window.syncNavbarWithUser(null, false);
+        }
         window.dispatchEvent(new Event('authLoaded'));
-        container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
-                Se connecter
-            </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
-                S'inscrire
-            </a>
-        `;
         return;
     }
 
-    try {
-        const res = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
-        if (res.ok) {
-            const data = await res.json();
-            window.previousGold = window.currentUser && window.currentUser.monnaie !== undefined ? window.currentUser.monnaie : (data.monnaie || 0);
-            window.currentUser = data;
-            window.isAdmin = data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN');
-            window.dispatchEvent(new Event('authLoaded'));
+    const cached = hydrateCachedUser();
+    if (cached && typeof window.syncNavbarWithUser === 'function') {
+        window.syncNavbarWithUser(cached, false);
+    }
 
-            // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
-            if (!window.location.pathname.includes('/combat') &&
-                !window.location.pathname.includes('/login.html') &&
-                window.location.pathname !== '/login' &&
-                !window.location.pathname.includes('/register.html') &&
-                window.location.pathname !== '/register' &&
-                !isOnDungeonsPage() &&
-                data.activeCombatSessionId) {
-                console.warn("Active combat session found via /api/auth/me, redirecting to /combat");
-                localStorage.setItem('activeCombatId', data.activeCombatSessionId);
-                window.location.href = '/combat';
-                return;
-            }
-            
-            let prevGold = window.previousGold || 0;
-            let currentGold = data.monnaie !== undefined ? +Number(data.monnaie) : 0;
-            const titleHtml = data.activeTitle ? `<span class="nav-active-title" title="Titre équipé : ${data.activeTitle}">« ${data.activeTitle} »</span>` : '';
-            
-            container.innerHTML = `
-                <a class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all" style="position:relative; flex-shrink: 0;" href="/secrets" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
-                    <span class="material-symbols-outlined text-lg text-success">account_circle</span>
-                    <div class="nav-user-col">
-                        <span class="nav-user-name">${data.username}</span>
-                        ${titleHtml}
-                    </div>
-                    ${data.claimableSecretRewardsCount > 0 ? `<span style="position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">${data.claimableSecretRewardsCount}</span>` : ''}
-                </a>
-                <div class="flex-center font-bold text-amber text-sm" title="Monnaie" style="gap: 0.2rem; min-width: 80px; justify-content: flex-end; flex-shrink: 0;">
-                    <span class="material-symbols-outlined text-lg">monetization_on</span>
-                    <span id="navUserGold" style="display:inline-block; transition: transform 0.1s ease; font-variant-numeric: tabular-nums; text-align: right;">${(window.animateGoldValue && prevGold !== currentGold) ? Number(prevGold).toFixed(1) : Number(currentGold).toFixed(1)}</span>
-                </div>
-                <button class="flex-center text-xs text-error rounded px-2 py-1 cursor-pointer font-family-inherit transition-all" onclick="logout()" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); flex-shrink: 0;" title="Déconnexion">
-                    <span class="material-symbols-outlined icon-sm">logout</span>
-                </button>
-            `;
-            
-            if (prevGold !== currentGold && window.animateGoldValue) {
-                const goldSpan = document.getElementById('navUserGold');
-                window.animateGoldValue(goldSpan, prevGold, currentGold, 1000);
-            }
+    if (!force && window.currentUser && window._lastAuthFetchAt && (Date.now() - window._lastAuthFetchAt < 120000)) {
+        if (!window.location.pathname.includes('/combat') &&
+            !window.location.pathname.includes('/login.html') &&
+            window.location.pathname !== '/login' &&
+            !window.location.pathname.includes('/register.html') &&
+            window.location.pathname !== '/register' &&
+            !isOnDungeonsPage() &&
+            window.currentUser.activeCombatSessionId) {
+            localStorage.setItem('activeCombatId', window.currentUser.activeCombatSessionId);
+            window.location.href = '/combat';
+            return;
+        }
+        window.dispatchEvent(new Event('authLoaded'));
+        return;
+    }
 
-            // Badge donjons débloqués pré-calculé côté serveur (SSOT via /api/auth/me)
-            const badge = document.getElementById('navDungeonBadge');
-            if (badge) {
-                const newCount = data.unseenDungeonsCount || 0;
-                if (newCount > 0) {
-                    badge.textContent = newCount;
-                    badge.classList.add('block');
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.remove('block');
-                    badge.classList.add('hidden');
+    if (window._authFetchPromise) {
+        return window._authFetchPromise;
+    }
+
+    window._authFetchPromise = (async () => {
+        try {
+            const res = await globalFetch('/api/auth/me', { credentials: 'same-origin' });
+            if (res.ok) {
+                const data = await res.json();
+                const hadPrevGold = Boolean(window._lastAuthFetchAt && window.currentUser && window.currentUser.monnaie !== undefined);
+                const prevGold = hadPrevGold ? +Number(window.currentUser.monnaie) : (+Number(data.monnaie) || 0);
+                const currentGold = data.monnaie !== undefined ? +Number(data.monnaie) : 0;
+
+                window.previousGold = prevGold;
+                window.currentUser = data;
+                window.isAdmin = Boolean(data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN'));
+                window._lastAuthFetchAt = Date.now();
+                try {
+                    localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(data));
+                } catch (_) {}
+
+                // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
+                if (!window.location.pathname.includes('/combat') &&
+                    !window.location.pathname.includes('/login.html') &&
+                    window.location.pathname !== '/login' &&
+                    !window.location.pathname.includes('/register.html') &&
+                    window.location.pathname !== '/register' &&
+                    !isOnDungeonsPage() &&
+                    data.activeCombatSessionId) {
+                    console.warn("Active combat session found via /api/auth/me, redirecting to /combat");
+                    localStorage.setItem('activeCombatId', data.activeCombatSessionId);
+                    window.location.href = '/combat';
+                    return;
                 }
-            }
 
-        } else {
+                if (typeof window.syncNavbarWithUser === 'function') {
+                    window.syncNavbarWithUser(data, hadPrevGold && prevGold !== currentGold, prevGold);
+                }
+                window.dispatchEvent(new Event('authLoaded'));
+            } else {
+                localStorage.removeItem('isLikelyLoggedIn');
+                localStorage.removeItem(AUTH_CACHE_KEY);
+                window.currentUser = null;
+                window.isAdmin = false;
+                window._lastAuthFetchAt = 0;
+                if (typeof window.syncNavbarWithUser === 'function') {
+                    window.syncNavbarWithUser(null, false);
+                }
+                window.dispatchEvent(new Event('authLoaded'));
+            }
+        } catch (e) {
             localStorage.removeItem('isLikelyLoggedIn');
+            localStorage.removeItem(AUTH_CACHE_KEY);
             window.currentUser = null;
             window.isAdmin = false;
+            window._lastAuthFetchAt = 0;
+            if (typeof window.syncNavbarWithUser === 'function') {
+                window.syncNavbarWithUser(null, false);
+            }
             window.dispatchEvent(new Event('authLoaded'));
-            container.innerHTML = `
-                <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login.html">
-                    Se connecter
-                </a>
-                <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
-                    S'inscrire
-                </a>
-            `;
+        } finally {
+            window._authFetchPromise = null;
         }
-    } catch (e) {
-        localStorage.removeItem('isLikelyLoggedIn');
-        window.currentUser = null;
-        window.isAdmin = false;
-        window.dispatchEvent(new Event('authLoaded'));
-        container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
-                Se connecter
-            </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
-                S'inscrire
-            </a>
-        `;
-    }
-}
+    })();
+
+    return window._authFetchPromise;
+};
 
 window.logout = async function () {
     if (typeof window.showModal === 'function') {
@@ -520,6 +533,10 @@ window.logout = async function () {
         localStorage.removeItem('isLikelyLoggedIn');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('activeCombatId');
+        localStorage.removeItem(AUTH_CACHE_KEY);
+        window.currentUser = null;
+        window.isAdmin = false;
+        window._lastAuthFetchAt = 0;
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
         window.location.replace('/login');
     } catch (e) {
@@ -529,56 +546,15 @@ window.logout = async function () {
 };
 
 window.addEventListener('authLoaded', () => {
-    const adminShop = document.getElementById('adminShopLink');
-    const adminPvE = document.getElementById('adminPvELink');
-    const adminAlchemy = document.getElementById('adminAlchemyLink');
-    const filterMutationAdminContainer = document.getElementById('filterMutationAdminContainer');
-
-    if (adminShop) adminShop.style.display = window.isAdmin ? 'inline-flex' : 'none';
-    if (adminPvE) adminPvE.style.display = window.isAdmin ? 'inline-flex' : 'none';
-    if (adminAlchemy) adminAlchemy.style.display = window.isAdmin ? 'inline-flex' : 'none';
-    if (filterMutationAdminContainer) filterMutationAdminContainer.style.display = window.isAdmin ? 'block' : 'none';
-
-    // Feature locks
-    const hasVault = window.currentUser && window.currentUser.unlockedVault;
-    const hasAlchemy = window.currentUser && window.currentUser.unlockedAlchemy;
-    const hasShop = window.currentUser && window.currentUser.unlockedShop;
-
-    document.querySelectorAll('.nav-vault').forEach(el => applyFeatureLock(el, hasVault, 'Coffres', 50, 'vault', '/vault'));
-    document.querySelectorAll('.nav-alchemy').forEach(el => applyFeatureLock(el, hasAlchemy, 'Alchimie', 150, 'alchemy', '/alchemy'));
-    document.querySelectorAll('.nav-shop').forEach(el => applyFeatureLock(el, hasShop, 'Boutique', 75, 'shop', '/shop'));
-
-    const huntingBadge = document.getElementById('navHuntingBadge');
-    if (huntingBadge) {
-        const claimable = window.currentUser ? (window.currentUser.huntingClaimable || 0) : 0;
-        if (claimable > 0) {
-            huntingBadge.textContent = claimable;
-            huntingBadge.style.display = 'inline-block';
-        } else {
-            huntingBadge.style.display = 'none';
-        }
+    if (typeof window.syncNavbarWithUser === 'function' && window.currentUser) {
+        window.syncNavbarWithUser(window.currentUser, false);
     }
+});
 
-    const alchemyBadge = document.getElementById('navAlchemyBadge');
-    if (alchemyBadge) {
-        const unseenCount = window.currentUser ? (window.currentUser.unseenAlchemyCount || 0) : 0;
-        if (unseenCount > 0) {
-            alchemyBadge.textContent = unseenCount;
-            alchemyBadge.style.display = 'inline-block';
-        } else {
-            alchemyBadge.style.display = 'none';
-        }
-    }
-
-    const armoryBadge = document.getElementById('navArmoryBadge');
-    if (armoryBadge) {
-        const availableSlots = window.currentUser ? (window.currentUser.availableCharacterSlots || 0) : 0;
-        if (availableSlots > 0) {
-            armoryBadge.textContent = availableSlots;
-            armoryBadge.style.display = 'inline-block';
-        } else {
-            armoryBadge.style.display = 'none';
-        }
+document.addEventListener('navbar-loaded', () => {
+    const cached = hydrateCachedUser();
+    if (typeof window.syncNavbarWithUser === 'function') {
+        window.syncNavbarWithUser(cached, false);
     }
 });
 

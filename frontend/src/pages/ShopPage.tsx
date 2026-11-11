@@ -17,7 +17,7 @@ export function ShopPage() {
 
     async function bootShop() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const shopUrl = '/js/pages/shop.js?v=9';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function ShopPage() {
 
   return (
     <>
-      <app-navbar active-page="shop"></app-navbar>
-
       {/* État Boutique Verrouillée */}
       <div
         id="shopFeatureLocked"

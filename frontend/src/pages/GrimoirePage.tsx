@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navbar } from '../components/Navbar';
 import { SpellEditingPreview } from '../components/grimoire/SpellCard';
 import { SpellFilterBar } from '../components/grimoire/SpellFilterBar';
 import { SpellForgePanel } from '../components/grimoire/SpellForgePanel';
@@ -20,7 +19,7 @@ export function GrimoirePage() {
     let cancelled = false;
 
     async function bootGrimoire() {
-      const authUrl = '/js/services/auth.js?v=27';
+      const authUrl = '/js/services/auth.js?v=32';
       const appUrl = '/js/app.js?v=15';
       await import(/* @vite-ignore */ authUrl);
       if (typeof window.initGrimoirePage !== 'function') {
@@ -45,8 +44,6 @@ export function GrimoirePage() {
 
   return (
     <>
-      <Navbar activePage="grimoire" />
-
       <main className="grimoire-main single-col">
         <div className="magic-rock"></div>
 

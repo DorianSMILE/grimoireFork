@@ -17,7 +17,7 @@ export function AlchemyPage() {
 
     async function bootAlchemy() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const alchemyUrl = '/js/pages/alchemy.js?v=1786180000004';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function AlchemyPage() {
 
   return (
     <>
-      <app-navbar active-page="alchemy"></app-navbar>
-
       <main className="block">
         {/* État non connecté */}
         <div

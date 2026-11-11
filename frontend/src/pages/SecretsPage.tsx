@@ -60,7 +60,7 @@ export function SecretsPage() {
 
     async function bootSecrets() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=30';
+      const authUrl = '/js/services/auth.js?v=32';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -244,8 +244,6 @@ export function SecretsPage() {
 
   return (
     <>
-      <app-navbar active-page="secret"></app-navbar>
-
       <main className="block">
         <div className="secrets-main">
           <div className="secrets-grid" id="secretsGrid">

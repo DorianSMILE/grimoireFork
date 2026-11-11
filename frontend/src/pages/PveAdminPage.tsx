@@ -241,7 +241,7 @@ export function PveAdminPage() {
     async function bootPveAdmin() {
       const uiUrl = '/js/ui.js?v=2';
       const apiUrl = '/js/services/api.js';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const grimoireUrl = '/js/pages/grimoire.js';
       const pveAdminUrl = '/js/pages/pve-admin.js?v=8';
 
@@ -270,8 +270,6 @@ export function PveAdminPage() {
 
   return (
     <>
-      <app-navbar active-page="pve-admin"></app-navbar>
-
       <main className="vault-container admin-container">
         <div
           className="hidden text-danger bg-red-glass border-red-glass p-4 rounded-lg mb-8 text-center"

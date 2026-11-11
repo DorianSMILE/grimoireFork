@@ -17,7 +17,7 @@ export function AchievementsPage() {
 
     async function bootAchievements() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const achievementsUrl = '/js/pages/achievements.js?v=1786180000041';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function AchievementsPage() {
 
   return (
     <>
-      <app-navbar active-page="achievements"></app-navbar>
-
       <main className="block">
         <div className="achievements-main">
           <div className="achievements-header">

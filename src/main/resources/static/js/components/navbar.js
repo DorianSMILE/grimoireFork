@@ -46,6 +46,163 @@ const NAVBAR_PAGE_CONFIG = {
     'alchemy-admin': { icon: 'science', cls: 'logo-admin', title: 'Admin Alchimie', subtitle: 'Gestion des recettes' }
 };
 
+const AUTH_CACHE_KEY = 'grimoire_cached_user_v1';
+let sharedHeaderEl = null;
+
+function getCachedUserSnapshot() {
+    if (window.currentUser) return window.currentUser;
+    if (localStorage.getItem('isLikelyLoggedIn') !== 'true') return null;
+    try {
+        const raw = localStorage.getItem(AUTH_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.username) {
+            window.currentUser = parsed;
+            window.isAdmin = Boolean(parsed.roles && parsed.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN'));
+            return parsed;
+        }
+    } catch (_) {}
+    return null;
+}
+
+function updateNavBadgeEl(id, count) {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    const num = Number(count) || 0;
+    if (num > 0) {
+        const str = String(num);
+        if (badge.textContent !== str) badge.textContent = str;
+        badge.classList.add('block');
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.remove('block');
+        badge.classList.add('hidden');
+    }
+}
+
+function applyNavbarFeatureLock(el, isUnlocked, featureName, cost, featureId, originalHref) {
+    if (!el) return;
+    el.href = originalHref;
+
+    if (isUnlocked) {
+        el.classList.remove('is-feature-locked');
+        el.removeAttribute('onclick');
+        const lockIcon = el.querySelector('.feature-lock-icon');
+        if (lockIcon) lockIcon.remove();
+    } else {
+        el.classList.add('is-feature-locked');
+        el.setAttribute('onclick', `event.preventDefault(); promptUnlockFeature('${featureId}', '${featureName}', ${cost})`);
+        if (!el.querySelector('.feature-lock-icon')) {
+            el.insertAdjacentHTML('beforeend', '<span class="material-symbols-outlined feature-lock-icon text-sm text-error ml-auto">lock</span>');
+        }
+    }
+}
+
+function ensureLoggedInAuthDom(container) {
+    if (container.querySelector('#navUserProfileLink')) return;
+    container.innerHTML = `
+        <a id="navUserProfileLink" class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all nav-user-profile-link" href="/secrets">
+            <span class="material-symbols-outlined text-lg text-success">account_circle</span>
+            <div class="nav-user-col">
+                <span id="navUserName" class="nav-user-name">...</span>
+                <span id="navUserTitle" class="nav-active-title is-hidden"></span>
+            </div>
+            <span id="navSecretBadge" class="nav-badge hidden">0</span>
+        </a>
+        <div id="navUserGoldWrap" class="flex-center font-bold text-amber text-sm nav-user-gold-wrap" title="Monnaie">
+            <span class="material-symbols-outlined text-lg">monetization_on</span>
+            <span id="navUserGold" class="nav-user-gold-val">0.0</span>
+        </div>
+        <button id="navLogoutBtn" type="button" class="flex-center text-xs text-error rounded px-2 py-1 cursor-pointer font-family-inherit transition-all nav-logout-btn" onclick="logout()" title="Déconnexion">
+            <span class="material-symbols-outlined icon-sm">logout</span>
+        </button>
+    `;
+}
+
+window.syncNavbarWithUser = function syncNavbarWithUser(data, animateGold = false, prevGold = 0) {
+    const container = document.getElementById('authNavContainer');
+    const isLikelyLoggedIn = localStorage.getItem('isLikelyLoggedIn') === 'true';
+
+    if (!isLikelyLoggedIn && !data) {
+        if (container && !container.querySelector('#navGuestLoginLink')) {
+            container.innerHTML = `
+                <a id="navGuestLoginLink" class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
+                    Se connecter
+                </a>
+                <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
+                    S'inscrire
+                </a>
+            `;
+        }
+        return;
+    }
+
+    if (container) {
+        ensureLoggedInAuthDom(container);
+    }
+
+    if (!data) return;
+
+    const nameEl = document.getElementById('navUserName');
+    if (nameEl && data.username && nameEl.textContent !== data.username) {
+        nameEl.textContent = data.username;
+    }
+
+    const titleEl = document.getElementById('navUserTitle');
+    if (titleEl) {
+        if (data.activeTitle) {
+            const formattedTitle = `« ${data.activeTitle} »`;
+            if (titleEl.textContent !== formattedTitle) titleEl.textContent = formattedTitle;
+            titleEl.title = `Titre équipé : ${data.activeTitle}`;
+            titleEl.classList.remove('is-hidden');
+        } else {
+            titleEl.textContent = '';
+            titleEl.classList.add('is-hidden');
+        }
+    }
+
+    updateNavBadgeEl('navSecretBadge', data.claimableSecretRewardsCount || 0);
+
+    const goldEl = document.getElementById('navUserGold');
+    if (goldEl) {
+        const currentGold = data.monnaie !== undefined ? +Number(data.monnaie) : 0;
+        if (animateGold && prevGold !== currentGold && typeof window.animateGoldValue === 'function') {
+            window.animateGoldValue(goldEl, prevGold, currentGold, 1000);
+        } else {
+            const formattedGold = Number(currentGold).toFixed(1);
+            if (goldEl.textContent !== formattedGold) {
+                goldEl.textContent = formattedGold;
+            }
+        }
+    }
+
+    const isAdmin = Boolean(data.roles && data.roles.some(r => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN'));
+    window.isAdmin = isAdmin;
+
+    ['adminShopLink', 'adminPvELink', 'adminAlchemyLink'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('init-hidden', !isAdmin);
+            el.classList.toggle('is-hidden', !isAdmin);
+        }
+    });
+
+    const filterMutationAdminContainer = document.getElementById('filterMutationAdminContainer');
+    if (filterMutationAdminContainer) {
+        filterMutationAdminContainer.classList.toggle('init-hidden', !isAdmin);
+        filterMutationAdminContainer.classList.toggle('is-hidden', !isAdmin);
+    }
+
+    document.querySelectorAll('.nav-vault').forEach(el => applyNavbarFeatureLock(el, Boolean(data.unlockedVault), 'Coffres', 50, 'vault', '/vault'));
+    document.querySelectorAll('.nav-alchemy').forEach(el => applyNavbarFeatureLock(el, Boolean(data.unlockedAlchemy), 'Alchimie', 150, 'alchemy', '/alchemy'));
+    document.querySelectorAll('.nav-shop').forEach(el => applyNavbarFeatureLock(el, Boolean(data.unlockedShop), 'Boutique', 75, 'shop', '/shop'));
+
+    updateNavBadgeEl('navDungeonBadge', data.unseenDungeonsCount || 0);
+    updateNavBadgeEl('navHuntingBadge', data.huntingClaimable || 0);
+    updateNavBadgeEl('navAlchemyBadge', data.unseenAlchemyCount || 0);
+    updateNavBadgeEl('navArmoryBadge', data.availableCharacterSlots || 0);
+};
+
 class AppNavbar extends HTMLElement {
     static get observedAttributes() {
         return ['active-page'];
@@ -57,13 +214,19 @@ class AppNavbar extends HTMLElement {
 
     connectedCallback() {
         const activePage = this.getAttribute('active-page') || 'grimoire';
-        if (!this.querySelector('header.top-header')) {
+        if (sharedHeaderEl) {
+            if (this.firstElementChild !== sharedHeaderEl) {
+                this.replaceChildren(sharedHeaderEl);
+            }
+            this.updateActiveState(activePage);
+        } else if (!this.querySelector('header.top-header')) {
             this.render(activePage);
         } else {
             this.updateActiveState(activePage);
         }
+        window.syncNavbarWithUser(getCachedUserSnapshot(), false);
         injectSpeculationRules();
-        
+
         // Dispatche un événement pour auth.js qui peut maintenant s'attacher à #authNavContainer
         document.dispatchEvent(new Event('navbar-loaded'));
     }
@@ -133,11 +296,11 @@ class AppNavbar extends HTMLElement {
                 </a>
                 <a href="/armory" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}">
                     <span class="material-symbols-outlined">shield</span> Armurerie
-                    <span id="navArmoryBadge" class="nav-badge">0</span>
+                    <span id="navArmoryBadge" class="nav-badge hidden">0</span>
                 </a>
                 <a href="/dungeons" class="top-nav-link nav-dungeon ${activePage === 'dungeon' || activePage === 'dungeons' ? 'active' : ''}">
                     <span class="material-symbols-outlined">swords</span> Donjons
-                    <span id="navDungeonBadge" class="nav-badge">0</span>
+                    <span id="navDungeonBadge" class="nav-badge hidden">0</span>
                 </a>
                 <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
                     <span class="material-symbols-outlined">money_bag</span> Coffres
@@ -147,11 +310,11 @@ class AppNavbar extends HTMLElement {
                 </a>
                 <a href="/alchemy" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}">
                     <span class="material-symbols-outlined">science</span> Alchimie
-                    <span id="navAlchemyBadge" class="nav-badge">0</span>
+                    <span id="navAlchemyBadge" class="nav-badge hidden">0</span>
                 </a>
                 <a href="/hunting" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}">
                     <span class="material-symbols-outlined">trophy</span> Chasse
-                    <span id="navHuntingBadge" class="nav-badge">0</span>
+                    <span id="navHuntingBadge" class="nav-badge hidden">0</span>
                 </a>
                 
                 <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin init-hidden ${activePage === 'shop-admin' ? 'active' : ''}">
@@ -164,12 +327,11 @@ class AppNavbar extends HTMLElement {
                     <span class="material-symbols-outlined">science</span> Admin Alchimie
                 </a>
 
-                <div id="authNavContainer" class="nav-auth-container">
-                    <span class="text-sm text-muted">Chargement...</span>
-                </div>
+                <div id="authNavContainer" class="nav-auth-container"></div>
             </div>
         </header>
         `;
+        sharedHeaderEl = this.querySelector('header.top-header');
     }
 }
 

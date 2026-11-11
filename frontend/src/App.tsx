@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { UiFeedbackProvider } from './context/UiFeedbackContext';
+import { Navbar } from './components/Navbar';
 import { ArmoryPage } from './pages/ArmoryPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { AlchemyAdminPage } from './pages/AlchemyAdminPage';
@@ -102,6 +103,7 @@ export function App() {
     <UiFeedbackProvider>
       <BrowserRouter>
         <SpaLinkInterceptor />
+        <Navbar />
         <Routes>
           <Route path="/" element={<RedirectWithSearch to="/grimoire" />} />
           <Route path="/index.html" element={<RedirectWithSearch to="/grimoire" />} />

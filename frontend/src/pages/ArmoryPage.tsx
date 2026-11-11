@@ -17,7 +17,7 @@ export function ArmoryPage() {
 
     async function bootArmory() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=27';
+      const authUrl = '/js/services/auth.js?v=32';
       const armoryUrl = '/js/pages/armory.js?v=112';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -43,8 +43,6 @@ export function ArmoryPage() {
 
   return (
     <>
-      <app-navbar active-page="armory"></app-navbar>
-
       <div className="armory-main">
         {/* Colonne Gauche : Formulaire de Création */}
         <div className="armory-form-panel" id="charFormPanel">

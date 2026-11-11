@@ -32,7 +32,7 @@ export function resolveNavbarPageFromPath(pathname: string): NavbarPageId {
       return 'armory';
     case 'dungeon':
     case 'dungeons':
-      return 'dungeons';
+      return 'dungeon';
     case 'vault':
       return 'vault';
     case 'shop':
@@ -61,6 +61,10 @@ export function resolveNavbarPageFromPath(pathname: string): NavbarPageId {
 
 export function Navbar({ activePage }: NavbarProps) {
   const location = useLocation();
+  const clean = location.pathname.replace(/\.html$/, '').replace(/^\//, '');
+  if (!activePage && (clean === 'combat' || clean === 'login' || clean === 'register')) {
+    return null;
+  }
   const resolvedPage = activePage ?? resolveNavbarPageFromPath(location.pathname);
 
   return <app-navbar active-page={resolvedPage}></app-navbar>;

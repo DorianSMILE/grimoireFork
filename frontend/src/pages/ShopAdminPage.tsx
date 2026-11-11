@@ -87,7 +87,7 @@ export function ShopAdminPage() {
 
     async function bootShopAdmin() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const shopAdminUrl = '/js/pages/shop-admin.js?v=102';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -126,8 +126,6 @@ export function ShopAdminPage() {
 
   return (
     <>
-      <app-navbar active-page="shop-admin"></app-navbar>
-
       <h2 id="shopAdminDenied" className="is-hidden text-error text-center mt-12">
         Accès Refusé : Réservé aux Admins
       </h2>

@@ -1,5 +1,5 @@
-import { pageState } from './combat-state.js?v=1786180000235';
-import { appendCustomCombatLogElement } from './combat-ui.js?v=1786180000235';
+import { pageState } from './combat-state.js?v=1786180000239';
+import { appendCustomCombatLogElement } from './combat-ui.js?v=1786180000239';
 import { fetchCombatSignalsConfig, postCombatSignal } from '../services/api.js';
 
 let signalsConfig = null;
@@ -522,36 +522,42 @@ export function hideFighterPingMenu() {
     menu.classList.add('is-hidden');
 }
 
+let _combatSignalDocListenersBound = false;
+
 /**
  * Initialise les écouteurs globaux pour fermer les popups lors d'un clic extérieur.
  */
 export function initCombatSignals() {
-    document.addEventListener('click', (e) => {
-        const popover = document.getElementById('combatEmotesPopover');
-        const emotesBtn = document.getElementById('btnCombatEmotes');
-        if (popover && popover.classList.contains('is-visible')) {
-            if (!popover.contains(e.target) && (!emotesBtn || !emotesBtn.contains(e.target))) {
-                hideEmotesPopover();
+    if (!_combatSignalDocListenersBound) {
+        _combatSignalDocListenersBound = true;
+        document.addEventListener('click', (e) => {
+            const popover = document.getElementById('combatEmotesPopover');
+            const emotesBtn = document.getElementById('btnCombatEmotes');
+            if (popover && popover.classList.contains('is-visible')) {
+                if (!popover.contains(e.target) && (!emotesBtn || !emotesBtn.contains(e.target))) {
+                    hideEmotesPopover();
+                }
             }
-        }
 
-        const pingMenu = document.getElementById('combatPingMenu');
-        if (pingMenu && pingMenu.classList.contains('is-visible')) {
-            if (!pingMenu.contains(e.target) && !e.target.closest('.fighter-ping-btn')) {
+            const pingMenu = document.getElementById('combatPingMenu');
+            if (pingMenu && pingMenu.classList.contains('is-visible')) {
+                if (!pingMenu.contains(e.target) && !e.target.closest('.fighter-ping-btn')) {
+                    hideFighterPingMenu();
+                }
+            }
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            const pingMenu = document.getElementById('combatPingMenu');
+            if (pingMenu && pingMenu.classList.contains('is-visible') && !pingMenu.contains(e.target)) {
                 hideFighterPingMenu();
             }
-        }
-    });
-
-    document.addEventListener('contextmenu', (e) => {
-        const pingMenu = document.getElementById('combatPingMenu');
-        if (pingMenu && pingMenu.classList.contains('is-visible') && !pingMenu.contains(e.target)) {
-            hideFighterPingMenu();
-        }
-    });
+        });
+    }
 
     const emotesBtn = document.getElementById('btnCombatEmotes');
-    if (emotesBtn) {
+    if (emotesBtn && emotesBtn.dataset.boundEmotesClick !== '1') {
+        emotesBtn.dataset.boundEmotesClick = '1';
         emotesBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleEmotesPopover(emotesBtn);

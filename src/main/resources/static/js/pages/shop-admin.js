@@ -5,6 +5,7 @@ const pageState = { allEquipments: [], equipmentToDelete: null, editingEquipment
 
 // ===== Custom Select Logic =====
 document.addEventListener('change', (e) => {
+    if (!document.getElementById('upgradesGrid')) return;
     if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'hidden') {
         const hiddenInput = e.target;
         if (hiddenInput.id === 'eqRarity') {
@@ -59,7 +60,7 @@ document.addEventListener('change', (e) => {
                 document.getElementById('eqSpecialEffectLabel').innerHTML = '<span class="material-symbols-outlined cs-icon text-muted">not_interested</span> Aucun';
                 document.getElementById('eqSpecialEffectValue').value = 0;
             }
-            updateWeightUI();
+            shopAdminUpdateWeightUI();
         } else if (hiddenInput.id.startsWith('eq') || hiddenInput.id === 'eqSpecialEffect') {
             if (hiddenInput.id === 'eqSpecialEffect') {
                 const infoContainer = document.getElementById('eqSpecialEffectInfoContainer');
@@ -67,7 +68,7 @@ document.addEventListener('change', (e) => {
                     infoContainer.innerHTML = window.getEffectInfoIconHtml(hiddenInput.value);
                 }
             }
-            updateWeightUI();
+            shopAdminUpdateWeightUI();
         } else {
             renderVault(); // Mettre à jour l'affichage au changement
         }
@@ -334,45 +335,70 @@ function renderGrid(equipments) {
     container.innerHTML = html;
 }
 
-// Init
-window.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
+async function applyShopAdminAuthState() {
+    if (!document.getElementById('upgradesGrid')) return;
+    if (!window.currentUser) return;
 
-    const checkAdmin = async () => {
-        if (!window.currentUser) return;
-        if (!window.isAdmin) {
-            document.body.innerHTML = "<h2 class='text-error text-center mt-12'>Accès Refusé : Réservé aux Admins</h2>";
-            return;
-        }
-        await Promise.all([loadAnomalies(), loadEquipments(), loadUpgrades()]); if (true) { renderVault(); renderUpgradesGrid(); return; }
-        loadEquipments();
-        loadUpgrades();
-    };
+    const mainEl = document.getElementById('shopAdminMain');
+    const deniedEl = document.getElementById('shopAdminDenied');
 
-    if (window.currentUser !== undefined) {
-        checkAdmin();
-    } else {
-        window.addEventListener('authLoaded', checkAdmin, { once: true });
+    if (!window.isAdmin) {
+        if (mainEl) mainEl.classList.add('is-hidden');
+        if (deniedEl) deniedEl.classList.remove('is-hidden');
+        return;
     }
 
-    if (document.getElementById('addAnomalyPriceBtn')) {
-        document.getElementById('addAnomalyPriceBtn').addEventListener('click', () => {
+    if (deniedEl) deniedEl.classList.add('is-hidden');
+    if (mainEl) mainEl.classList.remove('is-hidden');
+
+    const btnCreate = document.getElementById('btnCreateVaultEq');
+    if (btnCreate) {
+        btnCreate.classList.remove('hidden');
+    }
+
+    await Promise.all([loadAnomalies(), loadEquipments(), loadUpgrades()]);
+    renderVault();
+    renderUpgradesGrid();
+}
+
+window.initShopAdminPage = async function () {
+    window.openCreateEqModal = shopAdminOpenCreateEqModal;
+    window.closeCreateEqModal = shopAdminCloseCreateEqModal;
+    window.editEquipment = shopAdminEditEquipment;
+    window.deleteEquipment = deleteEquipment;
+    window.submitEquipment = shopAdminSubmitEquipment;
+    window.updateWeightUI = shopAdminUpdateWeightUI;
+    window.openCreateUpgradeModal = openCreateUpgradeModal;
+    window.openEditUpgradeModal = openEditUpgradeModal;
+
+    if (!window.api) {
+        const apiMod = await import('/js/services/api.js');
+        window.api = apiMod;
+    }
+
+    if (window.initAppMeta) await window.initAppMeta();
+
+    const addAnoBtn = document.getElementById('addAnomalyPriceBtn');
+    if (addAnoBtn && !addAnoBtn.dataset.shopAdminBound) {
+        addAnoBtn.dataset.shopAdminBound = 'true';
+        addAnoBtn.addEventListener('click', () => {
             addAnomalyRow();
         });
     }
 
-    // Listeners for Weight Calculation
     const eqInputs = ['eqSlot', 'eqRarity', 'eqHp', 'eqMana', 'eqPower', 'eqStr', 'eqArmor', 'eqRes', 'eqSpeed', 'eqCrit', 'eqRegenHp', 'eqRegenMana', 'eqSpecialEffectValue', 'eqBaseWeight'];
     eqInputs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(updateWeightUI, 150); });
-            el.addEventListener('change', updateWeightUI);
+        if (el && !el.dataset.shopAdminBound) {
+            el.dataset.shopAdminBound = 'true';
+            el.addEventListener('input', () => { clearTimeout(window._wTimer); window._wTimer = setTimeout(shopAdminUpdateWeightUI, 150); });
+            el.addEventListener('change', shopAdminUpdateWeightUI);
         }
     });
 
     const categoryInput = document.getElementById('eqConsumableCategory');
-    if (categoryInput) {
+    if (categoryInput && !categoryInput.dataset.shopAdminBound) {
+        categoryInput.dataset.shopAdminBound = 'true';
         categoryInput.addEventListener('change', () => {
             const row = document.getElementById('eqKeyBonusRow');
             if (row) {
@@ -385,9 +411,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Render create form slot select
     const slotOptionsContainer = document.getElementById('eqSlotOptions');
-    if (slotOptionsContainer) {
+    if (slotOptionsContainer && window.SLOT_LABELS) {
         const slots = ['CASQUE', 'PLASTRON', 'ARME_DEUX_MAINS', 'ARME_GAUCHE', 'ARME_DROITE', 'ANNEAU', 'BOTTES', 'CAPE', 'CONSOMMABLE'];
         slotOptionsContainer.innerHTML = slots.map(s => {
             const info = window.SLOT_LABELS[s];
@@ -397,48 +422,52 @@ window.addEventListener('DOMContentLoaded', async () => {
             </div>`;
         }).join('');
     }
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else if (window.currentUser !== undefined) {
+        await applyShopAdminAuthState();
+    }
+};
+
+window.cleanupShopAdminPage = function () {
+    document.getElementById('upgradeModal')?.remove();
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('upgradesGrid')) {
+        window.initShopAdminPage();
+    }
 });
 
 window.addEventListener('authLoaded', () => {
-    const btnCreate = document.getElementById('btnCreateVaultEq');
-    if (btnCreate) {
-        if (window.isAdmin) btnCreate.classList.remove('hidden');
-        else btnCreate.classList.add('hidden');
-    }
-
-    const searchOwnerContainer = document.getElementById('searchOwnerContainer');
-    if (searchOwnerContainer) {
-        if (window.isAdmin) searchOwnerContainer.classList.remove('hidden');
-        else searchOwnerContainer.classList.add('hidden');
-    }
-
-    // Re-render the grid in case equipments loaded before auth
-    if (pageState.allEquipments && pageState.allEquipments.length > 0) {
-        renderVault();
-    }
+    applyShopAdminAuthState();
 });
 
 // ===== Equipment Creation / Edition =====
 
-
-
-window.openCreateEqModal = function () {
+function shopAdminOpenCreateEqModal() {
     pageState.editingEquipmentId = null;
     document.getElementById('equipModalTitle').innerHTML = 'Forger un objet';
     document.getElementById('submitEquipmentBtn').innerHTML = '<span class="material-symbols-outlined icon-md">add</span> Forger';
     resetEqForm();
     document.getElementById('equipCreateModal').classList.add('show');
-    updateWeightUI();
+    shopAdminUpdateWeightUI();
 }
+window.openCreateEqModal = shopAdminOpenCreateEqModal;
 
-window.closeCreateEqModal = function () {
+function shopAdminCloseCreateEqModal() {
     document.getElementById('equipCreateModal').classList.remove('show');
     resetEqForm();
 }
+window.closeCreateEqModal = shopAdminCloseCreateEqModal;
 
 
 
-window.editEquipment = function (id) {
+function shopAdminEditEquipment(id) {
     pageState.editingEquipmentId = id;
     const eq = pageState.allEquipments.find(e => e.id === id);
     if (!eq) return;
@@ -608,13 +637,14 @@ window.editEquipment = function (id) {
 
     document.getElementById('eqSpecialEffectValue').value = eq.specialEffectValue || 0;
 
-    updateWeightUI();
+    shopAdminUpdateWeightUI();
     document.getElementById('equipCreateModal').classList.add('show');
 }
+window.editEquipment = shopAdminEditEquipment;
 
 
 
-window.submitEquipment = async function () {
+async function shopAdminSubmitEquipment() {
     const dto = getFormEquipmentData();
     const name = dto.name;
     const slot = dto.slot;
@@ -693,7 +723,7 @@ window.submitEquipment = async function () {
             return;
         }
 
-        closeCreateEqModal();
+        shopAdminCloseCreateEqModal();
         showNotif(pageState.editingEquipmentId ? 'Équipement modifié !' : 'Équipement forgé !');
         await loadEquipments();
     } catch (e) {
@@ -701,8 +731,9 @@ window.submitEquipment = async function () {
         showNotif('Erreur réseau', true);
     }
 }
+window.submitEquipment = shopAdminSubmitEquipment;
 
-window.updateWeightUI = async function () {
+async function shopAdminUpdateWeightUI() {
     const slot = document.getElementById('eqSlot').value;
     const rarity = document.getElementById('eqRarity').value;
     if (!slot) return;
@@ -812,6 +843,11 @@ window.updateWeightUI = async function () {
         const displayPrice = +Number(price).toFixed(1);
         priceEl.innerHTML = `${displayPrice} <span class="material-symbols-outlined icon-md">monetization_on</span>`;
     }
+}
+window.updateWeightUI = shopAdminUpdateWeightUI;
+window.deleteEquipment = deleteEquipment;
+window.removeAnomalyRow = function (btn) {
+    if (btn) btn.closest('.anomaly-price-row')?.remove();
 };
 
 

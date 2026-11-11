@@ -1,6 +1,6 @@
 import { state } from './state.js';
 
-import { renderFilteredSpells } from '../pages/grimoire.js';
+import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000240';
 
 export function getVoieButtonColor(v) {
     const vNom = (v ? (typeof v === 'string' ? v : (v.nom || v.name || '')) : '').toLowerCase();
@@ -21,6 +21,35 @@ export function getSpiritButtonColor(s) {
     if (sNom.includes('ténèbres') || sNom.includes('tenebres')) return '#c084fc';
     if (sNom.includes('karma')) return '#e7d198';
     return '#a78bfa';
+}
+
+export function getVoieAffinityClass(v) {
+    const vNom = (v ? (typeof v === 'string' ? v : (v.nom || v.name || '')) : '').toLowerCase();
+    if (vNom.includes('raison')) return 'affinity-raison';
+    if (vNom.includes('sûreté') || vNom.includes('surete')) return 'affinity-surete';
+    if (vNom.includes('trahison')) return 'affinity-trahison';
+    if (vNom.includes('consolidation')) return 'affinity-consolidation';
+    if (vNom.includes('conviction')) return 'affinity-conviction';
+    if (vNom.includes('création') || vNom.includes('creation')) return 'affinity-creation';
+    if (vNom.includes('destruction')) return 'affinity-destruction';
+    if (vNom.includes('violence')) return 'affinity-violence';
+    return 'affinity-default';
+}
+
+export function getSpiritAffinityClass(s) {
+    const sNom = (s ? (typeof s === 'string' ? s : (s.nom || s.name || '')) : '').toLowerCase();
+    if (sNom.includes('esprit')) return 'affinity-esprit';
+    if (sNom.includes('ténèbres') || sNom.includes('tenebres')) return 'affinity-tenebres';
+    if (sNom.includes('karma')) return 'affinity-karma';
+    return 'affinity-spirit-default';
+}
+
+export function getSpellAffinityClass(sp) {
+    if (!sp) return 'affinity-default';
+    if (sp.mutation) return 'affinity-mutation';
+    if (sp.voie) return getVoieAffinityClass(sp.voie);
+    if (sp.spiritualite) return getSpiritAffinityClass(sp.spiritualite);
+    return 'affinity-default';
 }
 
 export function resetFilters() {

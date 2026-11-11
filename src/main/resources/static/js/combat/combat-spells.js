@@ -1,8 +1,8 @@
-import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000235';
-import { updateUI } from './combat-ui.js?v=1786180000235';
+import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000239';
+import { updateUI } from './combat-ui.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
 import { triggerCombatActionSprite } from './combat-sprites.js';
 
 

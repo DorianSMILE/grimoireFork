@@ -1,10 +1,10 @@
 import { showFloatingTextOnElement } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000235';
-import { updateUI } from './combat-ui.js?v=1786180000235';
+import { pageState } from './combat-state.js?v=1786180000239';
+import { updateUI } from './combat-ui.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { handleSignalReceived } from './combat-signals.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { handleSignalReceived } from './combat-signals.js?v=1786180000239';
 import { handleCombatSpriteLog } from './combat-sprites.js';
 
 
@@ -32,6 +32,13 @@ export function processNewDeathLogs(combatLogs) {
 
 export let _multiSSE = null;
 
+export function closeMultiSSE() {
+    if (_multiSSE) {
+        _multiSSE.close();
+        _multiSSE = null;
+    }
+}
+
 export function initMultiSSE(sessionId) {
     if (_multiSSE) { _multiSSE.close(); _multiSSE = null; }
     _multiSSE = new EventSource(`/api/pve/combat/${sessionId}/events`);
@@ -51,6 +58,8 @@ export function initMultiSSE(sessionId) {
             // Ne pas re-renderer si on est en train de traiter une action locale
             if (!pageState.isProcessing) {
                 updateUI(data);
+            } else {
+                pageState.pendingSseData = data;
             }
         } catch (err) {
             console.error('[SSE] parse error', err);

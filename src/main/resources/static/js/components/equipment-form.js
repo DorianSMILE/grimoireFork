@@ -82,7 +82,7 @@ function getFormEquipmentData() {
         (document.getElementById('eqSpecialEffectValue') ? (parseInt(document.getElementById('eqSpecialEffectValue').value) || 0) : 0);
 
     return {
-        id: pageState.editingEquipmentId,
+        id: (typeof pageState !== 'undefined' ? pageState : window.pageState)?.editingEquipmentId || null,
         name: document.getElementById('eqName') ? document.getElementById('eqName').value.trim() : '',
         availableInShop: document.getElementById('eqAvailableInShop') ? document.getElementById('eqAvailableInShop').checked : false,
         slot,

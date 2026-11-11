@@ -248,4 +248,15 @@
 .shop-toggle:checked + .shop-toggle-track .shop-toggle-thumb {
     transform: translateX(16px);
     background: #a855f7;
-}
+}
+
+.page-header-icon.purple {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+}
+
+.btn-purple-gradient {
+    background: linear-gradient(135deg, #a855f7, #7c3aed) !important;
+    color: #ffffff !important;
+}
+

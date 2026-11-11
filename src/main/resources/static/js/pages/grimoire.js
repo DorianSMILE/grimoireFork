@@ -1,10 +1,10 @@
 import { state } from '../utils/state.js';
 import { javaClassToCode, TARGET_LABELS, TARGET_CSS_CLASSES, EFFECT_TYPE_CSS_CLASSES } from '../utils/constants.js';
-import * as ui from '../ui.js?v=2';
+import * as ui from '../ui.js?v=3';
 import * as api from '../services/api.js';
 
-import { updateRankTitle, updateSpecialVoieConfig, setViolenceType, updateViolenceLabel, renderEffects, handleAffinityChange } from './forge.js';
-import { getVoieButtonColor, getSpiritButtonColor, } from '../utils/filters.js';
+import { updateRankTitle, updateSpecialVoieConfig, setViolenceType, updateViolenceLabel, renderEffects, handleAffinityChange } from './forge.js?v=3';
+import { getVoieButtonColor, getSpiritButtonColor, } from '../utils/filters.js?v=3';
 
 window.handleAffinityChange = handleAffinityChange;
 window.setViolenceType = setViolenceType;
@@ -223,7 +223,7 @@ export function renderFilteredSpells() {
         try {
             return getSpellCardHtml(sp);
         } catch (e) {
-            return `<div style="color: red; padding: 1rem; border: 1px solid red;">Erreur de rendu pour le sort ${sp.id} : ${e.message}<br><pre>${e.stack}</pre></div>`;
+            return `<div class="empty-state text-danger">Erreur de rendu pour le sort ${sp.id} : ${e.message}</div>`;
         }
     }).join('');
 
@@ -231,7 +231,7 @@ export function renderFilteredSpells() {
     try {
         attachLvl5CardEffects(container);
     } catch (e) {
-        container.innerHTML += `<div style="color: red;">Erreur attachLvl5CardEffects : ${e.message}</div>`;
+        container.innerHTML += `<div class="empty-state text-danger">Erreur attachLvl5CardEffects : ${e.message}</div>`;
     }
 }
 
@@ -766,7 +766,6 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
             else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
             else if (t === 'POISON') statIcon = { icon: 'science', colorClass: 'eff-color-emerald' };
             else if (t === 'BURN') statIcon = { icon: 'local_fire_department', colorClass: 'eff-color-orange' };
-
             const statColorClass = statIcon.colorClass;
 
             let detailsStr = '';
@@ -1181,14 +1180,9 @@ export function updateEditingPreview() {
     if (state.editingSpellId !== null && state.loadedSpells) {
         const sp = state.loadedSpells.find(s => s.id === state.editingSpellId);
         if (sp) {
-            cardBody.innerHTML = getSpellCardHtml(sp);
-
-            // Masquer les boutons d'action du sort dans le preview
-            const headerActions = cardBody.querySelector('.spell-card-header div[style*="display: flex; gap: 0.3rem"]');
-            if (headerActions) {
-                headerActions.style.display = 'none';
-            }
-
+            let html = getSpellCardHtml(sp);
+            html = html.replace(/<div class="flex flex-wrap items-center gap-1">\s*<button type="button" class="btn-edit".*?<\/div>/s, '');
+            cardBody.innerHTML = html;
             preview.classList.add('active');
         } else {
             preview.classList.remove('active');

@@ -1,67 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Inscription, créez votre compte sur le Grimoire en inscrivant votre nom dans ces pages.">
-    <title>Inscription — Grimoire</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/png" href="/favicon.svg">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap"
-        rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="/styles/variables.css?v=1786180000001">
-    <link rel="stylesheet" href="/styles/ui/components.css?v=1786180000001">
-    <link rel="stylesheet" href="/styles/ui/utilities.css?v=1786180000001">
-    <link rel="stylesheet" href="/styles/pages/register.css?v=1786180000001">
-    <script src="/js/components/navbar.js"></script>
+    <title>Redirection — Grimoire</title>
+    <script>
+        window.location.replace('/register' + window.location.search);
+    </script>
 </head>
-
-<body>
-    <div class="ambient-light"></div>
-    <div class="ambient-light-2"></div>
-
-    <div class="auth-container">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <span
-                    class="material-symbols-outlined text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">auto_stories</span>
-                Grimoire
-            </div>
-            <div class="auth-subtitle">Créer un nouveau compte</div>
-        </div>
-
-        <div class="auth-error" id="authError"></div>
-        <div class="auth-success" id="authSuccess"></div>
-
-        <form class="auth-form" id="registerForm">
-            <div class="auth-field">
-                <label for="username">Nom d'utilisateur</label>
-                <input type="text" id="username" required autocomplete="username" minlength="3" maxlength="30">
-            </div>
-            <div class="auth-field">
-                <label for="password">Mot de passe</label>
-                <input type="password" id="password" required autocomplete="new-password" minlength="4">
-            </div>
-            <div class="auth-field">
-                <label for="confirmPassword">Confirmer le mot de passe</label>
-                <input type="password" id="confirmPassword" required autocomplete="new-password" minlength="4">
-            </div>
-            <button class="auth-btn" type="submit">Créer le compte</button>
-        </form>
-
-        <div class="auth-footer">
-            Déjà inscrit ? <a href="/login.html">Se connecter</a>
-        </div>
-    </div>
-
-    <script type="module" src="/js/services/auth.js?v=20"></script>
-</body>
-
+<body></body>
 </html>

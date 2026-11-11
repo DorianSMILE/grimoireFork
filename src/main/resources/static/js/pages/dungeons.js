@@ -332,24 +332,6 @@ function updateHeroCountDisplay() {
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    const checkAuth = async () => {
-        if (!window.currentUser) {
-            window.location.href = '/login.html';
-            return;
-        }
-
-        const initMetaTask = window.initAppMeta ? window.initAppMeta() : Promise.resolve();
-
-        document.getElementById('dungeonsContent').style.display = 'block';
-        await Promise.all([initMetaTask, loadCharacters(), loadAnomalies(), loadEquipments(), loadConsumables()]);
-
-
-
-        await loadDungeons();
-        initDungeonTutorial();
-    };
-
 function initDungeonTutorial() {
     if (!window.currentUser) return;
     if (!window.GrimoireTutorial || window.GrimoireTutorial.isActive()) return;
@@ -479,12 +461,80 @@ function initDungeonTutorial() {
     });
 }
 
-    if (window.currentUser !== undefined) {
-        checkAuth();
-    } else {
-        window.addEventListener('authLoaded', checkAuth);
+window.showPrepLootDropdown = function (el) {
+    if (el && el.hideTimer) clearTimeout(el.hideTimer);
+    const d = document.getElementById('prepLootDropdown');
+    if (d && d.innerHTML.trim() !== '') {
+        d.style.display = 'flex';
     }
-});
+};
+
+window.hidePrepLootDropdown = function (el) {
+    const hideFn = () => {
+        const d = document.getElementById('prepLootDropdown');
+        if (d) d.style.display = 'none';
+        if (window.hideGlobalTooltip) window.hideGlobalTooltip(true);
+    };
+    if (el) {
+        el.hideTimer = setTimeout(hideFn, 150);
+    } else {
+        hideFn();
+    }
+};
+
+window.initDungeonsPage = async function () {
+    pageState.currentDungeonId = null;
+    pageState.selectedCharIds = [];
+    pageState.currentMaxHeroes = 1;
+    pageState.selectedConsumableIds = [];
+    pageState.inspectedCharacterId = null;
+    window._isStartingCombat = false;
+    localStorage.removeItem('activeCombatId');
+
+    bindJoinLobbyCodeInput();
+
+    const initMetaTask = window.initAppMeta ? window.initAppMeta() : Promise.resolve();
+
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    }
+    if (!window.currentUser) {
+        window.location.href = '/login';
+        return;
+    }
+
+    const dungeonsContent = document.getElementById('dungeonsContent');
+    if (dungeonsContent) {
+        dungeonsContent.classList.remove('init-hidden');
+        dungeonsContent.style.display = 'block';
+    }
+    const prepInterface = document.getElementById('prepInterface');
+    if (prepInterface) {
+        prepInterface.classList.add('init-hidden');
+        prepInterface.style.display = 'none';
+    }
+
+    await Promise.all([initMetaTask, loadCharacters(), loadAnomalies(), loadEquipments(), loadConsumables()]);
+    await loadDungeons();
+    initDungeonTutorial();
+};
+
+window.cleanupDungeonsPage = function () {
+    if (coopLobbySSE) {
+        coopLobbySSE.close();
+        coopLobbySSE = null;
+    }
+    if (_joinLobbySSE) {
+        _joinLobbySSE.close();
+        _joinLobbySSE = null;
+    }
+    if (window.hideGlobalTooltip) {
+        window.hideGlobalTooltip(true);
+    }
+    if (window.GrimoireTutorial && typeof window.GrimoireTutorial.stop === 'function') {
+        window.GrimoireTutorial.stop();
+    }
+};
 
 
 
@@ -509,11 +559,13 @@ async function loadDungeons() {
 
             if (dungeons.length === 0) {
                 document.getElementById('noDungeonsMsg').style.display = 'block';
+                tabsHeader.classList.add('init-hidden');
                 tabsHeader.style.display = 'none';
                 document.getElementById('loadingDungeonsMsg').style.display = 'none';
                 return;
             } else {
                 document.getElementById('noDungeonsMsg').style.display = 'none';
+                tabsHeader.classList.remove('init-hidden');
                 tabsHeader.style.display = 'flex';
                 document.getElementById('loadingDungeonsMsg').style.display = 'none';
             }
@@ -1358,14 +1410,14 @@ window.clearInspectedCharacter = function() {
     const armoryBtn = document.getElementById('btnArmoryPrepLink');
     if (armoryBtn) {
         armoryBtn.classList.add('is-hidden');
-        armoryBtn.href = '/armory.html';
+        armoryBtn.href = '/armory';
     }
 };
 window.inspectCharacter = async function(id) {
     pageState.inspectedCharacterId = id;
     const armoryBtn = document.getElementById('btnArmoryPrepLink');
     if (armoryBtn) {
-        armoryBtn.href = '/armory.html?openEquip=' + id;
+        armoryBtn.href = '/armory?openEquip=' + id;
         armoryBtn.classList.remove('is-hidden');
     }
     document.querySelectorAll('.char-inspect-btn').forEach(btn => btn.classList.remove('is-inspecting'));
@@ -1584,7 +1636,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
                     <span class="material-symbols-outlined text-[0.9rem]">${icon}</span>${name}
                 </span>`;
             }).join('');
-            anomalySection.style.display = '';
+            anomalySection.style.display = 'block';
             anomalySection.innerHTML = `
                 <div class="font-semibold text-[0.8rem] text-purple-400 mb-1 flex items-center gap-1">
                     <span class="material-symbols-outlined text-[0.9rem]">auto_awesome</span> ANOMALIES TROUVABLE
@@ -1599,7 +1651,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     if (tooltipTrigger) {
         if (lootItems.length === 0) {
             tooltipTrigger.style.display = 'none';
-            tooltipTrigger.classList.add('hidden');
+            tooltipTrigger.classList.add('hidden', 'init-hidden');
             tooltipTrigger.classList.remove('flex');
             tooltipTrigger.removeAttribute('data-tooltip-html');
         } else {
@@ -1609,7 +1661,7 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
             if (dropdown) dropdown.innerHTML = tooltipContent;
 
             tooltipTrigger.style.display = 'flex';
-            tooltipTrigger.classList.remove('hidden');
+            tooltipTrigger.classList.remove('hidden', 'init-hidden');
             tooltipTrigger.classList.add('flex');
         }
     }
@@ -1647,8 +1699,15 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
 
     renderConsumablesList();
 
-    document.getElementById('dungeonsContent').style.display = 'none';
-    document.getElementById('prepInterface').style.display = 'block';
+    const dungeonsContent = document.getElementById('dungeonsContent');
+    if (dungeonsContent) {
+        dungeonsContent.style.display = 'none';
+    }
+    const prepInterface = document.getElementById('prepInterface');
+    if (prepInterface) {
+        prepInterface.classList.remove('init-hidden');
+        prepInterface.style.display = 'block';
+    }
     if (window.GrimoireTutorial && window.GrimoireTutorial.isActive() && window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') {
         setTimeout(() => { if (window.GrimoireTutorial.getCurrentStep()?.phase === 'DUNGEON') window.GrimoireTutorial.goToStepByName('DUNGEON_SELECT_HERO'); }, 80);
     }
@@ -1659,8 +1718,16 @@ window.closePrepInterface = function () {
         return;
     }
     window._isStartingCombat = false;
-    document.getElementById('prepInterface').style.display = 'none';
-    document.getElementById('dungeonsContent').style.display = 'block';
+    const prepInterface = document.getElementById('prepInterface');
+    if (prepInterface) {
+        prepInterface.classList.add('init-hidden');
+        prepInterface.style.display = 'none';
+    }
+    const dungeonsContent = document.getElementById('dungeonsContent');
+    if (dungeonsContent) {
+        dungeonsContent.classList.remove('init-hidden');
+        dungeonsContent.style.display = 'block';
+    }
     pageState.currentDungeonId = null;
     pageState.selectedCharIds = [];
     pageState.selectedConsumableIds = [];
@@ -1691,7 +1758,7 @@ window.startCombat = async function () {
     }
 
     const charIdsStr = pageState.selectedCharIds.join(',');
-    let url = `/combat.html?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}&_t=${Date.now()}`;
+    let url = `/combat?dungeonId=${pageState.currentDungeonId}&characterIds=${charIdsStr}&_t=${Date.now()}`;
     if (pageState.selectedConsumableIds.length > 0) {
         url += `&consumableIds=${pageState.selectedConsumableIds.join(',')}`;
     }
@@ -1905,8 +1972,10 @@ window.createCoopLobby = async function () {
         if (costWarning && costAmount) {
             if (window.currentDungeonEntryCost > 0) {
                 costAmount.textContent = window.currentDungeonEntryCost;
+                costWarning.classList.remove('init-hidden');
                 costWarning.style.display = 'block';
             } else {
+                costWarning.classList.add('init-hidden');
                 costWarning.style.display = 'none';
             }
         }
@@ -1919,6 +1988,7 @@ window.createCoopLobby = async function () {
         const preview = document.getElementById('lobbyGuestPreview');
         if (preview) {
             preview.innerHTML = '';
+            preview.classList.add('init-hidden');
             preview.style.display = 'none';
         }
 
@@ -1955,7 +2025,7 @@ function onLobbyReady(lobby) {
     // Courte pause puis redirect vers combat.html en tant qu'hôte
     setTimeout(() => {
         closeLobbyOverlay();
-        window.location.href = `/combat.html?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
+        window.location.href = `/combat?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
     }, 1200);
 }
 
@@ -1976,6 +2046,7 @@ function closeLobbyOverlay() {
     const preview = document.getElementById('lobbyGuestPreview');
     if (preview) {
         preview.innerHTML = '';
+        preview.classList.add('init-hidden');
         preview.style.display = 'none';
     }
 }
@@ -2091,6 +2162,7 @@ function onGuestUpdate(data) {
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">${consHtml}</div>
         </div>
     `;
+    section.classList.remove('init-hidden');
     section.style.display = 'block';
 }
 
@@ -2517,172 +2589,158 @@ window.updateJoinCharAvailability = function (info) {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function bindJoinLobbyCodeInput() {
     const input = document.getElementById('joinLobbyCodeInput');
     const infoContainer = document.getElementById('joinLobbyInfoContainer');
 
-    if (input) {
-        input.addEventListener('input', async (e) => {
-            const code = e.target.value.trim().toUpperCase();
-            if (code.length === 6) {
-                try {
-                    const res = await window.globalFetch(`/api/pve/multi/lobby/${code}/info`);
-                    if (res.ok) {
-                        const info = await res.json();
-                        window.maxSelectableJoinChars = info.availableSlots;
+    if (!input || input.dataset.boundLobbyInput === '1') return;
+    input.dataset.boundLobbyInput = '1';
 
-                        let hostHeroesHtml = '';
-                        if (info.hostHeroInfos && info.hostHeroInfos.length > 0) {
-                            const getVIcon = (nom) => {
-                                const n = nom.toLowerCase();
-                                if (n.includes('raison')) return { c: '#3b82f6', i: 'psychology' };
-                                if (n.includes('sûreté') || n.includes('surete')) return { c: '#00e5cc', i: 'water_drop' };
-                                if (n.includes('trahison')) return { c: '#ed5677', i: 'visibility_off' };
-                                if (n.includes('consolidation')) return { c: '#99674c', i: 'foundation' };
-                                if (n.includes('conviction')) return { c: '#b74c0b', i: 'volcano' };
-                                if (n.includes('création') || n.includes('creation')) return { c: '#10b981', i: 'eco' };
-                                if (n.includes('destruction')) return { c: '#ff0000', i: 'local_fire_department' };
-                                if (n.includes('violence')) return { c: '#a70740', i: 'explosion' };
-                                return { c: '#94a3b8', i: 'route' };
-                            };
-                            const getSIcon = (nom) => {
-                                const n = nom.toLowerCase();
-                                if (n.includes('esprit')) return { c: '#38bdf8', i: 'blur_on' };
-                                if (n.includes('ténèbres') || n.includes('tenebres')) return { c: '#c084fc', i: 'dark_mode' };
-                                if (n.includes('karma')) return { c: '#e7d198', i: 'all_inclusive' };
-                                return { c: '#94a3b8', i: 'star' };
-                            };
+    input.addEventListener('input', async (e) => {
+        const code = e.target.value.trim().toUpperCase();
+        if (code.length === 6) {
+            try {
+                const res = await window.globalFetch(`/api/pve/multi/lobby/${code}/info`);
+                if (res.ok) {
+                    const info = await res.json();
+                    window.maxSelectableJoinChars = info.availableSlots;
 
-                            hostHeroesHtml = '<div style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">' +
-                                '<div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em;">Héros de l\'hôte</div>' +
-                                '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' +
-                                info.hostHeroInfos.map(h => {
-                                    let iconsHtml = '';
-                                    let avatarName = '';
+                    let hostHeroesHtml = '';
+                    if (info.hostHeroInfos && info.hostHeroInfos.length > 0) {
+                        const getVIcon = (nom) => {
+                            const n = nom.toLowerCase();
+                            if (n.includes('raison')) return { c: '#3b82f6', i: 'psychology' };
+                            if (n.includes('sûreté') || n.includes('surete')) return { c: '#00e5cc', i: 'water_drop' };
+                            if (n.includes('trahison')) return { c: '#ed5677', i: 'visibility_off' };
+                            if (n.includes('consolidation')) return { c: '#99674c', i: 'foundation' };
+                            if (n.includes('conviction')) return { c: '#b74c0b', i: 'volcano' };
+                            if (n.includes('création') || n.includes('creation')) return { c: '#10b981', i: 'eco' };
+                            if (n.includes('destruction')) return { c: '#ff0000', i: 'local_fire_department' };
+                            if (n.includes('violence')) return { c: '#a70740', i: 'explosion' };
+                            return { c: '#94a3b8', i: 'route' };
+                        };
+                        const getSIcon = (nom) => {
+                            const n = nom.toLowerCase();
+                            if (n.includes('esprit')) return { c: '#38bdf8', i: 'blur_on' };
+                            if (n.includes('ténèbres') || n.includes('tenebres')) return { c: '#c084fc', i: 'dark_mode' };
+                            if (n.includes('karma')) return { c: '#e7d198', i: 'all_inclusive' };
+                            return { c: '#94a3b8', i: 'star' };
+                        };
 
-                                    if (h.voieName) {
-                                        const vi = getVIcon(h.voieName);
-                                        iconsHtml += `<span class="material-symbols-outlined" style="font-size:0.85rem; color:${vi.c};" title="${h.voieName}">${vi.i}</span>`;
-                                        const vNom = h.voieName.toLowerCase();
-                                        if (vNom.includes('consolidation')) avatarName = 'consolidation';
-                                        else if (vNom.includes('conviction')) avatarName = 'conviction';
-                                        else if (vNom.includes('création') || vNom.includes('creation')) avatarName = 'creation';
-                                        else if (vNom.includes('destruction')) avatarName = 'destruction';
-                                        else if (vNom.includes('raison')) avatarName = 'raison';
-                                        else if (vNom.includes('sûreté') || vNom.includes('surete')) avatarName = 'surete';
-                                        else if (vNom.includes('trahison')) avatarName = 'trahison';
-                                        else if (vNom.includes('violence')) avatarName = 'violence';
-                                    }
-                                    if (h.spiritualiteName) {
-                                        const si = getSIcon(h.spiritualiteName);
-                                        iconsHtml += `<span class="material-symbols-outlined" style="font-size:0.85rem; color:${si.c};" title="${h.spiritualiteName}">${si.i}</span>`;
-                                    }
+                        hostHeroesHtml = '<div style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">' +
+                            '<div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em;">Héros de l\'hôte</div>' +
+                            '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' +
+                            info.hostHeroInfos.map(h => {
+                                let iconsHtml = '';
+                                let avatarName = '';
 
-                                    let avatarHtml = `<span class="material-symbols-outlined" style="font-size:1.1rem; color:#818cf8;">person</span>`;
-                                    if (avatarName) {
-                                        avatarHtml = `<img src="/images/avatar/${avatarName}.png" alt="${avatarName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                                    }
-
-                                    return `
-                                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.75rem; border-radius:0.6rem; border:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.2); width:calc(50% - 0.2rem);">
-                                        <div style="width:2.2rem; height:2.2rem; border-radius:50%; background:rgba(99,102,241,0.2); display:flex; flex-shrink:0; align-items:center; justify-content:center;">
-                                            ${avatarHtml}
-                                        </div>
-                                        <div style="min-width:0; flex:1;">
-                                            <div style="font-weight:600; color:#e2e8f0; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:4px;">
-                                                ${h.name} ${iconsHtml}
-                                            </div>
-                                            <div style="color:#94a3b8; font-size:0.7rem;">Niv. ${h.level} &bull; ${h.healthMax} PV max</div>
-                                        </div>
-                                    </div>`;
-                                }).join('') +
-                                '</div></div>';
-                        }
-
-                                                let hostConsHtml = '';
-                        if (info.hostConsumables && info.hostConsumables.length > 0) {
-                            hostConsHtml = '<div style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">' +
-                                '<div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em;">Consomables de l\'hôte</div>' +
-                                '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' +
-                                info.hostConsumables.map(c => {
-                                    let iconName = 'inventory_2';
-                                    let iconColor = '#854c4c';
-                                    if (c.consumableCategory && window.CONSUMABLE_CATEGORIES && window.CONSUMABLE_CATEGORIES[c.consumableCategory]) {
-                                        iconName = window.CONSUMABLE_CATEGORIES[c.consumableCategory].icon;
-                                        iconColor = window.CONSUMABLE_CATEGORIES[c.consumableCategory].color;
-                                    }
-                                    return `
-                                        <span style="background:rgba(0,0,0,0.2); border:1px solid ${iconColor}40; border-radius:0.5rem; padding:0.3rem 0.6rem; font-size:0.8rem; color:#e2e8f0; display:inline-flex; align-items:center; gap:0.4rem;">
-                                            <span class="material-symbols-outlined" style="font-size:1rem; color:${iconColor};">${iconName}</span>
-                                            ${c.name} <span style="font-weight:700; color:#10b981;">x${c.quantity}</span>
-                                        </span>
-                                    `;
-                                }).join('') +
-                                '</div></div>';
-                        }
-
-                        infoContainer.style.display = 'block';
-                        infoContainer.innerHTML = `
-                            <div style="font-weight:600; color:#e2e8f0; margin-bottom:0.25rem;">Hôte : <span style="color:#38bdf8;">${info.hostUsername}</span></div>
-                            <div style="color:#94a3b8; font-size:0.85rem; margin-bottom:0.5rem;">Donjon : ${info.dungeonName} (Niv. ${info.recommendedLevel})</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-                                <span style="color:#cbd5e1;">Héros maximum : ${info.maxHeroes}</span>
-                                <span style="color:${info.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight:600;">Places restantes : ${info.availableSlots}</span>
-                            </div>
-                            ${hostHeroesHtml}
-                            ${hostConsHtml}
-                        `;
-
-                        window.updateJoinCharAvailability(info);
-                        _setJoinCharSelectEnabled(true);
-
-                        // Auto-unselect characters if we are over the new limit
-                        while (joinSelectedCharIds.length > window.maxSelectableJoinChars) {
-                            const removedId = joinSelectedCharIds[joinSelectedCharIds.length - 1];
-                            window.toggleJoinChar(removedId);
-                        }
-
-                        // Stocker le multiId pour guest-update en temps réel
-                        try {
-                            const findRes = await window.globalFetch(`/api/pve/multi/find/${code}`);
-                            if (findRes.ok) {
-                                const lobby = await findRes.json();
-                                _joinLobbyMultiId = lobby.multiSessionId;
-                                _joinLobbyHostHeroCount = lobby.hostCharacterIds ? lobby.hostCharacterIds.length : 0;
-                                                                _joinLobbyHostConsumableWeight = (info.hostConsumables || [])
-                                    .reduce((sum, c) => sum + (c.weight || 0) * (c.quantity || 1), 0);
-
-                                if (_joinLobbySSE) {
-                                    _joinLobbySSE.close();
+                                if (h.voieName) {
+                                    const vi = getVIcon(h.voieName);
+                                    iconsHtml += `<span class="material-symbols-outlined" style="font-size:0.85rem; color:${vi.c};" title="${h.voieName}">${vi.i}</span>`;
+                                    const vNom = h.voieName.toLowerCase();
+                                    if (vNom.includes('consolidation')) avatarName = 'consolidation';
+                                    else if (vNom.includes('conviction')) avatarName = 'conviction';
+                                    else if (vNom.includes('création') || vNom.includes('creation')) avatarName = 'creation';
+                                    else if (vNom.includes('destruction')) avatarName = 'destruction';
+                                    else if (vNom.includes('raison')) avatarName = 'raison';
+                                    else if (vNom.includes('sûreté') || vNom.includes('surete')) avatarName = 'surete';
+                                    else if (vNom.includes('trahison')) avatarName = 'trahison';
+                                    else if (vNom.includes('violence')) avatarName = 'violence';
                                 }
-                                _joinLobbySSE = new EventSource(`/api/pve/multi/${_joinLobbyMultiId}/events`);
-                                _joinLobbySSE.addEventListener('lobby-cancelled', () => {
-                                    window.showNotif('Lobby annulé par l\'hôte.', true);
-                                    window.closeJoinLobbyModal();
-                                });
-                                _joinLobbySSE.onerror = () => {
-                                    if (_joinLobbySSE) _joinLobbySSE.close();
-                                };
-                            }
-                        } catch (_) {}
+                                if (h.spiritualiteName) {
+                                    const si = getSIcon(h.spiritualiteName);
+                                    iconsHtml += `<span class="material-symbols-outlined" style="font-size:0.85rem; color:${si.c};" title="${h.spiritualiteName}">${si.i}</span>`;
+                                }
 
-                    } else {
-                        infoContainer.style.display = 'none';
-                        _joinLobbyMultiId = null;
-                        _setJoinCharSelectEnabled(false);
-                        _clearJoinSelections();
-                        _joinLobbyHostHeroCount = 0;
-                        _joinLobbyHostConsumableWeight = 0;
-                        window.maxSelectableJoinChars = 4;
-                        window.updateJoinCharAvailability(null);
-                        const msgContainer = document.getElementById('joinLobbyErrorMsg');
-                        if (msgContainer) {
-                            msgContainer.textContent = "Lobby introuvable.";
-                            msgContainer.style.display = 'block';
-                        }
+                                let avatarHtml = `<span class="material-symbols-outlined" style="font-size:1.1rem; color:#818cf8;">person</span>`;
+                                if (avatarName) {
+                                    avatarHtml = `<img src="/images/avatar/${avatarName}.png" alt="${avatarName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                                }
+
+                                return `
+                                <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.75rem; border-radius:0.6rem; border:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.2); width:calc(50% - 0.2rem);">
+                                    <div style="width:2.2rem; height:2.2rem; border-radius:50%; background:rgba(99,102,241,0.2); display:flex; flex-shrink:0; align-items:center; justify-content:center;">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div style="min-width:0; flex:1;">
+                                        <div style="font-weight:600; color:#e2e8f0; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:4px;">
+                                            ${h.name} ${iconsHtml}
+                                        </div>
+                                        <div style="color:#94a3b8; font-size:0.7rem;">Niv. ${h.level} &bull; ${h.healthMax} PV max</div>
+                                    </div>
+                                </div>`;
+                            }).join('') +
+                            '</div></div>';
                     }
-                } catch (err) {
-                    console.error("Erreur lors de la récupération des infos du lobby", err);
+
+                    let hostConsHtml = '';
+                    if (info.hostConsumables && info.hostConsumables.length > 0) {
+                        hostConsHtml = '<div style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">' +
+                            '<div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em;">Consomables de l\'hôte</div>' +
+                            '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' +
+                            info.hostConsumables.map(c => {
+                                let iconName = 'inventory_2';
+                                let iconColor = '#854c4c';
+                                if (c.consumableCategory && window.CONSUMABLE_CATEGORIES && window.CONSUMABLE_CATEGORIES[c.consumableCategory]) {
+                                    iconName = window.CONSUMABLE_CATEGORIES[c.consumableCategory].icon;
+                                    iconColor = window.CONSUMABLE_CATEGORIES[c.consumableCategory].color;
+                                }
+                                return `
+                                    <span style="background:rgba(0,0,0,0.2); border:1px solid ${iconColor}40; border-radius:0.5rem; padding:0.3rem 0.6rem; font-size:0.8rem; color:#e2e8f0; display:inline-flex; align-items:center; gap:0.4rem;">
+                                        <span class="material-symbols-outlined" style="font-size:1rem; color:${iconColor};">${iconName}</span>
+                                        ${c.name} <span style="font-weight:700; color:#10b981;">x${c.quantity}</span>
+                                    </span>
+                                `;
+                            }).join('') +
+                            '</div></div>';
+                    }
+
+                    infoContainer.style.display = 'block';
+                    infoContainer.innerHTML = `
+                        <div style="font-weight:600; color:#e2e8f0; margin-bottom:0.25rem;">Hôte : <span style="color:#38bdf8;">${info.hostUsername}</span></div>
+                        <div style="color:#94a3b8; font-size:0.85rem; margin-bottom:0.5rem;">Donjon : ${info.dungeonName} (Niv. ${info.recommendedLevel})</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                            <span style="color:#cbd5e1;">Héros maximum : ${info.maxHeroes}</span>
+                            <span style="color:${info.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight:600;">Places restantes : ${info.availableSlots}</span>
+                        </div>
+                        ${hostHeroesHtml}
+                        ${hostConsHtml}
+                    `;
+
+                    window.updateJoinCharAvailability(info);
+                    _setJoinCharSelectEnabled(true);
+
+                    // Auto-unselect characters if we are over the new limit
+                    while (joinSelectedCharIds.length > window.maxSelectableJoinChars) {
+                        const removedId = joinSelectedCharIds[joinSelectedCharIds.length - 1];
+                        window.toggleJoinChar(removedId);
+                    }
+
+                    // Stocker le multiId pour guest-update en temps réel
+                    try {
+                        const findRes = await window.globalFetch(`/api/pve/multi/find/${code}`);
+                        if (findRes.ok) {
+                            const lobby = await findRes.json();
+                            _joinLobbyMultiId = lobby.multiSessionId;
+                            _joinLobbyHostHeroCount = lobby.hostCharacterIds ? lobby.hostCharacterIds.length : 0;
+                            _joinLobbyHostConsumableWeight = (info.hostConsumables || [])
+                                .reduce((sum, c) => sum + (c.weight || 0) * (c.quantity || 1), 0);
+
+                            if (_joinLobbySSE) {
+                                _joinLobbySSE.close();
+                            }
+                            _joinLobbySSE = new EventSource(`/api/pve/multi/${_joinLobbyMultiId}/events`);
+                            _joinLobbySSE.addEventListener('lobby-cancelled', () => {
+                                window.showNotif('Lobby annulé par l\'hôte.', true);
+                                window.closeJoinLobbyModal();
+                            });
+                            _joinLobbySSE.onerror = () => {
+                                if (_joinLobbySSE) _joinLobbySSE.close();
+                            };
+                        }
+                    } catch (_) {}
+
+                } else {
                     infoContainer.style.display = 'none';
                     _joinLobbyMultiId = null;
                     _setJoinCharSelectEnabled(false);
@@ -2697,7 +2755,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         msgContainer.style.display = 'block';
                     }
                 }
-            } else {
+            } catch (err) {
+                console.error("Erreur lors de la récupération des infos du lobby", err);
                 infoContainer.style.display = 'none';
                 _joinLobbyMultiId = null;
                 _setJoinCharSelectEnabled(false);
@@ -2706,10 +2765,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 _joinLobbyHostConsumableWeight = 0;
                 window.maxSelectableJoinChars = 4;
                 window.updateJoinCharAvailability(null);
+                const msgContainer = document.getElementById('joinLobbyErrorMsg');
+                if (msgContainer) {
+                    msgContainer.textContent = "Lobby introuvable.";
+                    msgContainer.style.display = 'block';
+                }
             }
-        });
-    }
-});
+        } else {
+            infoContainer.style.display = 'none';
+            _joinLobbyMultiId = null;
+            _setJoinCharSelectEnabled(false);
+            _clearJoinSelections();
+            _joinLobbyHostHeroCount = 0;
+            _joinLobbyHostConsumableWeight = 0;
+            window.maxSelectableJoinChars = 4;
+            window.updateJoinCharAvailability(null);
+        }
+    });
+}
 
 
 
@@ -2755,7 +2828,7 @@ window.submitJoinLobby = async function () {
         const result = await joinRes.json();
 
         // 3. Redirect vers combat.html en tant que guest
-        window.location.href = `/combat.html?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;
+        window.location.href = `/combat?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;
     } catch (err) {
         console.error(err);
         window.showNotif(err.message || 'Erreur serveur.', true);

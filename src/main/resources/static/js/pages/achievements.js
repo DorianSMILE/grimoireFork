@@ -10,7 +10,10 @@ const pageState = {
     selectedTitleForEquip: null
 };
 
-window.addEventListener('authLoaded', () => {
+let _docClickCloseTitleSelect = null;
+
+function onAuthLoadedAchievements() {
+    if (!document.getElementById('achievementsGrid')) return;
     if (!window.currentUser) {
         const grid = document.getElementById('achievementsGrid');
         if (grid) {
@@ -19,7 +22,28 @@ window.addEventListener('authLoaded', () => {
         return;
     }
     loadAchievements();
-});
+}
+
+window.addEventListener('authLoaded', onAuthLoadedAchievements);
+
+window.initAchievementsPage = async function () {
+    pageState.activeCategory = 'ALL';
+    window.removeEventListener('authLoaded', onAuthLoadedAchievements);
+    window.addEventListener('authLoaded', onAuthLoadedAchievements);
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else {
+        onAuthLoadedAchievements();
+    }
+};
+
+window.cleanupAchievementsPage = function () {
+    window.removeEventListener('authLoaded', onAuthLoadedAchievements);
+    if (_docClickCloseTitleSelect) {
+        document.removeEventListener('click', _docClickCloseTitleSelect);
+        _docClickCloseTitleSelect = null;
+    }
+};
 
 async function loadAchievements() {
     const grid = document.getElementById('achievementsGrid');
@@ -61,14 +85,18 @@ function initTitleCustomSelectEvents() {
             const isOpen = wrapper.classList.toggle('open');
             if (card) card.classList.toggle('has-dropdown-open', isOpen);
         });
-
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                wrapper.classList.remove('open');
-                if (card) card.classList.remove('has-dropdown-open');
-            }
-        });
     }
+
+    if (_docClickCloseTitleSelect) {
+        document.removeEventListener('click', _docClickCloseTitleSelect);
+    }
+    _docClickCloseTitleSelect = (e) => {
+        if (!wrapper.contains(e.target)) {
+            wrapper.classList.remove('open');
+            if (card) card.classList.remove('has-dropdown-open');
+        }
+    };
+    document.addEventListener('click', _docClickCloseTitleSelect);
 }
 
 function renderTitleCustomSelect() {
@@ -197,7 +225,7 @@ function renderHeader() {
         ? Math.round((pageState.totalUnlocked / pageState.totalCount) * 100)
         : 0;
 
-    if (progressBar) progressBar.className = `kpi-progress-fill w-pct-${percent}`;
+    if (progressBar) progressBar.className = `achievements-progress-fill kpi-progress-fill w-pct-${percent}`;
     if (pctLabel) pctLabel.textContent = `${percent}% complété`;
 
     // 2. Active Title & Selector

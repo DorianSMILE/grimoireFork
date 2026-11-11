@@ -1,23 +1,31 @@
 // ===== Armory Page JavaScript =====
 
 function applyRbac() {
+    if (!document.getElementById('charFormPanel')) return;
+
+    const baseStats = document.getElementById('baseStatsSection');
+    const xpField = document.getElementById('charExperience');
+    const spiritExpField = document.getElementById('charSpiritExperience');
+    const eqCreateSection = document.querySelector('.equip-create-section');
+    const searchOwnerContainer = document.getElementById('searchOwnerContainer');
+
     if (window.isAdmin) {
-        const baseStats = document.getElementById('baseStatsSection');
         if (baseStats) baseStats.classList.remove('hidden');
-
-        const xpField = document.getElementById('charExperience');
         if (xpField && xpField.parentElement) xpField.parentElement.classList.remove('hidden');
-
-        const spiritExpField = document.getElementById('charSpiritExperience');
         if (spiritExpField && spiritExpField.parentElement) spiritExpField.parentElement.classList.remove('hidden');
-
-        const eqCreateSection = document.querySelector('.equip-create-section');
         if (eqCreateSection) eqCreateSection.classList.remove('hidden');
+        if (searchOwnerContainer) searchOwnerContainer.classList.remove('hidden');
+    } else {
+        if (baseStats) baseStats.classList.add('hidden');
+        if (xpField && xpField.parentElement) xpField.parentElement.classList.add('hidden');
+        if (spiritExpField && spiritExpField.parentElement) spiritExpField.parentElement.classList.add('hidden');
+        if (eqCreateSection) eqCreateSection.classList.add('hidden');
+        if (searchOwnerContainer) searchOwnerContainer.classList.add('hidden');
     }
 
     // Re-render characters to apply button visibility rules
     if (pageState.personnages.length > 0) {
-        updateCharsList();
+        renderPersonnages();
     }
 }
 window.addEventListener('authLoaded', applyRbac);
@@ -228,7 +236,7 @@ async function submitPersonnage() {
             if (data.redirectToDungeonTutorial) {
                 if (window.GrimoireTutorial) window.GrimoireTutorial.stop();
                 if (window.currentUser) window.currentUser.tutorialPhase = 'DUNGEON';
-                setTimeout(() => { window.location.href = '/dungeons.html?tutorial=1'; }, 650);
+                setTimeout(() => { window.location.href = '/dungeons?tutorial=1'; }, 650);
                 return;
             }
             resetForm(); await loadPersonnages();
@@ -969,6 +977,7 @@ function editPersonnage(id) {
     document.getElementById('cancelBtn').classList.add('inline-flex');
 
     updateSubmitButtonState();
+    applyVoieBaseStats(p.voie ? p.voie.nom : null);
     if (window.updateArmoryVoieSpider) {
         window.updateArmoryVoieSpider(p.voie ? p.voie.id : null, p.spiritualite ? p.spiritualite.id : null);
     }
@@ -1011,6 +1020,7 @@ function resetForm() {
     if (cvIcon) cvIcon.classList.add('hidden');
     const csIcon = document.getElementById('charSpiritInfoIcon');
     if (csIcon) csIcon.classList.add('hidden');
+    applyVoieBaseStats(null);
     if (window.updateArmoryVoieSpider) {
         window.updateArmoryVoieSpider(null);
     }
@@ -1038,97 +1048,94 @@ document.addEventListener('change', (e) => {
 
 // ===== Init =====
 
-window.addEventListener('DOMContentLoaded', async () => {
-    if (window.initAppMeta) await window.initAppMeta();
+function applyVoieBaseStats(voieNom) {
+    function buildStatHtml(label, valStr, icon, baseColor) {
+        const val = parseInt(valStr.replace('+', ''));
+        const isPos = val > 0;
+        const valColor = isPos ? '#10b981' : '#ef4444';
+        return `
+            <div class="flex-center justify-between px-3 py-2 bg-slate-900 rounded-md">
+                <div class="flex-center gap-2 text-slate-300">
+                    <span class="material-symbols-outlined text-lg" style="color: ${baseColor};">${icon}</span>
+                    ${label}
+                </div>
+                <div class="font-semibold" style="color: ${valColor};">${valStr}</div>
+            </div>
+        `;
+    }
 
+    let diffHtml = '<span class="font-italic text-muted text-sm">Sélectionnez une voie pour voir les effets.</span>';
+    // Statistiques par défaut
+    let stats = {
+        charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
+        charArmor: 5, charResistance: 5, charSpeed: 1, charCrit: 5,
+        charRegenHp: 2, charRegenMana: 4
+    };
 
-
-    const cvInput = document.getElementById('charVoie');
-    if (cvInput) {
-        function applyVoieBaseStats(voieNom) {
-            function buildStatHtml(label, valStr, icon, baseColor) {
-                const val = parseInt(valStr.replace('+', ''));
-                const isPos = val > 0;
-                const valColor = isPos ? '#10b981' : '#ef4444';
-                return `
-                    <div class="flex-center justify-between px-3 py-2 bg-slate-900 rounded-md">
-                        <div class="flex-center gap-2 text-slate-300">
-                            <span class="material-symbols-outlined text-lg" style="color: ${baseColor};">${icon}</span>
-                            ${label}
-                        </div>
-                        <div class="font-semibold" style="color: ${valColor};">${valStr}</div>
-                    </div>
-                `;
-            }
-
-            let diffHtml = '<span class="font-italic text-muted text-sm">Sélectionnez une voie pour voir les effets.</span>';
-            // Statistiques par défaut
-            let stats = {
-                charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
-                charArmor: 5, charResistance: 5, charSpeed: 1, charCrit: 5,
-                charRegenHp: 2, charRegenMana: 4
-            };
-
-            if (voieNom) {
-                diffHtml = "";
-                if (voieNom.includes('Raison')) {
-                    stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
-                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-                    diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
-                    diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
-                } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
-                    stats.charMana = 130; stats.charResistance = 8; stats.charRegenMana = 6;
-                    diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
-                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-                    diffHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', '#38bdf8');
-                } else if (voieNom.includes('Trahison')) {
-                    stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
-                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-                    diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
-                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
-                } else if (voieNom.includes('Consolidation')) {
-                    stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
-                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
-                    diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-                    diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
-                } else if (voieNom.includes('Conviction')) {
-                    stats.charRegenMana = 25; stats.charHp = 90; stats.charPower = 11;
-                    diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-                    diffHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', '#38bdf8');
-                } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
-                    stats.charHp = 120; stats.charArmor = 8;
-                    diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-                    diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
-                } else if (voieNom.includes('Destruction')) {
-                    stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
-                    diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
-                    diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
-                    diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
-                    diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
-                    diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
-                } else if (voieNom.includes('Violence')) {
-                    stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
-                    diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-                    diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
-                    diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
-                    diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
-                    diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
-                }
-            }
-
-            const diffEl = document.getElementById('voieStatsDiff');
-            if (diffEl) diffEl.innerHTML = diffHtml;
-
-            if (pageState.editingId) return; // Ne pas écraser les stats en mode édition
-
-            // Mise à jour des champs
-            for (const [key, value] of Object.entries(stats)) {
-                const el = document.getElementById(key);
-                if (el) el.value = value;
-            }
+    if (voieNom) {
+        diffHtml = "";
+        if (voieNom.includes('Raison')) {
+            stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
+            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+            diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
+            diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
+        } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
+            stats.charMana = 130; stats.charResistance = 8; stats.charRegenMana = 6;
+            diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
+            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+            diffHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', '#38bdf8');
+        } else if (voieNom.includes('Trahison')) {
+            stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
+            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+            diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
+            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+        } else if (voieNom.includes('Consolidation')) {
+            stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
+            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
+            diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
+        } else if (voieNom.includes('Conviction')) {
+            stats.charRegenMana = 25; stats.charHp = 90; stats.charPower = 11;
+            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
+            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+            diffHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', '#38bdf8');
+        } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
+            stats.charHp = 120; stats.charArmor = 8;
+            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
+            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+        } else if (voieNom.includes('Destruction')) {
+            stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
+            diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
+            diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
+            diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
+            diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
+            diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
+        } else if (voieNom.includes('Violence')) {
+            stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
+            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
+            diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
+            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+            diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
+            diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
         }
+    }
 
+    const diffEl = document.getElementById('voieStatsDiff');
+    if (diffEl) diffEl.innerHTML = diffHtml;
+
+    if (pageState.editingId) return; // Ne pas écraser les stats en mode édition
+
+    // Mise à jour des champs
+    for (const [key, value] of Object.entries(stats)) {
+        const el = document.getElementById(key);
+        if (el) el.value = value;
+    }
+}
+
+function bindArmorySelectListeners() {
+    const cvInput = document.getElementById('charVoie');
+    if (cvInput && !cvInput.dataset.boundArmoryChange) {
+        cvInput.dataset.boundArmoryChange = 'true';
         cvInput.addEventListener('change', (e) => {
             const vId = e.target.value;
             const iconEl = document.getElementById('charVoieInfoIcon');
@@ -1172,7 +1179,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     const csInput = document.getElementById('charSpirit');
-    if (csInput) {
+    if (csInput && !csInput.dataset.boundArmoryChange) {
+        csInput.dataset.boundArmoryChange = 'true';
         csInput.addEventListener('change', (e) => {
             const sId = e.target.value;
             const iconEl = document.getElementById('charSpiritInfoIcon');
@@ -1217,19 +1225,29 @@ window.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+}
 
+async function initArmoryPage() {
+    pageState.editingId = null;
+    pageState.equipModalPersoId = null;
 
-    await fetchMeta();
-});
+    if (window.initGlobalCustomSelect) {
+        window.initGlobalCustomSelect();
+    }
+    bindArmorySelectListeners();
 
-window.addEventListener('authLoaded', async () => {
-    const searchOwnerContainer = document.getElementById('searchOwnerContainer');
-    if (searchOwnerContainer) {
-        if (window.isAdmin) searchOwnerContainer.classList.remove('hidden');
-        else searchOwnerContainer.classList.add('hidden');
+    if (window.initAppMeta) {
+        await window.initAppMeta();
     }
 
-    await Promise.all([loadAllEquipments(), loadPersonnages()]);
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    }
+
+    applyRbac();
+
+    await Promise.all([fetchMeta(), loadAllEquipments()]);
+    await loadPersonnages();
 
     const urlParams = new URLSearchParams(window.location.search);
     const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
@@ -1240,10 +1258,7 @@ window.addEventListener('authLoaded', async () => {
     }
 
     initArmoryTutorial();
-
-});
-
-;
+}
 
 window.hideEqTooltip = function () {
     const tooltip = document.getElementById('globalSpellTooltip');
@@ -1294,8 +1309,8 @@ function initArmoryTutorial() {
             resolveTarget: (step) => {
                 if (step.name === 'ARMORY_PROFILE') {
                     const spider = document.getElementById('armorySpiderSection');
-                    if (spider && !spider.classList.contains('hidden')) return spider;
-                    return document.getElementById('formPanel');
+                    if (spider && !spider.classList.contains('hidden') && !spider.classList.contains('is-hidden')) return spider;
+                    return document.getElementById('charFormPanel') || document.getElementById('formPanel');
                 }
                 return document.querySelector(step.targetSelector);
             },
@@ -1330,8 +1345,19 @@ function initArmoryTutorial() {
     }
 }
 
-function _noopArmoryEnd() {
-};
+window.submitPersonnage = submitPersonnage;
+window.resetForm = resetForm;
+window.loadPersonnages = loadPersonnages;
+window.filterPersonnages = filterPersonnages;
+window.openEquipModal = openEquipModal;
+window.closeEquipModal = closeEquipModal;
+window.editPersonnage = editPersonnage;
+window.equipItem = equipItem;
+window.unequipItem = unequipItem;
+window.deleteEquipment = deleteEquipment;
+window.getVoieInfo = getVoieInfo;
+window.getSpiritInfo = getSpiritInfo;
+window.initArmoryPage = initArmoryPage;
 
 
 

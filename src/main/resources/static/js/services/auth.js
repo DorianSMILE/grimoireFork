@@ -3,19 +3,23 @@ window.initAppMeta = async function () {
     return initMeta();
 };
 
-const isDungeonsPage = window.location.pathname.includes('/dungeons.html');
-if (isDungeonsPage) {
+function isOnDungeonsPage() {
+    return window.location.pathname === '/dungeons' || window.location.pathname.includes('/dungeons.html');
+}
+if (isOnDungeonsPage()) {
     localStorage.removeItem('activeCombatId');
 }
 
 const activeCombatId = localStorage.getItem('activeCombatId');
 if (activeCombatId && 
-    !window.location.pathname.includes('/combat.html') && 
+    !window.location.pathname.includes('/combat') && 
     !window.location.pathname.includes('/login.html') && 
+    window.location.pathname !== '/login' &&
     !window.location.pathname.includes('/register.html') &&
-    !isDungeonsPage) {
+    window.location.pathname !== '/register' &&
+    !isOnDungeonsPage()) {
     console.warn('Active combat session found in localStorage, redirecting to combat page.');
-    window.location.href = '/combat.html';
+    window.location.href = '/combat';
 }
 
 function isValidToken(token) {
@@ -34,12 +38,12 @@ const isAuthPage = currentPath.includes('/login.html') || currentPath.includes('
 if (!isAuthPage) {
     const isLikely = localStorage.getItem('isLikelyLoggedIn') === 'true';
     if (!isLikely || !accessToken) {
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     }
 } else {
     const isLikely = localStorage.getItem('isLikelyLoggedIn') === 'true';
     if (isLikely && isValidToken(accessToken)) {
-        window.location.replace('/armory.html');
+        window.location.replace('/armory');
     }
 }
 
@@ -146,7 +150,7 @@ window.globalFetch = async function (url, options = {}) {
                     localStorage.removeItem('isLikelyLoggedIn');
                     if (!window.isRedirectingToLogin) {
                         window.isRedirectingToLogin = true;
-                        window.location.href = '/login.html';
+                        window.location.href = '/login';
                     }
                     await new Promise(() => {}); // Halt execution
                 }
@@ -168,7 +172,7 @@ window.globalFetch = async function (url, options = {}) {
             let isInCombat = errorMsg && errorMsg.toLowerCase().includes('combat');
 
             // If error message was generic (e.g. Spring Boot default "Forbidden"), query /api/pve/combat/current
-            if (!isInCombat && isValidToken(accessToken) && !url.includes('/api/pve/combat/') && !isDungeonsPage) {
+            if (!isInCombat && isValidToken(accessToken) && !url.includes('/api/pve/combat/') && !isOnDungeonsPage()) {
                 try {
                     const curRes = await fetch('/api/pve/combat/current', {
                         headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -183,12 +187,12 @@ window.globalFetch = async function (url, options = {}) {
                 } catch (e) {}
             }
 
-            if (isInCombat && !isDungeonsPage) {
+            if (isInCombat && !isOnDungeonsPage()) {
                 console.warn('Redirecting to combat page due to active combat session', url);
                 if (parsedData && parsedData.activeCombatSessionId) {
                     localStorage.setItem('activeCombatId', parsedData.activeCombatSessionId);
                 }
-                window.location.href = '/combat.html';
+                window.location.href = '/combat';
                 await new Promise(() => {}); // Halt execution
             }
 
@@ -204,7 +208,7 @@ window.globalFetch = async function (url, options = {}) {
                 localStorage.removeItem('isLikelyLoggedIn');
                 if (!window.isRedirectingToLogin) {
                     window.isRedirectingToLogin = true;
-                    window.location.href = '/login.html';
+                    window.location.href = '/login';
                 }
                 await new Promise(() => {}); // Halt execution
             }
@@ -268,14 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('grimoire_html_cache_v9', '1');
             sessionStorage.removeItem('grimoire_app_meta_v1');
             sessionStorage.removeItem('grimoire_app_meta_v2');
-            ['/dungeons.html', '/armory.html', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+            ['/dungeons', '/armory', '/shop', '/combat', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
                 fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
             });
         }
     } catch (_) {}
 
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
+    const isReactAuthRoute = window.location.pathname === '/login' || window.location.pathname === '/register';
+    const loginForm = !isReactAuthRoute ? document.getElementById('loginForm') : null;
+    const registerForm = !isReactAuthRoute ? document.getElementById('registerForm') : null;
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -314,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const sessionData = await currentSessionRes.json();
                             if (sessionData && sessionData.sessionId) {
                                 localStorage.setItem('activeCombatId', sessionData.sessionId);
-                                window.location.href = '/combat.html';
+                                window.location.href = '/combat';
                                 return;
                             }
                         }
@@ -322,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn("Could not check active combat session on login", e);
                     }
                     
-                    window.location.href = '/armory.html';
+                    window.location.href = '/armory';
                 }
             } catch (err) {
                 errorDiv.innerText = "Erreur de communication avec le serveur";
@@ -370,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     successDiv.innerText = data.message || "Inscription réussie ! Redirection vers l'armurerie...";
                     successDiv.style.display = 'block';
                     setTimeout(() => {
-                        window.location.href = '/armory.html';
+                        window.location.href = '/armory';
                     }, 1000);
                 }
             } catch (err) {
@@ -394,10 +399,10 @@ window.checkAuthStatus = async function checkAuthStatus() {
         window.isAdmin = false;
         window.dispatchEvent(new Event('authLoaded'));
         container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login.html">
+            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
+            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
                 S'inscrire
             </a>
         `;
@@ -414,14 +419,16 @@ window.checkAuthStatus = async function checkAuthStatus() {
             window.dispatchEvent(new Event('authLoaded'));
 
             // Redirection automatique si une session de combat est toujours en cours (pré-calculé par /api/auth/me)
-            if (!window.location.pathname.includes('/combat.html') &&
+            if (!window.location.pathname.includes('/combat') &&
                 !window.location.pathname.includes('/login.html') &&
+                window.location.pathname !== '/login' &&
                 !window.location.pathname.includes('/register.html') &&
-                !isDungeonsPage &&
+                window.location.pathname !== '/register' &&
+                !isOnDungeonsPage() &&
                 data.activeCombatSessionId) {
-                console.warn("Active combat session found via /api/auth/me, redirecting to combat.html");
+                console.warn("Active combat session found via /api/auth/me, redirecting to /combat");
                 localStorage.setItem('activeCombatId', data.activeCombatSessionId);
-                window.location.href = '/combat.html';
+                window.location.href = '/combat';
                 return;
             }
             
@@ -430,7 +437,7 @@ window.checkAuthStatus = async function checkAuthStatus() {
             const titleHtml = data.activeTitle ? `<span class="nav-active-title" title="Titre équipé : ${data.activeTitle}">« ${data.activeTitle} »</span>` : '';
             
             container.innerHTML = `
-                <a class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all" style="position:relative; flex-shrink: 0;" href="/secrets.html" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
+                <a class="flex-center-gap no-underline text-sm px-2 py-1 rounded transition-all" style="position:relative; flex-shrink: 0;" href="/secrets" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">
                     <span class="material-symbols-outlined text-lg text-success">account_circle</span>
                     <div class="nav-user-col">
                         <span class="nav-user-name">${data.username}</span>
@@ -486,10 +493,10 @@ window.checkAuthStatus = async function checkAuthStatus() {
         window.isAdmin = false;
         window.dispatchEvent(new Event('authLoaded'));
         container.innerHTML = `
-            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login.html">
+            <a class="font-medium text-info no-underline text-sm px-2 py-1 rounded bg-info-glass transition-all" href="/login">
                 Se connecter
             </a>
-            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register.html">
+            <a class="font-medium text-success no-underline text-sm px-2 py-1 rounded bg-success-glass transition-all" href="/register">
                 S'inscrire
             </a>
         `;
@@ -514,10 +521,10 @@ window.logout = async function () {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('activeCombatId');
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     } catch (e) {
         console.error("Logout failed", e);
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     }
 };
 
@@ -537,9 +544,9 @@ window.addEventListener('authLoaded', () => {
     const hasAlchemy = window.currentUser && window.currentUser.unlockedAlchemy;
     const hasShop = window.currentUser && window.currentUser.unlockedShop;
 
-    document.querySelectorAll('.nav-vault').forEach(el => applyFeatureLock(el, hasVault, 'Coffres', 50, 'vault', '/vault.html'));
-    document.querySelectorAll('.nav-alchemy').forEach(el => applyFeatureLock(el, hasAlchemy, 'Alchimie', 150, 'alchemy', '/alchemy.html'));
-    document.querySelectorAll('.nav-shop').forEach(el => applyFeatureLock(el, hasShop, 'Boutique', 75, 'shop', '/shop.html'));
+    document.querySelectorAll('.nav-vault').forEach(el => applyFeatureLock(el, hasVault, 'Coffres', 50, 'vault', '/vault'));
+    document.querySelectorAll('.nav-alchemy').forEach(el => applyFeatureLock(el, hasAlchemy, 'Alchimie', 150, 'alchemy', '/alchemy'));
+    document.querySelectorAll('.nav-shop').forEach(el => applyFeatureLock(el, hasShop, 'Boutique', 75, 'shop', '/shop'));
 
     const huntingBadge = document.getElementById('navHuntingBadge');
     if (huntingBadge) {

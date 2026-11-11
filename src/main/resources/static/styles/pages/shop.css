@@ -42,13 +42,27 @@
     min-height: 380px;
 }
 
-.vault-main {
+.vault-main.shop-main {
+    width: fit-content;
+    max-width: min(1600px, 100%);
     padding: 2rem;
-    max-width: 1600px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+}
+
+.shop-level-badge {
+    display: none;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    font-weight: bold;
+    align-items: center;
+    gap: 4px;
 }
 
 /* ======================================================

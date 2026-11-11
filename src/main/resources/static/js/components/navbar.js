@@ -10,15 +10,16 @@ function injectSpeculationRules() {
             {
                 source: 'list',
                 urls: [
-                    '/',
-                    '/armory.html',
-                    '/dungeons.html',
-                    '/vault.html',
-                    '/shop.html',
-                    '/alchemy.html',
-                    '/hunting.html',
-                    '/achievements.html',
-                    '/secrets.html'
+                    '/grimoire',
+                    '/armory',
+                    '/dungeons',
+                    '/vault',
+                    '/shop',
+                    '/alchemy',
+                    '/hunting',
+                    '/achievements',
+                    '/secrets',
+                    '/dungeon-stats'
                 ],
                 eagerness: 'moderate'
             }
@@ -46,6 +47,7 @@ class AppNavbar extends HTMLElement {
             'grimoire': { icon: 'auto_awesome', cls: 'logo-grimoire', title: 'Grimoire', subtitle: 'Ne pas prononcer à voix haute le nom des sorts...' },
             'armory': { icon: 'shield', cls: 'logo-armory', title: 'Armurerie', subtitle: 'Préparez votre équipement...' },
             'dungeon': { icon: 'swords', cls: 'logo-dungeon', title: 'Donjons', subtitle: 'Préparez-vous au combat...' },
+            'dungeons': { icon: 'swords', cls: 'logo-dungeon', title: 'Donjons', subtitle: 'Préparez-vous au combat...' },
             'vault': { icon: 'money_bag', cls: 'logo-vault', title: 'Coffres', subtitle: 'Un butin bien mérité.' },
             'shop': { icon: 'storefront', cls: 'logo-shop', title: 'Boutique', subtitle: "Touché c'est acheté !" },
             'alchemy': { icon: 'science', cls: 'logo-alchemy', title: 'Alchimie', subtitle: 'Mélangez vos ingrédients...' },
@@ -73,39 +75,39 @@ class AppNavbar extends HTMLElement {
             </div>
             <div class="header-actions">
                 
-                <a href="/" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}">
+                <a href="/grimoire" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">auto_awesome</span> Grimoire
                 </a>
-                <a href="/armory.html" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}" style="position:relative;">
+                <a href="/armory" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">shield</span> Armurerie
                     <span id="navArmoryBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/dungeons.html" class="top-nav-link nav-dungeon ${activePage === 'dungeon' ? 'active' : ''}" style="position:relative;">
+                <a href="/dungeons" class="top-nav-link nav-dungeon ${activePage === 'dungeon' || activePage === 'dungeons' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">swords</span> Donjons
                     <span id="navDungeonBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/vault.html" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
+                <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">money_bag</span> Coffres
                 </a>
-                <a href="/shop.html" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">
+                <a href="/shop" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">storefront</span> Boutique
                 </a>
-                <a href="/alchemy.html" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}" style="position:relative;">
+                <a href="/alchemy" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">science</span> Alchimie
                     <span id="navAlchemyBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
-                <a href="/hunting.html" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}" style="position:relative;">
+                <a href="/hunting" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}" style="position:relative;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">trophy</span> Chasse
                     <span id="navHuntingBadge" class="nav-badge" style="display:none; position:absolute; top:-2px; right:-8px; background:red; color:white; border-radius:50%; font-size:0.7rem; padding:1px 5px; font-weight:bold; pointer-events:none;">0</span>
                 </a>
                 
-                <a href="/shop-admin.html" id="adminShopLink" class="top-nav-link nav-admin ${activePage === 'shop-admin' ? 'active' : ''}" style="display: none;">
+                <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin ${activePage === 'shop-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">settings</span> Admin Boutique
                 </a>
-                <a href="/pve-admin.html" id="adminPvELink" class="top-nav-link nav-admin ${activePage === 'pve-admin' ? 'active' : ''}" style="display: none;">
+                <a href="/pve-admin" id="adminPvELink" class="top-nav-link nav-admin ${activePage === 'pve-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">admin_panel_settings</span> Admin PvE
                 </a>
-                <a href="/alchemy-admin.html" id="adminAlchemyLink" class="top-nav-link nav-admin ${activePage === 'alchemy-admin' ? 'active' : ''}" style="display: none;">
+                <a href="/alchemy-admin" id="adminAlchemyLink" class="top-nav-link nav-admin ${activePage === 'alchemy-admin' ? 'active' : ''}" style="display: none;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">science</span> Admin Alchimie
                 </a>
 
@@ -127,7 +129,7 @@ let lastUserActivity = Date.now();
 });
 
 setInterval(() => {
-    if (window.location.pathname.includes('combat.html')) return;
+    if (window.location.pathname.includes('/combat')) return;
     
     // Si inactivité >= 2 minutes
     if (Date.now() - lastUserActivity >= 120000) {

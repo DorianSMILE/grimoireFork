@@ -3,7 +3,19 @@ import { GLOBAL_STAT_LABELS, GLOBAL_SRC_LABELS } from './utils/constants.js';
 import { getVoieButtonColor, getSpiritButtonColor } from './utils/filters.js';
 
 export function formatStat(stat) {
-    return GLOBAL_STAT_LABELS[stat] || stat;
+    if (!stat) return '';
+    if (typeof stat === 'object') {
+        return stat.label || GLOBAL_STAT_LABELS[stat.name] || stat.name || '';
+    }
+    if (GLOBAL_STAT_LABELS[stat]) return GLOBAL_STAT_LABELS[stat];
+    if (window.GRIMOIRE_META && Array.isArray(window.GRIMOIRE_META.statTypes)) {
+        const found = window.GRIMOIRE_META.statTypes.find(s => s.name === stat);
+        if (found && found.label) {
+            GLOBAL_STAT_LABELS[stat] = found.label;
+            return found.label;
+        }
+    }
+    return stat;
 }
 
 export function formatSrc(src) {
@@ -11,7 +23,15 @@ export function formatSrc(src) {
     if (typeof src === 'object') {
         return src.label || GLOBAL_SRC_LABELS[src.name] || src.name || '';
     }
-    return GLOBAL_SRC_LABELS[src] || src;
+    if (GLOBAL_SRC_LABELS[src]) return GLOBAL_SRC_LABELS[src];
+    if (window.GRIMOIRE_META && Array.isArray(window.GRIMOIRE_META.sources)) {
+        const found = window.GRIMOIRE_META.sources.find(s => s.name === src);
+        if (found && found.label) {
+            GLOBAL_SRC_LABELS[src] = found.label;
+            return found.label;
+        }
+    }
+    return src;
 }
 
 export function getSourceIconInfo(srcValue) {
@@ -608,6 +628,7 @@ export async function showModal(options) {
     }
     return modal.show(options);
 }
+window.showModal = showModal;
 
 export function showGlobalTooltip(el) {
     if (!el) return;

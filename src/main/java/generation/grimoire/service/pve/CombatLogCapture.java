@@ -25,7 +25,7 @@ class CombatLogCapture {
             block.execute();
             ps.flush();
         } catch (Exception e) {
-            session.addLog("❌ Erreur interne : " + e.getMessage());
+            session.addLog("Erreur interne : " + e.getMessage());
         } finally {
             System.setOut(originalOut);
         }

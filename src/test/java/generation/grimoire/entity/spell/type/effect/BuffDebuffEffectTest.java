@@ -275,4 +275,27 @@ class BuffDebuffEffectTest {
             assertTrue(thrown.getMessage().contains("Stat inexploitable en flat"));
         }
     }
+
+    @Test
+    void testFormatModifierAndEffectDetails() {
+        assertEquals("+50%", BuffDebuffEffect.formatModifier(0.5));
+        assertEquals("-20%", BuffDebuffEffect.formatModifier(-0.2));
+        assertEquals("+12.5%", BuffDebuffEffect.formatModifier(0.125));
+        assertEquals("0%", BuffDebuffEffect.formatModifier(0.0));
+
+        // When flat == 0 and mult != 0 -> only mult
+        assertEquals("(+50%)", BuffDebuffEffect.formatEffectDetails(0, 0.5));
+        assertEquals("(-20%)", BuffDebuffEffect.formatEffectDetails(0, -0.2));
+
+        // When mult == 0 and flat != 0 -> only flat
+        assertEquals("(+10)", BuffDebuffEffect.formatEffectDetails(10, 0.0));
+        assertEquals("(-5)", BuffDebuffEffect.formatEffectDetails(-5, 0.0));
+
+        // When both != 0
+        assertEquals("(+10, +50%)", BuffDebuffEffect.formatEffectDetails(10, 0.5));
+        assertEquals("(-5, -20%)", BuffDebuffEffect.formatEffectDetails(-5, -0.2));
+
+        // When both == 0
+        assertEquals("", BuffDebuffEffect.formatEffectDetails(0, 0.0));
+    }
 }

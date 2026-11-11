@@ -1,0 +1,236 @@
+/* ==========================================================================
+   DUNGEON STATS PAGE STYLES (scoped to .stats-main)
+   ========================================================================== */
+
+.stats-main .stats-header-icon {
+    font-size: 2.5rem;
+}
+
+.stats-main .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.stats-main .chart-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.stats-main .chart-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(56, 189, 248, 0.2);
+}
+
+.stats-main .chart-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stats-main .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.stats-main .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stats-main .kpi-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.stats-main .kpi-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.stats-main .kpi-card.kpi-card-winrate {
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.stats-main .kpi-card.kpi-card-deathrate {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.stats-main .kpi-card.kpi-card-multi {
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+.stats-main .kpi-icon {
+    font-size: 2.5rem;
+    color: var(--info);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+}
+
+.stats-main .kpi-icon.kpi-icon-winrate {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.stats-main .kpi-icon.kpi-icon-deathrate {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.stats-main .kpi-icon.kpi-icon-multi {
+    color: #c084fc;
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.stats-main .kpi-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-main .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stats-main .kpi-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Styles spécifiques pour la table des runs */
+.stats-main .runs-table-container {
+    overflow-x: auto;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stats-main .runs-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.stats-main .runs-table th,
+.stats-main .runs-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stats-main .runs-table th {
+    background: rgba(30, 41, 59, 0.5);
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stats-main .runs-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.stats-main .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.stats-main .status-VICTORY {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.stats-main .status-DEFEAT {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.stats-main .status-FLEE {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+}
+
+.stats-main .status-TIMEOUT {
+    background: rgba(100, 116, 139, 0.1);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #94a3b8;
+}
+
+.stats-main .dungeon-selector {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #f8fafc;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+}
+
+.stats-main .dungeon-selector:focus {
+    border-color: var(--info);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.stats-main .btn-reset-tutorials {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #e2e8f0;
+    padding: 0.7rem 1.15rem;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.stats-main .btn-reset-tutorials:hover {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}

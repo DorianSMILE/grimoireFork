@@ -82,27 +82,37 @@ class SpellAvailabilityService {
     }
 
     private SpellAvailability checkSpellAvailability(Spell spell, Personnage p, CombatSession session) {
+        List<Personnage> allAliveEnemies = new ArrayList<>();
         Personnage defaultTarget = p;
         if (session != null && session.getEnemies() != null) {
             for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
                 if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
-                    defaultTarget = m.getAsPersonnage();
-                    break;
+                    allAliveEnemies.add(m.getAsPersonnage());
                 }
             }
+            if (!allAliveEnemies.isEmpty()) {
+                defaultTarget = allAliveEnemies.get(0);
+            }
         }
+        List<Personnage> allAliveAllies = new ArrayList<>();
         Personnage defaultAlly = p;
         if (session != null && session.getPlayers() != null) {
             for (Personnage ally : session.getPlayers()) {
-                if (ally != null && ally != p && ally.getHealthCurrent() > 0) {
-                    defaultAlly = ally;
-                    break;
+                if (ally != null && ally.getHealthCurrent() > 0) {
+                    allAliveAllies.add(ally);
+                    if (ally != p && defaultAlly == p) {
+                        defaultAlly = ally;
+                    }
                 }
             }
         }
+        if (allAliveAllies.isEmpty()) {
+            allAliveAllies.add(p);
+        }
 
         // Calculer systématiquement les coûts réels et leurs modificateurs pour l'affichage dynamique
-        ComputedSpellCosts computedCosts = computeSpellCostsForTargets(spell, p, defaultTarget, defaultAlly);
+        ComputedSpellCosts computedCosts = computeSpellCostsForTargets(
+                spell, p, defaultTarget, defaultAlly, allAliveEnemies, allAliveAllies);
 
         SpellAvailability avail;
         String canCastError = p.canCast(spell);
@@ -112,7 +122,7 @@ class SpellAvailabilityService {
             avail = evaluateSpellRules(spell, p, computedCosts);
         }
 
-        populateTargetPreviews(avail, spell, p, session, defaultTarget, defaultAlly);
+        populateTargetPreviews(avail, spell, p, session, defaultTarget, defaultAlly, allAliveEnemies, allAliveAllies);
         return avail;
     }
 
@@ -197,7 +207,8 @@ class SpellAvailabilityService {
 
     private void populateTargetPreviews(
             SpellAvailability avail, Spell spell, Personnage p, CombatSession session,
-            Personnage defaultTarget, Personnage defaultAlly) {
+            Personnage defaultTarget, Personnage defaultAlly,
+            List<Personnage> allAliveEnemies, List<Personnage> allAliveAllies) {
         if (session == null) {
             return;
         }
@@ -206,7 +217,8 @@ class SpellAvailabilityService {
             for (generation.grimoire.model.pve.ActiveMonster m : session.getEnemies()) {
                 if (!m.isDead() && m.getAsPersonnage() != null && m.getAsPersonnage().getHealthCurrent() > 0) {
                     Personnage enemyTarget = m.getAsPersonnage();
-                    ComputedSpellCosts costs = computeSpellCostsForTargets(spell, p, enemyTarget, defaultAlly);
+                    ComputedSpellCosts costs = computeSpellCostsForTargets(
+                            spell, p, enemyTarget, defaultAlly, allAliveEnemies, allAliveAllies);
                     avail.getEnemyPreviews().put(enemyIdx, toTargetPreview(costs));
                 }
                 enemyIdx++;
@@ -216,7 +228,8 @@ class SpellAvailabilityService {
             int allyIdx = 0;
             for (Personnage ally : session.getPlayers()) {
                 if (ally != null && ally.getHealthCurrent() > 0) {
-                    ComputedSpellCosts costs = computeSpellCostsForTargets(spell, p, defaultTarget, ally);
+                    ComputedSpellCosts costs = computeSpellCostsForTargets(
+                            spell, p, defaultTarget, ally, allAliveEnemies, allAliveAllies);
                     avail.getAllyPreviews().put(allyIdx, toTargetPreview(costs));
                 }
                 allyIdx++;
@@ -281,7 +294,9 @@ class SpellAvailabilityService {
         );
     }
 
-    private ComputedSpellCosts computeSpellCostsForTargets(Spell spell, Personnage p, Personnage target, Personnage ally) {
+    private ComputedSpellCosts computeSpellCostsForTargets(
+            Spell spell, Personnage p, Personnage target, Personnage ally,
+            List<Personnage> allAliveEnemies, List<Personnage> allAliveAllies) {
         List<SpellCostModifierDTO> manaModifiers = new ArrayList<>();
         List<SpellCostModifierDTO> healModifiers = new ArrayList<>();
         List<SpellCostModifierDTO> heatModifiers = new ArrayList<>();
@@ -383,10 +398,6 @@ class SpellAvailabilityService {
                             "Brèche spirituelle (" + Math.abs(hpLossPct) + "%)",
                             "-" + hpLoss + " PV subis",
                             false));
-                    healModifiers.add(new SpellCostModifierDTO(
-                            "Brèche spirituelle (" + Math.abs(hpLossPct) + "% mana)",
-                            "+" + hpLoss + " PV",
-                            false));
                 }
             }
 
@@ -402,7 +413,8 @@ class SpellAvailabilityService {
             }
         }
 
-        List<SpellEffectPreviewDTO> effectPreviews = computeSpellEffectPreviews(spell, p, target, ally);
+        List<SpellEffectPreviewDTO> effectPreviews = computeSpellEffectPreviews(
+                spell, p, target, ally, allAliveEnemies, allAliveAllies);
 
         return new ComputedSpellCosts(
                 actualManaCost,
@@ -422,7 +434,8 @@ class SpellAvailabilityService {
     }
 
     private List<SpellEffectPreviewDTO> computeSpellEffectPreviews(
-            Spell spell, Personnage caster, Personnage defaultEnemyTarget, Personnage defaultAllyTarget) {
+            Spell spell, Personnage caster, Personnage defaultEnemyTarget, Personnage defaultAllyTarget,
+            List<Personnage> allAliveEnemies, List<Personnage> allAliveAllies) {
         List<SpellEffectPreviewDTO> previews = new ArrayList<>();
         if (spell.getEffects() == null || spell.getEffects().isEmpty()) {
             return previews;
@@ -442,8 +455,91 @@ class SpellAvailabilityService {
 
         int i = 0;
         for (SpellEffect effect : spell.getEffects()) {
-            Personnage recipient = resolvePreviewRecipient(effect, simCaster, simEnemy, simAlly);
-            previews.add(computeSingleEffectPreview(i, effect, simCaster, recipient, karmaDamageAmp, sureteHealAmp));
+            EffectTarget tgt = effect.getEffectTarget() != null ? effect.getEffectTarget() : EffectTarget.TARGET;
+            boolean isAoE = (tgt == EffectTarget.ALL_ENEMIES || tgt == EffectTarget.ALL_ALLIES || tgt == EffectTarget.ALL_COMBATANTS);
+
+            if (!isAoE) {
+                Personnage recipient = resolvePreviewRecipient(effect, simCaster, simEnemy, simAlly);
+                Personnage primaryTarget = (tgt == EffectTarget.ALLY) ? simAlly : simEnemy;
+                previews.add(computeSingleEffectPreview(i, effect, simCaster, recipient, primaryTarget, karmaDamageAmp, sureteHealAmp));
+            } else {
+                List<Personnage> targetsToHit = new ArrayList<>();
+                if (tgt == EffectTarget.ALL_ENEMIES) {
+                    if (allAliveEnemies != null && !allAliveEnemies.isEmpty()) {
+                        targetsToHit.addAll(allAliveEnemies);
+                    } else if (defaultEnemyTarget != null) {
+                        targetsToHit.add(defaultEnemyTarget);
+                    } else {
+                        targetsToHit.add(simEnemy);
+                    }
+                } else if (tgt == EffectTarget.ALL_ALLIES) {
+                    if (allAliveAllies != null && !allAliveAllies.isEmpty()) {
+                        targetsToHit.addAll(allAliveAllies);
+                    } else if (defaultAllyTarget != null) {
+                        targetsToHit.add(defaultAllyTarget);
+                    } else {
+                        targetsToHit.add(simAlly);
+                    }
+                } else { // ALL_COMBATANTS
+                    if (allAliveAllies != null && !allAliveAllies.isEmpty()) {
+                        targetsToHit.addAll(allAliveAllies);
+                    } else {
+                        targetsToHit.add(simAlly);
+                    }
+                    if (allAliveEnemies != null && !allAliveEnemies.isEmpty()) {
+                        targetsToHit.addAll(allAliveEnemies);
+                    } else {
+                        targetsToHit.add(simEnemy);
+                    }
+                }
+
+                List<SpellEffectPreviewDTO> targetResults = new ArrayList<>();
+                for (Personnage rawTarget : targetsToHit) {
+                    Personnage targetClone = cloneForSimulation(rawTarget, null);
+                    applySureteDebuffIfActive(simCaster, targetClone);
+                    targetResults.add(computeSingleEffectPreview(
+                            i, effect, simCaster, targetClone, targetClone, karmaDamageAmp, sureteHealAmp));
+                }
+
+                int minVal = Integer.MAX_VALUE;
+                int maxVal = Integer.MIN_VALUE;
+                int minHp = Integer.MAX_VALUE;
+                int maxHp = Integer.MIN_VALUE;
+                int minShield = Integer.MAX_VALUE;
+                int maxShield = Integer.MIN_VALUE;
+                int minBrut = Integer.MAX_VALUE;
+                int maxBrut = Integer.MIN_VALUE;
+                boolean sourceResolved = false;
+                int pctMod = 0;
+
+                for (SpellEffectPreviewDTO r : targetResults) {
+                    minVal = Math.min(minVal, r.calculatedValue());
+                    maxVal = Math.max(maxVal, r.calculatedValue());
+                    minHp = Math.min(minHp, r.hpDamage());
+                    maxHp = Math.max(maxHp, r.hpDamage());
+                    minShield = Math.min(minShield, r.shieldAbsorbed());
+                    maxShield = Math.max(maxShield, r.shieldAbsorbed());
+                    minBrut = Math.min(minBrut, r.extraBrutDamage());
+                    maxBrut = Math.max(maxBrut, r.extraBrutDamage());
+                    if (r.sourceResolvedToFlat()) sourceResolved = true;
+                    pctMod = r.calculatedPercentModifier();
+                }
+
+                previews.add(SpellEffectPreviewDTO.forAreaOfEffect(
+                        i,
+                        effect.getId(),
+                        minVal,
+                        maxVal,
+                        pctMod,
+                        sourceResolved,
+                        minHp,
+                        maxHp,
+                        minShield,
+                        maxShield,
+                        minBrut,
+                        maxBrut
+                ));
+            }
             i++;
         }
         return previews;
@@ -551,17 +647,7 @@ class SpellAvailabilityService {
                     }
                 }
                 if (touchesEnemy && simEnemy != null) {
-                    BuffDebuffEffect debuffMag = new BuffDebuffEffect();
-                    debuffMag.setStatAffected(StatType.DAMAGE_TAKEN_MAGIC);
-                    debuffMag.setModifier(0.20);
-                    debuffMag.setDuration(2);
-                    simEnemy.getActiveBuffs().add(debuffMag);
-
-                    BuffDebuffEffect debuffPhys = new BuffDebuffEffect();
-                    debuffPhys.setStatAffected(StatType.DAMAGE_TAKEN_PHYSIC);
-                    debuffPhys.setModifier(0.20);
-                    debuffPhys.setDuration(2);
-                    simEnemy.getActiveBuffs().add(debuffPhys);
+                    applySureteDebuffIfActive(simCaster, simEnemy);
                 }
                 if (touchesSelf) {
                     BuffDebuffEffect buffPower = new BuffDebuffEffect();
@@ -572,6 +658,37 @@ class SpellAvailabilityService {
                 }
             }
         }
+    }
+
+    private void applySureteDebuffIfActive(Personnage simCaster, Personnage target) {
+        if (simCaster == null || target == null || simCaster.getVoie() == null || simCaster.getVoie().getPassiveEffects() == null) {
+            return;
+        }
+        boolean hasSurete = simCaster.getVoie().getPassiveEffects().stream()
+                .anyMatch(p -> p instanceof SuretePassiveEffect);
+        if (hasSurete && simCaster.getPassiveState("surete_points", 0) >= 100) {
+            if (target.getActiveBuffs() == null) {
+                target.setActiveBuffs(new ArrayList<>());
+            }
+            BuffDebuffEffect debuffMag = new BuffDebuffEffect();
+            debuffMag.setStatAffected(StatType.DAMAGE_TAKEN_MAGIC);
+            debuffMag.setModifier(0.20);
+            debuffMag.setDuration(2);
+            target.getActiveBuffs().add(debuffMag);
+
+            BuffDebuffEffect debuffPhys = new BuffDebuffEffect();
+            debuffPhys.setStatAffected(StatType.DAMAGE_TAKEN_PHYSIC);
+            debuffPhys.setModifier(0.20);
+            debuffPhys.setDuration(2);
+            target.getActiveBuffs().add(debuffPhys);
+        }
+    }
+
+    private Personnage resolveTargetForSource(Source source, Personnage recipient, Personnage primaryTarget) {
+        if (source != null && source.name().startsWith("TARGET_")) {
+            return primaryTarget != null ? primaryTarget : recipient;
+        }
+        return recipient;
     }
 
     private Personnage resolvePreviewRecipient(
@@ -626,7 +743,7 @@ class SpellAvailabilityService {
     }
 
     private SpellEffectPreviewDTO computeSingleEffectPreview(
-            int index, SpellEffect effect, Personnage caster, Personnage recipient,
+            int index, SpellEffect effect, Personnage caster, Personnage recipient, Personnage primaryTarget,
             double karmaDamageAmp, double sureteHealAmp) {
         if (effect instanceof DamageFixedEffect dfe) {
             DamageType dt = dfe.getDamageType();
@@ -638,7 +755,8 @@ class SpellAvailabilityService {
             dmg = dfe.applyEquipmentModifiers(dmg, caster, recipient, dt);
             int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
             SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
-            return new SpellEffectPreviewDTO(index, dfe.getId(), res.hpDamage(), 0, false,
+            int totalDamage = res.hpDamage() + res.shieldAbsorbed();
+            return new SpellEffectPreviewDTO(index, dfe.getId(), totalDamage, 0, false,
                     res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamagePercentageEffect dpe) {
@@ -647,12 +765,14 @@ class SpellAvailabilityService {
             if (dt == DamageType.PHYSIC || dt == DamageType.MAGIC) {
                 amp *= karmaDamageAmp;
             }
-            double sourceVal = StatCalculator.getSourceValue(dpe.getDamageSource(), caster, recipient);
+            Personnage targetForSrc = resolveTargetForSource(dpe.getDamageSource(), recipient, primaryTarget);
+            double sourceVal = StatCalculator.getSourceValue(dpe.getDamageSource(), caster, targetForSrc);
             double dmg = dpe.calculateDamage(sourceVal) * amp;
             dmg = dpe.applyEquipmentModifiers(dmg, caster, recipient, dt);
             int outgoingDmg = computeOutgoingDealDamage(caster, (int) dmg, dt);
             SimulatedDamageResult res = simulateDealAndTakeDamage(caster, recipient, outgoingDmg, dt);
-            return new SpellEffectPreviewDTO(index, dpe.getId(), res.hpDamage(), 0, true,
+            int totalDamage = res.hpDamage() + res.shieldAbsorbed();
+            return new SpellEffectPreviewDTO(index, dpe.getId(), totalDamage, 0, true,
                     res.hpDamage(), res.shieldAbsorbed(), res.extraBrutDamage());
         }
         if (effect instanceof DamageOverTimeEffect dot) {
@@ -664,7 +784,8 @@ class SpellAvailabilityService {
             int baseDmg = dot.getFixedDamagePerTick();
             boolean hasPct = dot.getPercentageDamagePerTick() > 0;
             if (hasPct) {
-                double sourceVal = StatCalculator.getSourceValue(dot.getDamageSource(), caster, recipient);
+                Personnage targetForSrc = resolveTargetForSource(dot.getDamageSource(), recipient, primaryTarget);
+                double sourceVal = StatCalculator.getSourceValue(dot.getDamageSource(), caster, targetForSrc);
                 baseDmg += (int) (sourceVal * dot.getPercentageDamagePerTick());
             }
             int totalDmg = (int) (baseDmg * amp);
@@ -693,7 +814,8 @@ class SpellAvailabilityService {
         if (effect instanceof HealPercentageEffect hpe) {
             boolean isAllyTarget = hpe.getEffectTarget() == EffectTarget.ALLY || hpe.getEffectTarget() == EffectTarget.ALL_ALLIES;
             double amp = hpe.getAmplificationMultiplier() * (isAllyTarget ? sureteHealAmp : 1.0);
-            double sourceVal = StatCalculator.getSourceValue(hpe.getHealSource(), caster, recipient);
+            Personnage targetForSrc = resolveTargetForSource(hpe.getHealSource(), recipient, primaryTarget);
+            double sourceVal = StatCalculator.getSourceValue(hpe.getHealSource(), caster, targetForSrc);
             double healGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.HEAL_GIVEN));
             int rawHeal = (int) (hpe.calculateHeal(sourceVal) * amp * healGivenMult);
             int finalHeal = rawHeal > 0 ? computeReceivedHeal(recipient, rawHeal) : rawHeal;
@@ -708,7 +830,8 @@ class SpellAvailabilityService {
             int totalHeal = hot.getFixedHealPerTick();
             boolean hasPct = hot.getPercentageHealPerTick() != 0;
             if (hasPct) {
-                double sourceVal = StatCalculator.getSourceValue(hot.getHealSource(), caster, recipient);
+                Personnage targetForSrc = resolveTargetForSource(hot.getHealSource(), recipient, primaryTarget);
+                double sourceVal = StatCalculator.getSourceValue(hot.getHealSource(), caster, targetForSrc);
                 totalHeal += (int) (sourceVal * hot.getPercentageHealPerTick());
             }
             double healGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.HEAL_GIVEN));
@@ -725,7 +848,8 @@ class SpellAvailabilityService {
         }
         if (effect instanceof ManaPercentageEffect mpe) {
             Source src = mpe.getManaSource() != null ? mpe.getManaSource() : Source.TARGET_MANA_MAX;
-            double sourceVal = StatCalculator.getSourceValue(src, caster, recipient);
+            Personnage targetForSrc = resolveTargetForSource(src, recipient, primaryTarget);
+            double sourceVal = StatCalculator.getSourceValue(src, caster, targetForSrc);
             int finalMana = (int) (mpe.calculateMana(sourceVal) * mpe.getAmplificationMultiplier());
             if (recipient != null) {
                 recipient.setManaCurrent(Math.max(0, Math.min(recipient.getTotalManaMax(), recipient.getManaCurrent() + finalMana)));
@@ -736,7 +860,8 @@ class SpellAvailabilityService {
             int totalMana = mot.getFixedManaPerTick();
             boolean hasPct = mot.getPercentageManaPerTick() != 0;
             if (hasPct) {
-                double sourceVal = StatCalculator.getSourceValue(mot.getManaSource(), caster, recipient);
+                Personnage targetForSrc = resolveTargetForSource(mot.getManaSource(), recipient, primaryTarget);
+                double sourceVal = StatCalculator.getSourceValue(mot.getManaSource(), caster, targetForSrc);
                 totalMana += (int) (sourceVal * mot.getPercentageManaPerTick());
             }
             totalMana = (int) (totalMana * mot.getAmplificationMultiplier());
@@ -746,7 +871,8 @@ class SpellAvailabilityService {
             double shieldAmount = se.getFixedValue();
             boolean hasPct = se.getShieldSource() != null && se.getPercentage() > 0;
             if (hasPct) {
-                double sourceVal = StatCalculator.getSourceValue(se.getShieldSource(), caster, recipient);
+                Personnage targetForSrc = resolveTargetForSource(se.getShieldSource(), recipient, primaryTarget);
+                double sourceVal = StatCalculator.getSourceValue(se.getShieldSource(), caster, targetForSrc);
                 shieldAmount += sourceVal * se.getPercentage();
             }
             double shieldGivenMult = Math.max(0, caster.getStatBuffMultiplier(StatType.SHIELD_GIVEN));
@@ -768,7 +894,8 @@ class SpellAvailabilityService {
             double rawModToApply = 0.0;
             if (bde.getModifier() != 0) {
                 if (bde.getModifierSource() != null) {
-                    double baseVal = StatCalculator.getSourceValue(bde.getModifierSource(), caster, recipient);
+                    Personnage targetForSrc = resolveTargetForSource(bde.getModifierSource(), recipient, primaryTarget);
+                    double baseVal = StatCalculator.getSourceValue(bde.getModifierSource(), caster, targetForSrc);
                     totalFlat += (int) Math.round(baseVal * bde.getModifier());
                     resolvedSource = true;
                 } else {
@@ -789,7 +916,8 @@ class SpellAvailabilityService {
             return new SpellEffectPreviewDTO(index, hfe.getId(), hfe.getAmount(), 0, false);
         }
         if (effect instanceof HeatPercentageEffect hpe) {
-            double sourceVal = StatCalculator.getSourceValue(hpe.getSource(), caster, caster);
+            Personnage targetForSrc = resolveTargetForSource(hpe.getSource(), caster, primaryTarget);
+            double sourceVal = StatCalculator.getSourceValue(hpe.getSource(), caster, targetForSrc);
             int amount = (int) (sourceVal * hpe.getPercentage());
             return new SpellEffectPreviewDTO(index, hpe.getId(), amount, 0, true);
         }
@@ -797,7 +925,8 @@ class SpellAvailabilityService {
             int amount = hot.getFixedValue();
             boolean hasPct = hot.getPercentage() != 0;
             if (hasPct) {
-                double sourceVal = StatCalculator.getSourceValue(hot.getSource(), caster, caster);
+                Personnage targetForSrc = resolveTargetForSource(hot.getSource(), caster, primaryTarget);
+                double sourceVal = StatCalculator.getSourceValue(hot.getSource(), caster, targetForSrc);
                 amount += (int) (sourceVal * hot.getPercentage());
             }
             return new SpellEffectPreviewDTO(index, hot.getId(), amount, 0, hasPct);

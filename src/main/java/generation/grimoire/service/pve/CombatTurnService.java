@@ -53,7 +53,7 @@ class CombatTurnService {
             if ("MAX_TURNS".equals(c.getType())) {
                 if (session.getTurnNumber() > c.getValue()) {
                     c.setFailed(true);
-                    session.addLog("❌ Challenge échoué : Le combat a dépassé la limite de " + c.getValue() + " tours.");
+                    session.addLog("Challenge échoué : Le combat a dépassé la limite de " + c.getValue() + " tours.");
                 }
             } else if ("MAX_HP_LOSS_PCT".equals(c.getType())) {
                 boolean failed = false;
@@ -67,7 +67,7 @@ class CombatTurnService {
                 }
                 if (failed) {
                     c.setFailed(true);
-                    session.addLog("❌ Challenge échoué : Un héros est passé en dessous de " + (100 - c.getValue()) + "% PV.");
+                    session.addLog("Challenge échoué : Un héros est passé en dessous de " + (100 - c.getValue()) + "% PV.");
                 }
             }
         }
@@ -165,7 +165,7 @@ class CombatTurnService {
                         int currentHp = m.getAsPersonnage().getHealthCurrent();
                         int healed = Math.min(rHp, Math.max(0, maxHp - currentHp));
                         if (healed > 0) {
-                            session.addLog("💖 " + m.getBase().getName() + " régénère " + healed + " PV.");
+                            session.addLog(m.getBase().getName() + " régénère " + healed + " PV.");
                         }
                     }
                     int rMana = m.getBase().getRegenMana();
@@ -174,7 +174,7 @@ class CombatTurnService {
                         int currentMana = m.getAsPersonnage().getManaCurrent();
                         int recovered = Math.min(rMana, Math.max(0, maxMana - currentMana));
                         if (recovered > 0) {
-                            session.addLog("💧 " + m.getBase().getName() + " régénère " + recovered + " Mana.");
+                            session.addLog(m.getBase().getName() + " régénère " + recovered + " Mana.");
                         }
                     }
                 }
@@ -187,7 +187,7 @@ class CombatTurnService {
                     mType = MonsterType.NORMAL;
                 if (mType == MonsterType.MORT_VIVANT && !m.isDead()) {
                     int regenAmount = (int) Math.ceil(m.getBase().getHealthMax() * 0.05);
-                    session.addLog("💀 " + m.getBase().getName() + " tente de se régénérer de " + regenAmount + " PV (Mort-vivant).");
+                    session.addLog(m.getBase().getName() + " tente de se régénérer de " + regenAmount + " PV (Mort-vivant).");
                     m.getAsPersonnage().heal(regenAmount);
                 }
 
@@ -196,7 +196,7 @@ class CombatTurnService {
                     if (mp.getRemainingChannelingTurns() > 0) {
                         if (mp.getChanneledSpell() != null) {
                             int currentTurn = mp.getChanneledSpell().getChannelingDuration() - mp.getRemainingChannelingTurns() + 1;
-                            session.addLog("🌀 " + m.getBase().getName() + " canalise " + mp.getChanneledSpell().getNom() + " ! (Tour " + currentTurn + ")");
+                            session.addLog(m.getBase().getName() + " canalise " + mp.getChanneledSpell().getNom() + " ! (Tour " + currentTurn + ")");
                         }
                         Personnage cTarget = mp.getChannelingTarget();
                         if (cTarget == null && !session.getPlayers().isEmpty()) {
@@ -324,7 +324,7 @@ class CombatTurnService {
                                     }
 
                                     session.addLog(
-                                            "🧬 " + m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
+                                            m.getBase().getName() + " lance " + mutSpell.getNom() + " !");
                                     final Personnage finalMutAlly = mutAlly;
                                     CombatLogCapture.captureLogs(session, () -> {
                                         spellService.castSpellGroup(mutSpell, m.getAsPersonnage(), mutTarget,
@@ -409,7 +409,7 @@ class CombatTurnService {
                                         dot.setBurn(true);
                                         targetPlayer.getActiveDamageOverTimeEffects().add(dot);
                                         session.addLog(
-                                                "🔥 " + targetPlayer.getName() + " s'embrase au contact ! (" + burnDmg
+                                                targetPlayer.getName() + " s'embrase au contact ! (" + burnDmg
                                                         + " dégâts par tour)");
                                     }
 
@@ -423,7 +423,7 @@ class CombatTurnService {
                                         dot.setDamageType(generation.grimoire.enumeration.DamageType.BRUT);
                                         dot.setPoison(true);
                                         targetPlayer.getActiveDamageOverTimeEffects().add(dot);
-                                        session.addLog("🦠 " + targetPlayer.getName() + " est empoisonné au contact ! ("
+                                        session.addLog(targetPlayer.getName() + " est empoisonné au contact ! ("
                                                 + poisonDmg + " dégâts par tour)");
                                     }
 
@@ -433,7 +433,7 @@ class CombatTurnService {
                                         if (manaLoss > 0) {
                                             targetPlayer.setManaCurrent(
                                                     Math.max(0, targetPlayer.getManaCurrent() - manaLoss));
-                                            session.addLog("🦇 " + targetPlayer.getName() + " perd " + manaLoss
+                                            session.addLog(targetPlayer.getName() + " perd " + manaLoss
                                                     + " points de mana ! (Corrupteur)");
                                         }
                                     }
@@ -648,7 +648,7 @@ class CombatTurnService {
                     personnageService.save(dbPersonnage);
                     p.setExperience(dbPersonnage.getExperience());
                     session.addLog(
-                            "☠️ " + p.getName() + " succombe à ses blessures et perd " + penalty + " XP normal...");
+                            p.getName() + " succombe à ses blessures et perd " + penalty + " XP normal...");
                 }
             }
         }
@@ -789,7 +789,7 @@ class CombatTurnService {
                         personnageService.save(p);
                     }
                     session.setBossBonusSpiritualXp(bossSpXp);
-                    session.addLog("🔮 Le Boss vaincu octroie " + bossSpXp + " XP Spiritualité, partagé entre "
+                    session.addLog("Le Boss vaincu octroie " + bossSpXp + " XP Spiritualité, partagé entre "
                             + bossEligible.size() + " héros (" + spXpPerHero + " chacun, x2 si 1ère fois).");
                 }
 
@@ -805,7 +805,7 @@ class CombatTurnService {
                     }
                     session.setTotalGoldAccumulated(session.getTotalGoldAccumulated() + bossGold);
                     session.setBossBonusGold(bossGold);
-                    session.addLog("💰 Le Boss vaincu octroie " + bossGold + " Or supplémentaires !");
+                    session.addLog("Le Boss vaincu octroie " + bossGold + " Or supplémentaires !");
                 }
                 
                 evaluateEndOfCombatChallengesAndGiveRewards(session, bossEligible);
@@ -831,16 +831,16 @@ class CombatTurnService {
                 }
                 if (!anyHeroDropped) {
                     c.setFailed(true);
-                    session.addLog("❌ Challenge échoué : Aucun héros n'est passé en dessous de " + (100 - c.getValue()) + "% PV.");
+                    session.addLog("Challenge échoué : Aucun héros n'est passé en dessous de " + (100 - c.getValue()) + "% PV.");
                 } else {
-                    session.addLog("✅ Challenge réussi (Risque-tout) !");
+                    session.addLog("Challenge réussi (Risque-tout) !");
                 }
             }
 
             if (!c.isFailed()) {
                 c.setCompleted(true);
                 // Give reward
-                session.addLog("🎁 Récompense de challenge obtenue !");
+                session.addLog("Récompense de challenge obtenue !");
                 if ("BONUS_SPIRIT_XP".equals(c.getRewardType()) && !bossEligible.isEmpty()) {
                     int spXpPerHero = c.getRewardValue() / Math.max(1, bossEligible.size());
                     for (Personnage p : bossEligible) {
@@ -852,7 +852,7 @@ class CombatTurnService {
                         p.setSpiritualiteExperience(p.getSpiritualiteExperience() + actualSpXp);
                         personnageService.save(p);
                     }
-                    session.addLog("🔮 Challenge : +" + c.getRewardValue() + " XP Spiritualité.");
+                    session.addLog("Challenge : +" + c.getRewardValue() + " XP Spiritualité.");
                 } else if ("BONUS_GOLD".equals(c.getRewardType()) && !bossEligible.isEmpty()) {
                     java.util.Set<Long> processedUserIds = new java.util.HashSet<>();
                     for (Personnage p : bossEligible) {
@@ -864,7 +864,7 @@ class CombatTurnService {
                         }
                     }
                     session.setTotalGoldAccumulated(session.getTotalGoldAccumulated() + c.getRewardValue());
-                    session.addLog("💰 Challenge : +" + c.getRewardValue() + " Or.");
+                    session.addLog("Challenge : +" + c.getRewardValue() + " Or.");
                 } else if ("REGEN_HP_MANA".equals(c.getRewardType())) {
                     for (Personnage p : bossEligible) {
                         int healAmount = (int) (p.getHealthMax() * (c.getRewardValue() / 100.0));
@@ -872,11 +872,11 @@ class CombatTurnService {
                         p.setHealthCurrent(Math.min(p.getHealthMax(), p.getHealthCurrent() + healAmount));
                         p.setManaCurrent(Math.min(p.getManaMax(), p.getManaCurrent() + manaAmount));
                     }
-                    session.addLog("💖 Challenge : L'équipe régénère " + c.getRewardValue() + "% de ses PV et Mana.");
+                    session.addLog("Challenge : L'équipe régénère " + c.getRewardValue() + "% de ses PV et Mana.");
                 } else if ("EXTRA_LOOT".equals(c.getRewardType())) {
                     session.setChallengeExtraLootPercent(
                             session.getChallengeExtraLootPercent() + c.getRewardValue());
-                    session.addLog("🎁 Challenge : +" + c.getRewardValue() + "% de probabilité de loot pour la suite du donjon !");
+                    session.addLog("Challenge : +" + c.getRewardValue() + "% de probabilité de loot pour la suite du donjon !");
                 }
             }
         }
@@ -939,7 +939,8 @@ class CombatTurnService {
         for (InitiativeEntry e : session.getTurnOrder()) {
             String name = e.isPlayer() ? session.getPlayers().get(e.getIndex()).getName()
                     : session.getEnemies().get(e.getIndex()).getBase().getName();
-            session.addLog(name + " | Init: " + e.getInitiativeScore() + " (Vitesse: " + e.getSpeedStat() + ")");
+            String speedPart = e.getSpeedStat() != 0 ? " (Vitesse: " + (e.getSpeedStat() > 0 ? "+" : "") + e.getSpeedStat() + ")" : "";
+            session.addLog(name + " | Init: " + e.getInitiativeScore() + speedPart);
         }
 
         // Clear leader forced targets at start of each round
@@ -982,7 +983,7 @@ class CombatTurnService {
                         int manaLost = (int) Math.ceil(p.getManaCurrent() * (totalManaOppressionPct / 100.0));
                         if (manaLost > 0) {
                             p.setManaCurrent(Math.max(0, p.getManaCurrent() - manaLost));
-                            System.out.println("🌌 Oppression Magique : " + p.getName() + " perd " + manaLost + " Mana !");
+                            System.out.println("Oppression Magique : " + p.getName() + " perd " + manaLost + " Mana !");
                         }
                     }
                     spellService.startTurn(p);
@@ -1013,7 +1014,7 @@ class CombatTurnService {
             for (Personnage p : alivePlayers) {
                 if (p.getId().equals(m.getLeaderForcedTargetId())) {
                     session.addLog(
-                            "\uD83D\uDC51 " + m.getBase().getName() + " obéit au Leader et cible " + p.getName() + ".");
+                            m.getBase().getName() + " obéit au Leader et cible " + p.getName() + ".");
                     return p;
                 }
             }
@@ -1026,7 +1027,7 @@ class CombatTurnService {
                 if (m.getLockedTargetId() != null) {
                     for (Personnage p : alivePlayers) {
                         if (p.getId().equals(m.getLockedTargetId())) {
-                            session.addLog("\uD83D\uDC3A " + m.getBase().getName() + " continue de traquer "
+                            session.addLog(m.getBase().getName() + " continue de traquer "
                                     + p.getName() + " (Prédateur).");
                             return p;
                         }
@@ -1035,7 +1036,7 @@ class CombatTurnService {
                 // Target dead or none, pick new one
                 Personnage newTarget = alivePlayers.get(rnd.nextInt(alivePlayers.size()));
                 m.setLockedTargetId(newTarget.getId());
-                session.addLog("\uD83D\uDC3A " + m.getBase().getName() + " verrouille " + newTarget.getName()
+                session.addLog(m.getBase().getName() + " verrouille " + newTarget.getName()
                         + " comme proie (Prédateur).");
                 return newTarget;
             }
@@ -1044,14 +1045,14 @@ class CombatTurnService {
                 Personnage target = alivePlayers.stream()
                         .max(java.util.Comparator.comparingInt(p -> p != null ? p.getManaCurrent() : 0))
                         .orElse(alivePlayers.get(0));
-                session.addLog("\uD83D\uDC1B " + m.getBase().getName() + " cible " + target.getName()
+                session.addLog(m.getBase().getName() + " cible " + target.getName()
                         + " (le plus de Mana - Corrupteur).");
                 return target;
             }
             case LEADER -> {
                 // Pick a target and force all allies to hit it too
                 Personnage target = alivePlayers.get(rnd.nextInt(alivePlayers.size()));
-                session.addLog("\uD83D\uDC51 " + m.getBase().getName() + " ordonne à tous les monstres de cibler "
+                session.addLog(m.getBase().getName() + " ordonne à tous les monstres de cibler "
                         + target.getName() + " (Leader) !");
                 for (ActiveMonster ally : session.getEnemies()) {
                     if (ally != m && !ally.isDead()) {
@@ -1066,7 +1067,7 @@ class CombatTurnService {
                         .min(java.util.Comparator.comparingInt(
                                 p -> p.getEffectiveStat(generation.grimoire.enumeration.StatType.RESISTANCE)))
                         .orElse(alivePlayers.get(0));
-                session.addLog("\uD83D\uDDE1\uFE0F " + m.getBase().getName() + " vise " + target.getName()
+                session.addLog(m.getBase().getName() + " vise " + target.getName()
                         + " (la plus faible Résistance - Assassin).");
                 return target;
             }
@@ -1074,7 +1075,7 @@ class CombatTurnService {
                 Personnage target = alivePlayers.stream()
                         .min(java.util.Comparator.comparingInt(p -> p.getHealthMax()))
                         .orElse(alivePlayers.get(0));
-                session.addLog("\uD83E\uDDA0 " + m.getBase().getName() + " frappe " + target.getName()
+                session.addLog(m.getBase().getName() + " frappe " + target.getName()
                         + " (le moins de PV max - Brutal).");
                 return target;
             }
@@ -1082,7 +1083,7 @@ class CombatTurnService {
                 Personnage target = alivePlayers.stream()
                         .min(java.util.Comparator.comparingInt(p -> p.getHealthCurrent()))
                         .orElse(alivePlayers.get(0));
-                session.addLog("\uD83D\uDE08 " + m.getBase().getName() + " s'acharne sur " + target.getName()
+                session.addLog(m.getBase().getName() + " s'acharne sur " + target.getName()
                         + " (le moins de PV actuel - Sadique).");
                 return target;
             }

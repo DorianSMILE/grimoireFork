@@ -53,7 +53,7 @@ public class DestructionPassiveEffect extends VoiePassiveEffect {
             personnage.setPassiveState("destruction_heat_was_max", 1);
             personnage.setPassiveState("destruction_heat_generated_this_cast", 0);
             
-            System.out.println("🔥 [Destruction] " + personnage.getName() + " consomme sa chaleur de 100. Le sort " + event.getSpell().getNom() + " est gratuit !");
+            System.out.println("[Destruction] " + personnage.getName() + " consomme sa chaleur de 100. Le sort " + event.getSpell().getNom() + " est gratuit !");
         }
     }
 
@@ -80,7 +80,7 @@ public class DestructionPassiveEffect extends VoiePassiveEffect {
             personnage.setPassiveState("destruction_heat", newHeat);
             personnage.setPassiveState("destruction_heat_was_max", 0);
             personnage.setPassiveState("destruction_heat_generated_this_cast", 0);
-            System.out.println("🔥 [Destruction] " + personnage.getName() + " a consommé sa chaleur de 100. Nouvelle chaleur après génération du sort : " + newHeat + "/100.");
+            System.out.println("[Destruction] " + personnage.getName() + " a consommé sa chaleur de 100. Nouvelle chaleur après génération du sort : " + newHeat + "/100.");
             if (newHeat >= 100) {
                 personnage.triggerFreeSpell();
             }
@@ -95,7 +95,7 @@ public class DestructionPassiveEffect extends VoiePassiveEffect {
         int addedHeat = spell.getHeatGenerated();
         
         if (addedHeat == 0) {
-            System.out.println("🔥 [Destruction] " + personnage.getName() + " lance un sort qui ne génère pas de chaleur.");
+            System.out.println("[Destruction] " + personnage.getName() + " lance un sort qui ne génère pas de chaleur.");
             return;
         }
 
@@ -103,10 +103,10 @@ public class DestructionPassiveEffect extends VoiePassiveEffect {
         if (heat > 100) {
             heat = 100;
         }
-        System.out.println("🔥 [Destruction] " + personnage.getName() + " accumule de la chaleur (+" + addedHeat + " -> " + heat + "/100).");
+        System.out.println("[Destruction] " + personnage.getName() + " accumule de la chaleur (+" + addedHeat + " -> " + heat + "/100).");
         if (heat >= 100) {
             personnage.triggerFreeSpell();
-            System.out.println("🔥 [Destruction] " + personnage.getName() + " a atteint 100 de chaleur ! Le prochain sort sera gratuit.");
+            System.out.println("[Destruction] " + personnage.getName() + " a atteint 100 de chaleur ! Le prochain sort sera gratuit.");
         }
         personnage.setPassiveState("destruction_heat", heat);
     }

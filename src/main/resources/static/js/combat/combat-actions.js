@@ -1,8 +1,8 @@
-import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000234';
-import { updateUI } from './combat-ui.js?v=1786180000234';
+import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000239';
+import { updateUI } from './combat-ui.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
 import { triggerAllWaitSprites, triggerCombatActionSprite } from './combat-sprites.js';
 
 
@@ -82,6 +82,8 @@ export async function nextRoom() {
             pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
+        pageState.isProcessing = false;
+        setButtonsProcessing(false);
         updateUI(data);
     } catch (e) {
         console.error(e);
@@ -90,6 +92,8 @@ export async function nextRoom() {
         try {
             const retryRes = await globalFetch(`/api/pve/combat/${pageState.sessionId}/resume`, { method: 'POST' });
             const retryData = await retryRes.json();
+            pageState.isProcessing = false;
+            setButtonsProcessing(false);
             updateUI(retryData);
         } catch (e2) {
             console.error('Recovery failed:', e2);
@@ -105,9 +109,8 @@ export async function openStrangeDoor() {
     pageState.isProcessing = true;
     setButtonsProcessing(true);
 
-    document.getElementById('eventOverlay').classList.remove('show');
-    const vicOverlay = document.getElementById('combatVictoryOverlay');
-    if (vicOverlay) vicOverlay.classList.remove('show');
+    // Do not hide overlays immediately: in multi-player we might be waiting for the ally (1/2).
+    // updateUI() will handle hiding/showing based on the actual session state.
 
     try {
         const res = await globalFetch(`/api/pve/combat/${pageState.sessionId}/open-strange-door`, { method: 'POST' });
@@ -126,6 +129,8 @@ export async function openStrangeDoor() {
             pageState.previousPlayerSpiritXP[p.id] = p.spiritualiteExperience || 0;
         });
 
+        pageState.isProcessing = false;
+        setButtonsProcessing(false);
         updateUI(data);
     } catch (e) {
         console.error(e);
@@ -183,6 +188,8 @@ export async function acceptAlteration(pass = false) {
             return;
         }
         const data = await res.json();
+        pageState.isProcessing = false;
+        setButtonsProcessing(false);
         updateUI(data);
     } catch (e) {
         console.error(e);
@@ -211,6 +218,8 @@ export async function useRope(equipmentId, actionType = 'ROPE') {
             return;
         }
         const data = await res.json();
+        pageState.isProcessing = false;
+        setButtonsProcessing(false);
         updateUI(data);
     } catch (e) {
         console.error(e);
@@ -386,15 +395,6 @@ export async function openChest(equipmentId, actionType = 'OPEN') {
         let url = `/api/pve/combat/${pageState.sessionId}/open-chest?actionType=${actionType}`;
         if (equipmentId) url += `&equipmentId=${equipmentId}`;
         const res = await globalFetch(url, { method: 'POST' });
-        if (!res.ok) {
-            const err = await res.text();
-            if (typeof showNotif !== 'undefined') window.showNotif("Erreur : " + err, true);
-            else ui.showNotif("Erreur : " + err, true);
-            pageState.isProcessing = false;
-            return;
-        }
-
-        const data = await res.json();
 
         // Handle button UI reset if it was in loading state
         if (btn) {
@@ -406,6 +406,19 @@ export async function openChest(equipmentId, actionType = 'OPEN') {
             btnKey.innerHTML = `<span class="material-symbols-outlined">vpn_key</span> Ouvrir (Clé : +10% de butin)`;
         }
 
+        if (!res.ok) {
+            const err = await res.text();
+            if (typeof showNotif !== 'undefined') window.showNotif("Erreur : " + err, true);
+            else ui.showNotif("Erreur : " + err, true);
+            pageState.isProcessing = false;
+            setButtonsProcessing(false);
+            return;
+        }
+
+        const data = await res.json();
+
+        pageState.isProcessing = false;
+        setButtonsProcessing(false);
         // Then call updateUI
         updateUI(data);
 
@@ -464,7 +477,7 @@ export function resetCombatTimeoutWarning(finished) {
             }, 1000);
 
         } else {
-            alert("⚠️ Attention : Le combat expirera dans 1 minute pour inactivité !");
+            alert("Attention : Le combat expirera dans 1 minute pour inactivité !");
         }
     }, 540000); // 9 minutes
 }

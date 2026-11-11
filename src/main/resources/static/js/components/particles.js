@@ -1,3 +1,23 @@
+function resolveLvl5Origin(badgeText) {
+    if (badgeText.includes('consolidation')) return 'consolidation';
+    if (badgeText.includes('raison')) return 'raison';
+    if (badgeText.includes('sûreté') || badgeText.includes('surete')) return 'surete';
+    if (badgeText.includes('trahison')) return 'trahison';
+    if (badgeText.includes('conviction')) return 'conviction';
+    if (badgeText.includes('création') || badgeText.includes('creation')) return 'creation';
+    if (badgeText.includes('destruction')) return 'destruction';
+    if (badgeText.includes('violence')) return 'violence';
+    if (badgeText.includes('esprit')) return 'esprit';
+    if (badgeText.includes('karma')) {
+        if (badgeText.includes('ténèbres') || badgeText.includes('tenebres')) return 'karma-tenebres';
+        if (badgeText.includes('lumière') || badgeText.includes('lumiere')) return 'karma-lumiere';
+        if (badgeText.includes('harmonie')) return 'karma-harmonie';
+        return 'karma';
+    }
+    if (badgeText.includes('ténèbres') || badgeText.includes('tenebres')) return 'tenebres';
+    return 'generic';
+}
+
 export function attachLvl5CardEffects(container) {
     const cards = container.querySelectorAll('.spell-card-lvl-5');
     cards.forEach(card => {
@@ -6,8 +26,8 @@ export function attachLvl5CardEffects(container) {
         card.parentNode.replaceChild(fresh, card);
 
         // Déterminer la voie / spiritualité depuis les badges
-        const badgeText = (fresh.querySelector('.spell-badges')?.innerText || '').toLowerCase();
-        const origin = getLvl5Origin(badgeText);
+        const badgeText = (fresh.querySelector('.spell-badges')?.innerText || fresh.querySelector('.spell-badges')?.textContent || '').toLowerCase();
+        const origin = typeof getLvl5Origin === 'function' ? getLvl5Origin(badgeText) : resolveLvl5Origin(badgeText);
 
         fresh.addEventListener('mouseenter', () => spellCardEnter(fresh, origin));
         fresh.addEventListener('mouseleave', () => spellCardLeave(fresh, origin));

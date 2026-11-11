@@ -75,7 +75,7 @@ public abstract class SpellEffect {
         
         boolean isCrit = roll <= totalCrit;
         if (isCrit) {
-            System.out.println("💥 Coup Critique déclenché par " + caster.getName() + " !");
+            System.out.println("Coup Critique déclenché par " + caster.getName() + " !");
         }
         return isCrit;
     }

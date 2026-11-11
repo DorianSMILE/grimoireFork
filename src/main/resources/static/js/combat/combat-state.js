@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE } from './combat-socket.js?v=1786180000234';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000234';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000234';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000234';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000234';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000239';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000239';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000239';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000239';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000239';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -71,6 +71,10 @@ window.pageState = window.pageState || {
 export const pageState = window.pageState;
 
 pageState.lastCombatLogCount = 0;
+pageState.renderedCombatLogs = [];
+pageState.renderedLogSessionId = null;
+pageState.isLogPinnedToBottom = true;
+pageState.isProgrammaticLogScroll = false;
 
 pageState.previousPlayerXP = {};
 
@@ -97,12 +101,17 @@ export function setButtonsProcessing(isProc) {
             btn.disabled = true;
             btn.classList.add('disabled');
         } else {
-            if (!btn.classList.contains('waiting-ready')) {
+            if (!btn.classList.contains('waiting-ready') && !btn.classList.contains('is-disabled')) {
                 btn.disabled = false;
                 btn.classList.remove('disabled');
             }
         }
     });
+    if (!isProc && pageState.pendingSseData) {
+        const pending = pageState.pendingSseData;
+        pageState.pendingSseData = null;
+        updateUI(pending);
+    }
 }
 
 window.showGlobalTooltip = ui.showGlobalTooltip;
@@ -159,11 +168,11 @@ window.promptFlee = function () {
                     return;
                 }
                 localStorage.removeItem('activeCombatId');
-                window.location.href = '/dungeons.html';
+                window.location.href = '/dungeons';
             } catch (e) {
                 console.error(e);
                 localStorage.removeItem('activeCombatId');
-                window.location.href = '/dungeons.html';
+                window.location.href = '/dungeons';
             }
         }
     });
@@ -171,7 +180,32 @@ window.promptFlee = function () {
 
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+let _combatTutorialObserver = null;
+
+window.initCombatPage = async function () {
+    pageState.lastCombatLogCount = 0;
+    pageState.renderedCombatLogs = [];
+    pageState.renderedLogSessionId = null;
+    pageState.isLogPinnedToBottom = true;
+    pageState.isProgrammaticLogScroll = false;
+    pageState.previousPlayerXP = {};
+    pageState.previousPlayerSpiritXP = {};
+    pageState.isProcessing = false;
+    pageState.isFleeing = false;
+    pageState.hasAnimatedOpening = false;
+    pageState.currentSpellFilter = 'ALL';
+    pageState.selectedTargetIndex = null;
+    pageState.selectedAllyIndex = -1;
+    pageState.pendingCastSpellId = null;
+    pageState.pendingNeedsEnemy = false;
+    pageState.pendingNeedsAlly = false;
+    pageState.isMulti = false;
+    pageState.multiRole = null;
+    pageState.multiId = null;
+    pageState.sessionId = null;
+    pageState.currentSessionData = null;
+    pageState.combatEquipments = {};
+
     window.dungeonMusic = null;
 
     const tryPlayMusic = () => {
@@ -217,8 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 };
                 tryStartCombatTutorial();
-                const obs = new MutationObserver(() => tryStartCombatTutorial());
-                obs.observe(enemiesEl, { childList: true });
+                if (_combatTutorialObserver) _combatTutorialObserver.disconnect();
+                _combatTutorialObserver = new MutationObserver(() => tryStartCombatTutorial());
+                _combatTutorialObserver.observe(enemiesEl, { childList: true });
             }
         }
     } catch (_) { }
@@ -246,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await globalFetch(`/api/pve/combat/${directSessionId}/resume`, { method: 'POST' });
         if (!res.ok) {
             window.showNotif('Session introuvable ou expirée.', true);
-            window.location.href = '/dungeons.html';
+            window.location.href = '/dungeons';
             return;
         }
         const data = await res.json();
@@ -276,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     savedCombatId = data.sessionId;
                     localStorage.setItem('activeCombatId', savedCombatId);
                     if (data.isMulti) {
-                        window.location.href = `/combat.html?sessionId=${data.sessionId}&multiId=${data.multiId}`;
+                        window.location.href = `/combat?sessionId=${data.sessionId}&multiId=${data.multiId}`;
                         return;
                     }
                 }
@@ -298,11 +333,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!dungeonId || !characterIds) {
         if (typeof showNotif !== 'undefined') window.showNotif("Paramètres de combat manquants.", true);
         else ui.showNotif("Paramètres de combat manquants.", true);
-        window.location.href = '/dungeons.html';
+        window.location.href = '/dungeons';
         return;
     }
 
     startCombat(characterIds, dungeonId, consumableIds);
+};
+
+window.cleanupCombatPage = function () {
+    closeMultiSSE();
+    if (_combatTutorialObserver) {
+        _combatTutorialObserver.disconnect();
+        _combatTutorialObserver = null;
+    }
+    if (window.dungeonMusic) {
+        try { window.dungeonMusic.pause(); } catch (_) {}
+        window.dungeonMusic = null;
+    }
+    if (pageState.combatWarningTimer) {
+        clearTimeout(pageState.combatWarningTimer);
+        pageState.combatWarningTimer = null;
+    }
+    if (pageState.combatCountdownInterval) {
+        clearInterval(pageState.combatCountdownInterval);
+        pageState.combatCountdownInterval = null;
+    }
+    if (window.multiplayerTurnInterval) {
+        clearInterval(window.multiplayerTurnInterval);
+        window.multiplayerTurnInterval = null;
+    }
+    if (ui.hideGlobalTooltip) {
+        ui.hideGlobalTooltip(true);
+    }
+    if (window.hideHeroEquipmentTooltip) {
+        window.hideHeroEquipmentTooltip(true);
+    }
+    if (window.GrimoireTutorial && typeof window.GrimoireTutorial.stop === 'function') {
+        window.GrimoireTutorial.stop();
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('arena') && !window.__reactCombatMounted) {
+        window.initCombatPage();
+    }
 });
 
 window.addEventListener('beforeunload', function (e) {
@@ -702,6 +776,11 @@ window.renderHeroStatsPanel = function () {
             </div>
         </div>`;
     });
+    const resultOverlay = document.getElementById('resultOverlay');
+    if (resultOverlay && resultOverlay.classList.contains('show')) {
+        statsDiv.style.display = 'none';
+        return;
+    }
     statsDiv.innerHTML = statsHtml;
     statsDiv.style.cssText = [
         'display: flex',
@@ -712,7 +791,7 @@ window.renderHeroStatsPanel = function () {
         'top: 16px',
         'margin-left: 30px',
         'width: 190px',
-        'z-index: 50',
+        'z-index: 20',
         'pointer-events: none',
     ].join('; ');
 
@@ -1255,6 +1334,24 @@ window.showHeroEquipmentTooltip = function (el, characterId) {
     const content = document.getElementById('heroEquipmentTooltipContent');
     if (!tooltip || !content) return;
 
+    if (tooltip.hideTimeout) {
+        clearTimeout(tooltip.hideTimeout);
+        tooltip.hideTimeout = null;
+    }
+
+    if (!tooltip._hasHoverListeners) {
+        tooltip.addEventListener('mouseenter', () => {
+            if (tooltip.hideTimeout) {
+                clearTimeout(tooltip.hideTimeout);
+                tooltip.hideTimeout = null;
+            }
+        });
+        tooltip.addEventListener('mouseleave', () => {
+            window.hideHeroEquipmentTooltip(false);
+        });
+        tooltip._hasHoverListeners = true;
+    }
+
     const hero = pageState.currentSessionData?.players?.find(p => p.id === characterId);
     const heroName = hero ? hero.name || hero.nom || 'Héros' : 'Héros';
     const heroLevel = hero ? hero.voieLevel || 1 : 1;
@@ -1262,100 +1359,135 @@ window.showHeroEquipmentTooltip = function (el, characterId) {
 
     let titleHtml = '';
     if (heroTitle && heroTitle.trim() !== '') {
-        titleHtml = `<div class="hero-modal-title">« ${heroTitle} »</div>`;
+        titleHtml = `<div class="combat-hero-equip-subtitle">« ${heroTitle} »</div>`;
     }
 
-    const headerHtml = `<div style="text-align:center; margin-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom:0.5rem;"><div style="font-weight:bold; font-size: 1.1rem; color:#f8fafc;">${heroName} <span class="text-sky-300" style="font-size: 0.9em;">(Niv. ${heroLevel})</span></div>${titleHtml}</div>`;
+    const headerHtml = `
+        <div class="combat-hero-equip-header">
+            <div class="combat-hero-equip-title">
+                <span>${heroName}</span>
+                <span class="hero-level">Niv. ${heroLevel}</span>
+            </div>
+            ${titleHtml}
+        </div>
+    `;
 
     let eqs = pageState.combatEquipments[characterId];
     if (!eqs || eqs.length === 0) {
-        content.innerHTML = headerHtml + '<div style="color:#cbd5e1; font-size:0.9rem; text-align:center;">Aucun équipement</div>';
+        content.innerHTML = headerHtml + '<div style="color:#cbd5e1; font-size:0.85rem; text-align:center; padding: 0.5rem;">Aucun équipement</div>';
     } else {
-        let html = headerHtml + '<div class="equip-slots-grid" style="width: 100%; min-width: 500px;">';
+        const twoHanded = eqs.find(e => e.slot === 'ARME_DEUX_MAINS');
+        const row1 = [
+            { slot: 'CASQUE' },
+            { slot: 'PLASTRON' },
+            { slot: 'CAPE' },
+            { slot: 'BOTTES' }
+        ];
+        const row2 = twoHanded
+            ? [
+                { slot: 'ARME_DEUX_MAINS', span2: true },
+                { slot: 'ANNEAU_GAUCHE' },
+                { slot: 'ANNEAU_DROIT' }
+            ]
+            : [
+                { slot: 'ARME_GAUCHE' },
+                { slot: 'ARME_DROITE' },
+                { slot: 'ANNEAU_GAUCHE' },
+                { slot: 'ANNEAU_DROIT' }
+            ];
 
-        const slots = Object.keys(window.SLOT_LABELS || {}).filter(s => s !== 'CONSOMMABLE' && s !== 'ANOMALIE' && s !== 'ARME_DEUX_MAINS' && s !== 'ARME' && s !== 'ANNEAU');
+        const slots = [...row1, ...row2];
 
-        // If SLOT_LABELS isn't loaded for some reason, fallback to basic list
-        if (slots.length === 0) {
-            slots.push('CASQUE', 'PLASTRON', 'ARME_GAUCHE', 'ANNEAU_GAUCHE', 'ANNEAU_DROIT', 'ARME_DROITE', 'BOTTES', 'CAPE');
-        }
+        let html = headerHtml + '<div class="combat-hero-equip-grid">';
 
-        slots.forEach(slotKey => {
+        const defs = window.STAT_DEFS || [
+            { key: 'bonusHealthMax', label: 'PV', icon: 'favorite', color: 'var(--secondary, #ec4899)' },
+            { key: 'bonusManaMax', label: 'Mana', icon: 'water_drop', color: 'var(--mana, #38bdf8)' },
+            { key: 'bonusPower', label: 'Pui', icon: 'auto_awesome', color: 'var(--magic, #a855f7)' },
+            { key: 'bonusStrength', label: 'For', icon: 'fitness_center', color: 'var(--danger, #f43f5e)' },
+            { key: 'bonusArmor', label: 'Arm', icon: 'shield', color: 'var(--accent, #3b82f6)' },
+            { key: 'bonusResistance', label: 'Rés', icon: 'shield', color: 'var(--success, #10b981)' },
+            { key: 'bonusSpeed', label: 'Vit', icon: 'bolt', color: 'var(--warning, #f59e0b)' },
+            { key: 'bonusCrit', label: 'Crit', icon: 'gps_fixed', color: 'var(--crit, #ef4444)' },
+            { key: 'regenHealthPerTurn', label: 'PV/t', icon: 'healing', color: 'var(--success, #10b981)' },
+            { key: 'regenManaPerTurn', label: 'Mana/t', icon: 'cyclone', color: 'var(--mana, #38bdf8)' }
+        ];
+
+        slots.forEach(entry => {
+            const slotKey = entry.slot;
+            const span2 = entry.span2;
             const slotInfo = window.SLOT_LABELS && window.SLOT_LABELS[slotKey] ? window.SLOT_LABELS[slotKey] : { icon: 'help', color: '#94a3b8', label: slotKey };
 
             let equipped = eqs.find(e => e.slot === slotKey);
-            const twoHanded = eqs.find(e => e.slot === 'ARME_DEUX_MAINS');
+            if (slotKey === 'ARME_DEUX_MAINS' && twoHanded) {
+                equipped = twoHanded;
+            }
 
-            if (slotKey === 'ARME_GAUCHE' && twoHanded) {
-                equipped = twoHanded;
-            }
-            if (slotKey === 'ARME_DROITE' && twoHanded) {
-                equipped = twoHanded;
-            }
+            const spanAttr = span2 ? 'style="grid-column: span 2;"' : '';
+            const slotLabel = span2 ? 'Arme 2 Mains' : (slotInfo.label || slotKey);
 
             if (equipped) {
-                const rarityName = typeof getRarityName === 'function' ? getRarityName(equipped.rarity) : '';
-                const rarityClass = rarityName ? `rarity-${rarityName}` : '';
+                const rarityName = typeof getRarityName === 'function' ? getRarityName(equipped.rarity) : (equipped.rarity || '');
+                const rarityClass = rarityName ? `rarity-${rarityName.toLowerCase()}` : '';
 
-                let statsChips = '';
-                if (typeof STAT_DEFS !== 'undefined') {
-                    statsChips = STAT_DEFS
-                        .filter(s => equipped[s.key] && equipped[s.key] !== 0)
-                        .map(s => {
-                            const val = equipped[s.key];
-                            const sign = val > 0 ? '+' : '';
-                            const isMalus = val < 0;
-                            const suffix = s.isPercent ? '%' : '';
-                            return `<span class="eq-stat-mini ${isMalus ? 'malus' : ''}" title="${s.label}"><span class="material-symbols-outlined text-xs" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>${sign}${val}${suffix}</span>`;
-                        }).join('');
-                } else {
-                    let statsHtml = '';
-                    if (equipped.power > 0) statsHtml += `<span style="color:#a855f7;">${equipped.power} Pui</span> `;
-                    if (equipped.strength > 0) statsHtml += `<span style="color:#f43f5e;">${equipped.strength} For</span> `;
-                    if (equipped.armor > 0) statsHtml += `<span style="color:#3b82f6;">${equipped.armor} Arm</span> `;
-                    if (equipped.resistance > 0) statsHtml += `<span style="color:#10b981;">${equipped.resistance} Rés</span> `;
-                    if (equipped.speed > 0) statsHtml += `<span style="color:#eab308;">${equipped.speed} Vit</span> `;
-                    if (equipped.crit > 0) statsHtml += `<span style="color:#ef4444;">${equipped.crit}% Crit</span> `;
-                    statsChips = statsHtml;
-                }
+                const statsChips = defs
+                    .filter(s => {
+                        const val = equipped[s.key] !== undefined ? equipped[s.key] : equipped[s.key.replace('bonus', '').toLowerCase()];
+                        return val && val !== 0;
+                    })
+                    .map(s => {
+                        const val = equipped[s.key] !== undefined ? equipped[s.key] : equipped[s.key.replace('bonus', '').toLowerCase()];
+                        const sign = val > 0 ? '+' : '';
+                        const isMalus = val < 0;
+                        const suffix = s.isPercent ? '%' : '';
+                        return `<span class="eq-stat-mini ${isMalus ? 'malus' : ''}" title="${s.label}"><span class="material-symbols-outlined text-xs" style="color:${isMalus ? '#ef4444' : s.color};">${s.icon}</span>${sign}${val}${suffix}</span>`;
+                    }).join('');
 
                 let specialEffectHtml = '';
                 if (equipped.specialEffect && equipped.specialEffect !== 'NONE' && equipped.specialEffect !== 'AUCUN') {
                     const label = window.EFFECT_LABELS ? (window.EFFECT_LABELS[equipped.specialEffect] || equipped.specialEffect) : equipped.specialEffect;
                     const isCursed = equipped.specialEffect.startsWith('CURSED_');
                     const icon = isCursed ? 'skull' : 'auto_awesome';
-                    const color = isCursed ? '#9b2d2d' : '#c084fc';
-                    const bg = isCursed ? 'rgba(156, 163, 175, 0.15)' : 'rgba(168, 85, 247, 0.1)';
+                    const color = isCursed ? '#f87171' : '#c084fc';
+                    const bg = isCursed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(168, 85, 247, 0.12)';
+                    const border = isCursed ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(168, 85, 247, 0.25)';
+                    const desc = (window.EFFECT_DESCRIPTIONS && window.EFFECT_DESCRIPTIONS[equipped.specialEffect]) || 'Aucune description disponible.';
+                    const valStr = equipped.specialEffectValue ? ` (${equipped.specialEffectValue})` : '';
+                    const tooltipHtml = `<div style="font-weight:700; color:${color}; margin-bottom:4px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined text-xs">${icon}</span><span>${label}${valStr}</span></div><div style="font-size:0.75rem; color:#cbd5e1; line-height:1.35; max-width:300px; white-space:normal;">${desc}</div>`;
+                    const encodedTooltip = encodeURIComponent(tooltipHtml);
 
-                    specialEffectHtml = `<div style="margin-top: 0.3rem; font-size: 0.7rem; color: ${color}; background: ${bg}; padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem; border: ${isCursed ? '1px solid rgba(156, 163, 175, 0.2)' : 'none'};">
-                        <span class="material-symbols-outlined text-xs">${icon}</span>
-                        ${label} : ${equipped.specialEffectValue || ''} ${window.getEffectInfoIconHtml ? window.getEffectInfoIconHtml(equipped.specialEffect) : ''}
-                    </div>`;
+                    specialEffectHtml = `
+                        <div class="combat-equip-card-effect"
+                             style="color: ${color}; background: ${bg}; border: ${border};"
+                             data-effect-desc="${encodedTooltip}"
+                             onmouseenter="if(window.showEffectTooltip) window.showEffectTooltip(this, decodeURIComponent(this.dataset.effectDesc))"
+                             onmouseleave="if(window.hideEffectTooltip) window.hideEffectTooltip()">
+                            <span class="material-symbols-outlined text-xs" style="flex-shrink:0;">${icon}</span>
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${label} ${equipped.specialEffectValue ? ': ' + equipped.specialEffectValue : ''}</span>
+                            <span class="material-symbols-outlined" style="font-size:0.8rem; opacity:0.75; flex-shrink:0;" title="Détails de l'effet">info</span>
+                        </div>
+                    `;
                 }
 
                 html += `
-                    <div class="equip-slot-card equipped" data-slot="${slotKey}">
-                        <div class="equip-slot-header">
-                            <span class="equip-slot-label">
-                                <span class="material-symbols-outlined text-lg ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
-                                ${slotInfo.label || slotKey}
-                            </span>
+                    <div class="combat-equip-card equipped" data-slot="${slotKey}" ${spanAttr}>
+                        <div class="combat-equip-card-header">
+                            <span class="material-symbols-outlined text-sm ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
+                            <span>${slotLabel}</span>
                         </div>
-                        <div class="equip-slot-item-name ${rarityClass}">${equipped.name}</div>
-                        <div class="equip-slot-stats">
-                            ${statsChips || '<span class="opacity-40">Aucun bonus</span>'}
-                            ${specialEffectHtml}
+                        <div class="combat-equip-card-name ${rarityClass}" title="${equipped.name}">${equipped.name}</div>
+                        <div class="combat-equip-card-stats">
+                            ${statsChips || '<span class="opacity-40" style="font-size:0.65rem;">Aucun bonus</span>'}
                         </div>
+                        ${specialEffectHtml}
                     </div>
                 `;
             } else {
                 html += `
-                    <div class="equip-slot-card empty" data-slot="${slotKey}">
-                        <div class="equip-slot-header" style="justify-content: center; opacity: 0.5;">
-                            <span class="equip-slot-label">
-                                <span class="material-symbols-outlined text-lg ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
-                                ${slotInfo.label || slotKey}
-                            </span>
+                    <div class="combat-equip-card empty" data-slot="${slotKey}" ${spanAttr}>
+                        <div class="combat-equip-card-header" style="justify-content: center; opacity: 0.4;">
+                            <span class="material-symbols-outlined text-sm ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
+                            <span>${slotLabel}</span>
                         </div>
                     </div>
                 `;
@@ -1365,27 +1497,73 @@ window.showHeroEquipmentTooltip = function (el, characterId) {
         content.innerHTML = html;
     }
 
+    // Measure and position tooltip clamped to viewport
     const rect = el.getBoundingClientRect();
     tooltip.style.display = 'block';
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.maxHeight = '';
+    tooltip.style.overflowY = '';
 
-    // Position tooltip to the right or left of the avatar depending on screen space
-    let top = rect.top + window.scrollY;
-    let left = rect.right + 10;
+    const tooltipWidth = tooltip.offsetWidth || 620;
+    const tooltipHeight = tooltip.offsetHeight || 220;
+    const padding = 12;
 
-    if (left + 750 > window.innerWidth) {
-        left = rect.left - 760;
+    // Center vertically on avatar
+    let top = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+
+    const maxAllowedHeight = window.innerHeight - (padding * 2);
+    if (tooltipHeight > maxAllowedHeight) {
+        tooltip.style.maxHeight = `${maxAllowedHeight}px`;
+        tooltip.style.overflowY = 'auto';
+        top = padding;
+    } else {
+        if (top + tooltipHeight > window.innerHeight - padding) {
+            top = window.innerHeight - tooltipHeight - padding;
+        }
+        if (top < padding) {
+            top = padding;
+        }
     }
 
-    // Ensure left is not negative
-    if (left < 10) {
-        left = 10;
+    // Position horizontally: try right first, then left
+    let left = rect.right + padding;
+    if (left + tooltipWidth > window.innerWidth - padding) {
+        left = rect.left - tooltipWidth - padding;
     }
 
-    tooltip.style.top = top + 'px';
-    tooltip.style.left = left + 'px';
+    // Clamp horizontally
+    if (left < padding) {
+        left = padding;
+    }
+    if (left + tooltipWidth > window.innerWidth - padding) {
+        left = Math.max(padding, window.innerWidth - tooltipWidth - padding);
+    }
+
+    tooltip.style.top = `${Math.round(top)}px`;
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.visibility = 'visible';
 };
 
-window.hideHeroEquipmentTooltip = function () {
+window.hideHeroEquipmentTooltip = function (immediate = false) {
     const tooltip = document.getElementById('heroEquipmentTooltip');
-    if (tooltip) tooltip.style.display = 'none';
+    if (!tooltip) return;
+
+    if (tooltip.hideTimeout) {
+        clearTimeout(tooltip.hideTimeout);
+        tooltip.hideTimeout = null;
+    }
+
+    if (immediate === true) {
+        tooltip.style.display = 'none';
+        tooltip.style.visibility = '';
+        if (window.hideEffectTooltip) window.hideEffectTooltip();
+        return;
+    }
+
+    tooltip.hideTimeout = setTimeout(() => {
+        tooltip.style.display = 'none';
+        tooltip.style.visibility = '';
+        tooltip.hideTimeout = null;
+        if (window.hideEffectTooltip) window.hideEffectTooltip();
+    }, 300);
 };

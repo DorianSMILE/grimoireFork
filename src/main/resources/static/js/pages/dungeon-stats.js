@@ -29,17 +29,89 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('authLoaded', initStats);
 });
 
+window.initDungeonStatsPage = async function () {
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = chartTheme.color;
+        Chart.defaults.font.family = chartTheme.fontFamily;
+        Chart.defaults.scale.grid.color = chartTheme.gridColor;
+    }
+    window.removeEventListener('authLoaded', initStats);
+    window.addEventListener('authLoaded', initStats);
+    if (typeof window.checkAuthStatus === 'function') {
+        await window.checkAuthStatus();
+    } else {
+        await initStats();
+    }
+};
+
+window.cleanupDungeonStatsPage = function () {
+    window.removeEventListener('authLoaded', initStats);
+    if (outcomesChartInstance) {
+        outcomesChartInstance.destroy();
+        outcomesChartInstance = null;
+    }
+    if (classesChartInstance) {
+        classesChartInstance.destroy();
+        classesChartInstance = null;
+    }
+    if (spiritualityChartInstance) {
+        spiritualityChartInstance.destroy();
+        spiritualityChartInstance = null;
+    }
+};
+
+function ensureChartJs() {
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = chartTheme.color;
+        Chart.defaults.font.family = chartTheme.fontFamily;
+        Chart.defaults.scale.grid.color = chartTheme.gridColor;
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[src*="chart.js"]');
+        if (existing) {
+            existing.addEventListener('load', () => {
+                if (typeof Chart !== 'undefined') {
+                    Chart.defaults.color = chartTheme.color;
+                    Chart.defaults.font.family = chartTheme.fontFamily;
+                    Chart.defaults.scale.grid.color = chartTheme.gridColor;
+                }
+                resolve();
+            });
+            existing.addEventListener('error', reject);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = () => {
+            if (typeof Chart !== 'undefined') {
+                Chart.defaults.color = chartTheme.color;
+                Chart.defaults.font.family = chartTheme.fontFamily;
+                Chart.defaults.scale.grid.color = chartTheme.gridColor;
+            }
+            resolve();
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
 async function initStats() {
+    if (!document.getElementById('statsLoader')) return;
+    await ensureChartJs();
+    if (!document.getElementById('statsLoader')) return;
     const isAdmin = window.isAdmin;
     const endpoint = isAdmin ? '/api/pve/admin/stats/dungeons' : '/api/pve/stats/my-dungeons';
 
-    // Update page title for non-admins
+    // Update page title and account column based on role
+    const titleEl = document.querySelector('.stats-main .logo-text-gradient.logo-dungeon');
+    const accountTh = document.querySelector('.stats-main .runs-table th:nth-child(3)');
     if (!isAdmin) {
-        const titleEl = document.querySelector('.logo-text-gradient.logo-dungeon');
         if (titleEl) titleEl.textContent = 'Mes Statistiques PvE';
-        // Hide account column
-        const accountTh = document.querySelector('.runs-table th:nth-child(3)');
         if (accountTh) accountTh.classList.add('is-hidden');
+    } else {
+        if (titleEl) titleEl.textContent = 'Statistiques des Donjons';
+        if (accountTh) accountTh.classList.remove('is-hidden');
     }
 
     try {
@@ -63,6 +135,8 @@ async function initStats() {
         // Sort runs by timestamp desc
         allRuns.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+        if (!document.getElementById('statsLoader')) return;
+
         populateDungeonSelect();
 
         document.getElementById('statsLoader').classList.add('is-hidden');
@@ -72,7 +146,8 @@ async function initStats() {
 
     } catch (e) {
         console.error("Erreur stats", e);
-        document.getElementById('statsLoader').setAttribute('message', 'Erreur de chargement des statistiques');
+        const loader = document.getElementById('statsLoader');
+        if (loader) loader.setAttribute('message', 'Erreur de chargement des statistiques');
     }
 }
 

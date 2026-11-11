@@ -580,13 +580,11 @@ class SpellAvailabilityServiceTest {
         assertThat(avail.getManaModifiers().get(0).bonus()).isFalse();
         assertThat(avail.getManaModifiers().get(1).label()).contains("Brèche spirituelle");
 
-        // PV: base 5 + 10 (10% de 100) = 15, et modificateur Brèche spirituelle (10% de 54 = 5 PV)
+        // PV: base 5 + 10 (10% de 100) = 15
         assertThat(avail.getPercentHealAmount()).isEqualTo(10);
         assertThat(avail.getRawHealCost()).isEqualTo(15);
         assertThat(avail.getFinalHealCost()).isEqualTo(15);
-        assertThat(avail.getHealModifiers()).hasSize(1);
-        assertThat(avail.getHealModifiers().get(0).label()).contains("Brèche spirituelle");
-        assertThat(avail.getHealModifiers().get(0).valueText()).isEqualTo("+5 PV");
+        assertThat(avail.getHealModifiers()).isEmpty();
     }
 
     @Test
@@ -765,9 +763,232 @@ class SpellAvailabilityServiceTest {
         // 2. REPTILE : ceil(120 * 0.85) = 102
         // 3. DAMAGE_TAKEN_PHYSIC (+25%) : 102 * 1.25 = 127.5
         // 4. Armure 100 (réduction 50%) : (int)(127.5 * 0.5) = 63
-        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV
-        assertThat(preview.calculatedValue()).isEqualTo(43);
+        // 5. Bouclier 20 : absorbe 20 -> reste 43 dégâts PV (total infligé = 63)
+        assertThat(preview.calculatedValue()).isEqualTo(63);
         assertThat(preview.hpDamage()).isEqualTo(43);
         assertThat(preview.shieldAbsorbed()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("Devrait recalculer les aperçus de dégâts basés sur TARGET_HEALTH_MISSING selon chaque cible")
+    void shouldUpdateDamagePreviewBasedOnTargetMissingHealthWhenTargetChanges() {
+        // Ennemi 1: Max 200, Actuel 150 -> Manquant 50
+        Personnage e1 = new Personnage();
+        e1.setId(101L);
+        e1.setName("Gobelin Blessé");
+        e1.setHealthMax(200);
+        e1.setHealthCurrent(150);
+
+        // Ennemi 2: Max 300, Actuel 100 -> Manquant 200
+        Personnage e2 = new Personnage();
+        e2.setId(102L);
+        e2.setName("Ogre Agonisant");
+        e2.setHealthMax(300);
+        e2.setHealthCurrent(100);
+
+        generation.grimoire.model.pve.ActiveMonster m1 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(e1);
+        generation.grimoire.model.pve.ActiveMonster m2 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m2.setAsPersonnage(e2);
+        session.setEnemies(List.of(m1, m2));
+
+        // Sort: 50% des PV manquants de la cible en dégâts magiques
+        Spell spell = createSpell(400L, "Exécution Spectrale", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamagePercentageEffect pctEff =
+                new generation.grimoire.entity.spell.type.effect.DamagePercentageEffect();
+        pctEff.setId(401L);
+        pctEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        pctEff.setDamageSource(generation.grimoire.enumeration.Source.TARGET_HEALTH_MISSING);
+        pctEff.setPercentage(0.50);
+        pctEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(pctEff)));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        // Cible 0: 50% de 50 = 25
+        assertThat(avail.getEnemyPreviews().get(0).effectPreviews().get(0).calculatedValue()).isEqualTo(25);
+        // Cible 1: 50% de 200 = 100
+        assertThat(avail.getEnemyPreviews().get(1).effectPreviews().get(0).calculatedValue()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("Devrait résoudre les stats de la cible sélectionnée quand l'effet cible le CASTER mais utilise une source TARGET_*")
+    void shouldResolveTargetDynamicStatWhenEffectTargetIsCasterWithTargetMissingHealthSource() {
+        // Ennemi 1: Max 200, Actuel 150 -> Manquant 50
+        Personnage e1 = new Personnage();
+        e1.setId(101L);
+        e1.setName("Ennemi Léger");
+        e1.setHealthMax(200);
+        e1.setHealthCurrent(150);
+
+        // Ennemi 2: Max 300, Actuel 100 -> Manquant 200
+        Personnage e2 = new Personnage();
+        e2.setId(102L);
+        e2.setName("Ennemi Lourd");
+        e2.setHealthMax(300);
+        e2.setHealthCurrent(100);
+
+        generation.grimoire.model.pve.ActiveMonster m1 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(e1);
+        generation.grimoire.model.pve.ActiveMonster m2 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m2.setAsPersonnage(e2);
+        session.setEnemies(List.of(m1, m2));
+
+        // Sort: Bouclier sur CASTER égal à 40% des PV manquants de la cible sélectionnée
+        Spell spell = createSpell(500L, "Barrière Vampire", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.ShieldEffect shieldEff =
+                new generation.grimoire.entity.spell.type.effect.ShieldEffect();
+        shieldEff.setId(501L);
+        shieldEff.setShieldSource(generation.grimoire.enumeration.Source.TARGET_HEALTH_MISSING);
+        shieldEff.setPercentage(0.40);
+        shieldEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.CASTER);
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(shieldEff)));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        // Cible 0 sélectionnée: 40% de 50 = 20
+        assertThat(avail.getEnemyPreviews().get(0).effectPreviews().get(0).calculatedValue()).isEqualTo(20);
+        // Cible 1 sélectionnée: 40% de 200 = 80
+        assertThat(avail.getEnemyPreviews().get(1).effectPreviews().get(0).calculatedValue()).isEqualTo(80);
+    }
+
+    @Test
+    @DisplayName("Devrait calculer une plage min-max pour les sorts de zone (ALL_ENEMIES) lorsque les dégâts diffèrent selon les cibles")
+    void shouldComputeMinMaxRangeForAreaOfEffectSpellWithVaryingTargetMitigation() {
+        // Ennemi 1: 0 résistance -> 100 dégâts
+        Personnage e1 = new Personnage();
+        e1.setId(201L);
+        e1.setName("Cible Vulnérable");
+        e1.setHealthMax(500);
+        e1.setHealthCurrent(500);
+        e1.setResistance(0);
+
+        // Ennemi 2: 100 résistance (50% mitigation) -> 50 dégâts
+        Personnage e2 = new Personnage();
+        e2.setId(202L);
+        e2.setName("Cible Résistante");
+        e2.setHealthMax(500);
+        e2.setHealthCurrent(500);
+        e2.setResistance(100);
+
+        generation.grimoire.model.pve.ActiveMonster m1 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m1.setAsPersonnage(e1);
+        generation.grimoire.model.pve.ActiveMonster m2 = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m2.setAsPersonnage(e2);
+        session.setEnemies(List.of(m1, m2));
+
+        // Sort AoE: 100 dégâts magiques fixes sur TOUS LES ENNEMIS
+        Spell spell = createSpell(600L, "Nova Magique", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamageFixedEffect aoeEff =
+                new generation.grimoire.entity.spell.type.effect.DamageFixedEffect();
+        aoeEff.setId(601L);
+        aoeEff.setDamageType(generation.grimoire.enumeration.DamageType.MAGIC);
+        aoeEff.setDamage(100);
+        aoeEff.setEffectTarget(generation.grimoire.enumeration.EffectTarget.ALL_ENEMIES);
+        spell.setEffects(new java.util.LinkedHashSet<>(List.of(aoeEff)));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell));
+
+        spellAvailabilityService.compute(session);
+
+        SpellAvailability avail = session.getSpellAvailability().get(0);
+        var preview = avail.getEffectPreviews().get(0);
+
+        assertThat(preview.isAreaOfEffect()).isTrue();
+        assertThat(preview.minCalculatedValue()).isEqualTo(50);
+        assertThat(preview.maxCalculatedValue()).isEqualTo(100);
+        assertThat(preview.minHpDamage()).isEqualTo(50);
+        assertThat(preview.maxHpDamage()).isEqualTo(100);
+
+        // Vérifier aussi dans enemyPreviews
+        var enemy0Preview = avail.getEnemyPreviews().get(0).effectPreviews().get(0);
+        assertThat(enemy0Preview.isAreaOfEffect()).isTrue();
+        assertThat(enemy0Preview.minHpDamage()).isEqualTo(50);
+        assertThat(enemy0Preview.maxHpDamage()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("Devrait calculer les dégâts totaux infligés incluant l'absorption du bouclier et le bonus contre bouclier")
+    void shouldComputeRealDamageInflictedIncludingShieldAbsorptionAndBonusToShield() {
+        // Ennemi avec 100 PV et 20 de bouclier
+        Personnage e = new Personnage();
+        e.setId(301L);
+        e.setName("Ennemi Bouclier");
+        e.setHealthMax(100);
+        e.setHealthCurrent(100);
+        e.addShield(20, 2, "TestShield");
+
+        generation.grimoire.model.pve.ActiveMonster m = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        m.setAsPersonnage(e);
+        session.setEnemies(List.of(m));
+
+        // Sort 1: 10 dégâts physiques fixes
+        Spell spell1 = createSpell(701L, "Attaque Faible", 10, 0, 0, SpellCastingType.BANAL);
+        generation.grimoire.entity.spell.type.effect.DamageFixedEffect eff1 =
+                new generation.grimoire.entity.spell.type.effect.DamageFixedEffect();
+        eff1.setId(701L);
+        eff1.setDamageType(generation.grimoire.enumeration.DamageType.PHYSIC);
+        eff1.setDamage(10);
+        eff1.setEffectTarget(generation.grimoire.enumeration.EffectTarget.TARGET);
+        spell1.setEffects(new java.util.LinkedHashSet<>(List.of(eff1)));
+
+        // Cas avec bonus de dégâts sur bouclier (+100%)
+        Personnage casterBonus = new Personnage();
+        casterBonus.setId(2L);
+        casterBonus.setName("Héros Briseur");
+        casterBonus.setHealthMax(100);
+        casterBonus.setHealthCurrent(100);
+        casterBonus.setManaMax(100);
+        casterBonus.setManaCurrent(100);
+
+        generation.grimoire.entity.spell.type.effect.BuffDebuffEffect bonusShieldDmg =
+                new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
+        bonusShieldDmg.setStatAffected(generation.grimoire.enumeration.StatType.DAMAGE_GIVEN_PHYSIC_TO_SHIELD);
+        bonusShieldDmg.setModifier(1.0); // +100%
+        bonusShieldDmg.setDuration(5);
+        casterBonus.setActiveBuffs(new java.util.ArrayList<>(List.of(bonusShieldDmg)));
+
+        Donjon donjon = new Donjon();
+        donjon.setId(1L);
+        donjon.setSalles(List.of(new Salle()));
+        CombatSession sessionBonus = new CombatSession("test-bonus", donjon, new ArrayList<>(List.of(casterBonus)));
+        sessionBonus.setFinished(false);
+        sessionBonus.getTurnOrder().clear();
+        sessionBonus.getTurnOrder().add(new InitiativeEntry(true, 0, 10, 10, 0));
+        sessionBonus.setCurrentTurnIndex(0);
+
+        Personnage targetWeakShield = new Personnage();
+        targetWeakShield.setId(302L);
+        targetWeakShield.setName("Cible 4 Shield 10 HP");
+        targetWeakShield.setHealthMax(10);
+        targetWeakShield.setHealthCurrent(10);
+        targetWeakShield.addShield(4, 2, "PetiteGarde");
+
+        generation.grimoire.model.pve.ActiveMonster mWeak = new generation.grimoire.model.pve.ActiveMonster(new generation.grimoire.entity.pve.Monstre());
+        mWeak.setAsPersonnage(targetWeakShield);
+        sessionBonus.setEnemies(List.of(mWeak));
+
+        when(spellRepository.findAll()).thenReturn(List.of(spell1));
+
+        // 1. Sort sur cible avec bouclier normal : 10 dégâts vs 20 bouclier -> total infligé = 10 (10 absorbé, 0 PV)
+        spellAvailabilityService.compute(session);
+        var preview1 = session.getSpellAvailability().get(0).getEffectPreviews().get(0);
+        assertThat(preview1.calculatedValue()).isEqualTo(10);
+        assertThat(preview1.shieldAbsorbed()).isEqualTo(10);
+        assertThat(preview1.hpDamage()).isEqualTo(0);
+
+        // 2. Sort sur cible avec bonus +100% vs bouclier : 10 dégâts vs 4 bouclier et 10 PV
+        // 4 bouclier brisés consomment 2 dégâts base. Reste 8 dégâts pour les PV. Total infligé = 4 + 8 = 12.
+        spellAvailabilityService.compute(sessionBonus);
+        var previewBonus = sessionBonus.getSpellAvailability().get(0).getEffectPreviews().get(0);
+        assertThat(previewBonus.calculatedValue()).isEqualTo(12);
+        assertThat(previewBonus.shieldAbsorbed()).isEqualTo(4);
+        assertThat(previewBonus.hpDamage()).isEqualTo(8);
     }
 }

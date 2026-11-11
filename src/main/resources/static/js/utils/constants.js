@@ -218,7 +218,13 @@ function applyMeta(allMeta) {
 }
 
 export async function initMeta() {
-    if (window.GRIMOIRE_META) return;
+    if (window.GRIMOIRE_META && Object.keys(GLOBAL_SRC_LABELS).length > 0) {
+        return;
+    }
+    if (window.GRIMOIRE_META) {
+        applyMeta(window.GRIMOIRE_META);
+        return;
+    }
     if (initMetaPromise) return initMetaPromise;
 
     initMetaPromise = (async () => {
@@ -229,28 +235,29 @@ export async function initMeta() {
                 if (raw) cachedMeta = JSON.parse(raw);
             } catch (_) {}
 
-            const metaFetchPromise = cachedMeta
-                ? Promise.resolve(null)
-                : globalFetch('/api/meta/all', { silent: true }).catch(() => null);
+            const fetchFn = window.globalFetch || fetch;
 
-            const recipesFetchPromise = window.GRIMOIRE_ALCHEMY_RECIPES
-                ? Promise.resolve(null)
-                : globalFetch('/api/alchemy/recipes', { silent: true }).catch(() => null);
-
-            const [metaRes, recipesRes] = await Promise.all([metaFetchPromise, recipesFetchPromise]);
-
-            if (recipesRes && recipesRes.ok) {
-                window.GRIMOIRE_ALCHEMY_RECIPES = await recipesRes.json();
+            if (cachedMeta && cachedMeta.sources && cachedMeta.statTypes) {
+                applyMeta(cachedMeta);
+            } else {
+                const metaRes = await fetchFn('/api/meta/all', { silent: true }).catch(() => null);
+                if (metaRes && metaRes.ok) {
+                    const allMeta = await metaRes.json();
+                    try {
+                        sessionStorage.setItem(META_STORAGE_KEY, JSON.stringify(allMeta));
+                    } catch (_) {}
+                    applyMeta(allMeta);
+                }
             }
 
-            if (cachedMeta) {
-                applyMeta(cachedMeta);
-            } else if (metaRes && metaRes.ok) {
-                const allMeta = await metaRes.json();
-                try {
-                    sessionStorage.setItem(META_STORAGE_KEY, JSON.stringify(allMeta));
-                } catch (_) {}
-                applyMeta(allMeta);
+            if (!window.GRIMOIRE_ALCHEMY_RECIPES) {
+                fetchFn('/api/alchemy/recipes', { silent: true })
+                    .then(async (recipesRes) => {
+                        if (recipesRes && recipesRes.ok) {
+                            window.GRIMOIRE_ALCHEMY_RECIPES = await recipesRes.json();
+                        }
+                    })
+                    .catch(() => null);
             }
         } catch (e) {
             console.error("Error loading global meta:", e);

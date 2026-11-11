@@ -1,25 +1,103 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000234';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000234';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000234';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000234';
+import { pageState } from './combat-state.js?v=1786180000239';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000239';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000239';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { showFighterPingMenu } from './combat-signals.js';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000239';
 import { renderHeroCombatSprite } from './combat-sprites.js';
+
+function isCombatLogOpen(logContainer) {
+    return Boolean(logContainer && !logContainer.classList.contains('is-hidden'));
+}
+
+export function scrollCombatLogToBottom(logContainer = document.getElementById('combatLog')) {
+    if (!logContainer) return;
+    pageState.isLogPinnedToBottom = true;
+    if (!isCombatLogOpen(logContainer)) return;
+    pageState.isProgrammaticLogScroll = true;
+    logContainer.scrollTop = logContainer.scrollHeight;
+    requestAnimationFrame(() => {
+        if (isCombatLogOpen(logContainer) && pageState.isLogPinnedToBottom) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        pageState.isProgrammaticLogScroll = false;
+    });
+}
+
+function ensureCombatLogScrollListener(logContainer) {
+    if (!logContainer || logContainer.dataset.scrollBound === 'true') return;
+    logContainer.dataset.scrollBound = 'true';
+
+    logContainer.addEventListener('scroll', () => {
+        if (!isCombatLogOpen(logContainer) || pageState.isProgrammaticLogScroll) return;
+        const distanceFromBottom = logContainer.scrollHeight - logContainer.clientHeight - logContainer.scrollTop;
+        pageState.isLogPinnedToBottom = distanceFromBottom <= 8;
+    }, { passive: true });
+}
+
+function markLogEntryEntering(entryEl, staggerIndex = 0) {
+    entryEl.classList.add('is-entering');
+    if (staggerIndex > 0) {
+        const staggerStep = Math.min(staggerIndex, 4);
+        entryEl.classList.add(`log-stagger-${staggerStep}`);
+    }
+    const cleanupAnim = () => {
+        entryEl.classList.remove('is-entering', 'log-stagger-1', 'log-stagger-2', 'log-stagger-3', 'log-stagger-4');
+    };
+    entryEl.addEventListener('transitionend', cleanupAnim, { once: true });
+    setTimeout(cleanupAnim, 600);
+}
+
+export function appendCustomCombatLogElement(entryEl) {
+    const logContainer = document.getElementById('combatLog');
+    if (!logContainer || !entryEl) return;
+
+    ensureCombatLogScrollListener(logContainer);
+    const logOpen = isCombatLogOpen(logContainer);
+    const shouldStickToBottom = pageState.isLogPinnedToBottom !== false;
+    const savedScrollTop = logContainer.scrollTop;
+
+    if (logOpen) {
+        markLogEntryEntering(entryEl, 0);
+    }
+    logContainer.appendChild(entryEl);
+
+    if (logOpen) {
+        if (shouldStickToBottom) {
+            scrollCombatLogToBottom(logContainer);
+        } else {
+            pageState.isProgrammaticLogScroll = true;
+            logContainer.scrollTop = savedScrollTop;
+            pageState.isProgrammaticLogScroll = false;
+        }
+    }
+}
 
 window.toggleCombatLog = function() {
     const log = document.getElementById('combatLog');
     const btn = document.getElementById('combatLogToggleBtn');
     const wrapper = document.getElementById('combatLogContainerWrapper');
-    if (log.style.display === 'none') {
-        log.style.display = 'block';
+    if (!log || !btn || !wrapper) return;
+    ensureCombatLogScrollListener(log);
+    if (log.classList.contains('is-hidden')) {
+        log.classList.remove('is-hidden');
         btn.classList.remove('rounded-full');
         btn.classList.add('rounded-t-lg', 'border-b-0');
         wrapper.classList.remove('retracted');
+        scrollCombatLogToBottom(log);
+        const onTransitionEnd = (e) => {
+            if (e.target !== wrapper) return;
+            wrapper.removeEventListener('transitionend', onTransitionEnd);
+            if (isCombatLogOpen(log) && pageState.isLogPinnedToBottom) {
+                scrollCombatLogToBottom(log);
+            }
+        };
+        wrapper.addEventListener('transitionend', onTransitionEnd);
     } else {
-        log.style.display = 'none';
+        log.classList.add('is-hidden');
         btn.classList.remove('rounded-t-lg', 'border-b-0');
         btn.classList.add('rounded-full');
         wrapper.classList.add('retracted');
@@ -283,6 +361,562 @@ export function getTrapEffectStats(room) {
     }
 }
 
+export const LOG_INLINE_EMOJIS = [
+    { regex: /⚔️|🗡️/g, icon: 'swords', cls: 'log-icon-physic' },
+    { regex: /💥/g, icon: 'flash_on', cls: 'log-icon-crit' },
+    { regex: /🔥/g, icon: 'local_fire_department', cls: 'log-icon-burn' },
+    { regex: /🌱/g, icon: 'psychology', cls: 'log-icon-hp' },
+    { regex: /✨/g, icon: 'auto_awesome', cls: 'log-icon-magic' },
+    { regex: /🏆/g, icon: 'emoji_events', cls: 'log-icon-trophy' },
+    { regex: /👑/g, icon: 'crown', cls: 'log-icon-trophy' },
+    { regex: /✅/g, icon: 'check_circle', cls: 'log-icon-challenge-success' },
+    { regex: /❌/g, icon: 'cancel', cls: 'log-icon-challenge-fail' },
+    { regex: /💰/g, icon: 'monetization_on', cls: 'log-icon-gold' },
+    { regex: /💖|❤️|💚/g, icon: 'favorite', cls: 'log-icon-hp' },
+    { regex: /🎁/g, icon: 'redeem', cls: 'log-icon-gift' },
+    { regex: /⏳/g, icon: 'hourglass_top', cls: 'log-icon-time' },
+    { regex: /💧/g, icon: 'water_drop', cls: 'log-icon-mana' },
+    { regex: /💀|☠️/g, icon: 'skull', cls: 'log-icon-death' },
+    { regex: /🛡️/g, icon: 'shield', cls: 'log-icon-shield' },
+    { regex: /🌀/g, icon: 'cyclone', cls: 'log-icon-spell' },
+    { regex: /🔮/g, icon: 'auto_awesome', cls: 'log-icon-xp' },
+    { regex: /🍔/g, icon: 'restaurant', cls: 'log-icon-consumable' },
+    { regex: /🎒/g, icon: 'inventory_2', cls: 'log-icon-consumable' },
+    { regex: /🗑️/g, icon: 'delete', cls: 'log-icon-discard' },
+    { regex: /🎉/g, icon: 'celebration', cls: 'log-icon-victory' },
+    { regex: /❄️/g, icon: 'ac_unit', cls: 'log-icon-frost' },
+    { regex: /🌵/g, icon: 'spa', cls: 'log-icon-brut' },
+    { regex: /👼/g, icon: 'health_and_safety', cls: 'log-icon-hp' },
+    { regex: /⚠️/g, icon: 'warning', cls: 'log-icon-warn' },
+    { regex: /🚫/g, icon: 'block', cls: 'log-icon-miss' },
+    { regex: /🛠️/g, icon: 'build', cls: 'log-icon-mechanism' },
+    { regex: /🌑/g, icon: 'dark_mode', cls: 'log-karma-dark' },
+    { regex: /🌕/g, icon: 'light_mode', cls: 'log-karma-light' },
+    { regex: /🌗/g, icon: 'contrast', cls: 'log-karma-mid' },
+    { regex: /⚖️/g, icon: 'balance', cls: 'log-karma-harmony' },
+    { regex: /🦇/g, icon: 'blur_on', cls: 'log-icon-mana-loss' },
+    { regex: /🐛|🦠/g, icon: 'coronavirus', cls: 'log-icon-poison' },
+    { regex: /🐺/g, icon: 'track_changes', cls: 'log-icon-crit' },
+    { regex: /😈/g, icon: 'psychology_alt', cls: 'log-icon-brut' },
+    { regex: /🧬/g, icon: 'biotech', cls: 'log-icon-magic' },
+    { regex: /🦎/g, icon: 'shield', cls: 'log-icon-shield' },
+    { regex: /🪞/g, icon: 'change_circle', cls: 'log-icon-shield' },
+    { regex: /🩸|🧛/g, icon: 'bloodtype', cls: 'log-icon-hp' },
+    { regex: /👻/g, icon: 'psychology', cls: 'log-icon-magic' },
+    { regex: /🥀|💔/g, icon: 'heart_broken', cls: 'log-icon-incompressible' },
+    { regex: /🧪/g, icon: 'science', cls: 'log-icon-consumable' },
+    { regex: /🌌|🌊/g, icon: 'water', cls: 'log-icon-magic' },
+    { regex: /😊/g, icon: 'sentiment_very_satisfied', cls: 'log-icon-hp' },
+    { regex: /😢/g, icon: 'sentiment_dissatisfied', cls: 'log-icon-mana' },
+    { regex: /😡/g, icon: 'sentiment_very_dissatisfied', cls: 'log-icon-burn' },
+    { regex: /👏/g, icon: 'emoji_events', cls: 'log-icon-trophy' },
+    { regex: /👋/g, icon: 'waving_hand', cls: 'log-icon-time' },
+    { regex: /🤔/g, icon: 'psychology', cls: 'log-icon-magic' },
+    { regex: /😱/g, icon: 'sentiment_worried', cls: 'log-icon-warn' },
+    { regex: /🙏/g, icon: 'volunteer_activism', cls: 'log-icon-hp' }
+];
+
+export const LEADING_EMOJI_ICON_MAP = [
+    { regex: /^🏁\s*/u, icon: 'sports_score', entryCls: 'log-turn-separator', iconCls: 'log-icon-turn' },
+    { regex: /^(?:⚔️|🗡️)\s*/u, icon: 'swords', entryCls: 'log-damage-physic', iconCls: 'log-icon-physic' },
+    { regex: /^💥\s*/u, icon: 'crisis_alert', entryCls: 'log-damage-crit', iconCls: 'log-icon-crit' },
+    { regex: /^🔥\s*/u, icon: 'local_fire_department', entryCls: 'log-damage-burn', iconCls: 'log-icon-burn' },
+    { regex: /^🌱\s*/u, icon: 'psychology', entryCls: 'log-heal-hp', iconCls: 'log-icon-creation' },
+    { regex: /^✨\s*/u, icon: 'auto_awesome', entryCls: 'log-spell', iconCls: 'log-icon-magic' },
+    { regex: /^(?:🏆|👑)\s*/u, icon: 'emoji_events', entryCls: 'log-achievement', iconCls: 'log-icon-trophy' },
+    { regex: /^✅\s*/u, icon: 'check_circle', entryCls: 'log-challenge-success', iconCls: 'log-icon-challenge-success' },
+    { regex: /^❌\s*/u, icon: 'cancel', entryCls: 'log-challenge-fail', iconCls: 'log-icon-challenge-fail' },
+    { regex: /^💰\s*/u, icon: 'monetization_on', entryCls: 'log-reward-gold', iconCls: 'log-icon-gold' },
+    { regex: /^(?:💖|❤️|💚)\s*/u, icon: 'favorite', entryCls: 'log-heal-hp', iconCls: 'log-icon-hp' },
+    { regex: /^🎁\s*/u, icon: 'redeem', entryCls: 'log-reward-gift', iconCls: 'log-icon-gift' },
+    { regex: /^⏳\s*/u, icon: 'hourglass_top', entryCls: 'log-generic', iconCls: 'log-icon-time' },
+    { regex: /^💧\s*/u, icon: 'water_drop', entryCls: 'log-heal-mana', iconCls: 'log-icon-mana' },
+    { regex: /^(?:💀|☠️)\s*/u, icon: 'skull', entryCls: 'log-death', iconCls: 'log-icon-death' },
+    { regex: /^🛡️\s*/u, icon: 'shield', entryCls: 'log-shield', iconCls: 'log-icon-shield' },
+    { regex: /^🌀\s*/u, icon: 'cyclone', entryCls: 'log-spell', iconCls: 'log-icon-spell' },
+    { regex: /^🔮\s*/u, icon: 'auto_awesome', entryCls: 'log-reward-xp', iconCls: 'log-icon-xp' },
+    { regex: /^🍔\s*/u, icon: 'restaurant', entryCls: 'log-consumable', iconCls: 'log-icon-consumable' },
+    { regex: /^🎒\s*/u, icon: 'inventory_2', entryCls: 'log-consumable', iconCls: 'log-icon-consumable' },
+    { regex: /^🗑️\s*/u, icon: 'delete', entryCls: 'log-discard', iconCls: 'log-icon-discard' },
+    { regex: /^🎉\s*/u, icon: 'celebration', entryCls: 'log-victory', iconCls: 'log-icon-victory' },
+    { regex: /^❄️\s*/u, icon: 'ac_unit', entryCls: 'log-damage-frost', iconCls: 'log-icon-frost' },
+    { regex: /^🌵\s*/u, icon: 'spa', entryCls: 'log-damage-brut', iconCls: 'log-icon-brut' },
+    { regex: /^👼\s*/u, icon: 'health_and_safety', entryCls: 'log-heal-hp', iconCls: 'log-icon-hp' },
+    { regex: /^⚠️\s*/u, icon: 'warning', entryCls: 'log-generic', iconCls: 'log-icon-warn' },
+    { regex: /^🚫\s*/u, icon: 'block', entryCls: 'log-miss', iconCls: 'log-icon-miss' },
+    { regex: /^🛠️\s*/u, icon: 'build', entryCls: 'log-mechanism', iconCls: 'log-icon-mechanism' },
+    { regex: /^🦇\s*/u, icon: 'blur_on', entryCls: 'log-mana-loss', iconCls: 'log-icon-mana-loss' },
+    { regex: /^(?:🐛|🦠)\s*/u, icon: 'coronavirus', entryCls: 'log-damage-poison', iconCls: 'log-icon-poison' },
+    { regex: /^🐺\s*/u, icon: 'track_changes', entryCls: 'log-damage-physic', iconCls: 'log-icon-crit' },
+    { regex: /^😈\s*/u, icon: 'psychology_alt', entryCls: 'log-damage-brut', iconCls: 'log-icon-brut' }
+];
+
+export function createCombatLogEntryElement(log, players = [], enemies = []) {
+    const div = document.createElement('div');
+    let text = log;
+    let iconName = 'chevron_right';
+    let entryClass = 'log-entry log-generic';
+    let iconClass = 'log-icon-generic';
+
+    // 0. Check leading emoji
+    for (const lead of LEADING_EMOJI_ICON_MAP) {
+        if (lead.regex.test(text)) {
+            iconName = lead.icon;
+            entryClass = `log-entry ${lead.entryCls}`;
+            iconClass = lead.iconCls;
+            text = text.replace(lead.regex, '');
+            break;
+        }
+    }
+
+    // 1. Turn Separator
+    if (text.startsWith("--- Tour de ") || log.startsWith("--- Tour de ")) {
+        entryClass = 'log-entry log-turn-separator';
+        iconName = 'sports_score';
+        iconClass = 'log-icon-turn';
+        text = text.replace(/--- Tour de (.*?) ---/, '<strong>Tour de $1</strong>');
+    }
+    // 1.b Nouveau Round
+    else if (text.startsWith("--- NOUVEAU ROUND") || log.startsWith("--- NOUVEAU ROUND")) {
+        entryClass = 'log-entry log-round-separator';
+        iconName = 'sync';
+        iconClass = 'log-icon-round';
+        text = text.replace(/--- NOUVEAU ROUND (.*?) ---/, '<strong>Nouveau Round $1</strong>');
+    }
+    // 1.c Fin de combat
+    else if (text.includes("=== FIN DU COMBAT ===") || log.includes("=== FIN DU COMBAT ===")) {
+        entryClass = 'log-entry log-turn-separator';
+        iconName = 'flag';
+        iconClass = 'log-icon-turn';
+        text = '<strong>=== Fin du Combat ===</strong>';
+    }
+    // 2. Challenges & Quêtes
+    else if (text.includes("Challenge réussi") || log.includes("Challenge réussi")) {
+        entryClass = 'log-entry log-challenge-success';
+        iconName = 'check_circle';
+        iconClass = 'log-icon-challenge-success';
+    } else if (text.includes("Challenge échoué") || log.includes("Challenge échoué")) {
+        entryClass = 'log-entry log-challenge-fail';
+        iconName = 'cancel';
+        iconClass = 'log-icon-challenge-fail';
+    } else if (text.includes("Challenge en cours") || log.includes("Challenge en cours") || text.includes("Challenge :")) {
+        entryClass = 'log-entry log-challenge-info';
+        if (text.includes("Or")) {
+            iconName = 'monetization_on';
+            iconClass = 'log-icon-gold';
+        } else if (text.includes("XP")) {
+            iconName = 'star';
+            iconClass = 'log-icon-xp';
+        } else if (text.includes("PV") || text.includes("soin")) {
+            iconName = 'favorite';
+            iconClass = 'log-icon-hp';
+        } else if (text.includes("loot")) {
+            iconName = 'redeem';
+            iconClass = 'log-icon-gift';
+        } else {
+            iconName = 'flag';
+            iconClass = 'log-icon-challenge-info';
+        }
+    }
+    // 3. Victoire / Succès
+    else if (text.includes("terminé ce donjon") || text.includes("Félicitations")) {
+        entryClass = 'log-entry log-victory';
+        iconName = 'celebration';
+        iconClass = 'log-icon-victory';
+    } else if (text.includes("Succès") || text.includes("Titre")) {
+        entryClass = 'log-entry log-achievement';
+        iconName = 'emoji_events';
+        iconClass = 'log-icon-trophy';
+    }
+    // 4. Mort / Défaite
+    else if (text.includes("succombe") || text.includes("terrassé") || text.includes("est mort") || text.includes("mort") || text.includes("est vaincu")) {
+        entryClass = 'log-entry log-death';
+        iconName = 'skull';
+        iconClass = 'log-icon-death';
+    }
+    // 5. Esquive / Bloque / Rate
+    else if (text.includes("esquive") || text.includes("rate") || text.includes("bloque") || text.includes("immunisé")) {
+        entryClass = 'log-entry log-miss';
+        iconName = 'shield';
+        iconClass = 'log-icon-miss';
+    }
+    // 6. Soins & Régénération PV
+    else if (text.includes("soigné") || (text.includes("récupère") && text.includes("PV")) || (text.includes("régénère") && text.includes("PV"))) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'favorite';
+        iconClass = 'log-icon-hp';
+        text = text.replace(/(\d+) PV/g, '<span class="log-val-hp">$1 PV</span>');
+    }
+    // 7. Mana gains
+    else if (text.toLowerCase().includes("mana") && (text.includes("récupère") || text.includes("régénère") || text.includes("vole"))) {
+        entryClass = 'log-entry log-heal-mana';
+        iconName = 'water_drop';
+        iconClass = 'log-icon-mana';
+        text = text.replace(/(\d+) (?:points de )?[mM]ana/g, '<span class="log-val-mana">$1 Mana</span>');
+        text = text.replace(/Mana actuelle : (\d+)/g, 'Mana actuelle : <span class="log-val-mana">$1</span>');
+    }
+    // 8. Mana pertes
+    else if (text.toLowerCase().includes("mana") && (text.includes("perd") || text.includes("perte"))) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'blur_on';
+        iconClass = 'log-icon-mana-loss';
+        text = text.replace(/perd (\d+) (?:points de )?[mM]ana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
+    }
+    // 9. Dégâts infligés
+    else if (text.includes("inflige") && text.includes("dégâts")) {
+        if (text.includes("Coup Critique")) {
+            entryClass = 'log-entry log-damage-crit';
+            iconName = 'crisis_alert';
+            iconClass = 'log-icon-crit';
+            text = text.replace(/inflige (\d+) dégâts(.*?)(?=\s|\(|<|$)/g, 'inflige <span class="log-val-crit">$1</span> dégâts$2');
+            text = text.replace("Coup Critique", '<span class="log-crit-text">Coup Critique</span>');
+        } else if (text.includes("magiques")) {
+            entryClass = 'log-entry log-damage-magic';
+            iconName = 'auto_awesome';
+            iconClass = 'log-icon-magic';
+            text = text.replace(/inflige (\d+) dégâts magiques/g, 'inflige <span class="log-val-magic">$1</span> dégâts <span class="log-val-magic">magiques</span>');
+        } else if (text.includes("physiques")) {
+            entryClass = 'log-entry log-damage-physic';
+            iconName = 'swords';
+            iconClass = 'log-icon-physic';
+            text = text.replace(/inflige (\d+) dégâts physiques/g, 'inflige <span class="log-val-physic">$1</span> dégâts <span class="log-val-physic">physiques</span>');
+        } else if (text.includes("bruts")) {
+            entryClass = 'log-entry log-damage-brut';
+            iconName = 'gpp_bad';
+            iconClass = 'log-icon-brut';
+            text = text.replace(/inflige (\d+) dégâts bruts/g, 'inflige <span class="log-val-brut">$1</span> dégâts <span class="log-val-brut">bruts</span>');
+        } else {
+            entryClass = 'log-entry log-damage-normal';
+            iconName = 'swords';
+            iconClass = 'log-icon-dmg';
+            text = text.replace(/inflige (\d+) dégâts/g, 'inflige <span class="log-val-dmg">$1</span> dégâts');
+        }
+    }
+    // 10. Dégâts subis
+    else if (text.includes("subit") && text.includes("dégâts")) {
+        if (text.includes("magiques") || text.includes("MAGIC")) {
+            entryClass = 'log-entry log-damage-magic';
+            iconName = 'auto_awesome';
+            iconClass = 'log-icon-magic';
+            text = text.replace(/subit (\d+) dégâts( magiques| \(MAGIC\))/g, 'subit <span class="log-val-magic">$1</span> dégâts$2');
+        } else if (text.includes("physiques") || text.includes("PHYSIC")) {
+            entryClass = 'log-entry log-damage-physic';
+            iconName = 'swords';
+            iconClass = 'log-icon-physic';
+            text = text.replace(/subit (\d+) dégâts( physiques| \(PHYSIC\))/g, 'subit <span class="log-val-physic">$1</span> dégâts$2');
+        } else if (text.includes("bruts") || text.includes("BRUT")) {
+            entryClass = 'log-entry log-damage-brut';
+            iconName = 'gpp_bad';
+            iconClass = 'log-icon-brut';
+            text = text.replace(/subit (\d+) dégâts( bruts| \(BRUT\))/g, 'subit <span class="log-val-brut">$1</span> dégâts$2');
+        } else if (text.includes("INCOMPRESSIBLE")) {
+            entryClass = 'log-entry log-damage-incompressible';
+            iconName = 'heart_broken';
+            iconClass = 'log-icon-incompressible';
+            text = text.replace(/subit (\d+) dégâts \(INCOMPRESSIBLE\)/g, 'subit <span class="log-val-incompressible">$1</span> dégâts (<span class="log-val-incompressible">INCOMPRESSIBLE</span>)');
+        } else if (text.includes("Brûlure") || text.includes("brûlure")) {
+            entryClass = 'log-entry log-damage-burn';
+            iconName = 'local_fire_department';
+            iconClass = 'log-icon-burn';
+            text = text.replace(/subit (\d+) dégâts de [Bb]rûlure/g, 'subit <span class="log-val-burn">$1</span> dégâts de <span class="log-val-burn">Brûlure</span>');
+        } else if (text.includes("Poison") || text.includes("poison")) {
+            entryClass = 'log-entry log-damage-poison';
+            iconName = 'coronavirus';
+            iconClass = 'log-icon-poison';
+            text = text.replace(/subit (\d+) dégâts de [Pp]oison/g, 'subit <span class="log-val-poison">$1</span> dégâts de <span class="log-val-poison">Poison</span>');
+        } else {
+            entryClass = 'log-entry log-damage-normal';
+            iconName = 'swords';
+            iconClass = 'log-icon-dmg';
+            text = text.replace(/subit (\d+) dégâts/g, 'subit <span class="log-val-dmg">$1</span> dégâts');
+        }
+    }
+    // 11. Perte de PV directe
+    else if (text.includes("perd") && text.includes("PV")) {
+        entryClass = 'log-entry log-damage-incompressible';
+        iconName = 'heart_broken';
+        iconClass = 'log-icon-incompressible';
+        text = text.replace(/perd (\d+) PV/g, 'perd <span class="log-val-incompressible">$1</span> <span class="log-val-incompressible">PV</span>');
+    }
+    // 12. Bouclier / Sûreté
+    else if (text.includes("bouclier") || text.includes("Bouclier") || text.includes("sûreté")) {
+        entryClass = 'log-entry log-shield';
+        iconName = 'shield';
+        iconClass = 'log-icon-shield';
+    }
+    // 12.b Effets de Buff / Débuff
+    else if (text.includes("reçoit un effet") || text.includes("perd l'effet")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'auto_awesome';
+        iconClass = 'log-icon-spell';
+    }
+    // 13. Sorts / Canalisation / Invocation
+    else if (text.includes("lance") || text.includes("canalise") || text.includes("invoque")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'auto_fix_high';
+        iconClass = 'log-icon-spell';
+    }
+    // 14. Purification
+    else if (text.includes("purifié") || text.includes("purifie")) {
+        entryClass = 'log-entry log-purify';
+        iconName = 'health_and_safety';
+        iconClass = 'log-icon-purify';
+    }
+    // 15. Consommable
+    else if (text.includes("consomme")) {
+        entryClass = 'log-entry log-consumable';
+        iconName = 'restaurant';
+        iconClass = 'log-icon-consumable';
+    }
+    // 16. Objet détruit
+    else if (text.includes("détruit")) {
+        entryClass = 'log-entry log-discard';
+        iconName = 'delete';
+        iconClass = 'log-icon-discard';
+    }
+    // 17. Mécanisme
+    else if (text.includes("Mécanisme")) {
+        entryClass = 'log-entry log-mechanism';
+        iconName = 'build';
+        iconClass = 'log-icon-mechanism';
+    }
+    // 18. Récompenses Or / XP / Gift
+    else if (text.includes("Or supplémentaires") || (text.includes("Or") && (text.includes("octroie") || text.includes("gagne")))) {
+        entryClass = 'log-entry log-reward-gold';
+        iconName = 'monetization_on';
+        iconClass = 'log-icon-gold';
+    } else if (text.includes("XP Spiritualité") || text.includes("XP normal") || text.includes("XP")) {
+        entryClass = 'log-entry log-reward-xp';
+        iconName = 'star';
+        iconClass = 'log-icon-xp';
+    } else if (text.includes("Récompense") || text.includes("cadeau")) {
+        entryClass = 'log-entry log-reward-gift';
+        iconName = 'redeem';
+        iconClass = 'log-icon-gift';
+    } else if (text.includes("Karma") || text.includes("Karmique")) {
+        entryClass = 'log-entry log-karma';
+        iconName = 'balance';
+        iconClass = 'log-karma-harmony';
+    }
+    // 19. Comportements & Passifs monstres
+    else if (text.includes("(Corrupteur)")) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'blur_on';
+        iconClass = 'log-icon-mana-loss';
+        text = text.replace(/perd (\d+) (?:points de )?[mM]ana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
+    } else if (text.includes("(Prédateur)")) {
+        entryClass = 'log-entry log-damage-physic';
+        iconName = 'track_changes';
+        iconClass = 'log-icon-crit';
+    } else if (text.includes("(Leader)")) {
+        entryClass = 'log-entry log-reward-gold';
+        iconName = 'crown';
+        iconClass = 'log-icon-trophy';
+    } else if (text.includes("(Assassin)")) {
+        entryClass = 'log-entry log-damage-crit';
+        iconName = 'crisis_alert';
+        iconClass = 'log-icon-crit';
+    } else if (text.includes("(Brutal)")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'fitness_center';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("(Sadique)")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'psychology_alt';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("Ange Gardien")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'health_and_safety';
+        iconClass = 'log-icon-hp';
+    } else if (text.includes("Capillarité")) {
+        entryClass = 'log-entry log-heal-mana';
+        iconName = 'water_drop';
+        iconClass = 'log-icon-mana';
+    } else if (text.includes("Épines") || text.includes("Miroir Épineux")) {
+        entryClass = 'log-entry log-damage-brut';
+        iconName = 'change_circle';
+        iconClass = 'log-icon-brut';
+    } else if (text.includes("Vol de vie") || text.includes("(Vampire)")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'bloodtype';
+        iconClass = 'log-icon-hp';
+    } else if (text.includes("Défaillance")) {
+        entryClass = 'log-entry log-spell';
+        iconName = 'warning';
+        iconClass = 'log-icon-warn';
+    } else if (text.includes("Sang Brûlant")) {
+        entryClass = 'log-entry log-damage-burn';
+        iconName = 'local_fire_department';
+        iconClass = 'log-icon-burn';
+    } else if (text.includes("Oppression Magique")) {
+        entryClass = 'log-entry log-mana-loss';
+        iconName = 'blur_on';
+        iconClass = 'log-icon-mana-loss';
+    } else if (text.includes("(Reptile)")) {
+        entryClass = 'log-entry log-shield';
+        iconName = 'shield';
+        iconClass = 'log-icon-shield';
+    } else if (text.includes("(Mort-vivant)")) {
+        entryClass = 'log-entry log-heal-hp';
+        iconName = 'skull';
+        iconClass = 'log-icon-death';
+    }
+
+    // Players & Enemies highlighting
+    if (Array.isArray(players)) {
+        players.forEach(p => {
+            text = text.replace(new RegExp(`\\b${p.name}\\b`, 'g'), `<span class="log-player-name">${p.name}</span>`);
+        });
+    }
+    if (Array.isArray(enemies)) {
+        enemies.forEach(e => {
+            text = text.replace(new RegExp(`\\b${e.name}\\b`, 'g'), `<span class="log-enemy-name">${e.name}</span>`);
+        });
+    }
+
+    const getStatClass = (statName) => {
+        const lower = statName.toLowerCase();
+        let cssClass = 'log-val-stat';
+        if (lower.includes("vie") || lower.includes("pv") || lower.includes("soin")) cssClass = 'log-val-hp';
+        else if (lower.includes("mana")) cssClass = 'log-val-mana';
+        else if (lower.includes("init")) cssClass = 'log-val-init';
+        else if (lower.includes("vitesse")) cssClass = 'log-val-speed';
+        else if (lower.includes("critique")) cssClass = 'log-val-crit';
+        else if (lower.includes("armure")) cssClass = 'log-val-armor';
+        else if (lower.includes("résistance")) cssClass = 'log-val-resist';
+        else if (lower.includes("bouclier")) cssClass = 'log-val-shield';
+        else if (lower.includes("magique") || lower.includes("puissance")) cssClass = 'log-val-magic';
+        else if (lower.includes("physique") || lower.includes("force")) cssClass = 'log-val-physic';
+        else if (lower.includes("brut")) cssClass = 'log-val-brut';
+        else if (lower.includes("incompressible")) cssClass = 'log-val-incompressible';
+        return cssClass;
+    };
+
+    // Buffs & Gains
+    text = text.replace(/\+(\d+) de ([a-zA-Zéèàçûîôâê]+)/gi, function (match, amount, statName) {
+        const cssClass = getStatClass(statName);
+        return `+<span class="${cssClass}">${amount}</span> de <span class="${cssClass}">${statName}</span>`;
+    });
+
+    // Passifs spécifiques
+    text = text.replace(/\+(\d+)% d'armure/gi, '+<span class="log-val-armor">$1%</span> d\'<span class="log-val-armor">armure</span>');
+    text = text.replace(/\+(\d+)% de résistance magique/gi, '+<span class="log-val-resist">$1%</span> de <span class="log-val-resist">résistance magique</span>');
+    text = text.replace(/\-(\d+)% sur le coût des sorts/gi, '-<span class="log-val-mana">$1%</span> sur le <span class="log-val-mana">coût des sorts</span>');
+    text = text.replace(/\+(\d+) Vitesse/gi, '+<span class="log-val-speed">$1</span> <span class="log-val-speed">Vitesse</span>');
+
+    // Passifs Voies & Spiritualités
+    text = text.replace(/(?:🔥\s*)?\[Destruction\]/g, '<span class="log-badge-destr"><span class="material-symbols-outlined log-inline-icon log-icon-burn">local_fire_department</span> [Destruction]</span>');
+    text = text.replace(/chaleur/gi, '<span class="log-badge-heat">chaleur</span>');
+    text = text.replace(/(?:🌱|✨\s*)?\[Création\]/g, '<span class="log-badge-creation"><span class="material-symbols-outlined log-inline-icon log-icon-creation">psychology</span> [Création]</span>');
+    text = text.replace(/bourgeon/gi, '<span class="log-badge-creation">bourgeon</span>');
+    text = text.replace(/instantané/gi, '<span class="log-badge-instant">instantané</span>');
+
+    // Sûreté
+    text = text.replace(/stocke (\d+) points de sûreté/gi, 'stocke <span class="log-val-shield">$1</span> <span class="log-val-shield">points de sûreté</span>');
+    text = text.replace(/\(Sûreté\)/g, '(<span class="log-val-shield">Sûreté</span>)');
+    text = text.replace(/\(Sûreté passive\)/g, '(<span class="log-val-shield">Sûreté passive</span>)');
+    text = text.replace(/\+(\d+)% de critique/gi, '+<span class="log-val-crit">$1%</span> de <span class="log-val-crit">critique</span>');
+
+    // Raison
+    text = text.replace(/de la Raison/g, 'de la <span class="log-val-magic">Raison</span>');
+    text = text.replace(/\(Raison\)/g, '(<span class="log-val-magic">Raison</span>)');
+    text = text.replace(/cumuls de Vitesse/g, 'cumuls de <span class="log-val-speed">Vitesse</span>');
+
+    // Violence
+    text = text.replace(/stacks de Violence/g, 'stacks de <span class="log-val-brut">Violence</span>');
+
+    // Karma
+    text = text.replace(/(?:✨\s*)?Harmonie Karmique/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">balance</span> Harmonie Karmique</span>');
+    text = text.replace(/(?:✨\s*)?Équilibre Karmique Parfait atteint !/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">auto_awesome</span> Équilibre Karmique Parfait atteint !</span>');
+    text = text.replace(/🌑\s*Le Karma/gi, '<span class="log-karma-dark"><span class="material-symbols-outlined log-inline-icon log-karma-dark">dark_mode</span> Le Karma</span>');
+    text = text.replace(/🌕\s*Le Karma/gi, '<span class="log-karma-light"><span class="material-symbols-outlined log-inline-icon log-karma-light">light_mode</span> Le Karma</span>');
+    text = text.replace(/🌗\s*Le Karma/gi, '<span class="log-karma-mid"><span class="material-symbols-outlined log-inline-icon log-karma-mid">contrast</span> Le Karma</span>');
+    text = text.replace(/🌗\s*Acte de rééquilibrage/gi, '<span class="log-karma-mid"><span class="material-symbols-outlined log-inline-icon log-karma-mid">contrast</span> Acte de rééquilibrage</span>');
+    text = text.replace(/💥\s*Le Karma/gi, '<span class="log-karma-boom"><span class="material-symbols-outlined log-inline-icon log-icon-crit">flash_on</span> Le Karma</span>');
+    text = text.replace(/⏳\s*Le Karma/gi, '<span class="log-karma-time"><span class="material-symbols-outlined log-inline-icon log-icon-time">hourglass_top</span> Le Karma</span>');
+    text = text.replace(/(?:✨\s*)?Le Karma/gi, '<span class="log-karma-harmony"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">auto_awesome</span> Le Karma</span>');
+    text = text.replace(/⚖️/gi, '<span class="log-karma-balance"><span class="material-symbols-outlined log-inline-icon log-karma-harmony">balance</span></span>');
+
+    // Jauge et Fractions
+    text = text.replace(/(\d+)\/100/g, '<span class="log-val-fraction">$1/100</span>');
+    text = text.replace(/Jauge: ([\-\d]+)/gi, 'Jauge: <span class="log-val-gauge">$1</span>');
+
+    // Effets sur la durée
+    text = text.replace(/Soins sur la durée/g, '<span class="log-val-hp">Soins sur la durée</span>');
+    text = text.replace(/Régénération de mana sur la durée/g, '<span class="log-val-mana">Régénération de mana sur la durée</span>');
+    text = text.replace(/Dégâts sur la durée/g, '<span class="log-val-dmg">Dégâts sur la durée</span>');
+
+    text = text.replace(/\(Critique\)/g, '<span class="log-crit-text">(Critique)</span>');
+    // Convert legacy (fixe: X, mult: Y) or (modificateur: Y) to clean (+XX%, +YY)
+    text = text.replace(/\(fixe:\s*([\-\+\d\.]+),\s*mult:\s*([\-\+\d\.]+)\)/g, (match, flatStr, multStr) => {
+        const flat = parseFloat(flatStr) || 0;
+        const mult = parseFloat(multStr) || 0;
+        const parts = [];
+        if (flat !== 0) {
+            parts.push((flat > 0 ? '+' : '') + flat);
+        }
+        if (mult !== 0) {
+            const pct = Math.round(mult * 1000) / 10;
+            const formattedPct = (pct > 0 ? '+' : '') + pct + '%';
+            parts.push(formattedPct);
+        }
+        return parts.length > 0 ? `(${parts.join(', ')})` : '';
+    });
+    text = text.replace(/\(modificateur\s*:\s*([\-\+\d\.]+)\)/g, (match, multStr) => {
+        const mult = parseFloat(multStr) || 0;
+        if (mult === 0) return '';
+        const pct = Math.round(mult * 1000) / 10;
+        return `(${pct > 0 ? '+' : ''}${pct}%)`;
+    });
+
+    // Effet sur stat avec valeurs (+50%, +10, etc.)
+    text = text.replace(/effet sur (.+?)\s*\(([\+\-\d\.\,\s\%]+)\)/g, function (match, statName, valuesPart) {
+        const formattedValues = valuesPart.replace(/([\+\-]?\d+(?:\.\d+)?%?)/g, '<span class="log-val-fix">$1</span>');
+        return `effet sur <span class="${getStatClass(statName)}">${statName}</span> (${formattedValues})`;
+    });
+
+    // Fallback pour effet sur sans parenthèses ou autres formats
+    text = text.replace(/effet sur (.*?)(?=\s+pour|\s*$)/g, function (match, statName) {
+        if (statName.includes('<span')) return match;
+        return `effet sur <span class="${getStatClass(statName)}">${statName}</span>`;
+    });
+    text = text.replace(/perd l'effet sur (.*?)(?=\s*$)/g, function (match, statName) {
+        if (statName.includes('<span')) return match;
+        return `perd l'effet sur <span class="${getStatClass(statName)}">${statName}</span>`;
+    });
+
+    text = text.replace(/fixe: ([\-\+\d\.]+)/g, 'fixe: <span class="log-val-fix">$1</span>');
+    text = text.replace(/mult: ([\-\+\d\.]+)/g, 'mult: <span class="log-val-fix">$1</span>');
+
+    // Nettoyage des logs résiduels ou inutiles (ex: réduction de 0%, Vitesse: 0, Reste: 0)
+    text = text.replace(/,\s*réduction de 0%/gi, '');
+    text = text.replace(/\s*\(réduction de 0%\)/gi, '');
+    text = text.replace(/\s*\(Vitesse:\s*0\)/gi, '');
+    text = text.replace(/\s*\(dégâts bruts consommés\s*:\s*\d+\)/gi, '');
+    text = text.replace(/\.?\s*Reste\s*:\s*0\s+absorption\./gi, '.');
+
+    // Formatage des détails de combat
+    text = text.replace(/réduction de (\d+)%/gi, 'réduction de <span class="log-val-shield">$1%</span>');
+    text = text.replace(/amplification de (\d+)%/gi, 'amplification de <span class="log-val-crit">$1%</span>');
+    text = text.replace(/absorbés par les boucliers\s*:\s*(\d+)/gi, 'absorbés par les boucliers : <span class="log-val-shield">$1</span>');
+    text = text.replace(/PV restants\s*:\s*(\d+)/gi, 'PV restants : <span class="log-val-hp">$1</span>');
+    text = text.replace(/Vie actuelle\s*:\s*(\d+)/gi, 'Vie actuelle : <span class="log-val-hp">$1</span>');
+    text = text.replace(/Init:\s*(\d+)/gi, 'Init: <span class="log-val-init">$1</span>');
+    text = text.replace(/\(Vitesse:\s*([\+\-]?\d+)\)/gi, '(<span class="log-val-speed">Vitesse: $1</span>)');
+
+    // Replace all inline emojis with Google Icons
+    for (const item of LOG_INLINE_EMOJIS) {
+        text = text.replace(item.regex, `<span class="material-symbols-outlined log-inline-icon ${item.cls}">${item.icon}</span>`);
+    }
+
+    // Strip any remaining unmapped emojis
+    text = text.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').replace(/\s{2,}/g, ' ').trim();
+
+    div.className = entryClass;
+    div.innerHTML = `<span class="material-symbols-outlined log-entry-icon ${iconClass}">${iconName}</span><span class="log-entry-text">${text}</span>`;
+    return div;
+}
+
 export function updateUI(data) {
     if (ui.hideGlobalTooltip) {
         ui.hideGlobalTooltip(true);
@@ -350,6 +984,7 @@ export function updateUI(data) {
     if (data && data.multi !== undefined) {
         pageState.isMulti = (data.multi === true);
     }
+    pageState.pendingSseData = null;
 
     // Auto-select first alive target if current is null or dead
     if (data.enemies && data.enemies.length > 0) {
@@ -510,7 +1145,7 @@ export function updateUI(data) {
             }
             let timerHtml = '';
             if (pageState.isMulti && isActive && data.turnStartTime) {
-                timerHtml = `<div class="turn-timer-badge" id="timerBadge_${index}" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 14px; border-radius: 8px; font-weight: bold; box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;">⏳ Calcul...</div>`;
+                timerHtml = `<div class="turn-timer-badge" id="timerBadge_${index}" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 14px; border-radius: 8px; font-weight: bold; box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 1rem;">hourglass_top</span> Calcul...</div>`;
             }
             const fId = div.dataset.fighterId;
             let forcedHp = null;
@@ -555,10 +1190,9 @@ export function updateUI(data) {
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'yellow';
-                    el.innerText = `[DEBUG] Player ${fId} HP: ${forcedHp} -> ${p.healthCurrent}`;
-                    log.prepend(el);
+                    el.className = 'log-entry log-debug-warning';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} HP: ${forcedHp} -&gt; ${p.healthCurrent}</span>`;
+                    // Debug log disabled to keep combat log scroll intact
                 }
 
                 animateGaugeJS(hpBar, hpTextEl, forcedHp, p.healthCurrent, p.healthMax, 800);
@@ -567,20 +1201,18 @@ export function updateUI(data) {
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'orange';
-                    el.innerText = `[DEBUG] Player ${fId} skipped HP anim (same val: ${forcedHp})`;
-                    log.prepend(el);
+                    el.className = 'log-entry log-debug-warning';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
+                    // Debug log disabled to keep combat log scroll intact
                 }
             } else if (forcedHp === null) {
                 // DEBUG
                 const log = document.getElementById('combatLog');
                 if (log) {
                     const el = document.createElement('div');
-                    el.className = 'log-entry';
-                    el.style.color = 'red';
-                    el.innerText = `[DEBUG] Player ${fId} skipped HP anim (forcedHp is NULL)`;
-                    log.prepend(el);
+                    el.className = 'log-entry log-debug-error';
+                    el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Player ${fId} skipped HP anim (forcedHp is NULL)</span>`;
+                    // Debug log disabled to keep combat log scroll intact
                 }
             }
             if (forcedMana !== null && forcedMana !== p.manaCurrent) {
@@ -597,7 +1229,7 @@ export function updateUI(data) {
                     }
                     if (hpLabel) {
                         let labelText = `${actualHp} / ${p.healthMax}`;
-                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} 🛡️)`;
+                        if (p.shieldTotal > 0) labelText += ` (+${p.shieldTotal} Bouclier)`;
                         hpLabel.textContent = labelText;
                     }
                 }, 800);
@@ -617,7 +1249,7 @@ export function updateUI(data) {
             let remaining = Math.max(0, maxTime - elapsed);
 
             document.querySelectorAll('.turn-timer-badge').forEach(badge => {
-                badge.textContent = `⏳ ${remaining}s`;
+                badge.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1rem;">hourglass_top</span> ${remaining}s`;
                 if (remaining <= 10) {
                     if (window.combatIsMyTurn) {
                         const turnId = `${data.turnNumber}-${data.currentTurnIndex}`;
@@ -857,8 +1489,12 @@ export function updateUI(data) {
             document.getElementById('enemiesContainer').innerHTML = ''; // Clear enemies
 
             // Reset les textes originaux des boutons pour ne pas garder ceux de la salle précédente
-            document.querySelectorAll('button[onclick*="nextRoom"]').forEach(btn => {
-                delete btn.dataset.origText;
+            document.querySelectorAll('#btnVictoryContinue, #btnContinueEvent, button[data-next-room-btn="true"], button[onclick*="nextRoom"]').forEach(btn => {
+                if (btn.id === 'btnVictoryContinue') {
+                    btn.dataset.origText = "Continuer l'exploration";
+                } else {
+                    btn.dataset.origText = 'Continuer';
+                }
             });
 
             const overlay = document.getElementById('eventOverlay');
@@ -881,6 +1517,8 @@ export function updateUI(data) {
             // Reset default onclick to prevent previous events (like PORTE_ETRANGE) from overriding it
             if (btnCont) {
                 btnCont.onclick = nextRoom;
+                btnCont.textContent = 'Continuer';
+                btnCont.dataset.origText = 'Continuer';
             }
 
             const actionContainer = document.getElementById('eventActionContainer');
@@ -888,6 +1526,8 @@ export function updateUI(data) {
                 actionContainer.querySelectorAll('.dynamic-key-btn').forEach(b => b.remove());
                 const oldKeys = document.getElementById('keysContainer');
                 if (oldKeys) oldKeys.remove();
+                const oldChestWait = document.getElementById('chestWaitingStatus');
+                if (oldChestWait) oldChestWait.remove();
             }
 
 
@@ -897,7 +1537,7 @@ export function updateUI(data) {
 
                 // Clear old styles first
                 btn.style.opacity = '1';
-                btn.classList.remove('bg-green-600', 'text-white', 'opacity-50');
+                btn.classList.remove('bg-green-600', 'text-white', 'opacity-50', 'is-choice-selected');
 
                 // Remove previous counter if exists
                 const existingCounter = btn.querySelector('.ready-counter');
@@ -911,7 +1551,7 @@ export function updateUI(data) {
                 }
 
                 if (isChosen) {
-                    btn.classList.add('bg-green-600', 'text-white');
+                    btn.classList.add('bg-green-600', 'text-white', 'is-choice-selected');
                     btn.classList.remove('bg-dark-surface', 'bg-dark-hover'); // in case it has these
                 } else if (myChoice) {
                     // if they chose something else, dim this button
@@ -919,7 +1559,7 @@ export function updateUI(data) {
                 }
             }
 
-            const activeUsersCount = new Set((data.players || []).filter(p => p.healthCurrent > 0 && p.ownerUsername).map(p => p.ownerUsername)).size;
+            const activeUsersCount = getActiveUsersCount(data);
             const readyUsersCount = data.playerRoomChoices ? Object.keys(data.playerRoomChoices).length : 0;
             if (data.currentRoom.type === 'TREASURE') {
                 icon.textContent = data.roomEventCompleted ? 'lock_open' : 'lock';
@@ -1098,17 +1738,8 @@ export function updateUI(data) {
 
                     lootContainer.classList.add('hidden'); lootContainer.classList.remove('flex');
 
-                    let openVotes = 0;
-                    if (data.playerRoomChoices) {
-                        for (let user in data.playerRoomChoices) {
-                            if (data.playerRoomChoices[user].actionType === 'OPEN') {
-                                openVotes++;
-                            }
-                        }
-                    }
-
                     const isMainChosen = myChoice && myChoice.actionType === 'OPEN';
-                    applyChoiceStyle(btnOpen, isMainChosen, activeUsersCount > 1, openVotes, activeUsersCount);
+                    applyChoiceStyle(btnOpen, isMainChosen, activeUsersCount > 1, readyUsersCount, activeUsersCount);
 
                     const actionContainer = document.getElementById('eventActionContainer');
                     if (actionContainer && btnCont) {
@@ -1221,6 +1852,18 @@ export function updateUI(data) {
                         });
                         const btnKey = document.getElementById('btnOpenChestKey');
                         if (btnKey) btnKey.classList.add('hidden');
+
+                        if (activeUsersCount > 1 && readyUsersCount > 0) {
+                            const waitDiv = document.createElement('div');
+                            waitDiv.id = 'chestWaitingStatus';
+                            waitDiv.className = myChoice
+                                ? 'text-center w-full mt-2 text-sm text-sky-medium animate-pulse'
+                                : 'text-center w-full mt-2 text-sm text-amber-400 animate-pulse';
+                            waitDiv.textContent = myChoice
+                                ? `En attente des autres joueurs... (${readyUsersCount}/${activeUsersCount})`
+                                : `Votre allié est prêt (${readyUsersCount}/${activeUsersCount})`;
+                            actionContainer.appendChild(waitDiv);
+                        }
                     }
                 }
             } else if (data.currentRoom.type === 'EVENT') {
@@ -1372,7 +2015,8 @@ export function updateUI(data) {
                                     btn.classList.remove('disabled');
                                 }
 
-                                const first = eligible[0];
+                                const first = eligible.find(a => String(a.id) === String(pageState.selectedAltarAnomalyId)) || eligible[0];
+                                pageState.selectedAltarAnomalyId = first.id;
                                 let firstCatIcon = first.category ? (getCategoryIcon(first.category)) : 'star';
                                 let selectHtml = `
                                 <div class="custom-select-wrapper" id="altarAnomalySelectWrapper" style="max-width: 350px; margin: 0 auto; z-index: 100;">
@@ -1386,7 +2030,7 @@ export function updateUI(data) {
                                 `;
                                 eligible.forEach(a => {
                                     let catIcon = a.category ? (getCategoryIcon(a.category)) : 'star';
-                                    selectHtml += `<div class="custom-option" onclick="document.getElementById('altarAnomalySelectLabel').innerHTML = this.innerHTML; document.getElementById('altarAnomalySelect').value = '${a.id}'; document.getElementById('altarAnomalySelectWrapper').classList.remove('open'); if(window.updateAltarDropChance) window.updateAltarDropChance(${a.level || 1});"><span class="material-symbols-outlined cs-icon" style="color: ${spColor};">${catIcon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1}) (Stock: ${a.stock || 1})</span></div>`;
+                                    selectHtml += `<div class="custom-option" onclick="document.getElementById('altarAnomalySelectLabel').innerHTML = this.innerHTML; document.getElementById('altarAnomalySelect').value = '${a.id}'; if(window.pageState) window.pageState.selectedAltarAnomalyId = '${a.id}'; document.getElementById('altarAnomalySelectWrapper').classList.remove('open'); if(window.updateAltarDropChance) window.updateAltarDropChance(${a.level || 1});"><span class="material-symbols-outlined cs-icon" style="color: ${spColor};">${catIcon}</span> ${a.name} <span style="opacity:0.5; font-size:0.8rem; margin-left:4px;">(Lvl ${a.level || 1}) (Stock: ${a.stock || 1})</span></div>`;
                                 });
                                 selectHtml += `
                                     </div>
@@ -1459,10 +2103,7 @@ export function updateUI(data) {
                         let passSelectedStyle = '';
                         let waitingHtml = '';
 
-                        let totalUsers = 1;
-                        if (data.players && data.players.length > 0) {
-                            totalUsers = new Set(data.players.map(p => p.ownerUsername)).size;
-                        }
+                        let totalUsers = getActiveUsersCount(data);
 
                         let acceptVotes = 0;
                         let passVotes = 0;
@@ -1486,8 +2127,10 @@ export function updateUI(data) {
                                     acceptSelectedStyle = 'box-shadow: 0 0 15px rgba(168, 85, 247, 0.6); background: rgba(168, 85, 247, 0.25) !important; border-color: rgba(168, 85, 247, 0.8) !important;';
                                 }
                                 if (isMulti) {
-                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs...</div>`;
+                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs... (${acceptVotes + passVotes}/${totalUsers})</div>`;
                                 }
+                            } else if (isMulti && (acceptVotes + passVotes) > 0) {
+                                waitingHtml = `<div class="text-center w-full mt-2 text-sm text-amber-400 animate-pulse">Votre allié a fait son choix (${acceptVotes + passVotes}/${totalUsers})</div>`;
                             }
                         }
 
@@ -1917,10 +2560,7 @@ export function updateUI(data) {
                         const hasRope = ropes.length > 0;
 
                         // Multi-player voting state
-                        let totalUsers = 1;
-                        if (data.players && data.players.length > 0) {
-                            totalUsers = new Set(data.players.filter(p => p.healthCurrent > 0 && p.ownerUsername).map(p => p.ownerUsername)).size;
-                        }
+                        let totalUsers = getActiveUsersCount(data);
                         const isMulti = totalUsers > 1;
 
                         let ropeVotes = 0;
@@ -1944,6 +2584,7 @@ export function updateUI(data) {
                             }
 
                             const myChoice = data.playerRoomChoices[pageState.currentUsername];
+                            const totalTrapVotes = ropeVotes + disarmVotes + acceptVotes;
                             if (myChoice) {
                                 if (myChoice.actionType === 'ROPE') {
                                     ropeSelectedClass = 'is-selected';
@@ -1953,8 +2594,10 @@ export function updateUI(data) {
                                     acceptSelectedClass = 'is-selected';
                                 }
                                 if (isMulti) {
-                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs...</div>`;
+                                    waitingHtml = `<div class="text-center w-full mt-2 text-sm text-sky-medium animate-pulse">En attente des autres joueurs... (${totalTrapVotes}/${totalUsers})</div>`;
                                 }
+                            } else if (isMulti && totalTrapVotes > 0) {
+                                waitingHtml = `<div class="text-center w-full mt-2 text-sm text-amber-400 animate-pulse">Votre allié a choisi une option (${totalTrapVotes}/${totalUsers})</div>`;
                             }
                         }
 
@@ -2104,6 +2747,7 @@ export function updateUI(data) {
                         btnOpen.classList.add('hidden');
                         btnCont.classList.remove('hidden');
                         btnCont.textContent = 'Passer la porte';
+                        btnCont.dataset.origText = 'Passer la porte';
                         btnCont.onclick = openStrangeDoor;
                         lootContainer.classList.add('hidden'); lootContainer.classList.remove('flex');
 
@@ -2146,214 +2790,64 @@ export function updateUI(data) {
 
     // Logs
     const logContainer = document.getElementById('combatLog');
-    const isAtBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 50;
-    const oldScrollTop = logContainer.scrollTop;
-    logContainer.innerHTML = '';
+    if (logContainer) {
+        ensureCombatLogScrollListener(logContainer);
+        const incomingLogs = Array.isArray(data.combatLog) ? data.combatLog : [];
+        const prevLogs = Array.isArray(pageState.renderedCombatLogs) ? pageState.renderedCombatLogs : [];
+        const currentSessionKey = `${data.sessionId || pageState.sessionId || ''}`;
 
-    data.combatLog.forEach(log => {
-        const div = document.createElement('div');
-        let text = log;
-        let isUseless = false;
+        let isReset = (
+            pageState.renderedLogSessionId !== currentSessionKey ||
+            prevLogs.length === 0 ||
+            incomingLogs.length < prevLogs.length
+        );
+        if (!isReset) {
+            for (let i = 0; i < prevLogs.length; i++) {
+                if (incomingLogs[i] !== prevLogs[i]) {
+                    isReset = true;
+                    break;
+                }
+            }
+        }
 
-        data.players.forEach(p => {
-            // Un peu de regex pour ne pas remplacer dans les attributs HTML si p.name correspond
-            text = text.replace(new RegExp(`\\b${p.name}\\b`, 'g'), `<span class="log-player-name">${p.name}</span>`);
-        });
+        const logOpen = isCombatLogOpen(logContainer);
+        const shouldStickToBottom = isReset ? true : (pageState.isLogPinnedToBottom !== false);
+        const savedScrollTop = logContainer.scrollTop;
 
-        if (data.enemies) {
-            data.enemies.forEach(e => {
-                text = text.replace(new RegExp(`\\b${e.name}\\b`, 'g'), `<span class="log-enemy-name">${e.name}</span>`);
+        if (isReset) {
+            logContainer.innerHTML = '';
+            incomingLogs.forEach(log => {
+                const entryEl = createCombatLogEntryElement(log, data.players, data.enemies);
+                logContainer.appendChild(entryEl);
             });
-        }
+            pageState.renderedCombatLogs = incomingLogs.slice();
+            pageState.renderedLogSessionId = currentSessionKey;
+            pageState.isLogPinnedToBottom = true;
+            if (logOpen) {
+                scrollCombatLogToBottom(logContainer);
+            }
+        } else if (incomingLogs.length > prevLogs.length) {
+            const newEntriesCount = incomingLogs.length - prevLogs.length;
+            for (let i = prevLogs.length; i < incomingLogs.length; i++) {
+                const entryEl = createCombatLogEntryElement(incomingLogs[i], data.players, data.enemies);
+                if (logOpen) {
+                    const batchIdx = newEntriesCount > 1 ? (i - prevLogs.length) : 0;
+                    markLogEntryEntering(entryEl, batchIdx);
+                }
+                logContainer.appendChild(entryEl);
+            }
+            pageState.renderedCombatLogs = incomingLogs.slice();
 
-        // 1. Turn Separator
-        if (text.startsWith("--- Tour de ")) {
-            div.className = 'log-entry log-turn-separator';
-            text = text.replace(/--- Tour de (.*?) ---/, '🏁 <strong>Tour de $1</strong>');
-        }
-        // 2. Damage (Crit or Normal)
-        else if (text.includes("inflige") && text.includes("dégâts")) {
-            if (text.includes("Coup Critique")) {
-                div.className = 'log-entry log-damage-crit';
-                // Couvre 'dégâts', 'dégâts magiques', etc. derrière le chiffre
-                text = text.replace(/inflige (\d+) dégâts(.*?)(?=\s|\(|<|$)/g, 'inflige <span class="log-val-crit">$1</span> dégâts$2');
-                text = text.replace("Coup Critique", '<span class="log-crit-text">Coup Critique</span>');
-            } else if (text.includes("magiques")) {
-                div.className = 'log-entry log-damage-magic';
-                text = text.replace(/inflige (\d+) dégâts magiques/g, 'inflige <span class="log-val-magic">$1</span> dégâts <span class="log-val-magic">magiques</span>');
-            } else if (text.includes("physiques")) {
-                div.className = 'log-entry log-damage-physic';
-                text = text.replace(/inflige (\d+) dégâts physiques/g, 'inflige <span class="log-val-physic">$1</span> dégâts <span class="log-val-physic">physiques</span>');
-            } else if (text.includes("bruts")) {
-                div.className = 'log-entry log-damage-brut';
-                text = text.replace(/inflige (\d+) dégâts bruts/g, 'inflige <span class="log-val-brut">$1</span> dégâts <span class="log-val-brut">bruts</span>');
-            } else {
-                div.className = 'log-entry log-damage-normal';
-                text = text.replace(/inflige (\d+) dégâts/g, 'inflige <span class="log-val-dmg">$1</span> dégâts');
+            if (logOpen) {
+                if (shouldStickToBottom) {
+                    scrollCombatLogToBottom(logContainer);
+                } else {
+                    pageState.isProgrammaticLogScroll = true;
+                    logContainer.scrollTop = savedScrollTop;
+                    pageState.isProgrammaticLogScroll = false;
+                }
             }
         }
-        // 3. Subit des dégâts (Dot, pièges...)
-        else if (text.includes("subit") && text.includes("dégâts")) {
-            if (text.includes("magiques") || text.includes("MAGIC")) {
-                div.className = 'log-entry log-damage-magic';
-                text = text.replace(/subit (\d+) dégâts( magiques| \(MAGIC\))/g, 'subit <span class="log-val-magic">$1</span> dégâts$2');
-            } else if (text.includes("physiques") || text.includes("PHYSIC")) {
-                div.className = 'log-entry log-damage-physic';
-                text = text.replace(/subit (\d+) dégâts( physiques| \(PHYSIC\))/g, 'subit <span class="log-val-physic">$1</span> dégâts$2');
-            } else if (text.includes("bruts") || text.includes("BRUT")) {
-                div.className = 'log-entry log-damage-brut';
-                text = text.replace(/subit (\d+) dégâts( bruts| \(BRUT\))/g, 'subit <span class="log-val-brut">$1</span> dégâts$2');
-            } else if (text.includes("INCOMPRESSIBLE")) {
-                div.className = 'log-entry log-damage-incompressible';
-                text = text.replace(/subit (\d+) dégâts \(INCOMPRESSIBLE\)/g, 'subit <span class="log-val-incompressible">$1</span> dégâts (<span class="log-val-incompressible">INCOMPRESSIBLE</span>)');
-            } else if (text.includes("Brûlure") || text.includes("brûlure")) {
-                div.className = 'log-entry log-damage-burn';
-                text = text.replace(/subit (\d+) dégâts de [Bb]rûlure/g, 'subit <span class="log-val-burn">$1</span> dégâts de <span class="log-val-burn">Brûlure</span>');
-            } else if (text.includes("Poison") || text.includes("poison")) {
-                div.className = 'log-entry log-damage-poison';
-                text = text.replace(/subit (\d+) dégâts de [Pp]oison/g, 'subit <span class="log-val-poison">$1</span> dégâts de <span class="log-val-poison">Poison</span>');
-            } else {
-                div.className = 'log-entry log-damage-normal';
-                text = text.replace(/subit (\d+) dégâts/g, 'subit <span class="log-val-dmg">$1</span> dégâts');
-            }
-        }
-        else if (text.includes("perd") && text.includes("PV")) {
-            div.className = 'log-entry log-damage-incompressible';
-            text = text.replace(/perd (\d+) PV/g, 'perd <span class="log-val-incompressible">$1</span> <span class="log-val-incompressible">PV</span>');
-        }
-        else if (text.includes("perd") && text.includes("Mana")) {
-            div.className = 'log-entry log-damage-magic';
-            text = text.replace(/perd (\d+) Mana/g, 'perd <span class="log-val-mana">$1</span> <span class="log-val-mana">Mana</span>');
-        }
-        // 4. Healing (HP)
-        else if (text.includes("soigné") || (text.includes("récupère") && text.includes("PV"))) {
-            div.className = 'log-entry log-heal-hp';
-            text = text.replace(/(\d+) PV/g, '<span class="log-val-hp">$1 PV</span>');
-        }
-        // 5. Healing (Mana)
-        else if (text.toLowerCase().includes("mana") && (text.includes("récupère") || text.includes("régénère"))) {
-            div.className = 'log-entry log-heal-mana';
-            text = text.replace(/(\d+) (?:points de )?[mM]ana/g, '<span class="log-val-mana">$1 Mana</span>');
-            // Gérer aussi "Mana actuelle : X" pour cette ligne
-            text = text.replace(/Mana actuelle : (\d+)/g, 'Mana actuelle : <span class="log-val-mana">$1</span>');
-        }
-        // 6. Deaths
-        else if (text.includes("succombe") || text.includes("terrassé") || text.includes("mort") || text.includes("est vaincu")) {
-            div.className = 'log-entry log-death';
-        }
-        // 7. Dodge / Miss
-        else if (text.includes("esquive") || text.includes("rate") || text.includes("bloque")) {
-            div.className = 'log-entry log-miss';
-        }
-        // 8. Default
-        else {
-            div.className = 'log-entry log-generic';
-        }
-
-        // Global value replacements
-        text = text.replace(/Init: (\d+)/g, 'Init: <span class="log-val-init">$1</span>');
-        text = text.replace(/Vitesse: (\d+)/g, 'Vitesse: <span class="log-val-speed">$1</span>');
-        text = text.replace(/PV restants : (\d+)/g, 'PV restants : <span class="log-val-hp">$1</span>');
-        text = text.replace(/Vie actuelle : (\d+)/g, 'Vie actuelle : <span class="log-val-hp">$1</span>');
-        text = text.replace(/soigné de (\d+) points/g, 'soigné de <span class="log-val-hp">$1</span> points');
-        text = text.replace(/reçoit un bouclier de (\d+)/g, 'reçoit un <span class="log-val-shield">bouclier</span> de <span class="log-val-shield">$1</span>');
-
-        const getStatClass = (statName) => {
-            let cssClass = 'log-val-stat'; // Default generic stat color
-            const lower = statName.toLowerCase();
-            if (lower.includes("brûlure")) cssClass = 'log-val-burn';
-            else if (lower.includes("poison")) cssClass = 'log-val-poison';
-            else if (lower.includes("vitesse")) cssClass = 'log-val-speed';
-            else if (lower.includes("critique")) cssClass = 'log-val-crit';
-            else if (lower.includes("mana")) cssClass = 'log-val-mana';
-            else if (lower.includes("vie") || lower.includes("soins")) cssClass = 'log-val-hp';
-            else if (lower.includes("armure")) cssClass = 'log-val-armor';
-            else if (lower.includes("résistance")) cssClass = 'log-val-resist';
-            else if (lower.includes("bouclier")) cssClass = 'log-val-shield';
-            else if (lower.includes("magique") || lower.includes("puissance")) cssClass = 'log-val-magic';
-            else if (lower.includes("physique") || lower.includes("force")) cssClass = 'log-val-physic';
-            else if (lower.includes("brut")) cssClass = 'log-val-brut';
-            else if (lower.includes("incompressible")) cssClass = 'log-val-incompressible';
-            return cssClass;
-        };
-
-        // Buffs & Gains
-        text = text.replace(/\+(\d+) de ([a-zA-Zéèàçûîôâê]+)/gi, function (match, amount, statName) {
-            const cssClass = getStatClass(statName);
-            return `+<span class="${cssClass}">${amount}</span> de <span class="${cssClass}">${statName}</span>`;
-        });
-
-        // Passifs spécifiques
-        text = text.replace(/\+(\d+)% d'armure/gi, '+<span class="log-val-armor">$1%</span> d\'<span class="log-val-armor">armure</span>');
-        text = text.replace(/\+(\d+)% de résistance magique/gi, '+<span class="log-val-resist">$1%</span> de <span class="log-val-resist">résistance magique</span>');
-        text = text.replace(/\-(\d+)% sur le coût des sorts/gi, '-<span class="log-val-mana">$1%</span> sur le <span class="log-val-mana">coût des sorts</span>');
-        text = text.replace(/\+(\d+) Vitesse/gi, '+<span class="log-val-speed">$1</span> <span class="log-val-speed">Vitesse</span>');
-
-        // Passifs Voies & Spiritualités (Mots clés et Phrases)
-        // Destruction
-        text = text.replace(/🔥 \[Destruction\]/g, '<span style="color:#ef4444;font-weight:bold;">🔥 [Destruction]</span>');
-        text = text.replace(/chaleur/gi, '<span style="color:#f97316;font-weight:bold;">chaleur</span>');
-
-        // Création
-        text = text.replace(/🌱 \[Création\]/g, '<span style="color:#10b981;font-weight:bold;">🌱 [Création]</span>');
-        text = text.replace(/✨ \[Création\]/g, '<span style="color:#10b981;font-weight:bold;">✨ [Création]</span>');
-        text = text.replace(/bourgeon/gi, '<span style="color:#10b981;font-weight:bold;">bourgeon</span>');
-        text = text.replace(/instantané/gi, '<span style="color:#a855f7;font-weight:bold;">instantané</span>');
-
-        // Sûreté
-        text = text.replace(/stocke (\d+) points de sûreté/gi, 'stocke <span class="log-val-shield">$1</span> <span class="log-val-shield">points de sûreté</span>');
-        text = text.replace(/\(Sûreté\)/g, '(<span class="log-val-shield">Sûreté</span>)');
-        text = text.replace(/\(Sûreté passive\)/g, '(<span class="log-val-shield">Sûreté passive</span>)');
-        text = text.replace(/\+(\d+)% de critique/gi, '+<span class="log-val-crit">$1%</span> de <span class="log-val-crit">critique</span>');
-
-        // Raison
-        text = text.replace(/de la Raison/g, 'de la <span class="log-val-magic">Raison</span>');
-        text = text.replace(/\(Raison\)/g, '(<span class="log-val-magic">Raison</span>)');
-        text = text.replace(/cumuls de Vitesse/g, 'cumuls de <span class="log-val-speed">Vitesse</span>');
-
-        // Violence
-        text = text.replace(/stacks de Violence/g, 'stacks de <span class="log-val-brut">Violence</span>');
-
-        // Karma (Spiritualité)
-        text = text.replace(/✨ Harmonie Karmique/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Harmonie Karmique</span>');
-        text = text.replace(/✨ Le Karma/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Le Karma</span>');
-        text = text.replace(/✨ Équilibre Karmique Parfait atteint !/gi, '<span style="color:#d946ef;font-weight:bold;">✨ Équilibre Karmique Parfait atteint !</span>');
-        text = text.replace(/🌑 Le Karma/gi, '<span style="color:#64748b;font-weight:bold;">🌑 Le Karma</span>');
-        text = text.replace(/🌕 Le Karma/gi, '<span style="color:#fcd34d;font-weight:bold;">🌕 Le Karma</span>');
-        text = text.replace(/🌗 Le Karma/gi, '<span style="color:#a1a1aa;font-weight:bold;">🌗 Le Karma</span>');
-        text = text.replace(/🌗 Acte de rééquilibrage/gi, '<span style="color:#a1a1aa;font-weight:bold;">🌗 Acte de rééquilibrage</span>');
-        text = text.replace(/💥 Le Karma/gi, '<span style="color:#ef4444;font-weight:bold;">💥 Le Karma</span>');
-        text = text.replace(/⏳ Le Karma/gi, '<span style="color:#f59e0b;font-weight:bold;">⏳ Le Karma</span>');
-        text = text.replace(/⚖️/gi, '<span style="color:#d946ef;font-weight:bold;">⚖️</span>');
-
-        // Jauge et Fractions
-        text = text.replace(/(\d+)\/100/g, '<span style="color:#ef4444;font-weight:bold;">$1/100</span>');
-        text = text.replace(/Jauge: ([\-\d]+)/gi, 'Jauge: <span style="color:#d946ef;font-weight:bold;">$1</span>');
-
-        // Effets sur la durée (traductions)
-        text = text.replace(/Soins sur la durée/g, '<span class="log-val-hp">Soins sur la durée</span>');
-        text = text.replace(/Régénération de mana sur la durée/g, '<span class="log-val-mana">Régénération de mana sur la durée</span>');
-        text = text.replace(/Dégâts sur la durée/g, '<span class="log-val-dmg">Dégâts sur la durée</span>');
-
-        text = text.replace(/\(Critique\)/g, '<span class="log-crit-text">(Critique)</span>');
-        text = text.replace(/fixe: ([\-\+\d\.]+)/g, 'fixe: <span style="color:#fbbf24;font-weight:bold;">$1</span>');
-        text = text.replace(/mult: ([\-\+\d\.]+)/g, 'mult: <span style="color:#fbbf24;font-weight:bold;">$1</span>');
-
-        // Tous les effets de buffs/debuffs
-        text = text.replace(/effet sur (.*?) \(/g, function (match, statName) {
-            return `effet sur <span class="${getStatClass(statName)}">${statName}</span> (`;
-        });
-
-        if (!isUseless) {
-            div.innerHTML = text;
-            logContainer.appendChild(div);
-        }
-    });
-
-    if (isAtBottom) {
-        logContainer.scrollTop = logContainer.scrollHeight;
-    } else {
-        logContainer.scrollTop = oldScrollTop;
     }
 
     // Check finish
@@ -2456,27 +2950,48 @@ function renderActiveChallenges(data) {
     }
 }
 
-function updateNextRoomButtons(data) {
-    if (!data.multi) return;
-
+function getActiveUsersCount(data) {
+    if (!data || !Array.isArray(data.players)) return 1;
     const activeUsers = new Set();
-    if (data.players) {
-        data.players.forEach(p => {
-            if (p.healthCurrent > 0 && !(data.fledUsernames && data.fledUsernames.includes(p.ownerUsername))) {
-                if (p.ownerUsername) activeUsers.add(p.ownerUsername);
+    data.players.forEach(p => {
+        if (p.healthCurrent > 0 && !(data.fledUsernames && data.fledUsernames.includes(p.ownerUsername))) {
+            if (p.ownerUsername) activeUsers.add(p.ownerUsername);
+        }
+    });
+    return Math.max(1, activeUsers.size);
+}
+
+function updateNextRoomButtons(data) {
+    const totalActive = getActiveUsersCount(data);
+    const isMultiSession = Boolean(data && (data.multi || data.isMulti || pageState.isMulti || totalActive > 1));
+    const buttons = document.querySelectorAll('#btnVictoryContinue, #btnContinueEvent, button[data-next-room-btn="true"], button[onclick*="nextRoom"]');
+
+    if (!isMultiSession || totalActive <= 1) {
+        buttons.forEach(btn => {
+            const origText = btn.dataset.origText || btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
+            if (origText && !origText.startsWith('En attente')) {
+                btn.textContent = origText;
             }
+            btn.disabled = false;
+            btn.classList.remove('waiting-ready', 'disabled');
+            btn.style.opacity = '1';
         });
+        return;
     }
-    const totalActive = activeUsers.size;
-    if (totalActive <= 1) return; // Only show for 2+ active players
 
     const readyUsers = data.readyForNextRoomUsers || [];
     const readyCount = readyUsers.length;
-    const isMeReady = readyUsers.includes(pageState.currentUsername);
+    const isMeReady = Boolean(pageState.currentUsername && readyUsers.includes(pageState.currentUsername));
 
-    document.querySelectorAll('button[onclick*="nextRoom"]').forEach(btn => {
-        let origText = btn.dataset.origText || btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
-        btn.dataset.origText = origText;
+    buttons.forEach(btn => {
+        let origText = btn.dataset.origText;
+        if (!origText || origText.startsWith('En attente')) {
+            const cleaned = btn.textContent.trim().replace(/\s*\(\d+\/\d+\)$/, '');
+            origText = (!cleaned || cleaned.startsWith('En attente'))
+                ? (btn.id === 'btnVictoryContinue' ? "Continuer l'exploration" : 'Continuer')
+                : cleaned;
+            btn.dataset.origText = origText;
+        }
 
         let newText = isMeReady ? `En attente (${readyCount}/${totalActive})` : `${origText} (${readyCount}/${totalActive})`;
         btn.textContent = newText;
@@ -2514,17 +3029,17 @@ export function getBossChallengesHtml(activeChallenges) {
         let iconName = '';
         
         if (chall.failed) {
-            statusHtml = '<div class="text-error font-bold mt-2">❌ Challenge Échoué</div>';
+            statusHtml = '<div class="text-error font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">cancel</span> Challenge Échoué</div>';
             badgeStyle = 'border-color: rgba(239, 68, 68, 0.4); color: #ef4444; background: rgba(239, 68, 68, 0.1); text-decoration: line-through;';
             iconStyle = 'text-error';
             iconName = 'cancel';
         } else if (chall.completed) {
-            statusHtml = '<div class="text-success font-bold mt-2">✨ Challenge Réussi</div>';
+            statusHtml = '<div class="text-success font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">check_circle</span> Challenge Réussi</div>';
             badgeStyle = 'border-color: rgba(16, 185, 129, 0.4); color: #10b981; background: rgba(16, 185, 129, 0.1);';
             iconStyle = 'text-success';
             iconName = 'check_circle';
         } else {
-            statusHtml = '<div class="text-success font-bold mt-2">✅ Challenge En cours</div>';
+            statusHtml = '<div class="text-success font-bold mt-2 flex items-center gap-1"><span class="material-symbols-outlined">military_tech</span> Challenge En cours</div>';
             badgeStyle = 'border-color: rgba(245, 158, 11, 0.4); color: #f59e0b; background: rgba(245, 158, 11, 0.1);';
             iconStyle = 'text-warning';
             iconName = 'military_tech';
@@ -2573,7 +3088,7 @@ export function getBossBuffsHtml(c) {
     }
 
     if (c.passiveStates['BOSS_BUFF_HP']) html += makeBadge(c.passiveStates['BOSS_BUFF_HP'], '#10b981', '16, 185, 129', 'favorite', `+${c.passiveStates['BOSS_BUFF_HP']}% PV`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_HP']}% de points de vie maximum supplémentaires.`);
-    if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) html += makeBadge(c.passiveStates['BOSS_BUFF_SHIELD'], '#38bdf8', '56, 189, 248', 'shield', `+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.`, `Le Boss commence le combat avec un bouclier égal à ${c.passiveStates['BOSS_BUFF_SHIELD']}% de ses PV max.`);
+    if (c.passiveStates['BOSS_BUFF_SHIELD'] && c.shieldTotal > 0) html += makeBadge(c.passiveStates['BOSS_BUFF_SHIELD'], '#38bdf8', '56, 189, 248', 'security', `+${c.passiveStates['BOSS_BUFF_SHIELD']}% Boucl.`, `Le Boss commence le combat avec un bouclier égal à ${c.passiveStates['BOSS_BUFF_SHIELD']}% de ses PV max.`);
     if (c.passiveStates['BOSS_BUFF_ARMOR'] && hasArmorBuff) html += makeBadge(c.passiveStates['BOSS_BUFF_ARMOR'], '#8b5cf6', '139, 92, 246', 'security', `+${c.passiveStates['BOSS_BUFF_ARMOR']} Arm.`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_ARMOR']} points d'Armure.`);
     if (c.passiveStates['BOSS_BUFF_RESIST'] && hasResistBuff) html += makeBadge(c.passiveStates['BOSS_BUFF_RESIST'], '#d946ef', '217, 70, 239', 'health_and_safety', `+${c.passiveStates['BOSS_BUFF_RESIST']} Rés.`, `Le Boss possède ${c.passiveStates['BOSS_BUFF_RESIST']} points de Résistance magique.`);
     if (c.passiveStates['BOSS_BUFF_BURN']) html += makeBadge(c.passiveStates['BOSS_BUFF_BURN'], '#ef4444', '239, 68, 68', 'local_fire_department', `Brûlure`, `Inflige l'altération Brûlure à la cible lors d'une attaque réussie.`);
@@ -2738,7 +3253,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
             icon: 'local_fire_department', color: '#f97316', value: `${heat}`,
             title: `Chaleur : ${heat}/100`, dangerClass,
             topBadge: regenBadge,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#f97316;">🔥 Chaleur (Destruction)</div><div class="text-xs" style="color:#cbd5e1;">${heat}/100 — Augmente les dégâts de feu. À 100, surcharge !</div>${heatTooltipEffects}`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f97316;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">local_fire_department</span><span>Chaleur (Destruction)</span></div><div class="text-xs" style="color:#cbd5e1;">${heat}/100 — Augmente les dégâts de feu. À 100, surcharge !</div>${heatTooltipEffects}`
         });
     }
 
@@ -2749,9 +3264,9 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         }
         let dangerClass = suretePoints >= 100 ? ' passive-orb-pulse' : '';
         passiveOrbs.push({
-            icon: 'security', color: '#14b8a6', value: `${suretePoints}`,
+            icon: 'water_drop', color: '#00e5cc', value: `${suretePoints}`,
             title: `Sûreté : ${suretePoints}/100`, dangerClass,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#14b8a6;">🛡️ Points de Sûreté (Sûreté)</div><div class="text-xs" style="color:#cbd5e1;">${suretePoints}/100${suretePoints >= 100 ? ' — <span style="color:#14b8a6; font-weight:bold;">100 points atteints ! Bonus consommés au prochain sort.</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#00e5cc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">water_drop</span><span>Points de Sûreté (Sûreté)</span></div><div class="text-xs" style="color:#cbd5e1;">${suretePoints}/100${suretePoints >= 100 ? ' — <span style="color:#00e5cc; font-weight:bold;">100 points atteints ! Bonus consommés au prochain sort.</span>' : ''}</div>`
         });
     }
 
@@ -2766,12 +3281,12 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'storm', color: '#dc2626', value: `${insp}`,
             title: `Inspiration : ${insp}/7`, dangerClass: inspDanger,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#dc2626;">⚡ Inspiration (Violence)</div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
         });
         passiveOrbs.push({
             icon: 'air', color: '#d946ef', value: `${exp}`,
             title: `Expiration : ${exp}/7`, dangerClass: expDanger,
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#d946ef;">💨 Expiration (Violence)</div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
         });
     }
 
@@ -2783,7 +3298,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'speed', color: '#eab308', value: `${raisonStacks}`,
             title: `Cumuls Vitesse : ${raisonStacks}`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#eab308;">⚡ Vitesse (Raison)</div><div class="text-xs" style="color:#cbd5e1;">Cumuls de vitesse actuels : ${raisonStacks}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#eab308;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">speed</span><span>Vitesse (Raison)</span></div><div class="text-xs" style="color:#cbd5e1;">Cumuls de vitesse actuels : ${raisonStacks}</div>`
         });
     }
 
@@ -2797,13 +3312,13 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
             { avail: lowHpAvail, label: '< 50% PV', desc: '+20% dégâts phys. (cible < 50% PV)' },
             { avail: debuffAvail, label: 'Débuff', desc: '+15% dégâts phys. (cible avec débuff)' }
         ];
-        const dotIcons = dots.map(d => `<span style="width:8px; height:8px; border-radius:50%; background:${d.avail ? '#c084fc' : '#4b5563'}; display:inline-block; box-shadow:${d.avail ? '0 0 4px #c084fc' : 'none'};"></span>`).join('');
-        const tooltipLines = dots.map(d => `<div class="text-xs" style="color:${d.avail ? '#c084fc' : '#6b7280'}; display:flex; align-items:center; gap:0.3rem;">${d.avail ? '✓' : '✗'} ${d.desc}</div>`).join('');
+        const dotIcons = dots.map(d => `<span style="width:8px; height:8px; border-radius:50%; background:${d.avail ? '#ed5677' : '#4b5563'}; display:inline-block; box-shadow:${d.avail ? '0 0 4px #ed5677' : 'none'};"></span>`).join('');
+        const tooltipLines = dots.map(d => `<div class="text-xs" style="color:${d.avail ? '#ed5677' : '#6b7280'}; display:flex; align-items:center; gap:0.3rem;">${d.avail ? '✓' : '✗'} ${d.desc}</div>`).join('');
 
         passiveOrbs.push({
-            icon: 'bolt', color: '#c084fc', value: dotIcons,
+            icon: 'visibility_off', color: '#ed5677', value: dotIcons,
             title: `Trahison`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#c084fc;">🗡️ Buffs Trahison</div>${tooltipLines}`,
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#ed5677;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">visibility_off</span><span>Buffs Trahison</span></div>${tooltipLines}`,
             isCustomValue: true
         });
     }
@@ -2813,7 +3328,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'yard', color: '#10b981', value: `${buds}`,
             title: `Bourgeons : ${buds}`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#10b981;">🌱 Graines (Création)</div><div class="text-xs" style="color:#cbd5e1;">Bourgeons actuels : ${buds}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#10b981;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">yard</span><span>Bourgeons (Création)</span></div><div class="text-xs" style="color:#cbd5e1;">Bourgeons actuels : ${buds}</div>`
         });
     }
 
@@ -2827,22 +3342,22 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         let kColor, kIcon, kText, kTooltip, kDanger = '';
         if (karmaLocked) {
             kColor = '#f87171'; kIcon = 'block'; kText = `${karmaLockedDuration}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#f87171;">💔 Karma Brisé</div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
             kDanger = ' passive-orb-pulse';
         } else if (karmaHarmony) {
-            kColor = '#cbd5e1'; kIcon = 'brightness_medium'; kText = '☯';
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#cbd5e1;">☯ Karma en Harmonie</div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
+            kColor = '#cbd5e1'; kIcon = 'all_inclusive'; kText = '∞';
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
         } else if (karmaGauge < 0) {
             kColor = '#c084fc'; kIcon = 'dark_mode'; kText = `${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#c084fc;">🌙 Karma Ténèbres</div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
             if (karmaGauge <= -3) kDanger = ' passive-orb-pulse';
         } else if (karmaGauge > 0) {
             kColor = '#fde047'; kIcon = 'light_mode'; kText = `+${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#fde047;">☀️ Karma Lumière</div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
             if (karmaGauge >= 3) kDanger = ' passive-orb-pulse';
         } else {
-            kColor = '#9ca3af'; kIcon = 'all_inclusive'; kText = '0';
-            kTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#9ca3af;">⚖️ Karma Neutre</div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
+            kColor = '#9ca3af'; kIcon = 'balance'; kText = '0';
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
         }
         passiveOrbs.push({ icon: kIcon, color: kColor, value: kText, title: 'Karma', dangerClass: kDanger, tooltip: kTooltip });
     }
@@ -2855,7 +3370,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const eColor = canCast ? '#38bdf8' : '#ef4444';
         const eIcon = canCast ? 'blur_on' : 'block';
         const eText = canCast ? '✓' : '✗';
-        const eTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:${eColor};">${canCast ? '💫 Éveillé' : '🚫 Bloqué'} (Esprit)</div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
         passiveOrbs.push({ icon: eIcon, color: eColor, value: eText, title: canCast ? 'Éveillé' : 'Bloqué', dangerClass: '', tooltip: eTooltip });
     }
 
@@ -2867,7 +3382,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const tColor = canCast ? '#c084fc' : '#ef4444';
         const tIcon = canCast ? 'nightlight_round' : 'block';
         const tText = canCast ? '✓' : '✗';
-        const tTooltip = `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:${tColor};">${canCast ? '🌑 Assombri' : '🚫 Bloqué'} (Ténèbres)</div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
         passiveOrbs.push({ icon: tIcon, color: tColor, value: tText, title: canCast ? 'Assombri' : 'Bloqué', dangerClass: '', tooltip: tTooltip });
     }
 
@@ -2877,7 +3392,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         passiveOrbs.push({
             icon: 'hand_bones', color: '#fda4af', value: `${turns}`,
             title: `Âme Détachée : ${turns} tour(s)`, dangerClass: '',
-            tooltip: `<div class="text-sm font-medium" style="margin-bottom:0.3rem; color:#fda4af;">💀 Âme Détachée</div><div class="text-xs" style="color:#cbd5e1;">+5 Dégâts Phys. et +30% Dégâts Phys.<br/>Reste ${turns} tour(s)</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fda4af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">hand_bones</span><span>Âme Détachée</span></div><div class="text-xs" style="color:#cbd5e1;">+5 Dégâts Phys. et +30% Dégâts Phys.<br/>Reste ${turns} tour(s)</div>`
         });
     }
 
@@ -3045,7 +3560,7 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
     } else if (rMana < 0) {
         manaRegenBadge = `<span title="Perd ${-rMana} Mana au début du tour (Famine)" style="cursor: help; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem; vertical-align: text-bottom;"><span class="material-symbols-outlined text-sm">water_drop</span>${rMana} MP/t</span>`;
     }
-    let avatarHtml = isHero ? '🧙‍♂️' : (isBossSolo ? '<span class="fighter-avatar-boss">👑</span>' : '👹');
+    let avatarHtml = isHero ? '<span class="material-symbols-outlined fighter-avatar-hero">person</span>' : (isBossSolo ? '<span class="fighter-avatar-boss material-symbols-outlined text-amber-400">crown</span>' : '<span class="material-symbols-outlined fighter-avatar-monster text-rose-400">skull</span>');
     if (isHero && c.voie && c.voie.nom) {
         const vNom = c.voie.nom.toLowerCase();
         let avatarName = '';
@@ -3318,10 +3833,9 @@ export function renderEnemies(enemies, turnMap = null) {
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'yellow';
-                el.innerText = `[DEBUG] Enemy ${fId} HP: ${forcedHp} -> ${pMonster.healthCurrent}`;
-                log.prepend(el);
+                el.className = 'log-entry log-debug-warning';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} HP: ${forcedHp} -&gt; ${pMonster.healthCurrent}</span>`;
+                // Debug log disabled to keep combat log scroll intact
             }
 
             animateGaugeJS(hpBar, hpTextEl, forcedHp, pMonster.healthCurrent, pMonster.healthMax, 800);
@@ -3330,20 +3844,18 @@ export function renderEnemies(enemies, turnMap = null) {
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'orange';
-                el.innerText = `[DEBUG] Enemy ${fId} skipped HP anim (same val: ${forcedHp})`;
-                log.prepend(el);
+                el.className = 'log-entry log-debug-warning';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-warn">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (same val: ${forcedHp})</span>`;
+                // Debug log disabled to keep combat log scroll intact
             }
         } else if (forcedHp === null) {
             // DEBUG
             const log = document.getElementById('combatLog');
             if (log) {
                 const el = document.createElement('div');
-                el.className = 'log-entry';
-                el.style.color = 'red';
-                el.innerText = `[DEBUG] Enemy ${fId} skipped HP anim (forcedHp is NULL)`;
-                log.prepend(el);
+                el.className = 'log-entry log-debug-error';
+                el.innerHTML = `<span class="material-symbols-outlined log-entry-icon log-icon-death">bug_report</span><span class="log-entry-text">[DEBUG] Enemy ${fId} skipped HP anim (forcedHp is NULL)</span>`;
+                // Debug log disabled to keep combat log scroll intact
             }
         }
         if (forcedMana !== null && forcedMana !== pMonster.manaCurrent) {
@@ -4248,6 +4760,19 @@ export function showResult(data) {
     const tipContainer = document.getElementById('resultTip');
     const tipText = document.getElementById('resultTipText');
 
+    // Masquer les overlays de salle / victoire intermédiaire et panneaux latéraux pour garantir le premier plan
+    const combatVictoryOverlay = document.getElementById('combatVictoryOverlay');
+    if (combatVictoryOverlay) combatVictoryOverlay.classList.remove('show');
+    const eventOverlay = document.getElementById('eventOverlay');
+    if (eventOverlay) eventOverlay.classList.remove('show');
+    const mainSidePanel = document.getElementById('combatMainSidePanelWrapper');
+    if (mainSidePanel) {
+        mainSidePanel.classList.add('-translate-x-full');
+        mainSidePanel.classList.remove('translate-x-0');
+    }
+    const heroStatsPanel = document.getElementById('eventOverlayHeroesStats');
+    if (heroStatsPanel) heroStatsPanel.style.display = 'none';
+
     if (data.playerWon) {
         title.textContent = "VICTOIRE";
         title.classList.add('text-success');
@@ -4256,6 +4781,7 @@ export function showResult(data) {
         if (tipContainer && tipText) {
             const randomTip = GAME_TIPS[Math.floor(Math.random() * GAME_TIPS.length)];
             tipText.innerHTML = randomTip;
+            tipContainer.classList.remove('is-hidden');
             tipContainer.style.display = 'block';
         }
     } else {
@@ -4263,7 +4789,10 @@ export function showResult(data) {
         title.classList.add('text-error');
         const goldLost = data.totalGoldLostOnDefeat || 0;
         desc.innerHTML = `Votre équipe a été anéantie.<br><span style="color:#fbbf24; font-weight:600; margin-top:0.5rem; display:block;">Pénalité : -${goldLost} Or</span>`;
-        if (tipContainer) tipContainer.style.display = 'none';
+        if (tipContainer) {
+            tipContainer.classList.add('is-hidden');
+            tipContainer.style.display = 'none';
+        }
     }
 
     localStorage.removeItem('activeCombatId');
@@ -4277,7 +4806,7 @@ export function showResult(data) {
                 await (window.globalFetch || fetch)(`/api/pve/combat/${sId}/finish`, { method: 'POST' });
             } catch (_) {}
         }
-        window.location.href = '/dungeons.html';
+        window.location.href = '/dungeons';
     };
 
     const retryBtn = document.getElementById('retryDungeonBtn');
@@ -4285,7 +4814,7 @@ export function showResult(data) {
         const urlParams = new URLSearchParams(window.location.search);
         const dId = (data && data.dungeonId) || (pageState.currentSessionData && pageState.currentSessionData.dungeonId) || urlParams.get('dungeonId');
         if (dId) {
-            let targetUrl = `/dungeons.html?dungeonId=${dId}`;
+            let targetUrl = `/dungeons?dungeonId=${dId}`;
             const heroes = (data && data.players && data.players.length > 0)
                 ? data.players
                 : (pageState.currentSessionData && pageState.currentSessionData.players);
@@ -4305,8 +4834,10 @@ export function showResult(data) {
                 }
                 window.location.href = targetUrl;
             };
+            retryBtn.classList.remove('is-hidden');
             retryBtn.style.display = 'inline-flex';
         } else {
+            retryBtn.classList.add('is-hidden');
             retryBtn.style.display = 'none';
         }
     }

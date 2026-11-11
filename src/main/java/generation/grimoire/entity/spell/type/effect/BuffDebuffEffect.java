@@ -118,7 +118,7 @@ return clone;
         if (statAffected == StatType.BURN || statAffected == StatType.POISON) {
             if (checkCriticalHit(caster)) {
                 totalFlatToApply = (int) Math.round(totalFlatToApply * getCriticalMultiplier(caster, true));
-                System.out.println("✨ Coup Critique sur le DoT (" + statAffected + ") !");
+                System.out.println("Coup Critique sur le DoT (" + statAffected + ") !");
             }
         }
 
@@ -136,7 +136,9 @@ target.getActiveBuffs().add(cloneFlat);
                     cloneMult.setModifier(totalModifierToApply);
 target.getActiveBuffs().add(cloneMult);
                 }
-                System.out.println(target.getName() + " reçoit un effet sur " + statAffected + " (fixe: " + totalFlatToApply + ", mult: " + totalModifierToApply + ") pour " + duration + " tours.");
+                String details = formatEffectDetails(totalFlatToApply, totalModifierToApply);
+                String detailsPart = details.isEmpty() ? "" : " " + details;
+                System.out.println(target.getName() + " reçoit un effet sur " + statAffected + detailsPart + " pour " + duration + " tours.");
             } else {
                 if (totalFlatToApply != 0) {
                     target.applyFlatBuff(statAffected, totalFlatToApply);
@@ -162,6 +164,32 @@ target.getActiveBuffs().add(cloneMult);
         return this.statAffected == statType;
     }
 
+    public static String formatModifier(double modifier) {
+        double pct = modifier * 100.0;
+        double rounded = Math.round(pct * 10.0) / 10.0;
+        String sign = rounded > 0 ? "+" : "";
+        if (Math.abs(rounded - Math.round(rounded)) < 0.0001) {
+            return sign + ((long) Math.round(rounded)) + "%";
+        } else {
+            return sign + String.format(java.util.Locale.ROOT, "%.1f%%", rounded);
+        }
+    }
 
+    public static String formatEffectDetails(int flat, double modifier) {
+        boolean hasFlat = flat != 0;
+        boolean hasMult = Math.abs(modifier) > 0.00001;
 
+        if (hasFlat && hasMult) {
+            String flatStr = (flat > 0 ? "+" : "") + flat;
+            String multStr = formatModifier(modifier);
+            return "(" + flatStr + ", " + multStr + ")";
+        } else if (hasMult) {
+            return "(" + formatModifier(modifier) + ")";
+        } else if (hasFlat) {
+            String flatStr = (flat > 0 ? "+" : "") + flat;
+            return "(" + flatStr + ")";
+        } else {
+            return "";
+        }
+    }
 }

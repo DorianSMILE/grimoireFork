@@ -1,0 +1,665 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { isAlreadyAuthenticated } from '../services/api';
+
+export function ArmoryPage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Armurerie — Grimoire';
+
+    if (!isAlreadyAuthenticated()) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    let cancelled = false;
+
+    async function bootArmory() {
+      const uiUrl = '/js/ui.js?v=2';
+      const authUrl = '/js/services/auth.js?v=32';
+      const armoryUrl = '/js/pages/armory.js?v=112';
+
+      await import(/* @vite-ignore */ uiUrl);
+      await import(/* @vite-ignore */ authUrl);
+      if (typeof window.initArmoryPage !== 'function') {
+        await import(/* @vite-ignore */ armoryUrl);
+      }
+      if (!cancelled && typeof window.initArmoryPage === 'function') {
+        await window.initArmoryPage();
+      }
+    }
+
+    bootArmory().catch((err) => {
+      console.error('Erreur initialisation Armurerie:', err);
+    });
+
+    return () => {
+      cancelled = true;
+      window.hideGlobalTooltip?.(true);
+      window.GrimoireTutorial?.stop?.();
+    };
+  }, [navigate]);
+
+  return (
+    <>
+      <div className="armory-main">
+        {/* Colonne Gauche : Formulaire de Création */}
+        <div className="armory-form-panel" id="charFormPanel">
+          <div className="armory-panel-title flex justify-between" id="formTitle">
+            <span className="flex items-center gap-2" id="formTitleText">
+              <span className="material-symbols-outlined">person_add</span>
+              Recruter à la taverne
+            </span>
+            <div className="flex items-center" id="charLimitContainer">
+              <span className="text-muted text-md font-medium" id="charLimitText">
+                -/-
+              </span>
+            </div>
+          </div>
+
+          {/* Nom */}
+          <div className="armory-field">
+            <label htmlFor="charName">
+              <span className="material-symbols-outlined text-warning">
+                badge
+              </span>
+              Nom du personnage
+            </label>
+            <input
+              type="text"
+              id="charName"
+              placeholder="Ex: Aldric le Sage, Sombria..."
+              required
+            />
+          </div>
+
+          {/* Voie & Spiritualité */}
+          <div className="armory-section-title flex items-center gap-2">
+            <span className="material-symbols-outlined text-purple">
+              auto_awesome
+            </span>
+            Voie &amp; Spiritualité
+          </div>
+
+          <div className="armory-form-row items-start">
+            <div className="flex gap-4 flex-col">
+              <div className="armory-field">
+                <label className="flex items-center gap-1" htmlFor="charVoie">
+                  <span className="material-symbols-outlined text-purple">
+                    route
+                  </span>
+                  Voie
+                  <span
+                    className="material-symbols-outlined text-purple text-lg cursor-help hidden"
+                    id="charVoieInfoIcon"
+                    onMouseEnter={(e) =>
+                      window.showGlobalTooltip?.(e.currentTarget)
+                    }
+                    onMouseLeave={() => window.hideGlobalTooltip?.()}
+                  >
+                    info
+                    <template className="tooltip-data"></template>
+                  </span>
+                </label>
+                <div
+                  className="custom-select-wrapper"
+                  id="charVoieWrapper"
+                  tabIndex={0}
+                >
+                  <div className="custom-select-trigger" id="charVoieTrigger">
+                    <span className="cs-label" id="charVoieLabel">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      — Aucune —
+                    </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">
+                      expand_more
+                    </span>
+                  </div>
+                  <div className="custom-select-options" id="charVoieOptions">
+                    <div className="custom-option" data-value="">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      — Aucune —
+                    </div>
+                  </div>
+                  <input type="hidden" id="charVoie" defaultValue="" />
+                </div>
+              </div>
+
+              <div className="armory-field hidden">
+                <label htmlFor="charExperience">
+                  <span className="material-symbols-outlined text-purple">
+                    star
+                  </span>
+                  Expérience
+                </label>
+                <input
+                  type="number"
+                  id="charExperience"
+                  min={0}
+                  defaultValue={0}
+                />
+              </div>
+
+              <div className="armory-field">
+                <label className="flex items-center gap-1" htmlFor="charSpirit">
+                  <span className="material-symbols-outlined text-orange-400">
+                    psychology
+                  </span>
+                  Spiritualité
+                  <span
+                    className="material-symbols-outlined text-lg text-orange cursor-help hidden"
+                    id="charSpiritInfoIcon"
+                    onMouseEnter={(e) =>
+                      window.showGlobalTooltip?.(e.currentTarget)
+                    }
+                    onMouseLeave={() => window.hideGlobalTooltip?.()}
+                  >
+                    info
+                    <template className="tooltip-data"></template>
+                  </span>
+                </label>
+                <div
+                  className="custom-select-wrapper"
+                  id="charSpiritWrapper"
+                  tabIndex={0}
+                >
+                  <div className="custom-select-trigger" id="charSpiritTrigger">
+                    <span className="cs-label" id="charSpiritLabel">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      — Aucune —
+                    </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">
+                      expand_more
+                    </span>
+                  </div>
+                  <div className="custom-select-options" id="charSpiritOptions">
+                    <div className="custom-option" data-value="">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      — Aucune —
+                    </div>
+                  </div>
+                  <input type="hidden" id="charSpirit" defaultValue="" />
+                </div>
+              </div>
+
+              <div className="armory-field hidden">
+                <label htmlFor="charSpiritExperience">
+                  <span className="material-symbols-outlined text-orange-400">
+                    star
+                  </span>
+                  Expérience Spirituelle
+                </label>
+                <input
+                  type="number"
+                  id="charSpiritExperience"
+                  min={0}
+                  defaultValue={0}
+                />
+              </div>
+            </div>
+
+            <div className="armory-field">
+              <label className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-success">
+                  bar_chart
+                </span>
+                Modificateurs de Base
+              </label>
+              <div
+                className="flex bg-slate-800/50 border border-slate-700 rounded-md p-[0.8rem] flex-col gap-[0.4rem] min-h-[100px]"
+                id="voieStatsDiff"
+              >
+                <span className="text-muted text-sm italic">
+                  Sélectionnez une voie...
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Toile des spécificités du héros / voie */}
+          <div id="armorySpiderSection" className="armory-spider-section is-hidden">
+            <div className="armory-spider-header">
+              <div className="armory-spider-title-wrap">
+                <span className="material-symbols-outlined text-cyan-400">
+                  hub
+                </span>
+                <span className="armory-spider-title">
+                  Profil &amp; Spécificités de la Voie
+                </span>
+                <span
+                  className="material-symbols-outlined text-purple text-lg cursor-help hidden"
+                  id="spiderVoieInfoIcon"
+                  onMouseEnter={(e) =>
+                    window.showGlobalTooltip?.(e.currentTarget)
+                  }
+                  onMouseLeave={() => window.hideGlobalTooltip?.()}
+                >
+                  info
+                  <template className="tooltip-data"></template>
+                </span>
+                <span
+                  className="material-symbols-outlined text-orange-400 text-lg cursor-help hidden"
+                  id="spiderSpiritInfoIcon"
+                  onMouseEnter={(e) =>
+                    window.showGlobalTooltip?.(e.currentTarget)
+                  }
+                  onMouseLeave={() => window.hideGlobalTooltip?.()}
+                >
+                  info
+                  <template className="tooltip-data"></template>
+                </span>
+              </div>
+            </div>
+            <div className="armory-spider-body">
+              <canvas
+                id="armorySpiderCanvas"
+                className="armory-spider-canvas"
+                width={280}
+                height={250}
+              ></canvas>
+              <div id="armorySpecBadges" className="armory-spider-badges"></div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex flex-col gap-5 hidden" id="baseStatsSection">
+            <div className="armory-section-title">
+              <span className="material-symbols-outlined text-success">
+                monitoring
+              </span>
+              Statistiques de Base
+            </div>
+
+            <div className="armory-form-row">
+              <div className="armory-field">
+                <label htmlFor="charHp">
+                  <span className="material-symbols-outlined text-pink">
+                    favorite
+                  </span>
+                  PV Max
+                </label>
+                <input type="number" id="charHp" min={1} defaultValue={100} />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charMana">
+                  <span className="material-symbols-outlined text-info">
+                    water_drop
+                  </span>
+                  Mana Max
+                </label>
+                <input type="number" id="charMana" min={0} defaultValue={100} />
+              </div>
+            </div>
+
+            <div className="armory-form-row quad">
+              <div className="armory-field">
+                <label htmlFor="charPower">
+                  <span className="material-symbols-outlined text-purple">
+                    auto_awesome
+                  </span>
+                  Puissance
+                </label>
+                <input type="number" id="charPower" min={0} defaultValue={10} />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charStrength">
+                  <span className="material-symbols-outlined text-rose-500">
+                    fitness_center
+                  </span>
+                  Force
+                </label>
+                <input
+                  type="number"
+                  id="charStrength"
+                  min={0}
+                  defaultValue={10}
+                />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charArmor">
+                  <span className="material-symbols-outlined text-info">
+                    shield
+                  </span>
+                  Armure
+                </label>
+                <input type="number" id="charArmor" min={0} defaultValue={5} />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charResistance">
+                  <span className="material-symbols-outlined text-success">
+                    shield
+                  </span>
+                  Résistance
+                </label>
+                <input
+                  type="number"
+                  id="charResistance"
+                  min={0}
+                  defaultValue={5}
+                />
+              </div>
+            </div>
+
+            <div className="armory-form-row">
+              <div className="armory-field">
+                <label htmlFor="charSpeed">
+                  <span className="material-symbols-outlined text-warning">
+                    bolt
+                  </span>
+                  Vitesse
+                </label>
+                <input type="number" id="charSpeed" min={0} defaultValue={1} />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charCrit">
+                  <span className="material-symbols-outlined text-danger">
+                    gps_fixed
+                  </span>
+                  Critique (%)
+                </label>
+                <input
+                  type="number"
+                  id="charCrit"
+                  min={0}
+                  max={100}
+                  defaultValue={5}
+                />
+              </div>
+            </div>
+
+            <div className="armory-form-row">
+              <div className="armory-field">
+                <label htmlFor="charRegenHp">
+                  <span className="material-symbols-outlined text-pink">
+                    healing
+                  </span>
+                  Régen PV
+                </label>
+                <input type="number" id="charRegenHp" min={0} defaultValue={2} />
+              </div>
+              <div className="armory-field">
+                <label htmlFor="charRegenMana">
+                  <span className="material-symbols-outlined text-info">
+                    cyclone
+                  </span>
+                  Régen Mana
+                </label>
+                <input
+                  type="number"
+                  id="charRegenMana"
+                  min={0}
+                  defaultValue={4}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Boutons */}
+          <div className="flex items-center gap-[0.6rem]">
+            <button
+              className="armory-submit-btn"
+              type="button"
+              id="submitBtn"
+              onClick={() => window.submitPersonnage?.()}
+            >
+              <span className="material-symbols-outlined text-lg">
+                person_add
+              </span>
+              Forger le Personnage
+            </button>
+            <button
+              className="armory-nav-link hidden"
+              type="button"
+              id="cancelBtn"
+              onClick={() => window.resetForm?.()}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+
+        {/* Colonne Droite : Liste des Personnages */}
+        <div className="flex flex-col">
+          <div className="armory-list-panel flex-1 flex m-0 flex-col max-h-[calc(100vh-140px)]">
+            <div className="armory-panel-title justify-between">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-info">
+                  groups
+                </span>
+                Personnages
+              </span>
+              <button
+                className="armory-nav-link text-sm"
+                type="button"
+                onClick={() => window.loadPersonnages?.()}
+              >
+                <span className="material-symbols-outlined text-base">
+                  refresh
+                </span>
+                Actualiser
+              </button>
+            </div>
+
+            <div className="mb-4 flex gap-2 flex-wrap bg-black/20 p-[0.8rem] rounded-lg border border-white/5">
+              {/* User Filter Input (hidden by default, for admins) */}
+              <div
+                className="armory-field flex-1 hidden min-w-[150px]"
+                id="searchOwnerContainer"
+              >
+                <label className="text-[0.7rem] text-slate-500 mb-1 block">
+                  <span className="material-symbols-outlined text-md align-bottom">
+                    person_search
+                  </span>{' '}
+                  Nom de compte
+                </label>
+                <input
+                  className="w-full text-sm py-[0.35rem] px-2 bg-black/30 border border-white/10 rounded-md"
+                  type="text"
+                  id="searchOwner"
+                  placeholder="Ex: Admin..."
+                  onInput={() => window.filterPersonnages?.()}
+                />
+              </div>
+              <div className="armory-field flex-05 min-w-[150px]">
+                <label className="text-[0.7rem] text-slate-500 mb-1 block">
+                  <span className="material-symbols-outlined text-md align-bottom">
+                    search
+                  </span>{' '}
+                  Prénom
+                </label>
+                <input
+                  className="w-full text-sm py-[0.35rem] px-2 bg-black/30 border border-white/10 rounded-md"
+                  type="text"
+                  id="searchName"
+                  placeholder="Ex: Lancelot..."
+                  onInput={() => window.filterPersonnages?.()}
+                />
+              </div>
+              <div className="armory-field flex-1 min-w-[120px]">
+                <label className="text-[0.7rem] text-slate-500 mb-1 block">
+                  <span className="material-symbols-outlined text-md align-bottom">
+                    route
+                  </span>{' '}
+                  Voie
+                </label>
+                <div
+                  className="custom-select-wrapper"
+                  id="searchVoieWrapper"
+                  tabIndex={0}
+                >
+                  <div className="custom-select-trigger" id="searchVoieTrigger">
+                    <span className="cs-label" id="searchVoieLabel">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      Toutes
+                    </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">
+                      expand_more
+                    </span>
+                  </div>
+                  <div className="custom-select-options" id="searchVoieOptions">
+                    <div className="custom-option" data-value="">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      Toutes
+                    </div>
+                  </div>
+                  <input type="hidden" id="searchVoie" defaultValue="" />
+                </div>
+              </div>
+              <div className="armory-field flex-1 min-w-[120px]">
+                <label className="text-[0.7rem] text-slate-500 mb-1 block">
+                  <span className="material-symbols-outlined text-md align-bottom">
+                    psychology
+                  </span>{' '}
+                  Spiritualité
+                </label>
+                <div
+                  className="custom-select-wrapper"
+                  id="searchSpiritWrapper"
+                  tabIndex={0}
+                >
+                  <div
+                    className="custom-select-trigger"
+                    id="searchSpiritTrigger"
+                  >
+                    <span className="cs-label" id="searchSpiritLabel">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      Toutes
+                    </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">
+                      expand_more
+                    </span>
+                  </div>
+                  <div
+                    className="custom-select-options"
+                    id="searchSpiritOptions"
+                  >
+                    <div className="custom-option" data-value="">
+                      <span className="material-symbols-outlined cs-icon text-muted">
+                        trip_origin
+                      </span>{' '}
+                      Toutes
+                    </div>
+                  </div>
+                  <input type="hidden" id="searchSpirit" defaultValue="" />
+                </div>
+              </div>
+            </div>
+
+            <div className="armory-characters-grid" id="personnagesList">
+              <app-loader message="Chargement des personnages..."></app-loader>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Equipment Modal */}
+      <div
+        className="equip-modal-overlay"
+        id="equipModalOverlay"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            window.closeEquipModal?.();
+          }
+        }}
+      >
+        <div className="equip-modal">
+          <div className="equip-modal-header">
+            <div className="equip-modal-title flex items-center gap-3">
+              <div id="equipModalAvatar" className="equip-modal-avatar">
+                <span className="material-symbols-outlined text-warning">
+                  shield
+                </span>
+              </div>
+              <div className="equip-modal-header-info">
+                <span id="equipModalTitle">Équipement</span>
+                <div
+                  id="equipModalAffiliations"
+                  className="equip-modal-affiliations"
+                ></div>
+              </div>
+            </div>
+            <button
+              className="equip-modal-close"
+              type="button"
+              onClick={() => window.closeEquipModal?.()}
+            >
+              <span className="material-symbols-outlined text-2xl">close</span>
+            </button>
+          </div>
+
+          <div className="equip-modal-body">
+            {/* Grille des 6 slots */}
+            <div className="equip-slots-grid" id="equipSlotsContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="blacksmith-cycle">
+        <div className="blacksmith work2"></div>
+        <div className="blacksmith work1"></div>
+        <div className="blacksmith bored"></div>
+      </div>
+
+      {/* Spécificités Modal */}
+      <div
+        className="equip-modal-overlay"
+        id="specModalOverlay"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            window.closeSpecModal?.();
+          }
+        }}
+      >
+        <div className="equip-modal max-w-[540px]">
+          <div className="equip-modal-header">
+            <div className="equip-modal-title flex items-center gap-2 flex-wrap">
+              <span className="material-symbols-outlined text-cyan-400">
+                hub
+              </span>
+              <span id="specModalTitle" className="font-bold text-white"></span>
+              <div
+                id="specModalAffiliationBadges"
+                className="char-card-badges flex items-center gap-1.5 flex-wrap"
+              ></div>
+            </div>
+            <button
+              className="equip-modal-close"
+              type="button"
+              onClick={() => window.closeSpecModal?.()}
+            >
+              <span className="material-symbols-outlined text-2xl">close</span>
+            </button>
+          </div>
+
+          <div className="equip-modal-body flex flex-col items-center gap-3">
+            <canvas
+              id="specModalCanvas"
+              className="armory-spider-canvas"
+              width={280}
+              height={250}
+            ></canvas>
+            <div id="specModalBadges" className="armory-spider-badges"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification */}
+      <div className="armory-notif" id="armoryNotif"></div>
+    </>
+  );
+}

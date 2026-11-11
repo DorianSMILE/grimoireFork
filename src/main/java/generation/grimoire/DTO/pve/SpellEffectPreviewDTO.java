@@ -11,6 +11,15 @@ package generation.grimoire.dto.pve;
  * @param hpDamage                  Dégâts réels infligés aux PV après réduction d'armure/résistance/passifs et absorption des boucliers
  * @param shieldAbsorbed            Dégâts absorbés par les boucliers (et bouclier de mana) de la cible
  * @param extraBrutDamage           Dégâts bruts supplémentaires déclenchés (ex: passif Trahison ou Démon)
+ * @param minCalculatedValue        Valeur calculée minimum observée (utile pour les effets de zone multi-cibles)
+ * @param maxCalculatedValue        Valeur calculée maximum observée
+ * @param minHpDamage               Dégâts PV minimums observés
+ * @param maxHpDamage               Dégâts PV maximums observés
+ * @param minShieldAbsorbed         Absorption bouclier minimum observée
+ * @param maxShieldAbsorbed         Absorption bouclier maximum observée
+ * @param minExtraBrutDamage        Dégâts bruts supplémentaires minimums observés
+ * @param maxExtraBrutDamage        Dégâts bruts supplémentaires maximums observés
+ * @param isAreaOfEffect            Vrai si l'effet touche une zone (plusieurs cibles potentielles)
  */
 public record SpellEffectPreviewDTO(
         int effectIndex,
@@ -20,8 +29,48 @@ public record SpellEffectPreviewDTO(
         boolean sourceResolvedToFlat,
         int hpDamage,
         int shieldAbsorbed,
-        int extraBrutDamage
+        int extraBrutDamage,
+        int minCalculatedValue,
+        int maxCalculatedValue,
+        int minHpDamage,
+        int maxHpDamage,
+        int minShieldAbsorbed,
+        int maxShieldAbsorbed,
+        int minExtraBrutDamage,
+        int maxExtraBrutDamage,
+        boolean isAreaOfEffect
 ) {
+    public SpellEffectPreviewDTO(
+            int effectIndex,
+            Long effectId,
+            int calculatedValue,
+            int calculatedPercentModifier,
+            boolean sourceResolvedToFlat,
+            int hpDamage,
+            int shieldAbsorbed,
+            int extraBrutDamage
+    ) {
+        this(
+                effectIndex,
+                effectId,
+                calculatedValue,
+                calculatedPercentModifier,
+                sourceResolvedToFlat,
+                hpDamage,
+                shieldAbsorbed,
+                extraBrutDamage,
+                calculatedValue,
+                calculatedValue,
+                hpDamage,
+                hpDamage,
+                shieldAbsorbed,
+                shieldAbsorbed,
+                extraBrutDamage,
+                extraBrutDamage,
+                false
+        );
+    }
+
     public SpellEffectPreviewDTO(
             int effectIndex,
             Long effectId,
@@ -30,5 +79,40 @@ public record SpellEffectPreviewDTO(
             boolean sourceResolvedToFlat
     ) {
         this(effectIndex, effectId, calculatedValue, calculatedPercentModifier, sourceResolvedToFlat, calculatedValue, 0, 0);
+    }
+
+    public static SpellEffectPreviewDTO forAreaOfEffect(
+            int effectIndex,
+            Long effectId,
+            int minCalculatedValue,
+            int maxCalculatedValue,
+            int calculatedPercentModifier,
+            boolean sourceResolvedToFlat,
+            int minHpDamage,
+            int maxHpDamage,
+            int minShieldAbsorbed,
+            int maxShieldAbsorbed,
+            int minExtraBrutDamage,
+            int maxExtraBrutDamage
+    ) {
+        return new SpellEffectPreviewDTO(
+                effectIndex,
+                effectId,
+                maxCalculatedValue,
+                calculatedPercentModifier,
+                sourceResolvedToFlat,
+                maxHpDamage,
+                maxShieldAbsorbed,
+                maxExtraBrutDamage,
+                minCalculatedValue,
+                maxCalculatedValue,
+                minHpDamage,
+                maxHpDamage,
+                minShieldAbsorbed,
+                maxShieldAbsorbed,
+                minExtraBrutDamage,
+                maxExtraBrutDamage,
+                true
+        );
     }
 }

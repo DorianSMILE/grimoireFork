@@ -49,7 +49,7 @@ public class HealOverTimeEffect extends HealEffect {
         if (duration > 0) {
             target.heal(fixedHealPerTick);
             duration--;
-            System.out.println("💚 " + target.getName() + " récupère " + fixedHealPerTick + " PV grâce à un soin sur la durée (HoT).");
+            System.out.println(target.getName() + " récupère " + fixedHealPerTick + " PV grâce à un soin sur la durée (HoT).");
         }
     }
 
@@ -93,7 +93,7 @@ public class HealOverTimeEffect extends HealEffect {
 
         if (checkCriticalHit(caster)) {
             totalHeal = (int) (totalHeal * this.getCriticalMultiplier(caster, false));
-            System.out.println("✨ Coup Critique sur le HoT !");
+            System.out.println("Coup Critique sur le HoT !");
         }
 
         clone.setFixedHealPerTick(totalHeal);

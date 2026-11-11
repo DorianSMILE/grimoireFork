@@ -1,10 +1,10 @@
 import { showFloatingTextOnElement } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000234';
-import { updateUI } from './combat-ui.js?v=1786180000234';
+import { pageState } from './combat-state.js?v=1786180000239';
+import { updateUI } from './combat-ui.js?v=1786180000239';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000234';
-import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js';
-import { handleSignalReceived } from './combat-signals.js';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
+import { handleSignalReceived } from './combat-signals.js?v=1786180000239';
 import { handleCombatSpriteLog } from './combat-sprites.js';
 
 
@@ -15,7 +15,7 @@ export function processNewDeathLogs(combatLogs) {
     }
     for (let i = pageState.lastCombatLogCount; i < combatLogs.length; i++) {
         const log = combatLogs[i];
-        const match = log.match(/☠️ (.*?) succombe à ses blessures et perd (\d+) XP/);
+        const match = log.match(/(?:☠️\s*)?(.*?) succombe à ses blessures et perd (\d+) XP/);
         if (match) {
             const heroName = match[1];
             const xpLost = match[2];
@@ -31,6 +31,13 @@ export function processNewDeathLogs(combatLogs) {
 }
 
 export let _multiSSE = null;
+
+export function closeMultiSSE() {
+    if (_multiSSE) {
+        _multiSSE.close();
+        _multiSSE = null;
+    }
+}
 
 export function initMultiSSE(sessionId) {
     if (_multiSSE) { _multiSSE.close(); _multiSSE = null; }
@@ -51,6 +58,8 @@ export function initMultiSSE(sessionId) {
             // Ne pas re-renderer si on est en train de traiter une action locale
             if (!pageState.isProcessing) {
                 updateUI(data);
+            } else {
+                pageState.pendingSseData = data;
             }
         } catch (err) {
             console.error('[SSE] parse error', err);
@@ -128,12 +137,12 @@ export function updateMultiTurnBanner(data) {
             } catch(e) {}
         }
         banner.innerHTML = `<span class="material-symbols-outlined text-[#4ade80]">person</span>
-            <span class="text-[#4ade80] font-semibold">👤 Votre tour — ${activePlayer?.name || ''}</span>`;
+            <span class="text-[#4ade80] font-semibold">Votre tour — ${activePlayer?.name || ''}</span>`;
         setMultiActionsEnabled(true);
     } else {
         const otherName = ownerUsername || 'Allié';
         banner.innerHTML = `<span class="material-symbols-outlined" style="color:#38bdf8;">hourglass_top</span>
-            <span style="color:#94a3b8;">⏳ Tour de <strong style="color:#38bdf8;">${activePlayer?.name || otherName}</strong> (${otherName})...</span>`;
+            <span style="color:#94a3b8;">Tour de <strong style="color:#38bdf8;">${activePlayer?.name || otherName}</strong> (${otherName})...</span>`;
         setMultiActionsEnabled(false);
     }
 }

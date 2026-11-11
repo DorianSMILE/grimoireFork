@@ -1,6 +1,6 @@
 import { state } from './state.js';
 
-import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000240';
+import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000242';
 
 export function getVoieButtonColor(v) {
     const vNom = (v ? (typeof v === 'string' ? v : (v.nom || v.name || '')) : '').toLowerCase();

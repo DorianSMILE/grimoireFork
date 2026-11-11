@@ -4,12 +4,14 @@ import * as ui from '../ui.js?v=3';
 import * as api from '../services/api.js';
 
 import { updateRankTitle, updateSpecialVoieConfig, setViolenceType, updateViolenceLabel, renderEffects, handleAffinityChange } from './forge.js?v=3';
-import { getVoieButtonColor, getSpiritButtonColor, } from '../utils/filters.js?v=3';
+import { getVoieButtonColor, getSpiritButtonColor, } from '../utils/filters.js?v=4';
+import { attachLvl5CardEffects } from '../components/particles.js?v=1786180000242';
 
 window.handleAffinityChange = handleAffinityChange;
 window.setViolenceType = setViolenceType;
 window.getSpellEffectsSummaryHtml = getSpellEffectsSummaryHtml;
 window.getCalculatedSpellEffectsSummaryHtml = getCalculatedSpellEffectsSummaryHtml;
+window.getLvl5Origin = getLvl5Origin;
 
 window.toggleSpellTypeFilter = function() {
     const states = ['ALL', 'INSTANTANE', 'BANAL', 'CANALISE'];
@@ -1183,6 +1185,7 @@ export function updateEditingPreview() {
             let html = getSpellCardHtml(sp);
             html = html.replace(/<div class="flex flex-wrap items-center gap-1">\s*<button type="button" class="btn-edit".*?<\/div>/s, '');
             cardBody.innerHTML = html;
+            try { attachLvl5CardEffects(cardBody); } catch (_) {}
             preview.classList.add('active');
         } else {
             preview.classList.remove('active');

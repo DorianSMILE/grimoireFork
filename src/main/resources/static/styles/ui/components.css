@@ -1859,3 +1859,13 @@
 .eff-color-fuchsia { color: #d946ef; }
 .eff-color-pink { color: #ec4899; }
 .eff-color-slate { color: #94a3b8; }
+
+app-loader {
+    grid-column: 1 / -1;
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

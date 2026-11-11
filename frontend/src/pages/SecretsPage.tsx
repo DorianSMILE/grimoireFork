@@ -48,6 +48,7 @@ export function SecretsPage() {
     }
 
     let cancelled = false;
+    let secretAudio: HTMLAudioElement | null = null;
     const win = window as GlobalSecretsWindow;
 
     function handleAuthLoaded() {
@@ -66,7 +67,7 @@ export function SecretsPage() {
 
       if (cancelled) return;
 
-      const secretAudio = new Audio('/sons/secret.mp3');
+      secretAudio = new Audio('/sons/secret.mp3');
       secretAudio.play().catch((e) => console.log('Autoplay bloqué par le navigateur :', e));
 
       if (typeof win.checkAuthStatus === 'function') {
@@ -82,6 +83,11 @@ export function SecretsPage() {
 
     return () => {
       cancelled = true;
+      if (secretAudio) {
+        secretAudio.pause();
+        secretAudio.currentTime = 0;
+        secretAudio = null;
+      }
       window.removeEventListener('authLoaded', handleAuthLoaded);
     };
   }, [navigate]);

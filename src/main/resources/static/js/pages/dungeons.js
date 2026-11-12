@@ -2258,7 +2258,10 @@ window.openJoinLobbyModal = function () {
 
     // Reset input and info
     const input = document.getElementById('joinLobbyCodeInput');
-    if (input) input.value = '';
+    if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 60);
+    }
     const infoContainer = document.getElementById('joinLobbyInfoContainer');
     if (infoContainer) infoContainer.style.display = 'none';
     const consSection = document.getElementById('joinLobbyConsomablesSection');
@@ -2548,13 +2551,34 @@ window.copyLobbyCode = function () {
 };
 
 window.pasteLobbyCode = function () {
+    const input = document.getElementById('joinLobbyCodeInput');
+    if (input) input.focus();
+
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+        if (typeof showNotif !== 'undefined') window.showNotif("Presse-papiers non supporté.", true);
+        return;
+    }
+
     navigator.clipboard.readText().then(text => {
-        const input = document.getElementById('joinLobbyCodeInput');
         if (input && text) {
             input.value = text.trim().substring(0, 6).toUpperCase();
             input.dispatchEvent(new Event('input'));
+
+            const btn = document.querySelector('.btn-paste-lobby-code');
+            if (btn) {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined text-emerald">check</span>';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 1500);
+            }
         }
-    }).catch(err => console.error('Erreur de collage:', err));
+    }).catch(err => {
+        console.warn('Erreur lecture presse-papiers:', err);
+        if (err && err.name === 'NotAllowedError') {
+            if (typeof showNotif !== 'undefined') {
+                window.showNotif("Activez l'autorisation presse-papiers dans les réglages du site (barre d'adresse).", true);
+            }
+        }
+    });
 };
 
 window.updateJoinCharAvailability = function (info) {

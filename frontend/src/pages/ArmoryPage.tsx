@@ -18,13 +18,11 @@ export function ArmoryPage() {
     async function bootArmory() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const armoryUrl = '/js/pages/armory.js?v=112';
+      const armoryUrl = '/js/pages/armory.js?v=114';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
-      if (typeof window.initArmoryPage !== 'function') {
-        await import(/* @vite-ignore */ armoryUrl);
-      }
+      await import(/* @vite-ignore */ armoryUrl);
       if (!cancelled && typeof window.initArmoryPage === 'function') {
         await window.initArmoryPage();
       }
@@ -46,182 +44,195 @@ export function ArmoryPage() {
       <div className="armory-main">
         {/* Colonne Gauche : Formulaire de Création */}
         <div className="armory-form-panel" id="charFormPanel">
-          <div className="armory-panel-title flex justify-between" id="formTitle">
-            <span className="flex items-center gap-2" id="formTitleText">
+          <div className="armory-panel-header" id="formTitle">
+            <div className="armory-panel-title" id="formTitleText">
               <span className="material-symbols-outlined">person_add</span>
               Recruter à la taverne
-            </span>
-            <div className="flex items-center" id="charLimitContainer">
-              <span className="text-muted text-md font-medium" id="charLimitText">
+            </div>
+            <div className="armory-limit-pill" id="charLimitContainer">
+              <span className="text-muted text-sm font-medium" id="charLimitText">
                 -/-
               </span>
             </div>
           </div>
 
-          {/* Nom */}
-          <div className="armory-field">
-            <label htmlFor="charName">
-              <span className="material-symbols-outlined text-warning">
-                badge
-              </span>
-              Nom du personnage
-            </label>
-            <input
-              type="text"
-              id="charName"
-              placeholder="Ex: Aldric le Sage, Sombria..."
-              required
-            />
+          {/* 1. Identité du Héros */}
+          <div className="armory-form-card">
+            <div className="armory-field">
+              <label className="armory-field-label" htmlFor="charName">
+                <span className="armory-step-badge">1</span>
+                <span className="material-symbols-outlined text-warning">
+                  badge
+                </span>
+                <span>Nom du personnage</span>
+              </label>
+              <input
+                type="text"
+                id="charName"
+                className="armory-name-input"
+                placeholder="Ex: Aldric le Sage, Sombria..."
+                required
+              />
+            </div>
           </div>
 
-          {/* Voie & Spiritualité */}
-          <div className="armory-section-title flex items-center gap-2">
-            <span className="material-symbols-outlined text-purple">
-              auto_awesome
-            </span>
-            Voie &amp; Spiritualité
-          </div>
-
-          <div className="armory-form-row items-start">
-            <div className="flex gap-4 flex-col">
-              <div className="armory-field">
-                <label className="flex items-center gap-1" htmlFor="charVoie">
+          {/* 2. Voie & Modificateurs de Base */}
+          <div className="armory-form-card">
+            <div className="armory-field">
+              <div className="armory-field-header">
+                <label className="armory-field-label" htmlFor="charVoie">
+                  <span className="armory-step-badge">2</span>
                   <span className="material-symbols-outlined text-purple">
                     route
                   </span>
-                  Voie
+                  <span>Voie Martiale</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="armory-spirit-hint">
+                    Cliquez sur l&apos;étoile
+                  </span>
                   <span
-                    className="material-symbols-outlined text-purple text-lg cursor-help hidden"
+                    className="armory-info-chip cursor-help hidden"
                     id="charVoieInfoIcon"
+                    data-child-tooltip="true"
+                    data-prefer-top=""
                     onMouseEnter={(e) =>
                       window.showGlobalTooltip?.(e.currentTarget)
                     }
                     onMouseLeave={() => window.hideGlobalTooltip?.()}
                   >
-                    info
+                    <span className="material-symbols-outlined text-sm">info</span>
+                    <span>Passif</span>
                     <template className="tooltip-data"></template>
                   </span>
-                </label>
-                <div
-                  className="custom-select-wrapper"
-                  id="charVoieWrapper"
-                  tabIndex={0}
-                >
-                  <div className="custom-select-trigger" id="charVoieTrigger">
-                    <span className="cs-label" id="charVoieLabel">
-                      <span className="material-symbols-outlined cs-icon text-muted">
-                        trip_origin
-                      </span>{' '}
-                      — Aucune —
-                    </span>
-                    <span className="material-symbols-outlined cs-arrow text-lg">
-                      expand_more
-                    </span>
-                  </div>
-                  <div className="custom-select-options" id="charVoieOptions">
-                    <div className="custom-option" data-value="">
-                      <span className="material-symbols-outlined cs-icon text-muted">
-                        trip_origin
-                      </span>{' '}
-                      — Aucune —
-                    </div>
-                  </div>
-                  <input type="hidden" id="charVoie" defaultValue="" />
                 </div>
               </div>
 
-              <div className="armory-field hidden">
-                <label htmlFor="charExperience">
-                  <span className="material-symbols-outlined text-purple">
-                    star
-                  </span>
-                  Expérience
-                </label>
-                <input
-                  type="number"
-                  id="charExperience"
-                  min={0}
-                  defaultValue={0}
-                />
-              </div>
-
-              <div className="armory-field">
-                <label className="flex items-center gap-1" htmlFor="charSpirit">
-                  <span className="material-symbols-outlined text-orange-400">
-                    psychology
-                  </span>
-                  Spiritualité
-                  <span
-                    className="material-symbols-outlined text-lg text-orange cursor-help hidden"
-                    id="charSpiritInfoIcon"
-                    onMouseEnter={(e) =>
-                      window.showGlobalTooltip?.(e.currentTarget)
-                    }
-                    onMouseLeave={() => window.hideGlobalTooltip?.()}
-                  >
-                    info
-                    <template className="tooltip-data"></template>
-                  </span>
-                </label>
-                <div
-                  className="custom-select-wrapper"
-                  id="charSpiritWrapper"
-                  tabIndex={0}
-                >
-                  <div className="custom-select-trigger" id="charSpiritTrigger">
-                    <span className="cs-label" id="charSpiritLabel">
-                      <span className="material-symbols-outlined cs-icon text-muted">
-                        trip_origin
-                      </span>{' '}
-                      — Aucune —
-                    </span>
-                    <span className="material-symbols-outlined cs-arrow text-lg">
-                      expand_more
-                    </span>
+              <div
+                className="voie-star-wheel-wrapper"
+                id="charVoieWrapper"
+                role="radiogroup"
+                aria-label="Roue astrale des Voies"
+                tabIndex={0}
+              >
+                <div className="voie-star-stage">
+                  <div className="voie-star-top-crown" title="Voie sélectionnée">
+                    <span className="material-symbols-outlined">keyboard_double_arrow_down</span>
                   </div>
-                  <div className="custom-select-options" id="charSpiritOptions">
-                    <div className="custom-option" data-value="">
-                      <span className="material-symbols-outlined cs-icon text-muted">
-                        trip_origin
-                      </span>{' '}
-                      — Aucune —
-                    </div>
+                  <div className="voie-star-ring" id="charVoieOptions"></div>
+                  <div className="voie-star-center" id="charVoieLabel">
+                    <span className="material-symbols-outlined voie-star-center-icon text-muted">
+                      explore
+                    </span>
+                    <span className="voie-star-center-title">Choisir une Voie</span>
                   </div>
-                  <input type="hidden" id="charSpirit" defaultValue="" />
                 </div>
-              </div>
-
-              <div className="armory-field hidden">
-                <label htmlFor="charSpiritExperience">
-                  <span className="material-symbols-outlined text-orange-400">
-                    star
-                  </span>
-                  Expérience Spirituelle
-                </label>
-                <input
-                  type="number"
-                  id="charSpiritExperience"
-                  min={0}
-                  defaultValue={0}
-                />
+                <input type="hidden" id="charVoie" defaultValue="" />
               </div>
             </div>
 
-            <div className="armory-field">
-              <label className="flex items-center gap-1">
+            <div className="armory-field hidden">
+              <label htmlFor="charExperience">
+                <span className="material-symbols-outlined text-purple">
+                  star
+                </span>
+                Expérience
+              </label>
+              <input
+                type="number"
+                id="charExperience"
+                min={0}
+                defaultValue={0}
+              />
+            </div>
+
+            <div className="armory-voie-mods-block">
+              <div className="armory-sub-label">
                 <span className="material-symbols-outlined text-success">
                   bar_chart
                 </span>
-                Modificateurs de Base
-              </label>
-              <div
-                className="flex bg-slate-800/50 border border-slate-700 rounded-md p-[0.8rem] flex-col gap-[0.4rem] min-h-[100px]"
-                id="voieStatsDiff"
-              >
-                <span className="text-muted text-sm italic">
-                  Sélectionnez une voie...
-                </span>
+                <span>Modificateurs de Départ</span>
               </div>
+              <div className="armory-voie-mods-box" id="voieStatsDiff">
+                <div className="armory-mods-empty">
+                  <span className="material-symbols-outlined">tune</span>
+                  <span>Sélectionnez une voie sur l&apos;étoile pour voir ses bonus et malus.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Spiritualité (4 Boutons Radio) */}
+          <div className="armory-form-card">
+            <div className="armory-field">
+              <div className="armory-field-header">
+                <label className="armory-field-label" htmlFor="charSpirit">
+                  <span className="armory-step-badge">3</span>
+                  <span className="material-symbols-outlined text-orange-400">
+                    psychology
+                  </span>
+                  <span>Spiritualité</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="armory-spirit-hint">
+                    Survolez pour lire le passif
+                  </span>
+                  <span
+                    className="armory-info-chip armory-info-chip-spirit cursor-help hidden"
+                    id="charSpiritInfoIcon"
+                    data-child-tooltip="true"
+                    data-prefer-top=""
+                    onMouseEnter={(e) =>
+                      window.showGlobalTooltip?.(e.currentTarget)
+                    }
+                    onMouseLeave={() => window.hideGlobalTooltip?.()}
+                  >
+                    <span className="material-symbols-outlined text-sm">info</span>
+                    <span>Passif</span>
+                    <template className="tooltip-data"></template>
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className="spirit-radio-wrapper"
+                id="charSpiritWrapper"
+                role="radiogroup"
+                aria-label="Choix de la Spiritualité"
+                tabIndex={0}
+              >
+                <div className="spirit-radio-grid" id="charSpiritOptions">
+                  <label className="spirit-radio-card spirit-card-none is-selected">
+                    <input
+                      type="radio"
+                      name="charSpiritRadio"
+                      className="spirit-radio-input"
+                      value=""
+                      defaultChecked
+                    />
+                    <span className="spirit-radio-icon-box">
+                      <span className="material-symbols-outlined">block</span>
+                    </span>
+                    <span className="spirit-radio-label">Aucune</span>
+                  </label>
+                </div>
+                <input type="hidden" id="charSpirit" defaultValue="" />
+              </div>
+            </div>
+
+            <div className="armory-field hidden">
+              <label htmlFor="charSpiritExperience">
+                <span className="material-symbols-outlined text-orange-400">
+                  star
+                </span>
+                Expérience Spirituelle
+              </label>
+              <input
+                type="number"
+                id="charSpiritExperience"
+                min={0}
+                defaultValue={0}
+              />
             </div>
           </div>
 

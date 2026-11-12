@@ -121,17 +121,15 @@ function updateSubmitButtonState() {
     const submitBtn = document.getElementById('submitBtn');
     if (!submitBtn) return;
 
+    submitBtn.disabled = false;
     if (pageState.editingId || window.isAdmin) {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'is-limit-reached');
     } else if (window.charLimitData) {
         const isMaxedOut = window.charLimitData.currentCharacters >= window.charLimitData.maxCharacters;
         if (isMaxedOut) {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            submitBtn.classList.add('opacity-50', 'is-limit-reached');
         } else {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'is-limit-reached');
         }
     }
 }
@@ -187,16 +185,40 @@ async function loadAllEquipments() {
 }
 
 async function submitPersonnage() {
-    const name = document.getElementById('charName').value.trim();
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+
+    if (!pageState.editingId && !window.isAdmin && window.charLimitData) {
+        if (window.charLimitData.currentCharacters >= window.charLimitData.maxCharacters) {
+            showNotif(`Limite de personnages atteinte (${window.charLimitData.currentCharacters}/${window.charLimitData.maxCharacters}). Débloquez un emplacement (+) en haut du formulaire.`, true);
+            return;
+        }
+    }
+
+    const nameInput = document.getElementById('charName');
+    const name = nameInput ? nameInput.value.trim() : '';
     if (!name) {
         showNotif('Le nom est obligatoire.', true);
+        if (nameInput) nameInput.focus();
         return;
     }
 
-    const voieIdVal = document.getElementById('charVoie').value;
-    const spiritIdVal = document.getElementById('charSpirit').value;
+    const activeWheelNode = document.querySelector('#charVoieOptions .voie-star-node.is-active');
+    const checkedSpiritRadio = document.querySelector('#charSpiritOptions input[name="charSpiritRadio"]:checked');
+    const selectedSpiritCard = document.querySelector('#charSpiritOptions .spirit-radio-card.is-selected input[name="charSpiritRadio"]');
+
+    const voieIdVal = document.getElementById('charVoie')?.value || (activeWheelNode ? activeWheelNode.getAttribute('data-value') : '') || '';
+    const spiritIdVal = document.getElementById('charSpirit')?.value || (checkedSpiritRadio ? checkedSpiritRadio.value : '') || (selectedSpiritCard ? selectedSpiritCard.value : '') || '';
+
     if (!pageState.editingId && (!voieIdVal || !spiritIdVal)) {
-        showNotif('Une Voie et une Spiritualité sont obligatoires à la création.', true);
+        if (!voieIdVal && !spiritIdVal) {
+            showNotif('Une Voie et une Spiritualité sont obligatoires à la création.', true);
+        } else if (!voieIdVal) {
+            showNotif('Veuillez choisir une Voie sur la roue en étoile.', true);
+        } else {
+            showNotif('Veuillez choisir une Spiritualité (Esprit, Karma ou Ténèbres).', true);
+        }
         return;
     }
 
@@ -213,9 +235,9 @@ async function submitPersonnage() {
         crit: parseInt(document.getElementById('charCrit').value) || 0,
         regenHp: parseInt(document.getElementById('charRegenHp').value) || 0,
         regenMana: parseInt(document.getElementById('charRegenMana').value) || 0,
-        voieId: document.getElementById('charVoie').value || null,
+        voieId: voieIdVal || null,
         experience: parseInt(document.getElementById('charExperience').value) || 0,
-        spiritualiteId: document.getElementById('charSpirit').value || null,
+        spiritualiteId: spiritIdVal || null,
         spiritualiteExperience: parseInt(document.getElementById('charSpiritExperience').value) || 0,
     };
 
@@ -346,41 +368,274 @@ async function deleteEquipment(id) {
 
 // Helpers for icons and colors
 function getVoieInfo(nom) {
-    if (!nom) return { icon: 'trip_origin', color: '#94a3b8' };
+    if (!nom) return { icon: 'trip_origin', color: '#94a3b8', nodeClass: 'voie-node-default', shortLabel: 'Aucune' };
     const n = nom.toLowerCase();
-    if (n.includes('raison')) return { icon: 'psychology', color: '#3b82f6' };
-    if (n.includes('sûreté') || n.includes('surete')) return { icon: 'water_drop', color: '#00e5cc' };
-    if (n.includes('trahison')) return { icon: 'visibility_off', color: '#ed5677' };
-    if (n.includes('consolidation')) return { icon: 'foundation', color: '#99674c' };
-    if (n.includes('conviction')) return { icon: 'volcano', color: '#b74c0b' };
-    if (n.includes('création') || n.includes('creation')) return { icon: 'eco', color: '#10b981' };
-    if (n.includes('destruction')) return { icon: 'local_fire_department', color: '#ff0000' };
-    if (n.includes('violence')) return { icon: 'explosion', color: '#a70740' };
-    return { icon: 'route', color: '#94a3b8' };
+    const shortName = nom.replace(/^Voie de la\s+/i, '').replace(/^Voie de\s+/i, '').trim();
+    if (n.includes('raison')) return { icon: 'psychology', color: '#3b82f6', nodeClass: 'voie-node-raison', shortLabel: shortName };
+    if (n.includes('sûreté') || n.includes('surete')) return { icon: 'water_drop', color: '#00e5cc', nodeClass: 'voie-node-surete', shortLabel: shortName };
+    if (n.includes('trahison')) return { icon: 'visibility_off', color: '#ed5677', nodeClass: 'voie-node-trahison', shortLabel: shortName };
+    if (n.includes('consolidation')) return { icon: 'foundation', color: '#99674c', nodeClass: 'voie-node-consolidation', shortLabel: shortName };
+    if (n.includes('conviction')) return { icon: 'volcano', color: '#b74c0b', nodeClass: 'voie-node-conviction', shortLabel: shortName };
+    if (n.includes('création') || n.includes('creation')) return { icon: 'eco', color: '#10b981', nodeClass: 'voie-node-creation', shortLabel: shortName };
+    if (n.includes('destruction')) return { icon: 'local_fire_department', color: '#ff0000', nodeClass: 'voie-node-destruction', shortLabel: shortName };
+    if (n.includes('violence')) return { icon: 'explosion', color: '#a70740', nodeClass: 'voie-node-violence', shortLabel: shortName };
+    return { icon: 'route', color: '#94a3b8', nodeClass: 'voie-node-default', shortLabel: shortName };
 }
 
 function getSpiritInfo(nom) {
-    if (!nom) return { icon: 'trip_origin', color: '#94a3b8' };
+    if (!nom) return { icon: 'trip_origin', color: '#94a3b8', cardClass: 'spirit-card-none', textClass: 'text-muted' };
     const n = nom.toLowerCase();
-    if (n.includes('esprit')) return { icon: 'blur_on', color: '#38bdf8' };
-    if (n.includes('ténèbres') || n.includes('tenebres')) return { icon: 'dark_mode', color: '#c084fc' };
-    if (n.includes('karma')) return { icon: 'all_inclusive', color: '#e7d198' };
-    return { icon: 'psychology', color: '#a78bfa' };
+    if (n.includes('esprit')) return { icon: 'blur_on', color: '#38bdf8', cardClass: 'spirit-card-esprit', textClass: 'text-info' };
+    if (n.includes('ténèbres') || n.includes('tenebres')) return { icon: 'dark_mode', color: '#c084fc', cardClass: 'spirit-card-tenebres', textClass: 'text-purple' };
+    if (n.includes('karma')) return { icon: 'all_inclusive', color: '#e7d198', cardClass: 'spirit-card-karma', textClass: 'text-gold' };
+    return { icon: 'psychology', color: '#a78bfa', cardClass: 'spirit-card-default', textClass: 'text-purple' };
+}
+
+function syncVoieWheelSelection(val, dispatchEvent = false) {
+    const strVal = val !== undefined && val !== null ? String(val) : '';
+    const hiddenInput = document.getElementById('charVoie');
+    if (hiddenInput) {
+        hiddenInput.value = strVal;
+    }
+
+    const ring = document.getElementById('charVoieOptions');
+    const centerEl = document.getElementById('charVoieLabel');
+    const total = pageState.voies.length || 8;
+    let currentAngle = typeof pageState.voieWheelAngle === 'number' ? pageState.voieWheelAngle : 0;
+
+    if (ring) {
+        const nodes = ring.querySelectorAll('.voie-star-node');
+        let activeIdx = -1;
+        nodes.forEach((node, idx) => {
+            const isMatch = String(node.getAttribute('data-value')) === strVal && strVal !== '';
+            node.classList.toggle('is-active', isMatch);
+            node.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+            if (isMatch) activeIdx = idx;
+        });
+
+        if (activeIdx >= 0 && total > 0) {
+            const targetMod = -activeIdx * (360 / total);
+            const delta = ((targetMod - currentAngle) % 360 + 540) % 360 - 180;
+            currentAngle = currentAngle + delta;
+            pageState.voieWheelAngle = currentAngle;
+        }
+
+        // Procedural rotation of the star wheel & counter-rotation of nodes so icons stay upright
+        ring.style.transform = `rotate(${currentAngle}deg)`;
+        const inners = ring.querySelectorAll('.voie-star-node-inner');
+        inners.forEach(inner => {
+            inner.style.transform = `rotate(${-currentAngle}deg)`;
+        });
+    }
+
+    if (centerEl) {
+        const selectedVoie = strVal ? pageState.voies.find(v => String(v.id) === strVal) : null;
+        if (selectedVoie) {
+            const info = getVoieInfo(selectedVoie.nom);
+            centerEl.className = `voie-star-center is-selected ${info.nodeClass}`;
+            centerEl.innerHTML = `
+                <span class="material-symbols-outlined voie-star-center-icon">${info.icon}</span>
+                <span class="voie-star-center-title">${info.shortLabel}</span>
+                <span class="voie-star-center-sub">Voie active</span>
+            `;
+        } else {
+            centerEl.className = 'voie-star-center';
+            centerEl.innerHTML = `
+                <span class="material-symbols-outlined voie-star-center-icon text-muted">explore</span>
+                <span class="voie-star-center-title">Choisir une Voie</span>
+            `;
+        }
+    }
+
+    if (dispatchEvent && hiddenInput) {
+        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+window.selectVoieWheel = function (val) {
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+    syncVoieWheelSelection(val, true);
+};
+
+function renderVoieStarWheel() {
+    const ring = document.getElementById('charVoieOptions');
+    if (!ring) return;
+
+    const currentVal = String(document.getElementById('charVoie')?.value || '');
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    const total = pageState.voies.length || 1;
+
+    // 8-pointed astral star SVG background inside the rotating wheel
+    let html = `
+        <svg class="voie-star-svg" viewBox="0 0 240 240" aria-hidden="true">
+            <circle cx="120" cy="120" r="92" class="voie-star-orbit" />
+            <circle cx="120" cy="120" r="62" class="voie-star-inner-orbit" />
+            <polygon points="120,18 144,96 222,120 144,144 120,222 96,144 18,120 96,96" class="voie-star-poly-main" />
+            <polygon points="48,48 136,88 192,48 152,136 192,192 104,152 48,192 88,104" class="voie-star-poly-alt" />
+            <line x1="120" y1="26" x2="120" y2="214" class="voie-star-spoke" />
+            <line x1="26" y1="120" x2="214" y2="120" class="voie-star-spoke" />
+            <line x1="54" y1="54" x2="186" y2="186" class="voie-star-spoke" />
+            <line x1="186" y1="54" x2="54" y2="186" class="voie-star-spoke" />
+        </svg>
+    `;
+
+    pageState.voies.forEach((v, idx) => {
+        const info = getVoieInfo(v.nom);
+        const angleDeg = idx * (360 / total);
+        const rad = (angleDeg - 90) * (Math.PI / 180);
+        const radiusPct = 38.5;
+        const leftPct = (50 + Math.cos(rad) * radiusPct).toFixed(2);
+        const topPct = (50 + Math.sin(rad) * radiusPct).toFixed(2);
+        const isSelected = currentVal === String(v.id);
+        const passiveHtml = richFormatter(v.passiveDescription) || 'Passif spécifique.';
+        const descHtml = v.description || 'Description générique.';
+
+        html += `
+            <button
+                type="button"
+                role="radio"
+                aria-checked="${isSelected ? 'true' : 'false'}"
+                class="voie-star-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
+                data-value="${v.id}"
+                data-child-tooltip="true"
+                data-prefer-top
+                style="left: ${leftPct}%; top: ${topPct}%;"
+                onclick="window.selectVoieWheel('${v.id}')"
+                onmouseenter="showGlobalTooltip(this)"
+                onmouseleave="hideGlobalTooltip()"
+            >
+                <span class="voie-star-node-inner">
+                    <span class="voie-star-node-medallion">
+                        <span class="material-symbols-outlined">${info.icon}</span>
+                    </span>
+                    <span class="voie-star-node-name">${info.shortLabel}</span>
+                </span>
+                <template class="tooltip-data">
+                    <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
+                        <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                        ${v.nom}
+                    </div>
+                    <div class="text-xs text-slate-300 mb-2">${descHtml}</div>
+                    <div class="flex-start-gap text-xs text-slate-200">
+                        <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
+                        <span class="font-italic whitespace-pre-wrap">${passiveHtml}</span>
+                    </div>
+                </template>
+            </button>
+        `;
+    });
+
+    ring.innerHTML = html;
+    syncVoieWheelSelection(currentVal, false);
+}
+
+function syncSpiritRadioSelection(val, dispatchEvent = false) {
+    const strVal = val !== undefined && val !== null ? String(val) : '';
+    const hiddenInput = document.getElementById('charSpirit');
+    if (hiddenInput) {
+        hiddenInput.value = strVal;
+    }
+
+    const container = document.getElementById('charSpiritOptions');
+    if (container) {
+        const cards = container.querySelectorAll('.spirit-radio-card');
+        cards.forEach(card => {
+            const radio = card.querySelector('input[type="radio"]');
+            const isMatch = radio && String(radio.value) === strVal;
+            if (radio) radio.checked = Boolean(isMatch);
+            card.classList.toggle('is-selected', Boolean(isMatch));
+        });
+    }
+
+    const labelEl = document.getElementById('charSpiritLabel');
+    if (labelEl) {
+        if (strVal) {
+            const s = pageState.spiritualites.find(x => String(x.id) === strVal);
+            if (s) {
+                const info = getSpiritInfo(s.nom);
+                labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon ${info.textClass}">${info.icon}</span> ${s.nom}`;
+            }
+        } else {
+            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+        }
+    }
+
+    if (dispatchEvent && hiddenInput) {
+        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+window.selectSpiritRadio = function (val) {
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+    syncSpiritRadioSelection(val, true);
+};
+
+function renderSpiritRadios() {
+    const charSpiritOptions = document.getElementById('charSpiritOptions');
+    if (!charSpiritOptions) return;
+
+    const currentVal = String(document.getElementById('charSpirit')?.value || '');
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+
+    let html = `
+        <label class="spirit-radio-card spirit-card-none ${currentVal === '' ? 'is-selected' : ''}" onclick="window.selectSpiritRadio('')">
+            <input type="radio" name="charSpiritRadio" class="spirit-radio-input" value="" ${currentVal === '' ? 'checked' : ''} />
+            <span class="spirit-radio-icon-box">
+                <span class="material-symbols-outlined">block</span>
+            </span>
+            <span class="spirit-radio-label">Aucune</span>
+        </label>
+    `;
+
+    pageState.spiritualites.forEach(s => {
+        const info = getSpiritInfo(s.nom);
+        const sIdStr = String(s.id);
+        const isSelected = currentVal === sIdStr;
+        const passiveHtml = richFormatter(s.passiveDescription) || 'Passif spécifique.';
+        const descHtml = s.description || 'Description générique.';
+
+        html += `
+            <label
+                class="spirit-radio-card ${info.cardClass} ${isSelected ? 'is-selected' : ''}"
+                data-child-tooltip="true"
+                data-prefer-top
+                onclick="window.selectSpiritRadio('${s.id}')"
+                onmouseenter="showGlobalTooltip(this)"
+                onmouseleave="hideGlobalTooltip()"
+            >
+                <input type="radio" name="charSpiritRadio" class="spirit-radio-input" value="${s.id}" ${isSelected ? 'checked' : ''} />
+                <span class="spirit-radio-icon-box">
+                    <span class="material-symbols-outlined">${info.icon}</span>
+                </span>
+                <span class="spirit-radio-label">${s.nom}</span>
+                <span class="material-symbols-outlined spirit-radio-info-dot">info</span>
+                <template class="tooltip-data">
+                    <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
+                        <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                        ${s.nom}
+                    </div>
+                    <div class="text-xs text-slate-300 mb-2">${descHtml}</div>
+                    <div class="flex-start-gap text-xs text-slate-200">
+                        <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
+                        <span class="font-italic whitespace-pre-wrap">${passiveHtml}</span>
+                    </div>
+                </template>
+            </label>
+        `;
+    });
+
+    charSpiritOptions.innerHTML = html;
 }
 
 function populateSelects() {
-    const charVoieOptions = document.getElementById('charVoieOptions');
-    const charSpiritOptions = document.getElementById('charSpiritOptions');
     const searchVoieOptions = document.getElementById('searchVoieOptions');
     const searchSpiritOptions = document.getElementById('searchSpiritOptions');
 
-    if (charVoieOptions) {
-        charVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
-        pageState.voies.forEach(v => {
-            const info = getVoieInfo(v.nom);
-            charVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
-        });
-    }
+    renderVoieStarWheel();
 
     if (searchVoieOptions) {
         searchVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
@@ -390,13 +645,7 @@ function populateSelects() {
         });
     }
 
-    if (charSpiritOptions) {
-        charSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
-        pageState.spiritualites.forEach(s => {
-            const info = getSpiritInfo(s.nom);
-            charSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
-        });
-    }
+    renderSpiritRadios();
 
     if (searchSpiritOptions) {
         searchSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
@@ -405,10 +654,6 @@ function populateSelects() {
             searchSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
         });
     }
-
-
-
-
 }
 function getVoieColor(nom) {
     if (!nom) return '#94a3b8';
@@ -947,23 +1192,11 @@ function editPersonnage(id) {
     document.getElementById('charCrit').value = p.crit || 0;
     document.getElementById('charRegenHp').value = p.regenHp || 0;
     document.getElementById('charRegenMana').value = p.regenMana || 0;
-    document.getElementById('charVoie').value = p.voie ? p.voie.id : '';
-    if (p.voie) {
-        const info = getVoieInfo(p.voie.nom);
-        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.voie.nom}`;
-    } else {
-        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
-    }
+    syncVoieWheelSelection(p.voie ? p.voie.id : '', true);
 
     document.getElementById('charExperience').value = p.experience || 0;
 
-    document.getElementById('charSpirit').value = p.spiritualite ? p.spiritualite.id : '';
-    if (p.spiritualite) {
-        const info = getSpiritInfo(p.spiritualite.nom);
-        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.spiritualite.nom}`;
-    } else {
-        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
-    }
+    syncSpiritRadioSelection(p.spiritualite ? p.spiritualite.id : '', true);
 
     document.getElementById('charSpiritExperience').value = p.spiritualiteExperience || 0;
 
@@ -998,13 +1231,11 @@ function resetForm() {
     document.getElementById('charCrit').value = 5;
     document.getElementById('charRegenHp').value = 2;
     document.getElementById('charRegenMana').value = 4;
-    document.getElementById('charVoie').value = '';
-    document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+    syncVoieWheelSelection('', false);
 
     document.getElementById('charExperience').value = 0;
 
-    document.getElementById('charSpirit').value = '';
-    document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+    syncSpiritRadioSelection('', false);
 
     document.getElementById('charSpiritExperience').value = 0;
 
@@ -1049,22 +1280,27 @@ document.addEventListener('change', (e) => {
 // ===== Init =====
 
 function applyVoieBaseStats(voieNom) {
-    function buildStatHtml(label, valStr, icon, baseColor) {
+    function buildStatHtml(label, valStr, icon, iconColorClass) {
         const val = parseInt(valStr.replace('+', ''));
         const isPos = val > 0;
-        const valColor = isPos ? '#10b981' : '#ef4444';
+        const stateClass = isPos ? 'is-bonus' : 'is-malus';
         return `
-            <div class="flex-center justify-between px-3 py-2 bg-slate-900 rounded-md">
-                <div class="flex-center gap-2 text-slate-300">
-                    <span class="material-symbols-outlined text-lg" style="color: ${baseColor};">${icon}</span>
-                    ${label}
+            <div class="voie-mod-pill ${stateClass}">
+                <div class="voie-mod-pill-label">
+                    <span class="material-symbols-outlined ${iconColorClass}">${icon}</span>
+                    <span>${label}</span>
                 </div>
-                <div class="font-semibold" style="color: ${valColor};">${valStr}</div>
+                <span class="voie-mod-pill-val">${valStr}</span>
             </div>
         `;
     }
 
-    let diffHtml = '<span class="font-italic text-muted text-sm">Sélectionnez une voie pour voir les effets.</span>';
+    let diffHtml = `
+        <div class="armory-mods-empty">
+            <span class="material-symbols-outlined">tune</span>
+            <span>Sélectionnez une voie pour voir ses bonus et malus de départ.</span>
+        </div>
+    `;
     // Statistiques par défaut
     let stats = {
         charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
@@ -1073,50 +1309,53 @@ function applyVoieBaseStats(voieNom) {
     };
 
     if (voieNom) {
-        diffHtml = "";
+        let pillsHtml = "";
         if (voieNom.includes('Raison')) {
             stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
-            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
+            pillsHtml += buildStatHtml('PV', '+20', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Mana', '+20', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Critique', '-5', 'gps_fixed', 'text-danger');
         } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
             stats.charMana = 130; stats.charResistance = 8; stats.charRegenMana = 6;
-            diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-            diffHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('Mana', '+30', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Résistance', '+3', 'shield', 'text-success');
+            pillsHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', 'text-info');
         } else if (voieNom.includes('Trahison')) {
             stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
-            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+            pillsHtml += buildStatHtml('PV', '-10', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Force', '+2', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Vitesse', '+1', 'bolt', 'text-warning');
         } else if (voieNom.includes('Consolidation')) {
             stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
-            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
-            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-            diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
+            pillsHtml += buildStatHtml('Armure', '+3', 'shield', 'text-blue');
+            pillsHtml += buildStatHtml('Résistance', '+3', 'shield', 'text-success');
+            pillsHtml += buildStatHtml('Régen PV', '+1', 'healing', 'text-success');
         } else if (voieNom.includes('Conviction')) {
             stats.charRegenMana = 25; stats.charHp = 90; stats.charPower = 11;
-            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('PV', '-10', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', 'text-info');
         } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
             stats.charHp = 120; stats.charArmor = 8;
-            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+            pillsHtml += buildStatHtml('PV', '+20', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Armure', '+3', 'shield', 'text-blue');
         } else if (voieNom.includes('Destruction')) {
             stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
-            diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
-            diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('Mana', '+10', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Force', '-2', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Armure', '-5', 'shield', 'text-blue');
+            pillsHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', 'text-info');
         } else if (voieNom.includes('Violence')) {
             stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
-            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
-            diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
-            diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
+            pillsHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Force', '+1', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Vitesse', '+1', 'bolt', 'text-warning');
+            pillsHtml += buildStatHtml('Critique', '+2', 'gps_fixed', 'text-danger');
+            pillsHtml += buildStatHtml('Régen PV', '-2', 'healing', 'text-success');
+        }
+        if (pillsHtml) {
+            diffHtml = `<div class="voie-mods-grid">${pillsHtml}</div>`;
         }
     }
 
@@ -1133,6 +1372,16 @@ function applyVoieBaseStats(voieNom) {
 }
 
 function bindArmorySelectListeners() {
+    const spiritWrapper = document.getElementById('charSpiritWrapper');
+    if (spiritWrapper && !spiritWrapper.dataset.boundSpiritRadios) {
+        spiritWrapper.dataset.boundSpiritRadios = 'true';
+        spiritWrapper.addEventListener('change', (e) => {
+            if (e.target && e.target.name === 'charSpiritRadio') {
+                syncSpiritRadioSelection(e.target.value, true);
+            }
+        });
+    }
+
     const cvInput = document.getElementById('charVoie');
     if (cvInput && !cvInput.dataset.boundArmoryChange) {
         cvInput.dataset.boundArmoryChange = 'true';
@@ -1200,13 +1449,13 @@ function bindArmorySelectListeners() {
                 const template = iconEl.querySelector('.tooltip-data');
                 if (template) {
                     template.innerHTML = `
-                        <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
+                        <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
                             <span class="material-symbols-outlined text-lg">${info.icon}</span>
                             ${s.nom}
                         </div>
                         <div class="text-xs text-slate-300 mb-2">${s.description || 'Description générique.'}</div>
                         <div class="flex-start-gap text-xs text-slate-200">
-                            <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
+                            <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
                             <span class="font-italic whitespace-pre-wrap">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
                         </div>
                     `;

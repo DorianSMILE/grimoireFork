@@ -26,7 +26,7 @@ export function ArmoryPage() {
       const armoryCssLink = document.querySelector<HTMLLinkElement>(
         'link[href*="/styles/pages/armory.css"]'
       );
-      const targetCssHref = '/styles/pages/armory.css?v=1786180000012';
+      const targetCssHref = '/styles/pages/armory.css?v=1786180000013';
       if (armoryCssLink && !armoryCssLink.href.endsWith(targetCssHref)) {
         armoryCssLink.href = targetCssHref;
       }
@@ -128,148 +128,147 @@ export function ArmoryPage() {
                 </div>
               </div>
 
-              {/* 2. Voie Martiale (Roue en étoile) */}
-              <div className="armory-form-card">
-                <div className="armory-field">
-                  <div className="armory-field-header">
-                    <label className="armory-field-label" htmlFor="charVoie">
-                      <span className="armory-step-badge">2</span>
-                      <span className="material-symbols-outlined text-purple">
-                        route
-                      </span>
-                      <span>Voie Martiale</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="armory-spirit-hint">
-                        Cliquez sur l&apos;étoile
-                      </span>
-                      <span
-                        className="armory-info-chip cursor-help hidden"
-                        id="charVoieInfoIcon"
-                        data-child-tooltip="true"
-                        data-prefer-top=""
-                        onMouseEnter={(e) =>
-                          window.showGlobalTooltip?.(e.currentTarget)
-                        }
-                        onMouseLeave={() => window.hideGlobalTooltip?.()}
-                      >
-                        <span className="material-symbols-outlined text-sm">info</span>
-                        <span>Passif</span>
-                        <template className="tooltip-data"></template>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div
-                    className="voie-star-wheel-wrapper"
-                    id="charVoieWrapper"
-                    role="radiogroup"
-                    aria-label="Roue astrale des Voies"
-                    tabIndex={0}
-                  >
-                    <div className="voie-star-stage">
-                      <div className="voie-star-top-crown" title="Voie sélectionnée">
-                        <span className="material-symbols-outlined">keyboard_double_arrow_down</span>
+              {/* 2 & 3. Panneau unifié : Voie Martiale (Roue en étoile) & Spiritualité */}
+              <div className="armory-form-card armory-affiliations-card">
+                <div className="armory-affiliations-grid">
+                  {/* Colonne Gauche : Voie Martiale */}
+                  <div className="armory-affil-voie-col">
+                    <div className="armory-field">
+                      <div className="armory-field-header">
+                        <label className="armory-field-label" htmlFor="charVoie">
+                          <span className="armory-step-badge">2</span>
+                          <span className="material-symbols-outlined text-purple">
+                            route
+                          </span>
+                          <span>Voie Martiale</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="armory-info-chip cursor-help hidden"
+                            id="charVoieInfoIcon"
+                            data-child-tooltip="true"
+                            data-prefer-top=""
+                            onMouseEnter={(e) =>
+                              window.showGlobalTooltip?.(e.currentTarget)
+                            }
+                            onMouseLeave={() => window.hideGlobalTooltip?.()}
+                          >
+                            <span className="material-symbols-outlined text-sm">info</span>
+                            <span>Passif</span>
+                            <template className="tooltip-data"></template>
+                          </span>
+                        </div>
                       </div>
-                      <div className="voie-star-ring" id="charVoieOptions"></div>
-                      <div className="voie-star-center" id="charVoieLabel">
-                        <span className="material-symbols-outlined voie-star-center-icon text-muted">
-                          explore
-                        </span>
-                        <span className="voie-star-center-title">Choisir une Voie</span>
+
+                      <div
+                        className="voie-star-wheel-wrapper"
+                        id="charVoieWrapper"
+                        role="radiogroup"
+                        aria-label="Roue astrale des Voies"
+                        tabIndex={0}
+                      >
+                        <div className="voie-star-stage">
+                          <div className="voie-star-top-crown" title="Voie sélectionnée">
+                            <span className="material-symbols-outlined">keyboard_double_arrow_down</span>
+                          </div>
+                          <div className="voie-star-ring" id="charVoieOptions"></div>
+                          <div className="voie-star-center" id="charVoieLabel">
+                            <span className="material-symbols-outlined voie-star-center-icon text-muted">
+                              explore
+                            </span>
+                            <span className="voie-star-center-title">Choisir une Voie</span>
+                          </div>
+                        </div>
+                        <input type="hidden" id="charVoie" defaultValue="" />
                       </div>
                     </div>
-                    <input type="hidden" id="charVoie" defaultValue="" />
-                  </div>
-                </div>
 
-                <div className="armory-field hidden">
-                  <label htmlFor="charExperience">
-                    <span className="material-symbols-outlined text-purple">
-                      star
-                    </span>
-                    Expérience
-                  </label>
-                  <input
-                    type="number"
-                    id="charExperience"
-                    min={0}
-                    defaultValue={0}
-                  />
-                </div>
-              </div>
-
-              {/* 3. Spiritualité (4 Boutons Radio) */}
-              <div className="armory-form-card">
-                <div className="armory-field">
-                  <div className="armory-field-header">
-                    <label className="armory-field-label" htmlFor="charSpirit">
-                      <span className="armory-step-badge">3</span>
-                      <span className="material-symbols-outlined text-orange-400">
-                        psychology
-                      </span>
-                      <span>Spiritualité</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="armory-spirit-hint">
-                        Survolez pour lire le passif
-                      </span>
-                      <span
-                        className="armory-info-chip armory-info-chip-spirit cursor-help hidden"
-                        id="charSpiritInfoIcon"
-                        data-child-tooltip="true"
-                        data-prefer-top=""
-                        onMouseEnter={(e) =>
-                          window.showGlobalTooltip?.(e.currentTarget)
-                        }
-                        onMouseLeave={() => window.hideGlobalTooltip?.()}
-                      >
-                        <span className="material-symbols-outlined text-sm">info</span>
-                        <span>Passif</span>
-                        <template className="tooltip-data"></template>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div
-                    className="spirit-radio-wrapper"
-                    id="charSpiritWrapper"
-                    role="radiogroup"
-                    aria-label="Choix de la Spiritualité"
-                    tabIndex={0}
-                  >
-                    <div className="spirit-radio-grid" id="charSpiritOptions">
-                      <label className="spirit-radio-card spirit-card-none is-selected">
-                        <input
-                          type="radio"
-                          name="charSpiritRadio"
-                          className="spirit-radio-input"
-                          value=""
-                          defaultChecked
-                        />
-                        <span className="spirit-radio-icon-box">
-                          <span className="material-symbols-outlined">block</span>
+                    <div className="armory-field hidden">
+                      <label htmlFor="charExperience">
+                        <span className="material-symbols-outlined text-purple">
+                          star
                         </span>
-                        <span className="spirit-radio-label">Aucune</span>
+                        Expérience
                       </label>
+                      <input
+                        type="number"
+                        id="charExperience"
+                        min={0}
+                        defaultValue={0}
+                      />
                     </div>
-                    <input type="hidden" id="charSpirit" defaultValue="" />
                   </div>
-                </div>
 
-                <div className="armory-field hidden">
-                  <label htmlFor="charSpiritExperience">
-                    <span className="material-symbols-outlined text-orange-400">
-                      star
-                    </span>
-                    Expérience Spirituelle
-                  </label>
-                  <input
-                    type="number"
-                    id="charSpiritExperience"
-                    min={0}
-                    defaultValue={0}
-                  />
+                  {/* Colonne Droite : Spiritualité (4 Boutons Radio empilés) */}
+                  <div className="armory-affil-spirit-col">
+                    <div className="armory-field flex-1">
+                      <div className="armory-field-header">
+                        <label className="armory-field-label" htmlFor="charSpirit">
+                          <span className="armory-step-badge">3</span>
+                          <span className="material-symbols-outlined text-orange-400">
+                            psychology
+                          </span>
+                          <span>Spiritualité</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="armory-info-chip armory-info-chip-spirit cursor-help hidden"
+                            id="charSpiritInfoIcon"
+                            data-child-tooltip="true"
+                            data-prefer-top=""
+                            onMouseEnter={(e) =>
+                              window.showGlobalTooltip?.(e.currentTarget)
+                            }
+                            onMouseLeave={() => window.hideGlobalTooltip?.()}
+                          >
+                            <span className="material-symbols-outlined text-sm">info</span>
+                            <span>Passif</span>
+                            <template className="tooltip-data"></template>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        className="spirit-radio-wrapper"
+                        id="charSpiritWrapper"
+                        role="radiogroup"
+                        aria-label="Choix de la Spiritualité"
+                        tabIndex={0}
+                      >
+                        <div className="spirit-radio-grid" id="charSpiritOptions">
+                          <label className="spirit-radio-card spirit-card-none is-selected">
+                            <input
+                              type="radio"
+                              name="charSpiritRadio"
+                              className="spirit-radio-input"
+                              value=""
+                              defaultChecked
+                            />
+                            <span className="spirit-radio-icon-box">
+                              <span className="material-symbols-outlined">block</span>
+                            </span>
+                            <span className="spirit-radio-label">Aucune</span>
+                          </label>
+                        </div>
+                        <input type="hidden" id="charSpirit" defaultValue="" />
+                      </div>
+                    </div>
+
+                    <div className="armory-field hidden">
+                      <label htmlFor="charSpiritExperience">
+                        <span className="material-symbols-outlined text-orange-400">
+                          star
+                        </span>
+                        Expérience Spirituelle
+                      </label>
+                      <input
+                        type="number"
+                        id="charSpiritExperience"
+                        min={0}
+                        defaultValue={0}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

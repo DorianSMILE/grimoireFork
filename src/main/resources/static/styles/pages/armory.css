@@ -453,19 +453,73 @@
     border-radius: 9px !important;
 }
 
+/* ===== Panneau unifié : Voie Martiale + Spiritualité ===== */
+.armory-affiliations-card {
+    padding: 0.9rem 1rem;
+}
+
+.armory-affiliations-grid {
+    display: grid;
+    grid-template-columns: minmax(228px, 1.15fr) minmax(168px, 0.9fr);
+    gap: 1.1rem;
+    align-items: stretch;
+}
+
+.armory-affil-voie-col,
+.armory-affil-spirit-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.armory-affil-spirit-col {
+    border-left: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-left: 1.05rem;
+}
+
+.armory-affil-spirit-col .spirit-radio-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.armory-affil-spirit-col .spirit-radio-grid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+}
+
+@media (max-width: 640px) {
+    .armory-affiliations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .armory-affil-spirit-col {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        padding-top: 0.85rem;
+    }
+
+    .armory-affil-spirit-col .spirit-radio-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 /* ===== Roue en Étoile des Voies (Astral Star Wheel) ===== */
 .voie-star-wheel-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 0.5rem 0 0.35rem;
+    padding: 0.35rem 0 0.2rem;
     outline: none;
 }
 
 .voie-star-stage {
     position: relative;
-    width: 248px;
-    height: 248px;
+    width: 228px;
+    height: 228px;
     display: flex;
     align-items: center;
     justify-content: center;

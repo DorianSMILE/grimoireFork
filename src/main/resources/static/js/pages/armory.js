@@ -37,7 +37,8 @@ const pageState = {
     equipModalPersoId: null,
     allEquipments: [],
     taverneCollapsed: false,
-    armoryCollapsed: false
+    armoryCollapsed: false,
+    initialLayoutApplied: false
 };
 window.pageState = pageState;
 
@@ -190,18 +191,33 @@ async function updateCharLimitUI() {
             }
             window.charLimitData = data;
 
+            const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
             if (window.currentUser) {
-                window.currentUser.availableCharacterSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
+                window.currentUser.availableCharacterSlots = availableSlots;
             }
             const armoryBadge = document.getElementById('navArmoryBadge');
             if (armoryBadge) {
-                const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
                 if (availableSlots > 0) {
                     armoryBadge.textContent = availableSlots;
                     armoryBadge.style.display = 'inline-block';
                 } else {
                     armoryBadge.style.display = 'none';
                 }
+            }
+
+            if (!pageState.initialLayoutApplied) {
+                pageState.initialLayoutApplied = true;
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasOpenEquip = !isNaN(parseInt(urlParams.get('openEquip'), 10));
+                const isEquipTuto = Boolean(window.currentUser && window.currentUser.equipTutorialActive && pageState.personnages.length > 0);
+                if (availableSlots > 0 && !hasOpenEquip && !isEquipTuto) {
+                    pageState.armoryCollapsed = true;
+                    pageState.taverneCollapsed = false;
+                } else {
+                    pageState.armoryCollapsed = false;
+                    pageState.taverneCollapsed = false;
+                }
+                applyArmoryLayoutState();
             }
 
             updateSubmitButtonState();
@@ -1675,6 +1691,16 @@ function bindArmorySelectListeners() {
 async function initArmoryPage() {
     pageState.editingId = null;
     pageState.equipModalPersoId = null;
+    pageState.initialLayoutApplied = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
+    const hasOpenEquip = !isNaN(openEquipCharId);
+
+    if (window.currentUser && typeof window.currentUser.availableCharacterSlots === 'number' && !hasOpenEquip && !window.currentUser.equipTutorialActive) {
+        pageState.armoryCollapsed = window.currentUser.availableCharacterSlots > 0;
+        pageState.taverneCollapsed = false;
+    }
     applyArmoryLayoutState();
 
     if (window.initGlobalCustomSelect) {
@@ -1690,6 +1716,12 @@ async function initArmoryPage() {
         await window.checkAuthStatus();
     }
 
+    if (!pageState.initialLayoutApplied && window.currentUser && typeof window.currentUser.availableCharacterSlots === 'number' && !hasOpenEquip && !window.currentUser.equipTutorialActive) {
+        pageState.armoryCollapsed = window.currentUser.availableCharacterSlots > 0;
+        pageState.taverneCollapsed = false;
+        applyArmoryLayoutState();
+    }
+
     applyRbac();
 
     await Promise.all([fetchMeta(), loadAllEquipments()]);
@@ -1700,9 +1732,7 @@ async function initArmoryPage() {
         window.updateArmoryVoieSpider(null, null, false);
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
-    if (!isNaN(openEquipCharId)) {
+    if (hasOpenEquip) {
         setTimeout(() => {
             openEquipModal(openEquipCharId);
         }, 100);

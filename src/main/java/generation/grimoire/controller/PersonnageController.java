@@ -51,6 +51,9 @@ public class PersonnageController {
         return ResponseEntity.ok(result);
     }
 
+    public static final int[] ROSTER_UPGRADE_COSTS = { 0, 0, 20, 50, 75, 150, 200, 300 };
+    public static final int ABSOLUTE_MAX_CHARACTERS = ROSTER_UPGRADE_COSTS.length;
+
     @GetMapping("/limit")
     public ResponseEntity<Map<String, Integer>> getLimit(java.security.Principal principal) {
         if (principal == null)
@@ -68,8 +71,13 @@ public class PersonnageController {
         int max = isAdmin ? 999 : userMax;
 
         int current = (int) personnageRepository.countByUser_Username(principal.getName());
+        int nextSlotCost = (!isAdmin && userMax < ABSOLUTE_MAX_CHARACTERS) ? ROSTER_UPGRADE_COSTS[userMax] : 0;
 
-        return ResponseEntity.ok(Map.of("maxCharacters", max, "currentCharacters", current));
+        return ResponseEntity.ok(Map.of(
+                "maxCharacters", max,
+                "currentCharacters", current,
+                "absoluteMaxCharacters", ABSOLUTE_MAX_CHARACTERS,
+                "nextSlotCost", nextSlotCost));
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)

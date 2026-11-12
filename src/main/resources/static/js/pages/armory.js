@@ -173,14 +173,16 @@ async function updateCharLimitUI() {
             const limitContainer = document.getElementById('charLimitContainer');
             if (!limitContainer) return;
 
+            const absoluteMax = data.absoluteMaxCharacters || 8;
             const isMaxedOut = data.currentCharacters >= data.maxCharacters;
+            const isAtAbsoluteMax = data.currentCharacters >= absoluteMax;
             const color = (isMaxedOut && !window.isAdmin) ? '#ef4444' : '#94a3b8';
 
             let html = `<span class="text-sm font-medium" style="color: ${color};">${data.currentCharacters}/${data.maxCharacters}</span>`;
 
-            if (isMaxedOut && data.maxCharacters < 8 && !window.isAdmin) {
+            if (isMaxedOut && data.maxCharacters < absoluteMax && !window.isAdmin) {
                 const costs = { 2: 20, 3: 50, 4: 75, 5: 150, 6: 200, 7: 300 };
-                const cost = costs[data.maxCharacters];
+                const cost = data.nextSlotCost || costs[data.maxCharacters];
                 html += `<button class="text-success ml-2 bg-success/20 border-success/40 rounded cursor-pointer px-1 py-0 flex-center" onclick="buyRosterSlot(${cost})" title="Acheter un emplacement pour ${cost} or"><span class="material-symbols-outlined text-sm">add</span></button>`;
             }
 
@@ -194,6 +196,9 @@ async function updateCharLimitUI() {
             const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
             if (window.currentUser) {
                 window.currentUser.availableCharacterSlots = availableSlots;
+                window.currentUser.currentCharacters = data.currentCharacters;
+                window.currentUser.maxCharacters = data.maxCharacters;
+                window.currentUser.absoluteMaxCharacters = absoluteMax;
             }
             const armoryBadge = document.getElementById('navArmoryBadge');
             if (armoryBadge) {
@@ -210,9 +215,17 @@ async function updateCharLimitUI() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const hasOpenEquip = !isNaN(parseInt(urlParams.get('openEquip'), 10));
                 const isEquipTuto = Boolean(window.currentUser && window.currentUser.equipTutorialActive && pageState.personnages.length > 0);
-                if (availableSlots > 0 && !hasOpenEquip && !isEquipTuto) {
-                    pageState.armoryCollapsed = true;
-                    pageState.taverneCollapsed = false;
+                if (!hasOpenEquip && !isEquipTuto) {
+                    if (isAtAbsoluteMax) {
+                        pageState.taverneCollapsed = true;
+                        pageState.armoryCollapsed = false;
+                    } else if (availableSlots > 0) {
+                        pageState.armoryCollapsed = true;
+                        pageState.taverneCollapsed = false;
+                    } else {
+                        pageState.armoryCollapsed = false;
+                        pageState.taverneCollapsed = false;
+                    }
                 } else {
                     pageState.armoryCollapsed = false;
                     pageState.taverneCollapsed = false;
@@ -1697,10 +1710,22 @@ async function initArmoryPage() {
     const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
     const hasOpenEquip = !isNaN(openEquipCharId);
 
-    if (window.currentUser && typeof window.currentUser.availableCharacterSlots === 'number' && !hasOpenEquip && !window.currentUser.equipTutorialActive) {
-        pageState.armoryCollapsed = window.currentUser.availableCharacterSlots > 0;
-        pageState.taverneCollapsed = false;
-    }
+    const applyPreloadedLayout = () => {
+        if (!window.currentUser || typeof window.currentUser.availableCharacterSlots !== 'number' || hasOpenEquip || window.currentUser.equipTutorialActive) {
+            return;
+        }
+        const absMax = window.currentUser.absoluteMaxCharacters || 8;
+        const currChars = typeof window.currentUser.currentCharacters === 'number' ? window.currentUser.currentCharacters : -1;
+        if (currChars >= absMax) {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        } else if (window.currentUser.availableCharacterSlots > 0) {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    };
+
+    applyPreloadedLayout();
     applyArmoryLayoutState();
 
     if (window.initGlobalCustomSelect) {
@@ -1716,9 +1741,8 @@ async function initArmoryPage() {
         await window.checkAuthStatus();
     }
 
-    if (!pageState.initialLayoutApplied && window.currentUser && typeof window.currentUser.availableCharacterSlots === 'number' && !hasOpenEquip && !window.currentUser.equipTutorialActive) {
-        pageState.armoryCollapsed = window.currentUser.availableCharacterSlots > 0;
-        pageState.taverneCollapsed = false;
+    if (!pageState.initialLayoutApplied) {
+        applyPreloadedLayout();
         applyArmoryLayoutState();
     }
 

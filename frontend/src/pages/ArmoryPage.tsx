@@ -34,7 +34,7 @@ export function ArmoryPage() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
       const spiderUrl = '/js/pages/hero-spider.js?v=19';
-      const armoryUrl = '/js/pages/armory.js?v=119';
+      const armoryUrl = '/js/pages/armory.js?v=120';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

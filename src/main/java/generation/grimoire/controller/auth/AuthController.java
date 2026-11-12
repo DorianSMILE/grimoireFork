@@ -171,6 +171,9 @@ public class AuthController {
             int maxChars = isAdmin ? 999 : userMax;
             int currentChars = (int) personnageRepository.countByUser_Username(u.getUsername());
             res.put("availableCharacterSlots", Math.max(0, maxChars - currentChars));
+            res.put("currentCharacters", currentChars);
+            res.put("maxCharacters", maxChars);
+            res.put("absoluteMaxCharacters", generation.grimoire.controller.PersonnageController.ABSOLUTE_MAX_CHARACTERS);
 
             // Calcul SSOT des donjons nouvellement débloqués non vus (évite de télécharger /api/pve/dungeons + /api/personnages sur chaque page)
             int maxLevel = currentChars > 0 ? personnageRepository.findMaxVoieLevelByUsername(u.getUsername()) : 0;
@@ -328,12 +331,11 @@ public class AuthController {
             if (currentMax < 2)
                 currentMax = 2;
 
-            if (currentMax >= 8)
+            if (currentMax >= generation.grimoire.controller.PersonnageController.ABSOLUTE_MAX_CHARACTERS)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("message", "Taille maximale déjà atteinte."));
 
-            int[] upgradeCosts = { 0, 0, 20, 50, 75, 150, 200, 300 };
-            int cost = upgradeCosts[currentMax];
+            int cost = generation.grimoire.controller.PersonnageController.ROSTER_UPGRADE_COSTS[currentMax];
 
             if (user.getMonnaie() < cost)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Pas assez d'or."));

@@ -30,8 +30,10 @@ window.switchDungeonTab = function (tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-    document.getElementById(`tab-btn-${tabName}`).classList.add('active');
-    document.getElementById(`${tabName}DungeonsSection`).classList.add('active');
+    const tabBtn = document.getElementById(`tab-btn-${tabName}`);
+    const section = document.getElementById(`${tabName}DungeonsSection`);
+    if (tabBtn) tabBtn.classList.add('active');
+    if (section) section.classList.add('active');
 };
 
 const pageState = {
@@ -546,6 +548,7 @@ async function loadDungeons() {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
             const contentContainer = document.getElementById('dungeonsSectionsContainer');
+            if (!tabsHeader || !contentContainer) return;
 
             // Find current active tab
             let activeTabId = null;
@@ -557,17 +560,19 @@ async function loadDungeons() {
             tabsHeader.innerHTML = '';
             contentContainer.innerHTML = '';
 
+            const noDungeonsMsg = document.getElementById('noDungeonsMsg');
+            const loadingDungeonsMsg = document.getElementById('loadingDungeonsMsg');
             if (dungeons.length === 0) {
-                document.getElementById('noDungeonsMsg').style.display = 'block';
+                if (noDungeonsMsg) noDungeonsMsg.style.display = 'block';
                 tabsHeader.classList.add('init-hidden');
                 tabsHeader.style.display = 'none';
-                document.getElementById('loadingDungeonsMsg').style.display = 'none';
+                if (loadingDungeonsMsg) loadingDungeonsMsg.style.display = 'none';
                 return;
             } else {
-                document.getElementById('noDungeonsMsg').style.display = 'none';
+                if (noDungeonsMsg) noDungeonsMsg.style.display = 'none';
                 tabsHeader.classList.remove('init-hidden');
                 tabsHeader.style.display = 'flex';
-                document.getElementById('loadingDungeonsMsg').style.display = 'none';
+                if (loadingDungeonsMsg) loadingDungeonsMsg.style.display = 'none';
             }
 
             const categories = new Map();
@@ -1037,6 +1042,7 @@ async function loadCharacters() {
             chars.sort((a, b) => (b.voieLevel || 1) - (a.voieLevel || 1));
             pageState.userCharacters = chars;
             const list = document.getElementById('prepCharList');
+            if (!list) return;
             list.innerHTML = '';
 
             if (pageState.userCharacters.length === 0) {
@@ -1143,6 +1149,7 @@ window.toggleConsumableFilter = function (btn, type) {
 
 function renderConsumablesList() {
     const list = document.getElementById('prepConsumableList');
+    if (!list) return;
     list.innerHTML = '';
 
     const curWeight = getCurrentWeight();
@@ -1464,8 +1471,12 @@ window.inspectCharacter = async function(id) {
         totalStats.regenManaPerTurn += (eq.regenManaPerTurn || 0);
     });
 
-    document.getElementById('prepStatEmpty').classList.add('hidden');
+    const statEmpty = document.getElementById('prepStatEmpty');
     const grid = document.getElementById('prepStatGrid');
+    const equipList = document.getElementById('prepEquipList');
+    if (!statEmpty || !grid || !equipList) return;
+
+    statEmpty.classList.add('hidden');
     grid.classList.remove('hidden');
     grid.style.display = '';
     grid.innerHTML = `
@@ -1481,7 +1492,6 @@ window.inspectCharacter = async function(id) {
         <div class="stat-item text-error"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
     `;
 
-    const equipList = document.getElementById('prepEquipList');
     equipList.innerHTML = '';
     if (equipments.length === 0) {
         equipList.innerHTML = `<div class="text-sm text-muted">Aucun \u00e9quipement port\u00e9.</div>`;
@@ -2042,7 +2052,8 @@ window.cancelCoopLobby = async function () {
 };
 
 function closeLobbyOverlay() {
-    document.getElementById('lobbyWaitingOverlay').style.display = 'none';
+    const waitingOverlay = document.getElementById('lobbyWaitingOverlay');
+    if (waitingOverlay) waitingOverlay.style.display = 'none';
     const preview = document.getElementById('lobbyGuestPreview');
     if (preview) {
         preview.innerHTML = '';
@@ -2486,7 +2497,8 @@ window.closeJoinLobbyModal = function () {
         _joinLobbySSE = null;
     }
     _joinLobbyMultiId = null;
-    document.getElementById('joinLobbyModal').style.display = 'none';
+    const modal = document.getElementById('joinLobbyModal');
+    if (modal) modal.style.display = 'none';
 };
 
 window.copyLobbyCode = function () {

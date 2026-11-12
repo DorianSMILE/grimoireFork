@@ -17,7 +17,7 @@ export function DungeonStatsPage() {
 
     async function bootDungeonStats() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const dungeonStatsUrl = '/js/pages/dungeon-stats.js?v=3';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function DungeonStatsPage() {
 
   return (
     <>
-      <app-navbar active-page="dungeon-stats"></app-navbar>
-
       <main className="w-full max-w-[1400px] mx-auto p-8 stats-main">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-outfit text-[2.5rem] m-0 leading-none flex items-center gap-3">

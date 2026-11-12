@@ -17,7 +17,7 @@ export function HuntingPage() {
 
     async function bootHunting() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const huntingUrl = '/js/pages/hunting.js?v=9';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function HuntingPage() {
 
   return (
     <>
-      <app-navbar active-page="hunting"></app-navbar>
-
       <main className="hunting-container w-full max-w-[1200px] mx-auto p-8">
         <div className="flex items-center gap-4 mb-2">
           <h2 className="font-outfit text-[2rem] m-0 leading-none">

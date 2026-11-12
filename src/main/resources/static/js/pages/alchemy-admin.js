@@ -32,7 +32,7 @@ async function applyAlchemyAdminAuthState() {
     if (adminLink) adminLink.style.display = 'inline-flex';
 
     await Promise.all([loadItems(), loadRecipes()]);
-    window.renderRecipesList();
+    renderAdminRecipesList();
 }
 
 async function loadItems() {
@@ -91,6 +91,7 @@ async function loadItems() {
     }
 
     // AFFICHER LE DEBUG SUR LA PAGE
+    if (!document.getElementById('recipeForm')) return;
     let debugDiv = document.getElementById('debug_items_count');
     if (!debugDiv) {
         debugDiv = document.createElement('div');
@@ -98,11 +99,9 @@ async function loadItems() {
         debugDiv.style.color = '#10b981';
         debugDiv.style.fontSize = '0.8rem';
         debugDiv.style.marginTop = '1rem';
-        const panel = document.querySelector('.admin-panel');
+        const panel = document.getElementById('recipePanel') || document.querySelector('.admin-panel');
         if (panel) {
             panel.appendChild(debugDiv);
-        } else {
-            document.body.appendChild(debugDiv);
         }
     }
     debugDiv.innerHTML = `Items chargés : ${pageState.allAnomalies.length} anomalies, ${pageState.allConsumables.length} consommables.`;
@@ -111,10 +110,11 @@ async function loadItems() {
 }
 
 async function updateRewardNameInput() {
-    const type = document.getElementById('rewardType').value;
+    const rewardTypeEl = document.getElementById('rewardType');
     const container = document.getElementById('rewardNameContainer');
     const qtyInput = document.getElementById('rewardQty');
-    if (!container) return;
+    if (!container || !rewardTypeEl) return;
+    const type = rewardTypeEl.value;
 
     if (qtyInput) {
         if (type === 'UNLOCK_FEATURE') {
@@ -285,6 +285,7 @@ async function updateRewardNameInput() {
 }
 function addRequirement(type, selectedName = '', qty = 1) {
     const list = document.getElementById(type === 'anomalie' ? 'reqAnomaliesList' : 'reqConsumablesList');
+    if (!list) return;
     const div = document.createElement('div');
     div.className = 'req-item';
     div.style.display = 'flex';
@@ -364,15 +365,16 @@ async function loadRecipes() {
         if (res && res.ok) {
             const data = await res.json();
             pageState.allRecipes = data; // Store for edit
-            renderRecipesList();
+            renderAdminRecipesList();
         }
     } catch (e) {
         console.error(e);
     }
 }
 
-window.renderRecipesList = function () {
+function renderAdminRecipesList() {
     const container = document.getElementById('recipesList');
+    if (!container) return;
     container.innerHTML = '';
 
     const searchName = (document.getElementById('searchRecipeName')?.value || '').toLowerCase();
@@ -654,10 +656,12 @@ window.cancelEdit = function () {
 
 window.addRequirement = addRequirement;
 window.deleteRecipe = deleteRecipe;
+window.renderRecipesList = renderAdminRecipesList;
 
 window.initAlchemyAdminPage = async function () {
     window.addRequirement = addRequirement;
     window.deleteRecipe = deleteRecipe;
+    window.renderRecipesList = renderAdminRecipesList;
 
     const rewardTypeInput = document.getElementById('rewardType');
     if (rewardTypeInput && !rewardTypeInput.dataset.changeBound) {

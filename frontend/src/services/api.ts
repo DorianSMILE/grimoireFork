@@ -208,3 +208,96 @@ export async function fetchCurrentUser(): Promise<CurrentUserResponse | null> {
   }
   return (await res.json()) as CurrentUserResponse;
 }
+
+export function isAdmin(user: CurrentUserResponse | null | undefined): boolean {
+  if (!user || !Array.isArray(user.roles)) {
+    return false;
+  }
+  return user.roles.some(
+    (r) => r.authority === 'ADMIN' || r.authority === 'ROLE_ADMIN'
+  );
+}
+
+export async function logoutApi(): Promise<void> {
+  clearAuthStorage();
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+  } catch (e) {
+    console.warn('Logout request failed', e);
+  }
+}
+
+export async function apiGet<T>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await apiFetch(url, { ...options, method: 'GET' });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(errText || `Erreur GET ${url}`);
+  }
+  return (await res.json()) as T;
+}
+
+export async function apiPost<T>(
+  url: string,
+  body?: unknown,
+  options: RequestInit = {}
+): Promise<T> {
+  const headers = new Headers(options.headers || undefined);
+  if (body !== undefined && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  const res = await apiFetch(url, {
+    ...options,
+    method: 'POST',
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(errText || `Erreur POST ${url}`);
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : null) as T;
+}
+
+export async function apiPut<T>(
+  url: string,
+  body?: unknown,
+  options: RequestInit = {}
+): Promise<T> {
+  const headers = new Headers(options.headers || undefined);
+  if (body !== undefined && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  const res = await apiFetch(url, {
+    ...options,
+    method: 'PUT',
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(errText || `Erreur PUT ${url}`);
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : null) as T;
+}
+
+export async function apiDelete<T = void>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await apiFetch(url, { ...options, method: 'DELETE' });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(errText || `Erreur DELETE ${url}`);
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+

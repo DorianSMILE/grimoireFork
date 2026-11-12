@@ -17,7 +17,7 @@ export function AlchemyAdminPage() {
 
     async function bootAlchemyAdmin() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=29';
+      const authUrl = '/js/services/auth.js?v=32';
       const alchemyAdminUrl = '/js/pages/alchemy-admin.js?v=2';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function AlchemyAdminPage() {
 
   return (
     <>
-      <app-navbar active-page="alchemy-admin"></app-navbar>
-
       <div
         id="alchemyAdminWarning"
         className="hidden flex flex-col items-center justify-center h-[80vh] text-center text-white"

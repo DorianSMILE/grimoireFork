@@ -15,7 +15,7 @@ export function CombatPage() {
           url: string
         ) => Promise<unknown>;
 
-        await importDynamic('/js/services/auth.js?v=27');
+        await importDynamic('/js/services/auth.js?v=32');
         if (cancelled) return;
 
         await importDynamic('/js/combat/combat-state.js?v=1786180000239');

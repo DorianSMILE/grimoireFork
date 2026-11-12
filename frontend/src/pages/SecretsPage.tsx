@@ -48,6 +48,7 @@ export function SecretsPage() {
     }
 
     let cancelled = false;
+    let secretAudio: HTMLAudioElement | null = null;
     const win = window as GlobalSecretsWindow;
 
     function handleAuthLoaded() {
@@ -59,14 +60,14 @@ export function SecretsPage() {
 
     async function bootSecrets() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=30';
+      const authUrl = '/js/services/auth.js?v=32';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
 
       if (cancelled) return;
 
-      const secretAudio = new Audio('/sons/secret.mp3');
+      secretAudio = new Audio('/sons/secret.mp3');
       secretAudio.play().catch((e) => console.log('Autoplay bloqué par le navigateur :', e));
 
       if (typeof win.checkAuthStatus === 'function') {
@@ -82,6 +83,11 @@ export function SecretsPage() {
 
     return () => {
       cancelled = true;
+      if (secretAudio) {
+        secretAudio.pause();
+        secretAudio.currentTime = 0;
+        secretAudio = null;
+      }
       window.removeEventListener('authLoaded', handleAuthLoaded);
     };
   }, [navigate]);
@@ -238,8 +244,6 @@ export function SecretsPage() {
 
   return (
     <>
-      <app-navbar active-page="secret"></app-navbar>
-
       <main className="block">
         <div className="secrets-main">
           <div className="secrets-grid" id="secretsGrid">

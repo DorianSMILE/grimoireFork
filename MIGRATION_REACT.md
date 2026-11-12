@@ -1,6 +1,6 @@
 # État de la Migration vers React — Grimoire
 
-> Dernière mise à jour : 10/11/2026  
+> Dernière mise à jour : 11/11/2026  
 > Stack cible : **React 19 · TypeScript · Vite 6 · React Router 7** (intégré à **Spring Boot 3.4.4**)
 
 ---
@@ -28,7 +28,7 @@ Les **16 pages** de Grimoire sont désormais migrées dans la SPA React sans int
 | :--- | :--- | :--- | :---: | :--- | :--- |
 | **Connexion** | `/login.html` | `/login` | ✅ Migrée | `src/pages/LoginPage.tsx` | Typage strict DTO, détection session de combat active, zéro style inline. |
 | **Inscription** | `/register.html` | `/register` | ✅ Migrée | `src/pages/RegisterPage.tsx` | Validation mots de passe, auto-login, thème émeraude `.auth-page-register`. |
-| **Grimoire & Forge** | `/` (`index.html`) | `/grimoire` | ✅ Migrée | `src/pages/GrimoirePage.tsx` | Redirection `/` → `/grimoire`, filtres multi-critères, animations Lvl-5, Forge admin. |
+| **Grimoire & Forge** | `/` (`index.html`) | `/grimoire` | ✅ Migrée | `src/pages/GrimoirePage.tsx` | Redirection `/` → `/grimoire`, sous-composants modulaires (`SpellForgePanel`, `SpellFilterBar`, `SpellCard`), animations Lvl 1–5 & Voie/Spiritualité. |
 | **Armurerie** | `/armory.html` | `/armory` | ✅ Migrée | `src/pages/ArmoryPage.tsx` | Gestion des personnages, équipement, toile des spécificités (`hero-spider.js`), tutoriel guidé. |
 | **Donjons** | `/dungeons.html` | `/dungeons` | ✅ Migrée | `src/pages/DungeonsPage.tsx` | Sélection d'équipe, cartes de donjons, sacoche, lobbys multijoueur SSE, tutoriel donjon. |
 | **Coffres (Vault)** | `/vault.html` | `/vault` | ✅ Migrée | `src/pages/VaultPage.tsx` | Inventaire de compte, filtres d'équipements/consommables/anomalies, création/édition admin, destruction. |
@@ -45,14 +45,14 @@ Les **16 pages** de Grimoire sont désormais migrées dans la SPA React sans int
 
 ---
 
-## 3. Composants Partagés & Services
+## 3. Composants Partagés & Services (100% Complétés)
 
-| Élément | Statut actuel | Cible fin de migration |
-| :--- | :--- | :--- |
-| **Client API & Auth (`frontend/src/services/api.ts`)** | ✅ Créé en TypeScript (`apiFetch`, `loginApi`, `registerApi`, `fetchCurrentUser`) | Enrichir au fil des pages migrées et supprimer `static/js/services/auth.js` + `api.js` une fois la dernière page migrée. |
-| **Barre de navigation (`navbar.js`)** | 🔄 Web Component `<app-navbar>` encapsulé + intercepté par `SpaLinkInterceptor` | Convertir en composant React `<Navbar />` partagé dans un `<AppLayout />` pour conserver l'en-tête monté sans re-rendu entre les pages. |
-| **Modales & Toasts (`modal.js`, `ui.js`)** | 🔄 Web Component `<app-modal>` + fonctions globales | Convertir en contexte/composant React (`ModalProvider` / `ToastProvider`). |
-| **Moteur de Sorts & Forge (`grimoire.js`, `forge.js`)** | 🔄 Pont ES Module (`initGrimoirePage` dans `app.js`) piloté par `GrimoirePage.tsx` | Découper progressivement en sous-composants React (`<SpellCard />`, `<SpellFilterBar />`, `<SpellForgePanel />`). |
+| Élément | Statut actuel | Architecture & Fichiers |
+| :--- | :---: | :--- |
+| **Client API & Auth (`frontend/src/services/api.ts`)** | ✅ Complété | Client TypeScript complet (`apiFetch`, `apiGet`, `apiPost`, `apiPut`, `apiDelete`, `loginApi`, `registerApi`, `logoutApi`, `fetchCurrentUser`, `isAdmin`) synchronisé avec `auth.js` et `api.js`. |
+| **Barre de navigation (`Navbar.tsx`, `AppLayout.tsx`, `navbar.js`)** | ✅ Complété | Composants React partagés `src/components/Navbar.tsx` et `src/components/AppLayout.tsx` + mise à jour dynamique en place (`attributeChangedCallback` sur `active-page`) sans démontage de `#authNavContainer` ni attribut `style=` inline. |
+| **Modales & Toasts (`UiFeedbackContext.tsx`, `modal.js`, `ui.js`)** | ✅ Complété | Contextes React `ModalProvider`, `ToastProvider` et `UiFeedbackProvider` (`src/context/UiFeedbackContext.tsx`, hooks `useModal` / `useToast`) connectés à `<app-modal>` et `#notif`. |
+| **Moteur de Sorts & Forge (`src/components/grimoire/`)** | ✅ Complété | `GrimoirePage.tsx` découpé en sous-composants React modulaires (`src/components/grimoire/SpellForgePanel.tsx`, `SpellFilterBar.tsx`, `SpellCard.tsx` + `SpellEditingPreview`) pilotant `grimoire.js` et `forge.js` (< 500 lignes par fichier). |
 
 ---
 
@@ -74,7 +74,9 @@ Au fil de la migration complète des 16 pages, les points critiques suivants ont
 6. **Suivi des validations Co-op `(1/2)` en Combat (`/combat`)** :
    - En mode multijoueur, toutes les actions nécessitant la validation des deux joueurs (continuer après victoire, ouvrir/passer un coffre, choisir une option de rencontre/piège/altération/porte étrange, passer la salle du marchand) affichent l'indicateur `(readyCount/totalCount)` en temps réel via SSE (`playerReadyNextRoom` et `playerRoomChoices`), avec mise en évidence du bouton choisi (`.is-choice-selected`) et bannière d'état de l'allié.
 7. **Classes d'affinité sémantiques des cartes de sorts (`filters.js` & `spell-cards.css`)** :
-   - Les couleurs de voies, spiritualités et mutations sont portées par les classes `.affinity-*` et `.lvl-badge-*` (`getVoieAffinityClass`, `getSpiritAffinityClass`, `getSpellAffinityClass` exportées par `js/utils/filters.js`), éliminant les attributs `style=` inline dans le rendu du Grimoire et des infobulles de combat.
+   - Les couleurs de voies, spiritualités et mutations sont portées par les classes `.affinity-*`, `.origin-filter-btn` et `.lvl-badge-*` (`getVoieAffinityClass`, `getSpiritAffinityClass`, `getSpellAffinityClass` exportées par `js/utils/filters.js`), éliminant les attributs `style=` inline dans le rendu du Grimoire et des infobulles de combat.
+8. **Préservation des animations par palier (Lvl 1–5) et par Voie Lvl 5 / Spiritualité Lvl 3 (`spell-cards.css`, `spell-cards-animations.css`, `particles.js`)** :
+   - Les cartes de sorts du Grimoire combinent `.spell-card-lvl-${tierNumber}` (progression visuelle et reflets de niveau 1 à 5 alimentés par `--spell-color` et `--spell-rgb` issus de `.affinity-*`) et `attachLvl5CardEffects(card, origin)` (`particles.js` + `spell-cards-animations.css`) pour déclencher les animations élémentaires d'entrée/sortie au survol de chaque Voie Niveau 5 (`wind`, `water`, `poison`, `earth`, `lava`, `plant`, `fire`, `explosion`) et de chaque Spiritualité Niveau 3 (`spirit`, `darkness`, `karma` selon l'alignement Harmonie/Lumière/Ténèbres).
 
 ---
 

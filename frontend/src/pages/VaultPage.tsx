@@ -17,7 +17,7 @@ export function VaultPage() {
 
     async function bootVault() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=28';
+      const authUrl = '/js/services/auth.js?v=32';
       const vaultUrl = '/js/pages/vault.js?v=110';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -62,8 +62,6 @@ export function VaultPage() {
 
   return (
     <>
-      <app-navbar active-page="vault"></app-navbar>
-
       <div className="fox-cycle">
         <div className="fox"></div>
       </div>

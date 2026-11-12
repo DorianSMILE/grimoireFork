@@ -40,8 +40,8 @@
             z-index: 1;
 
             --card-glow-alpha: 0;
-            --card-border-alpha: 0.15;
-            --card-bg-alpha: 0.06;
+            --card-border-alpha: 0.08;
+            --card-bg-alpha: 0.02;
 
             border: 1px solid rgba(var(--spell-rgb), var(--card-border-alpha));
             background: linear-gradient(135deg, rgba(var(--spell-rgb), var(--card-bg-alpha)) 0%, rgba(255, 255, 255, 0.01) 100%);
@@ -50,10 +50,35 @@
 
 .spell-card:hover{
             z-index: 10;
-            --card-glow-alpha: 0.15;
-            --card-border-alpha: 0.35;
-            --card-bg-alpha: 0.12;
+            --card-glow-alpha: 0.05;
+            --card-border-alpha: 0.2;
+            --card-bg-alpha: 0.04;
             transform: translateY(-2px);
+        }
+
+/* Lvl 2: Subtile (More border presence) */
+        .spell-card-lvl-2{
+            --card-border-alpha: 0.2;
+            --card-bg-alpha: 0.04;
+        }
+
+.spell-card-lvl-2:hover{
+            --card-glow-alpha: 0.15;
+            --card-border-alpha: 0.4;
+            transform: translateY(-3px) scale(1.005);
+        }
+
+/* Lvl 3: Advanced (Noticeable tint & glow) */
+        .spell-card-lvl-3{
+            --card-border-alpha: 0.35;
+            --card-bg-alpha: 0.08;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 20px rgba(var(--spell-rgb), var(--card-glow-alpha));
+        }
+
+.spell-card-lvl-3:hover{
+            --card-glow-alpha: 0.25;
+            --card-border-alpha: 0.55;
+            transform: translateY(-4px) scale(1.01);
         }
 
 /* Lvl 4: Master (Strong presence, brighter border) */
@@ -61,6 +86,12 @@
             --card-border-alpha: 0.5;
             --card-bg-alpha: 0.12;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 25px rgba(var(--spell-rgb), var(--card-glow-alpha));
+        }
+
+.spell-card-lvl-4:hover{
+            --card-glow-alpha: 0.4;
+            --card-border-alpha: 0.75;
+            transform: translateY(-5px) scale(1.015);
         }
 
 /* Lvl 5: Legendary (Shiny, strong tint, animated reflection) */
@@ -111,6 +142,18 @@
             border-radius: 4px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
+        }
+
+.badge-voie{
+            color: #facc15;
+            border-color: rgba(250, 204, 21, 0.3);
+            background: rgba(250, 204, 21, 0.05);
+        }
+
+.badge-spirit{
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(56, 189, 248, 0.05);
         }
 
 .spell-meta{
@@ -180,3 +223,230 @@
     }
 }
 
+/* =====================================================
+   AFFINITY CLASSES & SPELL CARD SEMANTIC HELPERS
+   ===================================================== */
+.affinity-raison { --spell-color: #3b82f6; --spell-rgb: 59, 130, 246; }
+.affinity-surete { --spell-color: #00e5cc; --spell-rgb: 0, 229, 204; }
+.affinity-trahison { --spell-color: #ed5677; --spell-rgb: 237, 86, 119; }
+.affinity-consolidation { --spell-color: #99674c; --spell-rgb: 153, 103, 76; }
+.affinity-conviction { --spell-color: #b74c0b; --spell-rgb: 183, 76, 11; }
+.affinity-creation { --spell-color: #10b981; --spell-rgb: 16, 185, 129; }
+.affinity-destruction { --spell-color: #ff0000; --spell-rgb: 255, 0, 0; }
+.affinity-violence { --spell-color: #a70740; --spell-rgb: 167, 7, 64; }
+.affinity-esprit { --spell-color: #38bdf8; --spell-rgb: 56, 189, 248; }
+.affinity-tenebres { --spell-color: #c084fc; --spell-rgb: 192, 132, 252; }
+.affinity-karma { --spell-color: #e7d198; --spell-rgb: 231, 209, 152; }
+.affinity-spirit-default { --spell-color: #a78bfa; --spell-rgb: 167, 139, 250; }
+.affinity-mutation { --spell-color: #e879f9; --spell-rgb: 232, 121, 249; }
+.affinity-default { --spell-color: #94a3b8; --spell-rgb: 148, 163, 184; }
+
+.spell-card .spell-name {
+    color: var(--spell-color, var(--primary));
+}
+
+.spell-card.is-locked {
+    opacity: 0.6;
+    filter: grayscale(60%);
+    pointer-events: none;
+}
+
+.editing-preview-container .spell-admin-actions {
+    display: none;
+}
+
+.affinity-badge {
+    color: var(--spell-color);
+    border-color: rgba(var(--spell-rgb), 0.3);
+    background: rgba(var(--spell-rgb), 0.05);
+}
+
+.affinity-tooltip-header {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--spell-color);
+}
+
+.affinity-tooltip-desc {
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+.affinity-tooltip-passive {
+    color: #e2e8f0;
+}
+
+.affinity-tooltip-bolt {
+    font-size: 0.95rem;
+    color: var(--spell-color);
+}
+
+.affinity-tooltip-pre {
+    white-space: pre-wrap;
+}
+
+.badge-icon-sm {
+    font-size: 1.05rem;
+}
+
+.badge-icon-md {
+    font-size: 1.1rem;
+}
+
+.lvl-badge-1 {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #f8fafc;
+    font-weight: 500;
+}
+
+.lvl-badge-2 {
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    font-weight: 600;
+}
+
+.lvl-badge-3 {
+    background: rgba(var(--spell-rgb), 0.25);
+    border: 1px solid rgba(var(--spell-rgb), 0.6);
+    color: var(--spell-color);
+    font-weight: 700;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.lvl-badge-4 {
+    background: rgba(var(--spell-rgb), 0.4);
+    border: 1px solid var(--spell-color);
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 0 5px var(--spell-color);
+    box-shadow: 0 0 12px rgba(var(--spell-rgb), 0.5);
+}
+
+.lvl-badge-5 {
+    background: linear-gradient(135deg, var(--spell-color), rgba(var(--spell-rgb), 0.6));
+    border: 1px solid #fff;
+    color: #fff;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 20px rgba(var(--spell-rgb), 0.8);
+}
+
+.rank-tooltip-title {
+    font-weight: 700;
+    color: var(--spell-color);
+}
+
+.spell-channeling-meta {
+    color: #a78bfa;
+}
+
+.spell-description-quote {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.eff-icon-base {
+    font-size: 1.1rem;
+}
+
+.eff-icon-stat {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    margin-left: -0.1rem;
+}
+
+.eff-icon-ds {
+    font-size: 1rem;
+}
+
+.spell-effects-calculated-wrapper {
+    position: relative;
+    padding-right: 1.8rem;
+}
+
+.spell-tooltip-raw-help-btn {
+    position: absolute;
+    top: 0.4rem;
+    right: 0;
+    cursor: help;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 20;
+}
+
+.spell-tooltip-raw-help-btn:hover {
+    opacity: 1;
+}
+
+.spell-tooltip-raw-help-icon {
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+
+.spell-type-filter-btn.is-pulsing {
+    transform: scale(0.85);
+}
+
+.spell-type-filter-btn.is-type-instantane {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+.spell-type-filter-btn.is-type-banal {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.spell-type-filter-btn.is-type-canalise {
+    background-color: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+}
+
+.spell-type-single-icon-lg {
+    pointer-events: none;
+    font-size: 26px;
+}
+
+.spell-type-single-icon-md {
+    pointer-events: none;
+    font-size: 24px;
+}
+
+.origin-filter-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(var(--spell-rgb), 0.1);
+    border: 1px solid rgba(var(--spell-rgb), 0.4);
+    color: var(--spell-color);
+    font-weight: normal;
+    opacity: 0.85;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.origin-filter-btn.is-selected {
+    background: rgba(var(--spell-rgb), 0.3);
+    border-color: var(--spell-color);
+    font-weight: bold;
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(var(--spell-rgb), 0.4);
+}
+
+.origin-filter-btn-icon {
+    font-size: 1.1em;
+}

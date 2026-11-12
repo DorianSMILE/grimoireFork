@@ -17,7 +17,7 @@ export function DungeonsPage() {
 
     async function bootDungeons() {
       const uiUrl = '/js/ui.js?v=2';
-      const authUrl = '/js/services/auth.js?v=27';
+      const authUrl = '/js/services/auth.js?v=32';
       const dungeonsUrl = '/js/pages/dungeons.js?v=21';
 
       await import(/* @vite-ignore */ uiUrl);
@@ -42,8 +42,6 @@ export function DungeonsPage() {
 
   return (
     <>
-      <app-navbar active-page="dungeon"></app-navbar>
-
       <main className="vault-container w-full max-w-[1200px] mx-auto p-8">
         <div
           className="text-danger hidden bg-red-500/10 border border-red-500/30 p-4 rounded-lg mb-8 text-center"

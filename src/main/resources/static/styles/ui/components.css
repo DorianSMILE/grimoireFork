@@ -716,6 +716,29 @@
     background: rgba(255, 255, 255, 0.03);
     transition: all 0.2s ease;
     white-space: nowrap;
+    position: relative;
+}
+
+.top-nav-link > .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.nav-badge {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: -8px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+.nav-badge.block {
+    display: inline-block;
 }
 
 .top-nav-link.nav-grimoire:hover,
@@ -770,6 +793,8 @@
 /* Unified Header Styles */
 .top-header {
     padding: 1.15rem 2rem;
+    min-height: 78px;
+    box-sizing: border-box;
     border-bottom: 1px solid var(--glass-border);
     background: rgba(11, 15, 25, 0.6);
     backdrop-filter: blur(12px);
@@ -782,6 +807,8 @@
 .page-logo-container {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    min-height: 44px;
     gap: 0.15rem;
     flex-shrink: 0;
 }
@@ -1454,12 +1481,62 @@
 .nav-auth-container {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: flex-end;
     flex-shrink: 0;
     gap: 0.75rem;
     margin-left: 1.25rem;
     padding-left: 1.25rem;
+    min-height: 36px;
     border-left: 1px solid var(--glass-border);
+}
+
+.nav-user-profile-link {
+    position: relative;
+    flex-shrink: 0;
+    background: transparent;
+}
+
+.nav-user-profile-link:hover {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.nav-user-gold-wrap {
+    gap: 0.2rem;
+    min-width: 80px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.nav-user-gold-val {
+    display: inline-block;
+    transition: color 0.2s ease, transform 0.1s ease;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.nav-user-gold-val.is-gold-gain {
+    color: #10b981;
+    transform: scale(1.1);
+}
+
+.nav-user-gold-val.is-gold-loss {
+    color: #ef4444;
+    transform: scale(0.9);
+}
+
+.nav-logout-btn {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    flex-shrink: 0;
+}
+
+.nav-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.top-nav-link.is-feature-locked {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .hero-modal-title {
@@ -1782,3 +1859,13 @@
 .eff-color-fuchsia { color: #d946ef; }
 .eff-color-pink { color: #ec4899; }
 .eff-color-slate { color: #94a3b8; }
+
+app-loader {
+    grid-column: 1 / -1;
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

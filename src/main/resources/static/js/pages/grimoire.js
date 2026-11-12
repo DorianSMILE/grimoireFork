@@ -4,12 +4,14 @@ import * as ui from '../ui.js?v=3';
 import * as api from '../services/api.js';
 
 import { updateRankTitle, updateSpecialVoieConfig, setViolenceType, updateViolenceLabel, renderEffects, handleAffinityChange } from './forge.js?v=3';
-import { getVoieButtonColor, getSpiritButtonColor, } from '../utils/filters.js?v=3';
+import { getVoieButtonColor, getSpiritButtonColor, getVoieAffinityClass, getSpiritAffinityClass, getSpellAffinityClass } from '../utils/filters.js?v=5';
+import { attachLvl5CardEffects } from '../components/particles.js?v=1786180000242';
 
 window.handleAffinityChange = handleAffinityChange;
 window.setViolenceType = setViolenceType;
 window.getSpellEffectsSummaryHtml = getSpellEffectsSummaryHtml;
 window.getCalculatedSpellEffectsSummaryHtml = getCalculatedSpellEffectsSummaryHtml;
+window.getLvl5Origin = getLvl5Origin;
 
 window.toggleSpellTypeFilter = function() {
     const states = ['ALL', 'INSTANTANE', 'BANAL', 'CANALISE'];
@@ -18,44 +20,28 @@ window.toggleSpellTypeFilter = function() {
     
     const btn = document.getElementById('spellTypeFilterBtn');
     if (btn) {
-        btn.style.transform = 'scale(0.85)';
-        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+        btn.classList.add('is-pulsing');
+        setTimeout(() => btn.classList.remove('is-pulsing'), 150);
         
         let html = '';
         if (state.spellTypeFilter === 'ALL') {
             html = `
-                <div class="relative w-full h-full" style="pointer-events: none;">
-                    <span class="material-symbols-outlined absolute text-amber-400" style="top: 3px; left: 50%; transform: translateX(-50%); font-size: 18px;">bolt</span>
-                    <span class="material-symbols-outlined absolute text-blue-400" style="bottom: 2px; left: 2px; font-size: 16px;">hourglass_empty</span>
-                    <span class="material-symbols-outlined absolute text-purple-400" style="bottom: 2px; right: 2px; font-size: 17px;">cyclone</span>
+                <div class="relative w-full h-full spell-type-filter-icons">
+                    <span class="material-symbols-outlined absolute text-amber-400 spell-type-icon-bolt">bolt</span>
+                    <span class="material-symbols-outlined absolute text-blue-400 spell-type-icon-banal">hourglass_empty</span>
+                    <span class="material-symbols-outlined absolute text-purple-400 spell-type-icon-canalise">cyclone</span>
                 </div>
             `;
-            btn.className = "flex-shrink-0 flex items-center justify-center bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none hover:bg-slate-800";
-            btn.style.boxShadow = 'none';
-            btn.style.backgroundColor = '';
-            btn.style.borderColor = '';
-            btn.style.color = '';
+            btn.className = "flex-shrink-0 flex items-center justify-center bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none hover:bg-slate-800 spell-type-filter-btn";
         } else if (state.spellTypeFilter === 'INSTANTANE') {
-            html = `<span class="material-symbols-outlined text-amber-400" style="pointer-events: none; font-size: 26px;">bolt</span>`;
-            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all";
-            btn.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-            btn.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-            btn.style.color = '#f59e0b';
-            btn.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.2)';
+            html = `<span class="material-symbols-outlined text-amber-400 spell-type-single-icon-lg">bolt</span>`;
+            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all spell-type-filter-btn is-type-instantane";
         } else if (state.spellTypeFilter === 'BANAL') {
-            html = `<span class="material-symbols-outlined text-blue-400" style="pointer-events: none; font-size: 24px;">hourglass_empty</span>`;
-            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all";
-            btn.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-            btn.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-            btn.style.color = '#60a5fa';
-            btn.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.2)';
+            html = `<span class="material-symbols-outlined text-blue-400 spell-type-single-icon-md">hourglass_empty</span>`;
+            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all spell-type-filter-btn is-type-banal";
         } else if (state.spellTypeFilter === 'CANALISE') {
-            html = `<span class="material-symbols-outlined text-purple-400" style="pointer-events: none; font-size: 26px;">cyclone</span>`;
-            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all";
-            btn.style.backgroundColor = 'rgba(168, 85, 247, 0.1)';
-            btn.style.borderColor = 'rgba(168, 85, 247, 0.3)';
-            btn.style.color = '#c084fc';
-            btn.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.2)';
+            html = `<span class="material-symbols-outlined text-purple-400 spell-type-single-icon-lg">cyclone</span>`;
+            btn.className = "flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer outline-none transition-all spell-type-filter-btn is-type-canalise";
         }
         btn.innerHTML = html;
     }
@@ -278,24 +264,24 @@ export function getSpellEffectsSummaryHtml(sp) {
                     }
                 }
 
-                let indicatorColor = isBad ? '#f43f5e' : '#10b981'; // Red for bad, green for good
-                if (['Shield', 'SHIELD'].includes(t)) indicatorColor = '#3b82f6';
-                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) indicatorColor = '#38bdf8';
-                if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT'].includes(t)) indicatorColor = '#f97316';
-                if (t === 'BUD') indicatorColor = '#10b981';
+                let indicatorColorClass = isBad ? 'eff-color-rose' : 'eff-color-emerald';
+                if (['Shield', 'SHIELD'].includes(t)) indicatorColorClass = 'eff-color-blue';
+                if (['ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'ManaOverTime', 'MOT', 'MANA_OVER_TIME'].includes(t)) indicatorColorClass = 'eff-color-sky';
+                if (['HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'HeatOverTime', 'HEAT_OVER_TIME', 'Heat', 'HEAT'].includes(t)) indicatorColorClass = 'eff-color-orange';
+                if (t === 'BUD') indicatorColorClass = 'eff-color-emerald';
 
                 let iconName = 'stars';
                 if (['DamageFixed', 'FIXED_DAMAGE', 'DamagePercentage', 'PERCENTAGE_DAMAGE', 'DamageOverTime', 'DOT'].includes(t)) {
                     const dt = (e.damageType || 'MAGIC').toLowerCase();
                     if (dt === 'magic') {
                         iconName = 'auto_awesome';
-                        indicatorColor = '#a855f7';
+                        indicatorColorClass = 'eff-color-purple';
                     } else if (dt === 'physic') {
                         iconName = 'swords';
-                        indicatorColor = '#f43f5e';
+                        indicatorColorClass = 'eff-color-rose';
                     } else if (dt === 'brut') {
                         iconName = 'bloodtype';
-                        indicatorColor = '#ef4444';
+                        indicatorColorClass = 'eff-color-red';
                     } else {
                         iconName = 'swords';
                     }
@@ -308,7 +294,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                 if (t === 'POISON') iconName = 'science';
                 if (t === 'AME_DETACHEE') iconName = 'person_cancel';
                 if (t === 'BUD') iconName = 'yard';
-                if (t === 'Purge' || t === 'PURGE') iconName = 'cleaning_services';
+                if (t === 'Purge' || t === 'PURGE' || t === 'DISPEL') iconName = 'cleaning_services';
                 if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t)) iconName = isBad ? 'trending_down' : 'trending_up';
 
                 const typeNames = {
@@ -363,12 +349,9 @@ export function getSpellEffectsSummaryHtml(sp) {
                 }
 
                 const dt = (e.damageType || 'MAGIC').toLowerCase();
-                let dtColor = '#a855f7';
-                if (dt === 'physic') dtColor = '#f43f5e';
-                if (dt === 'brut') dtColor = '#790000ff';
-
+                const dtColorClass = dt === 'physic' ? 'dt-text-physic' : (dt === 'brut' ? 'dt-text-brut' : 'dt-text-magic');
                 const dtStr = dt === 'magic' ? 'Magiques' : (dt === 'physic' ? 'Physiques' : 'Bruts');
-                const dtHtml = `<span class="font-bold" style="color: ${dtColor};">${dtStr}</span>`;
+                const dtHtml = `<span class="font-bold ${dtColorClass}">${dtStr}</span>`;
 
                 let detailsStr = '';
                 if (t === 'DamageFixed' || t === 'FIXED_DAMAGE') {
@@ -450,7 +433,7 @@ export function getSpellEffectsSummaryHtml(sp) {
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
                     detailsStr = `➔ MoT de ${parts.join(' + ')} Mana/tour${durStr}`;
-                } else if (t === 'Purge' || t === 'PURGE') {
+                } else if (t === 'Purge' || t === 'PURGE' || t === 'DISPEL') {
                     detailsStr = `➔ dissipe les altérations`;
                 } else if (t === 'Shield' || t === 'SHIELD') {
                     let parts = [];
@@ -507,48 +490,47 @@ export function getSpellEffectsSummaryHtml(sp) {
 
                 let dsBadge = '';
                 if (e.detachedSoulRequirement === 'REQUIRED') {
-                    dsBadge = `<span class="badge-pill badge-green-flat" title="Requiert l'Âme Détachée"><span class="material-symbols-outlined" style="font-size:1rem;">hand_bones</span>Requis</span>`;
+                    dsBadge = `<span class="badge-pill badge-green-flat" title="Requiert l'Âme Détachée"><span class="material-symbols-outlined eff-icon-ds">hand_bones</span>Requis</span>`;
                 } else if (e.detachedSoulRequirement === 'FORBIDDEN') {
-                    dsBadge = `<span class="badge-pill badge-red-flat" title="Exclut l'Âme Détachée"><span class="material-symbols-outlined" style="font-size:1rem;">hand_bones</span>Exclu</span>`;
+                    dsBadge = `<span class="badge-pill badge-red-flat" title="Exclut l'Âme Détachée"><span class="material-symbols-outlined eff-icon-ds">hand_bones</span>Exclu</span>`;
                 }
 
                 let statIconHtml = '';
                 if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t) && e.statAffected) {
-                    const sa = e.statAffected.toUpperCase();
-                    let statIcon = { icon: 'star', color: '#94a3b8' };
-                    if (sa.includes('SPEED')) statIcon = { icon: 'bolt', color: '#f59e0b' };
-                    else if (sa.includes('MANA')) statIcon = { icon: 'water_drop', color: '#38bdf8' };
-                    else if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) statIcon = { icon: 'favorite', color: '#ec4899' };
-                    else if (sa.includes('CRIT')) statIcon = { icon: 'gps_fixed', color: '#ef4444' };
-                    else if (sa.includes('ARMOR') || sa.includes('ARMURE')) statIcon = { icon: 'shield', color: '#3b82f6' };
-                    else if (sa.includes('RESISTANCE')) statIcon = { icon: 'shield', color: '#10b981' };
-                    else if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) statIcon = { icon: 'fitness_center', color: '#f43f5e' };
-                    else if (sa.includes('POWER')) statIcon = { icon: 'auto_awesome', color: '#a855f7' };
-                    else if (sa.includes('HEAL_RECEIVED')) statIcon = { icon: 'health_and_safety', color: '#10b981' };
-                    else if (sa.includes('SHIELD_RECEIVED')) statIcon = { icon: 'security', color: '#06b6d4' };
-                    else if (sa.includes('HEAL_GIVEN')) statIcon = { icon: 'healing', color: '#34d399' };
-                    else if (sa.includes('SHIELD_GIVEN')) statIcon = { icon: 'add_moderator', color: '#22d3ee' };
-                    else if (sa === 'SHIELD_PIERCED') statIcon = { icon: 'heart_broken', color: '#ef4444' };
-                    else if (sa === 'SHIELD_PENETRATION') statIcon = { icon: 'heart_broken', color: '#fb923c' };
-                    else if (sa === 'DAMAGE_TAKEN_MAGIC') statIcon = { icon: 'explosion', color: '#a855f7' };
-                    else if (sa === 'DAMAGE_TAKEN_PHYSIC') statIcon = { icon: 'explosion', color: '#ef4444' };
-                    else if (sa === 'DAMAGE_TAKEN_BRUT') statIcon = { icon: 'explosion', color: '#b91c1c' };
-                    else if (sa === 'DAMAGE_GIVEN_MAGIC') statIcon = { icon: 'auto_awesome', color: '#a855f7' };
-                    else if (sa === 'DAMAGE_GIVEN_PHYSIC') statIcon = { icon: 'swords', color: '#f43f5e' };
-                    else if (sa === 'DAMAGE_GIVEN_BRUT') statIcon = { icon: 'bloodtype', color: '#b91c1c' };
-                    else if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') statIcon = { icon: 'gavel', color: '#d946ef' };
-                    else if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') statIcon = { icon: 'gavel', color: '#f43f5e' };
-                    else if (sa.includes('DAMAGE_TAKEN')) statIcon = { icon: 'explosion', color: '#ef4444' };
-                    else if (sa.includes('DAMAGE_GIVEN')) statIcon = { icon: 'swords', color: '#f43f5e' };
-                    else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', color: '#fb923c' };
-
+                    const sa = (e.statAffected + '').toUpperCase();
                     if (sa !== 'POISON' && sa !== 'BURN' && sa !== 'AME_DETACHEE') {
-                        statIconHtml = `<span class="material-symbols-outlined" style="flex-shrink:0; font-size:1.1rem; color:${statIcon.color}; margin-left:-0.1rem;">${statIcon.icon}</span>`;
+                        let statIcon = { icon: 'star', colorClass: 'eff-color-slate' };
+                        if (sa.includes('SPEED')) statIcon = { icon: 'bolt', colorClass: 'eff-color-amber' };
+                        else if (sa.includes('MANA')) statIcon = { icon: 'water_drop', colorClass: 'eff-color-sky' };
+                        else if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) statIcon = { icon: 'favorite', colorClass: 'eff-color-pink' };
+                        else if (sa.includes('CRIT')) statIcon = { icon: 'gps_fixed', colorClass: 'eff-color-red' };
+                        else if (sa.includes('ARMOR') || sa.includes('ARMURE')) statIcon = { icon: 'shield', colorClass: 'eff-color-blue' };
+                        else if (sa.includes('RESISTANCE')) statIcon = { icon: 'shield', colorClass: 'eff-color-emerald' };
+                        else if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) statIcon = { icon: 'fitness_center', colorClass: 'eff-color-rose' };
+                        else if (sa.includes('POWER')) statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+                        else if (sa.includes('HEAL_RECEIVED')) statIcon = { icon: 'health_and_safety', colorClass: 'eff-color-emerald' };
+                        else if (sa.includes('SHIELD_RECEIVED')) statIcon = { icon: 'security', colorClass: 'eff-color-cyan' };
+                        else if (sa.includes('HEAL_GIVEN')) statIcon = { icon: 'healing', colorClass: 'eff-color-emerald-light' };
+                        else if (sa.includes('SHIELD_GIVEN')) statIcon = { icon: 'add_moderator', colorClass: 'eff-color-cyan-light' };
+                        else if (sa === 'SHIELD_PIERCED') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-red' };
+                        else if (sa === 'SHIELD_PENETRATION') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+                        else if (sa === 'DAMAGE_TAKEN_MAGIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-purple' };
+                        else if (sa === 'DAMAGE_TAKEN_PHYSIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
+                        else if (sa === 'DAMAGE_TAKEN_BRUT') statIcon = { icon: 'explosion', colorClass: 'eff-color-red-dark' };
+                        else if (sa === 'DAMAGE_GIVEN_MAGIC') statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+                        else if (sa === 'DAMAGE_GIVEN_PHYSIC') statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
+                        else if (sa === 'DAMAGE_GIVEN_BRUT') statIcon = { icon: 'bloodtype', colorClass: 'eff-color-red-dark' };
+                        else if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-fuchsia' };
+                        else if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-rose' };
+                        else if (sa.includes('DAMAGE_TAKEN')) statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
+                        else if (sa.includes('DAMAGE_GIVEN')) statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
+                        else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+                        statIconHtml = `<span class="material-symbols-outlined eff-icon-stat ${statIcon.colorClass}">${statIcon.icon}</span>`;
                     }
                 }
 
                 effectsSummaryHtml += `<div class="effect-line flex flex-wrap items-start gap-1">
-                            <span class="material-symbols-outlined shrink-0" style="font-size:1.1rem; color:${indicatorColor};">${iconName}</span>
+                            <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
                             ${statIconHtml}
                             ${turnBadge}
                             ${keyBadge}
@@ -951,20 +933,19 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
 export function getSpellCardHtml(sp) {
     let voieBadge = '';
     if (sp.voie) {
-        const vHex = getVoieButtonColor(sp.voie);
-        const vRgb = hexToRgb(vHex);
+        const vAffClass = getVoieAffinityClass(sp.voie);
         const vIcon = getVoieIcon(sp.voie.nom);
-        voieBadge = `<span class="badge-pill cursor-help" style="color: ${vHex}; border-color: rgba(${vRgb}, 0.3); background: rgba(${vRgb}, 0.05);" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
-            <span class="material-symbols-outlined" style="font-size:1.1em;">${vIcon}</span>${sp.voie.nom}
+        voieBadge = `<span class="badge-pill cursor-help affinity-badge ${vAffClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
+            <span class="material-symbols-outlined badge-icon-md">${vIcon}</span>${sp.voie.nom}
             <template class="tooltip-data">
-                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${vHex};">
-                    <span class="material-symbols-outlined" style="font-size:1.1rem;">${vIcon}</span>
+                <div class="text-sm font-medium affinity-tooltip-header ${vAffClass}">
+                    <span class="material-symbols-outlined badge-icon-md">${vIcon}</span>
                     ${sp.voie.nom}
                 </div>
-                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.voie.description || 'Description générique.'}</div>
-                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
-                    <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${vHex};">bolt</span>
-                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sp.voie.passiveDescription) || 'Passif spécifique.'}</span>
+                <div class="text-xs affinity-tooltip-desc">${sp.voie.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs affinity-tooltip-passive ${vAffClass}">
+                    <span class="material-symbols-outlined affinity-tooltip-bolt">bolt</span>
+                    <span class="font-italic affinity-tooltip-pre">${formatRichText(sp.voie.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -972,20 +953,19 @@ export function getSpellCardHtml(sp) {
 
     let spiritBadge = '';
     if (sp.spiritualite) {
-        const sHex = getSpiritButtonColor(sp.spiritualite);
-        const sRgb = hexToRgb(sHex);
+        const sAffClass = getSpiritAffinityClass(sp.spiritualite);
         const sIcon = getSpiritIcon(sp.spiritualite.nom);
-        spiritBadge = `<span class="badge-pill cursor-help" style="color: ${sHex}; border-color: rgba(${sRgb}, 0.3); background: rgba(${sRgb}, 0.05);" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
-            <span class="material-symbols-outlined" style="font-size:1.1em;">${sIcon}</span>${sp.spiritualite.nom}
+        spiritBadge = `<span class="badge-pill cursor-help affinity-badge ${sAffClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
+            <span class="material-symbols-outlined badge-icon-md">${sIcon}</span>${sp.spiritualite.nom}
             <template class="tooltip-data">
-                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${sHex};">
-                    <span class="material-symbols-outlined" style="font-size:1.1rem;">${sIcon}</span>
+                <div class="text-sm font-medium affinity-tooltip-header ${sAffClass}">
+                    <span class="material-symbols-outlined badge-icon-md">${sIcon}</span>
                     ${sp.spiritualite.nom}
                 </div>
-                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.spiritualite.description || 'Description générique.'}</div>
-                <div class="flex-start-gap text-xs" style="color: #e2e8f0;">
-                    <span class="material-symbols-outlined" style="font-size: 0.95rem; color: ${sHex};">bolt</span>
-                    <span class="font-italic" style="white-space: pre-wrap;">${formatRichText(sp.spiritualite.passiveDescription) || 'Passif spécifique.'}</span>
+                <div class="text-xs affinity-tooltip-desc">${sp.spiritualite.description || 'Description générique.'}</div>
+                <div class="flex-start-gap text-xs affinity-tooltip-passive ${sAffClass}">
+                    <span class="material-symbols-outlined affinity-tooltip-bolt">bolt</span>
+                    <span class="font-italic affinity-tooltip-pre">${formatRichText(sp.spiritualite.passiveDescription) || 'Passif spécifique.'}</span>
                 </div>
             </template>
         </span>`;
@@ -993,17 +973,15 @@ export function getSpellCardHtml(sp) {
 
     let mutationBadge = '';
     if (sp.mutation) {
-        const mHex = sp.mutation.color || '#e879f9';
-        const mRgb = hexToRgb(mHex);
         const mIcon = sp.mutation.icon || 'pets';
-        mutationBadge = `<span class="badge-pill cursor-help" style="color: ${mHex}; border-color: rgba(${mRgb}, 0.3); background: rgba(${mRgb}, 0.05);" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
-            <span class="material-symbols-outlined" style="font-size:1.1em;">${mIcon}</span>${sp.mutation.nom} (Niv. ${sp.mutation.level || 1})
+        mutationBadge = `<span class="badge-pill cursor-help affinity-badge affinity-mutation" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
+            <span class="material-symbols-outlined badge-icon-md">${mIcon}</span>${sp.mutation.nom} (Niv. ${sp.mutation.level || 1})
             <template class="tooltip-data">
-                <div class="text-sm font-medium" style="margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.3rem; color: ${mHex};">
-                    <span class="material-symbols-outlined" style="font-size:1.1rem;">${mIcon}</span>
+                <div class="text-sm font-medium affinity-tooltip-header affinity-mutation">
+                    <span class="material-symbols-outlined badge-icon-md">${mIcon}</span>
                     Mutation : ${sp.mutation.nom} (Niv. ${sp.mutation.level || 1})
                 </div>
-                <div class="text-xs" style="color: #cbd5e1; margin-bottom: 0.5rem;">${sp.mutation.description || 'Description de la mutation.'}</div>
+                <div class="text-xs affinity-tooltip-desc">${sp.mutation.description || 'Description de la mutation.'}</div>
             </template>
         </span>`;
     }
@@ -1017,7 +995,7 @@ export function getSpellCardHtml(sp) {
     const ctBadgeClass = ctInfo.name === 'INSTANTANE' ? 'badge-amber' : (ctInfo.name === 'CANALISE' ? 'badge-purple' : 'badge-slate');
 
     castBadge = `<span class="badge-pill ${ctBadgeClass} cursor-help" data-color="${ctInfo.color}" data-prefer-top onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
-        <span class="material-symbols-outlined" style="font-size: 1.05rem;">${ctInfo.icon}</span>${ctInfo.label}
+        <span class="material-symbols-outlined badge-icon-sm">${ctInfo.icon}</span>${ctInfo.label}
         <template class="tooltip-data">
             ${ctTooltipHtml}
         </template>
@@ -1025,18 +1003,18 @@ export function getSpellCardHtml(sp) {
 
     if ((sp.voie && sp.voie.nom && sp.voie.nom.toLowerCase().includes('violence')) || (sp.spiritualite && sp.spiritualite.nom && sp.spiritualite.nom.toLowerCase().includes('violence'))) {
         if (sp.category === 'INSPIRATION' || sp.inspiration === true) {
-            castBadge += ` <span class="badge-pill badge-red"><span class="material-symbols-outlined" style="font-size: 1.05rem;">storm</span>Inspiration</span>`;
+            castBadge += ` <span class="badge-pill badge-red"><span class="material-symbols-outlined badge-icon-sm">storm</span>Inspiration</span>`;
         } else if (sp.category === 'EXPIRATION' || sp.inspiration === false) {
-            castBadge += ` <span class="badge-pill badge-pink"><span class="material-symbols-outlined" style="font-size: 1.05rem;">air</span>Expiration</span>`;
+            castBadge += ` <span class="badge-pill badge-pink"><span class="material-symbols-outlined badge-icon-sm">air</span>Expiration</span>`;
         }
     }
     if (sp.spiritualite && sp.spiritualite.nom && sp.spiritualite.nom.toLowerCase().includes('karma')) {
         if (sp.karmaAlignment === 'OFFENSIVE') {
-            castBadge += ` <span class="badge-pill badge-violet"><span class="material-symbols-outlined" style="font-size: 1.05rem;">dark_mode</span>Ténèbres</span>`;
+            castBadge += ` <span class="badge-pill badge-violet"><span class="material-symbols-outlined badge-icon-sm">dark_mode</span>Ténèbres</span>`;
         } else if (sp.karmaAlignment === 'PROTECTIVE') {
-            castBadge += ` <span class="badge-pill badge-yellow"><span class="material-symbols-outlined" style="font-size: 1.05rem;">light_mode</span>Lumière</span>`;
+            castBadge += ` <span class="badge-pill badge-yellow"><span class="material-symbols-outlined badge-icon-sm">light_mode</span>Lumière</span>`;
         } else if (sp.karmaAlignment === 'RESTORATIVE') {
-            castBadge += ` <span class="badge-pill badge-slate"><span class="material-symbols-outlined" style="font-size: 1.05rem;">brightness_medium</span>Harmonie</span>`;
+            castBadge += ` <span class="badge-pill badge-slate"><span class="material-symbols-outlined badge-icon-sm">brightness_medium</span>Harmonie</span>`;
         }
     }
 
@@ -1044,29 +1022,20 @@ export function getSpellCardHtml(sp) {
 
     let rankTitleBadge = '';
     if (sp.voie && sp.voie.rankNames && sp.voie.rankNames[sp.niveau]) {
-        rankTitleBadge = `<div class="text-success font-bold text-sm inline-flex items-center gap-1 mt-[-0.4rem]"><span class="material-symbols-outlined text-success align-middle" style="font-size:1.1em;">workspace_premium</span>"${sp.voie.rankNames[sp.niveau]}"</div>`;
+        rankTitleBadge = `<div class="text-success font-bold text-sm inline-flex items-center gap-1 mt-[-0.4rem]"><span class="material-symbols-outlined text-success align-middle badge-icon-md">workspace_premium</span>"${sp.voie.rankNames[sp.niveau]}"</div>`;
     } else if (sp.spiritualite && sp.spiritualite.rankNames && sp.spiritualite.rankNames[sp.niveau]) {
-        rankTitleBadge = `<div class="text-success font-bold text-sm inline-flex items-center gap-1 mt-[-0.4rem]"><span class="material-symbols-outlined text-success align-middle" style="font-size:1.1em;">workspace_premium</span>"${sp.spiritualite.rankNames[sp.niveau]}"</div>`;
+        rankTitleBadge = `<div class="text-success font-bold text-sm inline-flex items-center gap-1 mt-[-0.4rem]"><span class="material-symbols-outlined text-success align-middle badge-icon-md">workspace_premium</span>"${sp.spiritualite.rankNames[sp.niveau]}"</div>`;
     }
 
-    const titleColor = getSpellColor(sp);
-    const titleRgb = hexToRgb(titleColor);
-
+    const affinityClass = getSpellAffinityClass(sp);
     const isMaxLevel = (sp.niveau === 5 && sp.voie) || (sp.niveau === 3 && sp.spiritualite && !sp.voie);
-
-    let lvlBadgeStyle = 'background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #f8fafc; font-weight: 500;';
-    let lvlIcon = '<span class="material-symbols-outlined" style="font-size: 1.05rem;">workspace_premium</span>';
-    if (sp.niveau === 2) {
-        lvlBadgeStyle = 'background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.5); color: #fff; font-weight: 600;';
-    } else if (sp.niveau === 3 && !isMaxLevel) {
-        lvlBadgeStyle = `background: rgba(var(--spell-rgb), 0.25); border: 1px solid rgba(var(--spell-rgb), 0.6); color: var(--spell-color); font-weight: 700; text-shadow: 0 0 3px rgba(0,0,0,0.5);`;
-    } else if (sp.niveau === 4) {
-        lvlBadgeStyle = `background: rgba(var(--spell-rgb), 0.4); border: 1px solid var(--spell-color); color: #fff; font-weight: 700; text-shadow: 0 0 5px var(--spell-color); box-shadow: 0 0 12px rgba(var(--spell-rgb), 0.5);`;
-        lvlIcon = '<span class="material-symbols-outlined" style="font-size: 1.05rem;">auto_awesome</span>';
-    } else if (isMaxLevel) {
-        lvlBadgeStyle = `background: linear-gradient(135deg, var(--spell-color), rgba(var(--spell-rgb), 0.6)); border: 1px solid #fff; color: #fff; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.9); box-shadow: 0 0 20px rgba(var(--spell-rgb), 0.8);`;
-        lvlIcon = '<span class="material-symbols-outlined" style="font-size: 1.05rem;">workspace_premium</span>';
+    const tierNumber = isMaxLevel ? 5 : (sp.niveau || 1);
+    const lvlBadgeClass = `lvl-badge-${tierNumber}`;
+    let lvlIcon = '<span class="material-symbols-outlined badge-icon-sm">workspace_premium</span>';
+    if (sp.niveau === 4 && !isMaxLevel) {
+        lvlIcon = '<span class="material-symbols-outlined badge-icon-sm">auto_awesome</span>';
     }
+
     let rankName = "";
     if (sp.voie && sp.voie.rankNames && sp.voie.rankNames[sp.niveau]) {
         rankName = sp.voie.rankNames[sp.niveau];
@@ -1074,24 +1043,24 @@ export function getSpellCardHtml(sp) {
         rankName = sp.spiritualite.rankNames[sp.niveau];
     }
 
-    let lvlBadge = `<span class="badge-pill" style="${lvlBadgeStyle}">${lvlIcon}Lvl ${sp.niveau}</span>`;
+    let lvlBadge = `<span class="badge-pill ${lvlBadgeClass} ${affinityClass}">${lvlIcon}Lvl ${sp.niveau}</span>`;
     if (rankName) {
-        lvlBadge = `<span class="badge-pill cursor-help" style="${lvlBadgeStyle}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
+        lvlBadge = `<span class="badge-pill ${lvlBadgeClass} ${affinityClass} cursor-help" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
             ${lvlIcon}Lvl ${sp.niveau}
             <template class="tooltip-data">
                 <div class="p-2">
-                    <div class="text-white-50 small mt-1"><span class="font-bold" style="color: ${titleColor};">${rankName}</span></div>
+                    <div class="text-white-50 small mt-1"><span class="rank-tooltip-title ${affinityClass}">${rankName}</span></div>
                 </div>
             </template>
         </span>`;
     }
 
     return `
-                <div class="spell-card spell-card-lvl-${isMaxLevel ? 5 : (sp.niveau || 1)}" style="--spell-color: ${titleColor}; --spell-rgb: ${titleRgb}; ${sp.isLocked ? 'opacity: 0.6; filter: grayscale(60%); pointer-events: none;' : ''}">
+                <div class="spell-card spell-card-lvl-${tierNumber} ${affinityClass} ${sp.isLocked ? 'is-locked' : ''}">
                     <div class="spell-card-header items-start">
                         <div class="flex flex-col gap-1.5">
-                            <div class="spell-name" style="color: ${titleColor};">
-                                ${sp.isLocked ? '<span class="material-symbols-outlined align-middle mr-1" style="font-size: 1.1em;">lock</span> ' : ''}
+                            <div class="spell-name">
+                                ${sp.isLocked ? '<span class="material-symbols-outlined align-middle mr-1 badge-icon-md">lock</span> ' : ''}
                                 ${sp.isLocked ? 'Sortilège Inconnu' : sp.nom}
                             </div>
                             <div class="spell-badges">
@@ -1102,34 +1071,34 @@ export function getSpellCardHtml(sp) {
                                 ${mutationBadge}
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center gap-1">
+                        <div class="flex flex-wrap items-center gap-1 spell-admin-actions">
                             ${api.isAdmin(window.currentUser) ? `
-                            <button type="button" class="btn-edit" onclick="editSpell(${sp.id})" title="Modifier les propriétés de ce sort"><span class="material-symbols-outlined" style="font-size: 1.05rem;">edit</span><span>Éditer</span></button>
-                            <button type="button" class="btn-delete-small" onclick="deleteSpell(${sp.id})" title="Supprimer définitivement ce sort"><span class="material-symbols-outlined" style="font-size: 1.05rem;">delete</span></button>
+                            <button type="button" class="btn-edit" onclick="editSpell(${sp.id})" title="Modifier les propriétés de ce sort"><span class="material-symbols-outlined badge-icon-sm">edit</span><span>Éditer</span></button>
+                            <button type="button" class="btn-delete-small" onclick="deleteSpell(${sp.id})" title="Supprimer définitivement ce sort"><span class="material-symbols-outlined badge-icon-sm">delete</span></button>
                             ` : ''}
                         </div>
                     </div>
                     ${rankTitleBadge}
                     <div class="spell-meta flex-wrap items-center gap-2">
-                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #38bdf8;">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
-                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #f43f5e;">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
-                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #f97316;">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
-                        ${sp.seedCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle" style="font-size: 1.05rem; color: #6ee7b7;">yard</span>${sp.seedCost} Graines</span>` : ''}
+                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-sky">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
+                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-rose">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
+                        ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-orange">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
+                        ${sp.seedCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-emerald-light">yard</span>${sp.seedCost} Graines</span>` : ''}
                         ${(ui.getCastingTypeName ? ui.getCastingTypeName(sp.castingType) : sp.castingType) === 'CANALISE' ? `
-                            <span style="color: #a78bfa;" class="inline-flex items-center gap-1 text-sm" title="Paramètres du sort canalisé">
-                                <span class="material-symbols-outlined align-middle" style="font-size: 1.1rem; color: #a78bfa;">cyclone</span>
+                            <span class="inline-flex items-center gap-1 text-sm spell-channeling-meta" title="Paramètres du sort canalisé">
+                                <span class="material-symbols-outlined align-middle badge-icon-md spell-channeling-meta">cyclone</span>
                                 <span>${sp.channelingDuration} tour${sp.channelingDuration > 1 ? 's' : ''}</span>
                                 ${sp.allowInstantDuringChanneling ? `
-                                    <span class="material-symbols-outlined align-middle text-purple-300" title="Instantanés autorisés pendant la canalisation" style="font-size: 1.1rem;">flash_on</span>
+                                    <span class="material-symbols-outlined align-middle text-purple-300 badge-icon-md" title="Instantanés autorisés pendant la canalisation">flash_on</span>
                                 ` : `
                                     <span class="relative align-middle inline-flex items-center justify-center w-[1.1rem] h-[1.1rem]" title="Instantanés interdits pendant la canalisation">
-                                        <span class="material-symbols-outlined text-slate-500" style="font-size: 1.1rem;">flash_off</span>
+                                        <span class="material-symbols-outlined text-slate-500 badge-icon-md">flash_off</span>
                                     </span>
                                 `}
                             </span>
                         ` : ''}
                     </div>
-                    ${sp.description ? `<div style="font-size:0.9rem; color:var(--text-muted); font-style:italic;">"${sp.isLocked ? 'Description illisible...' : sp.description}"</div>` : ''}
+                    ${sp.description ? `<div class="spell-description-quote">"${sp.isLocked ? 'Description illisible...' : sp.description}"</div>` : ''}
                     ${sp.isLocked ? '<div class="spell-effects-summary"><div class="effect-line text-slate-400"><i>Atteignez le niveau de maîtrise requis pour déchiffrer ce sortilège.</i></div></div>' : effectsSummaryHtml}
                 </div>
             `;
@@ -1180,9 +1149,8 @@ export function updateEditingPreview() {
     if (state.editingSpellId !== null && state.loadedSpells) {
         const sp = state.loadedSpells.find(s => s.id === state.editingSpellId);
         if (sp) {
-            let html = getSpellCardHtml(sp);
-            html = html.replace(/<div class="flex flex-wrap items-center gap-1">\s*<button type="button" class="btn-edit".*?<\/div>/s, '');
-            cardBody.innerHTML = html;
+            cardBody.innerHTML = getSpellCardHtml(sp);
+            try { attachLvl5CardEffects(cardBody); } catch (_) {}
             preview.classList.add('active');
         } else {
             preview.classList.remove('active');

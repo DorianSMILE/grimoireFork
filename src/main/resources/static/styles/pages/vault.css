@@ -56,6 +56,15 @@
     gap: 1.2rem;
 }
 
+.vault-grid app-loader {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 260px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 /* ===== Extracted Vault Components ===== */
 .anomaly-info-box {
     display: none;

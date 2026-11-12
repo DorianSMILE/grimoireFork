@@ -1,9 +1,9 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
 import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000240';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000240';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000241';
 import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000240';
 import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000240';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000240';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000241';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
@@ -183,6 +183,20 @@ window.promptFlee = function () {
 let _combatTutorialObserver = null;
 
 window.initCombatPage = async function () {
+    const combatLoadingStateEl = document.getElementById('combatLoadingState');
+    if (combatLoadingStateEl) {
+        combatLoadingStateEl.classList.remove('is-hidden');
+    }
+    const headerCombatIcon = document.getElementById('headerCombatIcon');
+    if (headerCombatIcon) {
+        headerCombatIcon.classList.add('animate-spin');
+        headerCombatIcon.textContent = 'autorenew';
+    }
+    const headerDungeonName = document.getElementById('headerDungeonName');
+    if (headerDungeonName) {
+        headerDungeonName.textContent = 'Chargement du combat...';
+    }
+
     pageState.lastCombatLogCount = 0;
     pageState.renderedCombatLogs = [];
     pageState.renderedLogSessionId = null;

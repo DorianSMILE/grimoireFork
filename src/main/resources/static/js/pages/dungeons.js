@@ -491,6 +491,10 @@ window.initDungeonsPage = async function () {
     pageState.selectedConsumableIds = [];
     pageState.inspectedCharacterId = null;
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     localStorage.removeItem('activeCombatId');
 
     bindJoinLobbyCodeInput();
@@ -522,6 +526,11 @@ window.initDungeonsPage = async function () {
 };
 
 window.cleanupDungeonsPage = function () {
+    window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     if (coopLobbySSE) {
         coopLobbySSE.close();
         coopLobbySSE = null;
@@ -1700,11 +1709,16 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     window.clearInspectedCharacter();
 
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
         btn.disabled = false;
-        btn.classList.remove('pointer-events-none');
+        btn.classList.remove('pointer-events-none', 'opacity-80');
         btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.innerHTML = '<span class="material-symbols-outlined">swords</span> ENTRER DANS LE DONJON';
     }
 
     renderConsumablesList();
@@ -1728,6 +1742,10 @@ window.closePrepInterface = function () {
         return;
     }
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     const prepInterface = document.getElementById('prepInterface');
     if (prepInterface) {
         prepInterface.classList.add('init-hidden');
@@ -1747,7 +1765,7 @@ window.closePrepInterface = function () {
 window.startCombat = async function () {
     if (window._isStartingCombat) return;
     if (pageState.selectedCharIds.length === 0) {
-        window.showNotif("Veuillez s\u00e9lectionner au moins un personnage.", true);
+        window.showNotif("Veuillez sélectionner au moins un personnage.", true);
         return;
     }
 
@@ -1764,7 +1782,14 @@ window.startCombat = async function () {
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
         btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.classList.remove('opacity-50');
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">autorenew</span> Lancement du donjon...';
+    }
+
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.remove('is-hidden');
     }
 
     const charIdsStr = pageState.selectedCharIds.join(',');
@@ -2029,8 +2054,15 @@ window.createCoopLobby = async function () {
 
 function onLobbyReady(lobby) {
     if (coopLobbySSE) { coopLobbySSE.close(); coopLobbySSE = null; }
-    document.getElementById('lobbyWaitingStatus').innerHTML =
-        '<span class="lobby-status-ready"><span class="material-symbols-outlined">check_circle</span> Joueur 2 connecté ! Lancement du donjon...</span>';
+    const statusEl = document.getElementById('lobbyWaitingStatus');
+    if (statusEl) {
+        statusEl.innerHTML =
+            '<span class="lobby-status-ready flex items-center justify-center gap-2"><span class="material-symbols-outlined animate-spin mr-1">autorenew</span> Joueur 2 connecté ! Lancement du donjon...</span>';
+    }
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.remove('is-hidden');
+    }
 
     // Courte pause puis redirect vers /combat en tant qu'hôte
     setTimeout(() => {
@@ -2838,6 +2870,11 @@ window.submitJoinLobby = async function () {
             return;
         }
         const result = await joinRes.json();
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">autorenew</span> Lancement du donjon...';
+        const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+        if (launchOverlay) {
+            launchOverlay.classList.remove('is-hidden');
+        }
 
         // 3. Redirect vers combat.html en tant que guest
         window.location.href = `/combat?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;

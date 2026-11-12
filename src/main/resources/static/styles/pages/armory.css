@@ -531,9 +531,6 @@
 .voie-star-ring {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
-    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
 }
 
 .voie-star-svg {
@@ -542,6 +539,8 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+    transform-origin: center center;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .voie-star-orbit {
@@ -585,6 +584,8 @@
     cursor: pointer;
     z-index: 3;
     outline: none;
+    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .voie-star-node-inner {
@@ -592,27 +593,24 @@
     flex-direction: column;
     align-items: center;
     gap: 0.12rem;
-    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
 }
 
 .voie-star-node-medallion {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.92);
+    background-color: #0f172a;
     border: 1.5px solid var(--voie-color, #94a3b8);
     color: var(--voie-color, #94a3b8);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), inset 0 0 8px rgba(255, 255, 255, 0.05);
-    transition: all 0.25s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .voie-star-node-medallion .material-symbols-outlined {
     font-size: 1.15rem;
-    transition: transform 0.25s ease;
 }
 
 .voie-star-node-name {
@@ -620,13 +618,13 @@
     font-size: 0.64rem;
     font-weight: 600;
     color: #cbd5e1;
-    background: rgba(2, 6, 23, 0.85);
+    background-color: #020617;
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.05rem 0.35rem;
     border-radius: 999px;
     white-space: nowrap;
     line-height: 1.25;
-    transition: all 0.25s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .voie-star-node:hover {
@@ -634,8 +632,10 @@
 }
 
 .voie-star-node:hover .voie-star-node-medallion {
-    transform: scale(1.12);
+    background-color: #1e293b;
+    border-color: var(--voie-color, #f59e0b);
     box-shadow: 0 0 14px var(--voie-color, #f59e0b);
+    color: #ffffff;
 }
 
 .voie-star-node:hover .voie-star-node-name {
@@ -650,10 +650,11 @@
 .voie-star-node.is-active .voie-star-node-medallion {
     width: 44px;
     height: 44px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.96) 75%);
+    background-color: #1e293b;
     border-width: 2px;
     border-color: #fbbf24;
     box-shadow: 0 0 18px var(--voie-color, #f59e0b), 0 0 8px rgba(251, 191, 36, 0.65);
+    color: #fef3c7;
 }
 
 .voie-star-node.is-active .voie-star-node-medallion .material-symbols-outlined {
@@ -943,10 +944,7 @@
     z-index: 4;
     outline: none;
     transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.35s ease,
-                filter 0.35s ease;
-    will-change: left, top, transform, filter;
+                top 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Coulissement au centre du triangle quand sélectionné */
@@ -967,19 +965,18 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.94);
+    background-color: #0f172a;
     border: 1.5px solid var(--spirit-color, #94a3b8);
     color: var(--spirit-color, #94a3b8);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.05);
-    transition: all 0.28s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .spirit-tri-node-medallion .material-symbols-outlined {
     font-size: 1.25rem;
-    transition: transform 0.28s ease;
 }
 
 .spirit-tri-node-name {
@@ -987,13 +984,13 @@
     font-size: 0.66rem;
     font-weight: 600;
     color: #cbd5e1;
-    background: rgba(2, 6, 23, 0.88);
+    background-color: #020617;
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.05rem 0.42rem;
     border-radius: 999px;
     white-space: nowrap;
     line-height: 1.25;
-    transition: all 0.25s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .spirit-tri-node:hover {
@@ -1001,8 +998,10 @@
 }
 
 .spirit-tri-node:hover .spirit-tri-node-medallion {
-    transform: scale(1.12);
+    background-color: #1e293b;
+    border-color: var(--spirit-color, #38bdf8);
     box-shadow: 0 0 16px var(--spirit-color, #38bdf8);
+    color: #ffffff;
 }
 
 .spirit-tri-node:hover .spirit-tri-node-name {
@@ -1013,10 +1012,11 @@
 .spirit-tri-node.is-active .spirit-tri-node-medallion {
     width: 48px;
     height: 48px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(15, 23, 42, 0.96) 75%);
+    background-color: #1e293b;
     border-width: 2px;
     border-color: var(--spirit-color, #fbbf24);
     box-shadow: 0 0 22px var(--spirit-color, #38bdf8), 0 0 10px rgba(255, 255, 255, 0.35);
+    color: #ffffff;
 }
 
 .spirit-tri-node.is-active .spirit-tri-node-medallion .material-symbols-outlined {

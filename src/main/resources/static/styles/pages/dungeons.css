@@ -1310,3 +1310,46 @@
     font-size: 1.2rem;
     animation: none;
 }
+
+/* ─── Dungeon Launch Overlay ─── */
+.dungeon-launch-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 5, 5, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.dungeon-launch-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(168, 85, 247, 0.25);
+    border-radius: 1.25rem;
+    padding: 2.5rem 3.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.dungeon-launch-spinner {
+    font-size: 3.5rem;
+    color: #c084fc;
+}
+
+.dungeon-launch-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.02em;
+}
+
+.dungeon-launch-sub {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}

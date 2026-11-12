@@ -18,7 +18,7 @@ export function CombatPage() {
         await importDynamic('/js/services/auth.js?v=32');
         if (cancelled) return;
 
-        await importDynamic('/js/combat/combat-state.js?v=1786180000240');
+        await importDynamic('/js/combat/combat-state.js?v=1786180000241');
         if (cancelled) return;
 
         if (typeof window.initCombatPage === 'function') {
@@ -46,11 +46,14 @@ export function CombatPage() {
       <div className="combat-header">
         <div className="flex items-center gap-6">
           <div className="page-logo">
-            <span className="material-symbols-outlined logo-icon-gradient logo-dungeon">
-              swords
+            <span
+              id="headerCombatIcon"
+              className="material-symbols-outlined logo-icon-gradient logo-dungeon animate-spin"
+            >
+              autorenew
             </span>
             <span className="logo-text-gradient logo-dungeon" id="headerDungeonName">
-              Combat en cours...
+              Chargement du combat...
             </span>
           </div>
 
@@ -106,6 +109,19 @@ export function CombatPage() {
       </div>
 
       <div className="combat-arena relative overflow-hidden" id="arena">
+        {/* Loading state while combat initializes */}
+        <div id="combatLoadingState" className="combat-loading-state">
+          <div className="combat-loading-card">
+            <span className="material-symbols-outlined animate-spin combat-loading-spinner">
+              autorenew
+            </span>
+            <div className="combat-loading-title">Chargement du combat...</div>
+            <div className="combat-loading-sub">
+              Préparation de l&apos;arène et des combattants...
+            </div>
+          </div>
+        </div>
+
         {/* Combat Main Side Panel (During combat) */}
         <div
           id="combatMainSidePanelWrapper"

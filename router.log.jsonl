@@ -10,3 +10,4 @@
 {"ts":"2026-11-09T14:23:49","level":1,"model":"gemini-3.8-flash-low","source":"auto","prompt":"Pour brèche spirituelle, quand j\u0027ai des cout en PV parfois ça marque +1PV "}
 {"ts":"2026-11-09T15:50:22","level":3,"model":"gemini-3.8-flash-high","source":"auto","prompt":"J\u0027ai des chargements infini dans alchemy pour les Sélectionnez le personnage canalisant; Y a juste marqué Chargement... et ça me met pas la liste des perso dispo"}
 {"ts":"2026-11-10T15:07:53","level":1,"model":"gemini-3.8-flash-low","source":"auto","prompt":"pour installer uipro init --ai antigravity, c\u0027est bien antigrav que j\u0027utilise ? Ou on est sur gemini ?"}
+{"ts":"2026-11-12T15:54:01","level":3,"model":"gemini-3.8-flash-high","source":"auto","prompt":"Ajout d\u0027un chargement avec les flèches qui tourne lors du lancement d\u0027un donjon, quand on charge le combat il faut indiquer que l\u0027on est en train de charger le combat"}

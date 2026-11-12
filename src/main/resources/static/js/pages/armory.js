@@ -544,11 +544,17 @@ function syncVoieWheelSelection(val, dispatchEvent = false) {
             pageState.voieWheelAngle = currentAngle;
         }
 
-        // Procedural rotation of the star wheel & counter-rotation of nodes so icons stay upright
-        ring.style.transform = `rotate(${currentAngle}deg)`;
-        const inners = ring.querySelectorAll('.voie-star-node-inner');
-        inners.forEach(inner => {
-            inner.style.transform = `rotate(${-currentAngle}deg)`;
+        const svg = ring.querySelector('.voie-star-svg');
+        if (svg) {
+            svg.style.transform = `rotate(${currentAngle}deg)`;
+        }
+
+        const radiusPct = 38.5;
+        nodes.forEach((node, idx) => {
+            const angleDeg = idx * (360 / total) + currentAngle;
+            const rad = (angleDeg - 90) * (Math.PI / 180);
+            node.style.left = `${(50 + Math.cos(rad) * radiusPct).toFixed(2)}%`;
+            node.style.top = `${(50 + Math.sin(rad) * radiusPct).toFixed(2)}%`;
         });
     }
 

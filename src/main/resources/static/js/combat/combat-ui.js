@@ -918,6 +918,16 @@ export function createCombatLogEntryElement(log, players = [], enemies = []) {
 }
 
 export function updateUI(data) {
+    const combatLoadingStateEl = document.getElementById('combatLoadingState');
+    if (combatLoadingStateEl) {
+        combatLoadingStateEl.classList.add('is-hidden');
+    }
+    const headerCombatIcon = document.getElementById('headerCombatIcon');
+    if (headerCombatIcon) {
+        headerCombatIcon.classList.remove('animate-spin');
+        headerCombatIcon.textContent = 'swords';
+    }
+
     if (ui.hideGlobalTooltip) {
         ui.hideGlobalTooltip(true);
     }

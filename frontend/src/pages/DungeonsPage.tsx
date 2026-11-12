@@ -18,7 +18,7 @@ export function DungeonsPage() {
     async function bootDungeons() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const dungeonsUrl = '/js/pages/dungeons.js?v=22';
+      const dungeonsUrl = '/js/pages/dungeons.js?v=23';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -528,6 +528,17 @@ export function DungeonsPage() {
               Payer &amp; Entrer
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Dungeon Launch Overlay */}
+      <div id="dungeonLaunchOverlay" className="dungeon-launch-overlay is-hidden">
+        <div className="dungeon-launch-card">
+          <span className="material-symbols-outlined animate-spin dungeon-launch-spinner">
+            autorenew
+          </span>
+          <div className="dungeon-launch-title">Lancement du donjon...</div>
+          <div className="dungeon-launch-sub">Chargement du combat en cours...</div>
         </div>
       </div>
 

@@ -35,9 +35,99 @@ const pageState = {
     personnages: [],
     editingId: null,
     equipModalPersoId: null,
-    allEquipments: []
+    allEquipments: [],
+    taverneCollapsed: false,
+    armoryCollapsed: false
 };
 window.pageState = pageState;
+
+function applyArmoryLayoutState() {
+    const mainEl = document.getElementById('armoryMain');
+    const formPanel = document.getElementById('charFormPanel');
+    const rosterCol = document.getElementById('armoryRosterCol');
+    const taverneDock = document.getElementById('taverneCollapsedDock');
+    const armoryDock = document.getElementById('armoryCollapsedDock');
+
+    const expandTaverneIcon = document.getElementById('btnExpandTaverneIcon');
+    const expandTaverneLabel = document.getElementById('btnExpandTaverneLabel');
+    const expandArmoryIcon = document.getElementById('btnExpandArmoryIcon');
+    const expandArmoryLabel = document.getElementById('btnExpandArmoryLabel');
+
+    if (!mainEl) return;
+
+    if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
+        mainEl.classList.add('is-taverne-expanded');
+        mainEl.classList.remove('is-armory-expanded');
+        if (formPanel) formPanel.classList.remove('is-hidden');
+        if (rosterCol) rosterCol.classList.add('is-hidden');
+        if (taverneDock) taverneDock.classList.add('is-hidden');
+        if (armoryDock) armoryDock.classList.remove('is-hidden');
+
+        if (expandTaverneIcon) expandTaverneIcon.textContent = 'close_fullscreen';
+        if (expandTaverneLabel) expandTaverneLabel.textContent = 'Vue partagée';
+    } else if (pageState.taverneCollapsed && !pageState.armoryCollapsed) {
+        mainEl.classList.add('is-armory-expanded');
+        mainEl.classList.remove('is-taverne-expanded');
+        if (formPanel) formPanel.classList.add('is-hidden');
+        if (rosterCol) rosterCol.classList.remove('is-hidden');
+        if (taverneDock) taverneDock.classList.remove('is-hidden');
+        if (armoryDock) armoryDock.classList.add('is-hidden');
+
+        if (expandArmoryIcon) expandArmoryIcon.textContent = 'close_fullscreen';
+        if (expandArmoryLabel) expandArmoryLabel.textContent = 'Vue partagée';
+    } else {
+        mainEl.classList.remove('is-taverne-expanded', 'is-armory-expanded');
+        if (formPanel) formPanel.classList.remove('is-hidden');
+        if (rosterCol) rosterCol.classList.remove('is-hidden');
+        if (taverneDock) taverneDock.classList.add('is-hidden');
+        if (armoryDock) armoryDock.classList.add('is-hidden');
+
+        if (expandTaverneIcon) expandTaverneIcon.textContent = 'open_in_full';
+        if (expandTaverneLabel) expandTaverneLabel.textContent = 'Grand format';
+        if (expandArmoryIcon) expandArmoryIcon.textContent = 'open_in_full';
+        if (expandArmoryLabel) expandArmoryLabel.textContent = 'Grand format';
+    }
+}
+
+window.toggleArmoryPanel = function (panel) {
+    if (panel === 'taverne') {
+        if (pageState.taverneCollapsed) {
+            pageState.taverneCollapsed = false;
+        } else {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        }
+    } else if (panel === 'armory') {
+        if (pageState.armoryCollapsed) {
+            pageState.armoryCollapsed = false;
+        } else {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    }
+    applyArmoryLayoutState();
+};
+
+window.expandArmoryPanel = function (panel) {
+    if (panel === 'taverne') {
+        if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
+            pageState.armoryCollapsed = false;
+            pageState.taverneCollapsed = false;
+        } else {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    } else if (panel === 'armory') {
+        if (pageState.taverneCollapsed && !pageState.armoryCollapsed) {
+            pageState.taverneCollapsed = false;
+            pageState.armoryCollapsed = false;
+        } else {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        }
+    }
+    applyArmoryLayoutState();
+};
 
 // Replaced by window.SLOT_LABELS and window.CONSUMABLE_CATEGORIES
 
@@ -94,6 +184,10 @@ async function updateCharLimitUI() {
             }
 
             limitContainer.innerHTML = html;
+            const dockLimitBadge = document.getElementById('taverneDockLimitBadge');
+            if (dockLimitBadge) {
+                dockLimitBadge.textContent = `${data.currentCharacters}/${data.maxCharacters}`;
+            }
             window.charLimitData = data;
 
             if (window.currentUser) {
@@ -447,8 +541,13 @@ function syncVoieWheelSelection(val, dispatchEvent = false) {
         }
     }
 
-    if (dispatchEvent && hiddenInput) {
-        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    if (dispatchEvent) {
+        if (typeof handleVoieSelectionChange === 'function') {
+            handleVoieSelectionChange(strVal);
+        }
+        if (hiddenInput) {
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 }
 
@@ -459,13 +558,28 @@ window.selectVoieWheel = function (val) {
     syncVoieWheelSelection(val, true);
 };
 
+function getVoieWheelOrderIndex(nom) {
+    if (!nom) return 99;
+    const clean = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (clean.includes('raison')) return 0;
+    if (clean.includes('trahison')) return 1;
+    if (clean.includes('surete')) return 2;
+    if (clean.includes('creation')) return 3;
+    if (clean.includes('consolidation')) return 4;
+    if (clean.includes('conviction')) return 5;
+    if (clean.includes('destruction')) return 6;
+    if (clean.includes('violence')) return 7;
+    return 99;
+}
+
 function renderVoieStarWheel() {
     const ring = document.getElementById('charVoieOptions');
     if (!ring) return;
 
     const currentVal = String(document.getElementById('charVoie')?.value || '');
     const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
-    const total = pageState.voies.length || 1;
+    const orderedVoies = [...pageState.voies].sort((a, b) => getVoieWheelOrderIndex(a.nom) - getVoieWheelOrderIndex(b.nom));
+    const total = orderedVoies.length || 1;
 
     // 8-pointed astral star SVG background inside the rotating wheel
     let html = `
@@ -481,7 +595,7 @@ function renderVoieStarWheel() {
         </svg>
     `;
 
-    pageState.voies.forEach((v, idx) => {
+    orderedVoies.forEach((v, idx) => {
         const info = getVoieInfo(v.nom);
         const angleDeg = idx * (360 / total);
         const rad = (angleDeg - 90) * (Math.PI / 180);
@@ -562,8 +676,13 @@ function syncSpiritRadioSelection(val, dispatchEvent = false) {
         }
     }
 
-    if (dispatchEvent && hiddenInput) {
-        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    if (dispatchEvent) {
+        if (typeof handleSpiritSelectionChange === 'function') {
+            handleSpiritSelectionChange(strVal);
+        }
+        if (hiddenInput) {
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 }
 
@@ -735,6 +854,12 @@ function filterPersonnages() {
 function renderPersonnages() {
     const container = document.getElementById('personnagesList');
     if (!container) return;
+
+    const totalCount = pageState.personnages.length;
+    const rosterCountEl = document.getElementById('armoryRosterCount');
+    if (rosterCountEl) rosterCountEl.textContent = String(totalCount);
+    const dockCountEl = document.getElementById('armoryDockCountBadge');
+    if (dockCountEl) dockCountEl.textContent = String(totalCount);
 
     // Filter logic
     const searchName = document.getElementById('searchName') ? document.getElementById('searchName').value.toLowerCase() : '';
@@ -1174,10 +1299,65 @@ function renderEquipModal() {
     }).join('');
 }
 
+function updateTavernePassivesPreview() {
+    const previewEl = document.getElementById('tavernePassivesPreview');
+    if (!previewEl) return;
+
+    const vId = document.getElementById('charVoie')?.value;
+    const sId = document.getElementById('charSpirit')?.value;
+    const v = vId ? pageState.voies.find(x => String(x.id) === String(vId)) : null;
+    const s = sId ? pageState.spiritualites.find(x => String(x.id) === String(sId)) : null;
+
+    if (!v && !s) {
+        previewEl.innerHTML = `
+            <div class="taverne-passive-empty">
+                <span class="material-symbols-outlined">auto_stories</span>
+                <span>Les passifs de votre Voie et de votre Spiritualité s'afficheront ici.</span>
+            </div>
+        `;
+        return;
+    }
+
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    let html = '';
+    if (v) {
+        const vInfo = getVoieInfo(v.nom);
+        const passiveText = richFormatter(v.passiveDescription || v.description || 'Passif de voie.');
+        html += `
+            <div class="taverne-passive-card ${vInfo.nodeClass}">
+                <div class="taverne-passive-header">
+                    <span class="material-symbols-outlined">${vInfo.icon}</span>
+                    <span>${v.nom}</span>
+                </div>
+                <div class="taverne-passive-body">${passiveText}</div>
+            </div>
+        `;
+    }
+    if (s) {
+        const sInfo = getSpiritInfo(s.nom);
+        const passiveText = richFormatter(s.passiveDescription || s.description || 'Passif spirituel.');
+        html += `
+            <div class="taverne-passive-card ${sInfo.cardClass}">
+                <div class="taverne-passive-header ${sInfo.textClass}">
+                    <span class="material-symbols-outlined">${sInfo.icon}</span>
+                    <span>${s.nom}</span>
+                </div>
+                <div class="taverne-passive-body">${passiveText}</div>
+            </div>
+        `;
+    }
+    previewEl.innerHTML = html;
+}
+
 function editPersonnage(id) {
     pageState.editingId = id;
     const p = pageState.personnages.find(x => x.id === id);
     if (!p) return;
+
+    if (pageState.taverneCollapsed) {
+        pageState.taverneCollapsed = false;
+        applyArmoryLayoutState();
+    }
 
     document.getElementById('charFormPanel').classList.add('editing-mode');
 
@@ -1211,6 +1391,7 @@ function editPersonnage(id) {
 
     updateSubmitButtonState();
     applyVoieBaseStats(p.voie ? p.voie.nom : null);
+    updateTavernePassivesPreview();
     if (window.updateArmoryVoieSpider) {
         window.updateArmoryVoieSpider(p.voie ? p.voie.id : null, p.spiritualite ? p.spiritualite.id : null);
     }
@@ -1240,8 +1421,8 @@ function resetForm() {
     document.getElementById('charSpiritExperience').value = 0;
 
     document.getElementById('formTitleText').innerHTML = `
-        <span class="material-symbols-outlined">person_add</span>
-        Recruter à la taverne`;
+        <span class="material-symbols-outlined">sports_bar</span>
+        Taverne — Recrutement`;
     document.getElementById('submitBtn').innerHTML = `
         <span class="material-symbols-outlined text-lg">person_add</span>
         Forger le Personnage`;
@@ -1251,9 +1432,14 @@ function resetForm() {
     if (cvIcon) cvIcon.classList.add('hidden');
     const csIcon = document.getElementById('charSpiritInfoIcon');
     if (csIcon) csIcon.classList.add('hidden');
+    const svIcon = document.getElementById('spiderVoieInfoIcon');
+    if (svIcon) svIcon.classList.add('hidden');
+    const ssIcon = document.getElementById('spiderSpiritInfoIcon');
+    if (ssIcon) ssIcon.classList.add('hidden');
     applyVoieBaseStats(null);
+    updateTavernePassivesPreview();
     if (window.updateArmoryVoieSpider) {
-        window.updateArmoryVoieSpider(null);
+        window.updateArmoryVoieSpider(null, null, false);
     }
     if (window.updateArmorySpiritSpider) {
         window.updateArmorySpiritSpider(null);
@@ -1371,6 +1557,109 @@ function applyVoieBaseStats(voieNom) {
     }
 }
 
+function handleVoieSelectionChange(vId) {
+    const iconEl = document.getElementById('charVoieInfoIcon');
+    const spiderIconEl = document.getElementById('spiderVoieInfoIcon');
+    const currentSpirit = document.getElementById('charSpirit')?.value;
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+
+    if (!vId) {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderIconEl) spiderIconEl.classList.add('hidden');
+        applyVoieBaseStats(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit || null, true);
+        return;
+    }
+    const v = pageState.voies.find(x => String(x.id) === String(vId));
+    if (v) {
+        const info = getVoieInfo(v.nom);
+        const tooltipHtml = `
+            <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
+                <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                ${v.nom}
+            </div>
+            <div class="text-xs text-slate-300 mb-2">${v.description || 'Description générique.'}</div>
+            <div class="flex-start-gap text-xs text-slate-200">
+                <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
+                <span class="font-italic whitespace-pre-wrap">${richFormatter(v.passiveDescription) || 'Passif spécifique.'}</span>
+            </div>
+        `;
+        if (iconEl) {
+            const template = iconEl.querySelector('.tooltip-data');
+            if (template) template.innerHTML = tooltipHtml;
+            iconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (spiderIconEl) {
+            const spiderTpl = spiderIconEl.querySelector('.tooltip-data');
+            if (spiderTpl) spiderTpl.innerHTML = tooltipHtml;
+            spiderIconEl.classList.remove('hidden', 'is-hidden');
+        }
+        applyVoieBaseStats(v.nom);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(vId, currentSpirit || null, true);
+    } else {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderIconEl) spiderIconEl.classList.add('hidden');
+        applyVoieBaseStats(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit || null, false);
+    }
+}
+
+function handleSpiritSelectionChange(sId) {
+    const iconEl = document.getElementById('charSpiritInfoIcon');
+    const spiderSpiritIconEl = document.getElementById('spiderSpiritInfoIcon');
+    const currentVoie = document.getElementById('charVoie')?.value;
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+
+    if (!sId) {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderSpiritIconEl) spiderSpiritIconEl.classList.add('hidden');
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) {
+            window.updateArmoryVoieSpider(currentVoie || null, null, true);
+        }
+        return;
+    }
+    const s = pageState.spiritualites.find(x => String(x.id) === String(sId));
+    if (s) {
+        const info = getSpiritInfo(s.nom);
+        const tooltipHtml = `
+            <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
+                <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                ${s.nom}
+            </div>
+            <div class="text-xs text-slate-300 mb-2">${s.description || 'Description générique.'}</div>
+            <div class="flex-start-gap text-xs text-slate-200">
+                <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
+                <span class="font-italic whitespace-pre-wrap">${richFormatter(s.passiveDescription) || 'Passif spécifique.'}</span>
+            </div>
+        `;
+        if (iconEl) {
+            const template = iconEl.querySelector('.tooltip-data');
+            if (template) template.innerHTML = tooltipHtml;
+            iconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (spiderSpiritIconEl) {
+            const spiderTpl = spiderSpiritIconEl.querySelector('.tooltip-data');
+            if (spiderTpl) spiderTpl.innerHTML = tooltipHtml;
+            spiderSpiritIconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(s);
+    } else {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderSpiritIconEl) spiderSpiritIconEl.classList.add('hidden');
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
+    }
+
+    updateTavernePassivesPreview();
+    if (window.updateArmoryVoieSpider) {
+        window.updateArmoryVoieSpider(currentVoie || null, s || sId, true);
+    }
+}
+
 function bindArmorySelectListeners() {
     const spiritWrapper = document.getElementById('charSpiritWrapper');
     if (spiritWrapper && !spiritWrapper.dataset.boundSpiritRadios) {
@@ -1381,104 +1670,12 @@ function bindArmorySelectListeners() {
             }
         });
     }
-
-    const cvInput = document.getElementById('charVoie');
-    if (cvInput && !cvInput.dataset.boundArmoryChange) {
-        cvInput.dataset.boundArmoryChange = 'true';
-        cvInput.addEventListener('change', (e) => {
-            const vId = e.target.value;
-            const iconEl = document.getElementById('charVoieInfoIcon');
-            const currentSpirit = document.getElementById('charSpirit')?.value;
-
-            if (!vId) {
-                if (iconEl) iconEl.classList.add('hidden');
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-                return;
-            }
-            const v = pageState.voies.find(x => x.id == vId);
-            if (v && iconEl) {
-                const info = getVoieInfo(v.nom);
-                const template = iconEl.querySelector('.tooltip-data');
-                if (template) {
-                    template.innerHTML = `
-                        <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
-                            <span class="material-symbols-outlined text-lg">${info.icon}</span>
-                            ${v.nom}
-                        </div>
-                        <div class="text-xs text-slate-300 mb-2">${v.description || 'Description générique.'}</div>
-                        <div class="flex-start-gap text-xs text-slate-200">
-                            <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
-                            <span class="font-italic whitespace-pre-wrap">${formatRichText(v.passiveDescription) || 'Passif spécifique.'}</span>
-                        </div>
-                    `;
-                }
-                iconEl.classList.remove('hidden');
-                applyVoieBaseStats(v.nom);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(vId, currentSpirit, true);
-            } else if (iconEl) {
-                iconEl.classList.add('hidden');
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-            } else {
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-            }
-        });
-    }
-
-    const csInput = document.getElementById('charSpirit');
-    if (csInput && !csInput.dataset.boundArmoryChange) {
-        csInput.dataset.boundArmoryChange = 'true';
-        csInput.addEventListener('change', (e) => {
-            const sId = e.target.value;
-            const iconEl = document.getElementById('charSpiritInfoIcon');
-            const currentVoie = document.getElementById('charVoie')?.value;
-
-            if (!sId) {
-                if (iconEl) iconEl.classList.add('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-                if (currentVoie && window.updateArmoryVoieSpider) {
-                    window.updateArmoryVoieSpider(currentVoie, null, true);
-                }
-                return;
-            }
-            const s = pageState.spiritualites.find(x => x.id == sId);
-            if (s && iconEl) {
-                const info = getSpiritInfo(s.nom);
-                const template = iconEl.querySelector('.tooltip-data');
-                if (template) {
-                    template.innerHTML = `
-                        <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
-                            <span class="material-symbols-outlined text-lg">${info.icon}</span>
-                            ${s.nom}
-                        </div>
-                        <div class="text-xs text-slate-300 mb-2">${s.description || 'Description générique.'}</div>
-                        <div class="flex-start-gap text-xs text-slate-200">
-                            <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
-                            <span class="font-italic whitespace-pre-wrap">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
-                        </div>
-                    `;
-                }
-                iconEl.classList.remove('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(s);
-            } else if (iconEl) {
-                iconEl.classList.add('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-            } else {
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-            }
-
-            if (currentVoie && window.updateArmoryVoieSpider) {
-                window.updateArmoryVoieSpider(currentVoie, s || sId, true);
-            }
-        });
-    }
 }
 
 async function initArmoryPage() {
     pageState.editingId = null;
     pageState.equipModalPersoId = null;
+    applyArmoryLayoutState();
 
     if (window.initGlobalCustomSelect) {
         window.initGlobalCustomSelect();
@@ -1497,6 +1694,11 @@ async function initArmoryPage() {
 
     await Promise.all([fetchMeta(), loadAllEquipments()]);
     await loadPersonnages();
+
+    updateTavernePassivesPreview();
+    if (window.updateArmoryVoieSpider) {
+        window.updateArmoryVoieSpider(null, null, false);
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);

@@ -247,17 +247,17 @@
         const baseNorm = (maxVal > 0) ? Math.min(1, Math.max(0, rawVal / maxVal)) * 0.80 : 0;
         if (!isExtended) return baseNorm;
         if (isKarma) {
-            // Karma étend tout mais un peu moins (+0.11 ou +0.10 si base nulle)
-            const bonus = (baseNorm === 0) ? 0.10 : 0.11;
+            // Karma étend tout mais un peu moins (+0.11 ou +0.14 si base nulle)
+            const bonus = (baseNorm === 0) ? 0.14 : 0.11;
             return Math.min(1.0, baseNorm + bonus);
         } else {
-            // Esprit (mana, tank, soutien) ou Ténèbres (puissance, force) : bonus ciblé (+0.20 ou +0.18 si base nulle)
-            const bonus = (baseNorm === 0) ? 0.18 : 0.20;
+            // Esprit (mana, tank, soutien) ou Ténèbres (puissance, force) : bonus ciblé (+0.20 ou +0.22 si base nulle)
+            const bonus = (baseNorm === 0) ? 0.22 : 0.20;
             return Math.min(1.0, baseNorm + bonus);
         }
     }
 
-    function renderSpiderFrame(canvas, norms, isExtendedList, spiritType) {
+    function renderSpiderFrame(canvas, norms, isExtendedList, spiritType, hasProfile = false) {
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
@@ -296,50 +296,56 @@
             ctx.stroke();
         }
 
+        const hasAnyPositiveNorm = norms.some(n => (n || 0) > 0.001);
+
         // Zone polygonale des scores
-        ctx.beginPath();
-        for (let i = 0; i < N; i++) {
-            const norm = norms[i] || 0;
-            const p = pt(i, Math.max(norm * R, 5));
-            i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        if (hasProfile || hasAnyPositiveNorm) {
+            ctx.beginPath();
+            for (let i = 0; i < N; i++) {
+                const norm = norms[i] || 0;
+                const radius = hasProfile ? Math.max(norm * R, 5) : (norm * R);
+                const p = pt(i, radius);
+                i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+            }
+            ctx.closePath();
+
+            // Dégradé radial avec teinte adaptée à la spiritualité active
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+            if (spiritType === 'ESPRIT') {
+                grad.addColorStop(0, 'rgba(56, 189, 248, 0.65)');
+                grad.addColorStop(0.65, 'rgba(96, 165, 250, 0.35)');
+                grad.addColorStop(1, 'rgba(52, 211, 153, 0.15)');
+            } else if (spiritType === 'TENEBRES') {
+                grad.addColorStop(0, 'rgba(168, 85, 247, 0.65)');
+                grad.addColorStop(0.65, 'rgba(239, 68, 68, 0.35)');
+                grad.addColorStop(1, 'rgba(192, 132, 252, 0.15)');
+            } else if (spiritType === 'KARMA') {
+                grad.addColorStop(0, 'rgba(231, 209, 152, 0.65)');
+                grad.addColorStop(0.65, 'rgba(245, 158, 11, 0.35)');
+                grad.addColorStop(1, 'rgba(139, 92, 246, 0.15)');
+            } else {
+                grad.addColorStop(0, 'rgba(139, 92, 246, 0.6)');
+                grad.addColorStop(0.7, 'rgba(56, 189, 248, 0.35)');
+                grad.addColorStop(1, 'rgba(16, 185, 129, 0.15)');
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.strokeStyle = spiritType === 'ESPRIT' ? 'rgba(56, 189, 248, 0.95)'
+                : spiritType === 'TENEBRES' ? 'rgba(192, 132, 252, 0.95)'
+                    : spiritType === 'KARMA' ? 'rgba(245, 158, 11, 0.95)'
+                        : 'rgba(192, 132, 252, 0.9)';
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
         }
-        ctx.closePath();
 
-        // Dégradé radial avec teinte adaptée à la spiritualité active
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-        if (spiritType === 'ESPRIT') {
-            grad.addColorStop(0, 'rgba(56, 189, 248, 0.65)');
-            grad.addColorStop(0.65, 'rgba(96, 165, 250, 0.35)');
-            grad.addColorStop(1, 'rgba(52, 211, 153, 0.15)');
-        } else if (spiritType === 'TENEBRES') {
-            grad.addColorStop(0, 'rgba(168, 85, 247, 0.65)');
-            grad.addColorStop(0.65, 'rgba(239, 68, 68, 0.35)');
-            grad.addColorStop(1, 'rgba(192, 132, 252, 0.15)');
-        } else if (spiritType === 'KARMA') {
-            grad.addColorStop(0, 'rgba(231, 209, 152, 0.65)');
-            grad.addColorStop(0.65, 'rgba(245, 158, 11, 0.35)');
-            grad.addColorStop(1, 'rgba(139, 92, 246, 0.15)');
-        } else {
-            grad.addColorStop(0, 'rgba(139, 92, 246, 0.6)');
-            grad.addColorStop(0.7, 'rgba(56, 189, 248, 0.35)');
-            grad.addColorStop(1, 'rgba(16, 185, 129, 0.15)');
-        }
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.strokeStyle = spiritType === 'ESPRIT' ? 'rgba(56, 189, 248, 0.95)'
-            : spiritType === 'TENEBRES' ? 'rgba(192, 132, 252, 0.95)'
-                : spiritType === 'KARMA' ? 'rgba(245, 158, 11, 0.95)'
-                    : 'rgba(192, 132, 252, 0.9)';
-        ctx.lineWidth = 2.2;
-        ctx.stroke();
-
-        // Points de repère aux sommets
+        // Points de repère aux sommets (ou au centre si norm === 0 et aucune voie)
         for (let i = 0; i < N; i++) {
             const axis = SPIDER_AXES[i];
             const norm = norms[i] || 0;
             const isExt = isExtendedList ? isExtendedList[i] : false;
-            const p = pt(i, Math.max(norm * R, 5));
+            const radius = hasProfile ? Math.max(norm * R, 5) : (norm * R);
+            const p = pt(i, radius);
 
             ctx.beginPath();
             ctx.arc(p.x, p.y, isExt ? 5 : 4, 0, Math.PI * 2);
@@ -377,12 +383,13 @@
             const axis = SPIDER_AXES[i];
             const maxVal = globalAxisMax[axis.key] || 1;
             const rawVal = profile ? (profile[axis.key] || 0) : 0;
-            const isExt = profile ? isAxisExtended(spiritType, axis.key) : false;
+            const isExt = isAxisExtended(spiritType, axis.key);
             const norm = computeAxisTargetNorm(rawVal, maxVal, isExt, isKarma);
             targetNorms.push(norm);
             isExtendedList.push(isExt);
         }
 
+        const hasProfile = Boolean(profile);
         const isFirstSelection = !canvas._spiderState || !canvas._spiderState.currentNorms;
         if (!canvas._spiderState) {
             canvas._spiderState = {
@@ -398,7 +405,7 @@
 
         if (!animate) {
             canvas._spiderState.currentNorms = [...targetNorms];
-            renderSpiderFrame(canvas, targetNorms, isExtendedList, spiritType);
+            renderSpiderFrame(canvas, targetNorms, isExtendedList, spiritType, hasProfile);
             return;
         }
 
@@ -409,7 +416,7 @@
         const duration = isFirstSelection ? 360 : 280;
 
         // Afficher immédiatement l'état initial (centre ou forme précédente)
-        renderSpiderFrame(canvas, startNorms, isExtendedList, spiritType);
+        renderSpiderFrame(canvas, startNorms, isExtendedList, spiritType, hasProfile);
 
         function step(now) {
             const elapsed = now - startTime;
@@ -417,7 +424,7 @@
             const ease = 1 - Math.pow(1 - t, 3);
             const interpolated = startNorms.map((start, idx) => start + (targetNorms[idx] - start) * ease);
             canvas._spiderState.currentNorms = interpolated;
-            renderSpiderFrame(canvas, interpolated, isExtendedList, spiritType);
+            renderSpiderFrame(canvas, interpolated, isExtendedList, spiritType, hasProfile);
             if (t < 1) {
                 canvas._spiderState.animId = requestAnimationFrame(step);
             } else {
@@ -588,25 +595,8 @@
         const effectiveVoie = (voieId !== undefined && voieId !== null && voieId !== '') ? voieId : document.getElementById('charVoie')?.value;
         const effectiveSpirit = (spiritId !== undefined && spiritId !== null && spiritId !== '') ? spiritId : document.getElementById('charSpirit')?.value;
 
-        if (!effectiveVoie) {
-            if (spiderIconEl) spiderIconEl.classList.add('hidden');
-            if (spiderSpiritIconEl) spiderSpiritIconEl.classList.add('hidden');
-            section.classList.add('is-hidden');
-            section.classList.remove('is-visible');
-            if (canvas._spiderState) {
-                if (canvas._spiderState.animId) cancelAnimationFrame(canvas._spiderState.animId);
-                canvas._spiderState = null;
-            }
-            return;
-        }
-
         section.classList.remove('is-hidden');
         section.classList.add('is-visible');
-
-        const profile = await getProfileForVoie(effectiveVoie);
-        if (spiderIconEl && profile) {
-            populateVoieTooltip(spiderIconEl, profile);
-        }
 
         if (effectiveSpirit && spiderSpiritIconEl) {
             let s = findSpirit(effectiveSpirit);
@@ -618,6 +608,18 @@
             else spiderSpiritIconEl.classList.add('hidden');
         } else if (spiderSpiritIconEl) {
             spiderSpiritIconEl.classList.add('hidden');
+        }
+
+        if (!effectiveVoie) {
+            if (spiderIconEl) spiderIconEl.classList.add('hidden');
+            drawSpiderWeb(canvas, null, effectiveSpirit, animate);
+            badges.innerHTML = '<span class="text-xs text-muted font-italic">Sélectionnez une Voie sur l\'étoile pour révéler ses spécificités</span>';
+            return;
+        }
+
+        const profile = await getProfileForVoie(effectiveVoie);
+        if (spiderIconEl && profile) {
+            populateVoieTooltip(spiderIconEl, profile);
         }
 
         drawSpiderWeb(canvas, profile, effectiveSpirit, animate);

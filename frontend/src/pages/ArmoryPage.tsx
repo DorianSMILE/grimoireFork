@@ -128,10 +128,10 @@ export function ArmoryPage() {
                 </div>
               </div>
 
-              {/* 2 & 3. Panneau unifié : Voie Martiale (Roue en étoile) & Spiritualité */}
+              {/* 2 & 3. Panneau unifié : Voie (Roue en étoile) & Spiritualité */}
               <div className="armory-form-card armory-affiliations-card">
                 <div className="armory-affiliations-grid">
-                  {/* Colonne Gauche : Voie Martiale */}
+                  {/* Colonne Gauche : Voie */}
                   <div className="armory-affil-voie-col">
                     <div className="armory-field">
                       <div className="armory-field-header">
@@ -140,7 +140,7 @@ export function ArmoryPage() {
                           <span className="material-symbols-outlined text-purple">
                             route
                           </span>
-                          <span>Voie Martiale</span>
+                          <span>Voie</span>
                         </label>
                         <div className="flex items-center gap-2">
                           <span

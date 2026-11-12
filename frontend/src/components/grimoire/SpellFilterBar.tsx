@@ -43,49 +43,55 @@ export function SpellFilterBar() {
         />
       </div>
 
-      <div>
-        <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-          <span className="material-symbols-outlined text-purple text-md">
-            auto_awesome
-          </span>
-          FILTRER PAR VOIE
-        </label>
-        <div
-          className="flex flex-wrap gap-[0.4rem]"
-          id="filterVoiesButtonsContainer"
-        ></div>
-      </div>
-
-      <div className="flex gap-4 flex-wrap items-start">
-        <div className="flex-1">
+      <div
+        className="flex flex-col gap-4"
+        role="radiogroup"
+        aria-label="Filtrer par Voie ou Spiritualité"
+      >
+        <div>
           <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-            <span className="material-symbols-outlined text-md text-orange-400">
-              grade
+            <span className="material-symbols-outlined text-purple text-md">
+              auto_awesome
             </span>
-            FILTRER PAR SPIRITUALITÉ
+            FILTRER PAR VOIE
           </label>
           <div
             className="flex flex-wrap gap-[0.4rem]"
-            id="filterSpiritsButtonsContainer"
+            id="filterVoiesButtonsContainer"
           ></div>
         </div>
 
-        <div className="flex-1 init-hidden" id="filterMutationAdminContainer">
-          <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-            <span className="material-symbols-outlined text-purple text-md">
-              pets
-            </span>
-            FILTRER PAR MUTATION
-          </label>
-          <select
-            className="w-full text-sm p-[0.6rem] bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none"
-            id="filterMutation"
-            defaultValue="NONE"
-          >
-            <option value="NONE">Sans mutation</option>
-            <option value="ALL">Mutations + Sorts classiques</option>
-            <option value="ONLY_MUTATIONS">Mutations uniquement</option>
-          </select>
+        <div className="flex gap-4 flex-wrap items-start">
+          <div className="flex-1">
+            <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
+              <span className="material-symbols-outlined text-md text-orange-400">
+                grade
+              </span>
+              FILTRER PAR SPIRITUALITÉ
+            </label>
+            <div
+              className="flex flex-wrap gap-[0.4rem]"
+              id="filterSpiritsButtonsContainer"
+            ></div>
+          </div>
+
+          <div className="flex-1 init-hidden" id="filterMutationAdminContainer">
+            <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
+              <span className="material-symbols-outlined text-purple text-md">
+                pets
+              </span>
+              FILTRER PAR MUTATION
+            </label>
+            <select
+              className="w-full text-sm p-[0.6rem] bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none"
+              id="filterMutation"
+              defaultValue="NONE"
+            >
+              <option value="NONE">Sans mutation</option>
+              <option value="ALL">Mutations + Sorts classiques</option>
+              <option value="ONLY_MUTATIONS">Mutations uniquement</option>
+            </select>
+          </div>
         </div>
       </div>
 

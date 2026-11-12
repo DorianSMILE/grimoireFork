@@ -4,7 +4,7 @@ import * as ui from '../ui.js?v=3';
 import * as api from '../services/api.js';
 
 import { updateRankTitle, updateSpecialVoieConfig, setViolenceType, updateViolenceLabel, renderEffects, handleAffinityChange } from './forge.js?v=3';
-import { getVoieButtonColor, getSpiritButtonColor, getVoieAffinityClass, getSpiritAffinityClass, getSpellAffinityClass } from '../utils/filters.js?v=5';
+import { getVoieButtonColor, getSpiritButtonColor, getVoieAffinityClass, getSpiritAffinityClass, getSpellAffinityClass } from '../utils/filters.js?v=6';
 import { attachLvl5CardEffects } from '../components/particles.js?v=1786180000242';
 
 window.handleAffinityChange = handleAffinityChange;

@@ -26,7 +26,7 @@ export function ArmoryPage() {
       const armoryCssLink = document.querySelector<HTMLLinkElement>(
         'link[href*="/styles/pages/armory.css"]'
       );
-      const targetCssHref = '/styles/pages/armory.css?v=1786180000014';
+      const targetCssHref = '/styles/pages/armory.css?v=1786180000015';
       if (armoryCssLink && !armoryCssLink.href.endsWith(targetCssHref)) {
         armoryCssLink.href = targetCssHref;
       }
@@ -34,7 +34,7 @@ export function ArmoryPage() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
       const spiderUrl = '/js/pages/hero-spider.js?v=19';
-      const armoryUrl = '/js/pages/armory.js?v=121';
+      const armoryUrl = '/js/pages/armory.js?v=122';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

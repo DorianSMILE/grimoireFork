@@ -847,9 +847,17 @@ function renderSpiritRadios() {
             <span class="fx-karma-seal seal-outer"></span>
             <span class="fx-karma-seal seal-inner"></span>
 
-            <!-- Duel Karma -> Ténèbres : Éclipse Vorace -->
+            <!-- Duel Karma -> Ténèbres : Éclipse Vorace & Pics Abyssaux -->
             <span class="fx-eclipse-disc"></span>
             <span class="fx-eclipse-corona"></span>
+            <span class="fx-dark-spike spike-1"></span>
+            <span class="fx-dark-spike spike-2"></span>
+            <span class="fx-dark-spike spike-3"></span>
+            <span class="fx-dark-spike spike-4"></span>
+            <span class="fx-dark-spike spike-5"></span>
+            <span class="fx-dark-spike spike-6"></span>
+            <span class="fx-dark-spike spike-7"></span>
+            <span class="fx-dark-spike spike-8"></span>
         </div>
     `;
 

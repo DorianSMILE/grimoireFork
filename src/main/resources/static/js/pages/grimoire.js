@@ -221,7 +221,7 @@ export function renderFilteredSpells() {
     }
 }
 
-export function getSpellEffectsSummaryHtml(sp) {
+export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
     let effectsSummaryHtml = '';
     if ((sp.effects && sp.effects.length > 0) || (sp.heatGenerated && sp.heatGenerated > 0)) {
         effectsSummaryHtml = `<div class="spell-effects-summary">`;
@@ -529,7 +529,12 @@ export function getSpellEffectsSummaryHtml(sp) {
                     }
                 }
 
-                effectsSummaryHtml += `<div class="effect-line flex flex-wrap items-start gap-1">
+                const hasChoiceKey = e.requiredChoiceKey != null && e.requiredChoiceKey !== '';
+                const choiceKeyAttr = hasChoiceKey ? ` data-choice-key="${e.requiredChoiceKey}"` : '';
+                const isChoiceInactive = hasChoiceKey && selectedChoiceKey !== null && selectedChoiceKey !== undefined && String(e.requiredChoiceKey) !== String(selectedChoiceKey);
+                const choiceStateClass = isChoiceInactive ? ' is-choice-inactive' : '';
+
+                effectsSummaryHtml += `<div class="effect-line flex flex-wrap items-start gap-1${choiceStateClass}"${choiceKeyAttr}>
                             <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
                             ${statIconHtml}
                             ${turnBadge}
@@ -547,8 +552,21 @@ export function getSpellEffectsSummaryHtml(sp) {
     return effectsSummaryHtml;
 }
 
-export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
-    const rawSummaryHtml = getSpellEffectsSummaryHtml(sp);
+export function getCalculatedSpellEffectsSummaryHtml(sp, avail, selectedChoiceKey = null) {
+    let activeChoiceKey = selectedChoiceKey;
+    if (activeChoiceKey === null || activeChoiceKey === undefined) {
+        const selectEl = typeof document !== 'undefined' && sp && sp.id != null ? document.getElementById(`choice-select-${sp.id}`) : null;
+        if (selectEl && selectEl.value !== undefined && selectEl.value !== '') {
+            activeChoiceKey = selectEl.value;
+        } else if (typeof window !== 'undefined' && window.pageState?.selectedSpellChoices && sp && sp.id != null && window.pageState.selectedSpellChoices[sp.id] !== undefined) {
+            activeChoiceKey = window.pageState.selectedSpellChoices[sp.id];
+        } else if (sp && Array.isArray(sp.effects)) {
+            const firstChoiceEffect = sp.effects.find(ef => ef.requiredChoiceKey != null && ef.requiredChoiceKey !== '');
+            if (firstChoiceEffect) activeChoiceKey = firstChoiceEffect.requiredChoiceKey;
+        }
+    }
+
+    const rawSummaryHtml = getSpellEffectsSummaryHtml(sp, activeChoiceKey);
     if (!rawSummaryHtml) return '';
 
     const previews = (avail && Array.isArray(avail.effectPreviews)) ? avail.effectPreviews : [];
@@ -914,7 +932,12 @@ export function getCalculatedSpellEffectsSummaryHtml(sp, avail) {
                 }
             }
 
-            html += `<div class="effect-line flex flex-wrap items-start gap-1">
+            const hasChoiceKey = e.requiredChoiceKey != null && e.requiredChoiceKey !== '';
+            const choiceKeyAttr = hasChoiceKey ? ` data-choice-key="${e.requiredChoiceKey}"` : '';
+            const isChoiceInactive = hasChoiceKey && activeChoiceKey !== null && activeChoiceKey !== undefined && String(e.requiredChoiceKey) !== String(activeChoiceKey);
+            const choiceStateClass = isChoiceInactive ? ' is-choice-inactive' : '';
+
+            html += `<div class="effect-line flex flex-wrap items-start gap-1${choiceStateClass}"${choiceKeyAttr}>
                         <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
                         ${statIconHtml}
                         ${turnBadge}

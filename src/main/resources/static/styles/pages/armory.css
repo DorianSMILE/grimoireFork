@@ -1612,7 +1612,7 @@
 }
 
 /* ==========================================================================
-   DUEL 6 : KARMA -> TÉNÈBRES (Éclipse Vorace & Engloutissement Abyssal)
+   DUEL 6 : KARMA -> TÉNÈBRES (Éclipse Vorace & Éclatement de Pics Abyssaux)
    ========================================================================== */
 .fx-eclipse-disc {
     left: 68%;
@@ -1637,12 +1637,32 @@
     transform: translate(-50%, -50%) scale(0.4);
 }
 
+.fx-dark-spike {
+    left: 50%;
+    top: 53.5%;
+    width: 9px;
+    height: 24px;
+    background: linear-gradient(180deg, #f5d0fe 0%, #c084fc 35%, #6b21a8 75%, #1e1b4b 100%);
+    clip-path: polygon(50% 0%, 100% 78%, 50% 100%, 0% 78%);
+    filter: drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 10px #7e22ce);
+    transform-origin: center center;
+}
+
 .spirit-triangle-stage.anim-duel-karma-tenebres .fx-eclipse-disc {
     animation: fxEclipseCreepAcross 1.2s ease-in-out forwards;
 }
 .spirit-triangle-stage.anim-duel-karma-tenebres .fx-eclipse-corona {
     animation: fxEclipseCoronaPulse 1.2s ease-out forwards;
 }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-1 { animation: fxDarkSpikeBurst1 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-2 { animation: fxDarkSpikeBurst2 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-3 { animation: fxDarkSpikeBurst3 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-4 { animation: fxDarkSpikeBurst4 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-5 { animation: fxDarkSpikeBurst5 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-6 { animation: fxDarkSpikeBurst6 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-7 { animation: fxDarkSpikeBurst7 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-dark-spike.spike-8 { animation: fxDarkSpikeBurst8 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 .spirit-triangle-stage.anim-duel-karma-tenebres .spirit-node-karma.is-duel-victim {
     z-index: 7;
     animation: duelKarmaEclipsedAndBanished 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -1654,26 +1674,70 @@
 
 @keyframes fxEclipseCreepAcross {
     0% { opacity: 0; left: 74%; top: 68%; transform: translate(-50%, -50%) scale(0.4); }
-    35%, 52% { opacity: 0.96; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.08); }
-    75%, 100% { opacity: 0; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.2); }
+    32%, 46% { opacity: 0.96; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.12); }
+    72%, 100% { opacity: 0; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.2); }
 }
 
 @keyframes fxEclipseCoronaPulse {
-    0%, 42% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
-    58% { opacity: 1; transform: translate(-50%, -50%) scale(1.38); }
-    92%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.15); }
+    0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.42); }
+    88%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes fxDarkSpikeBurst1 {
+    0%, 36% { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) translateY(0) scale(0.2, 0.2); }
+    45% { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) translateY(-24px) scale(1.1, 1.35); }
+    86%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) translateY(-64px) scale(0.45, 0.7); }
+}
+@keyframes fxDarkSpikeBurst2 {
+    0%, 37% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) translateY(0) scale(0.2, 0.2); }
+    46% { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) translateY(-26px) scale(1.05, 1.3); }
+    88%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) translateY(-68px) scale(0.4, 0.65); }
+}
+@keyframes fxDarkSpikeBurst3 {
+    0%, 36% { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) translateY(0) scale(0.2, 0.2); }
+    45% { opacity: 1; transform: translate(-50%, -50%) rotate(90deg) translateY(-24px) scale(1.1, 1.35); }
+    86%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) translateY(-62px) scale(0.45, 0.7); }
+}
+@keyframes fxDarkSpikeBurst4 {
+    0%, 38% { opacity: 0; transform: translate(-50%, -50%) rotate(135deg) translateY(0) scale(0.2, 0.2); }
+    47% { opacity: 1; transform: translate(-50%, -50%) rotate(135deg) translateY(-25px) scale(1, 1.28); }
+    89%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(135deg) translateY(-66px) scale(0.4, 0.65); }
+}
+@keyframes fxDarkSpikeBurst5 {
+    0%, 36% { opacity: 0; transform: translate(-50%, -50%) rotate(180deg) translateY(0) scale(0.2, 0.2); }
+    45% { opacity: 1; transform: translate(-50%, -50%) rotate(180deg) translateY(-24px) scale(1.1, 1.35); }
+    86%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(180deg) translateY(-64px) scale(0.45, 0.7); }
+}
+@keyframes fxDarkSpikeBurst6 {
+    0%, 35% { opacity: 0; transform: translate(-50%, -50%) rotate(230deg) translateY(0) scale(0.2, 0.2); }
+    44% { opacity: 1; transform: translate(-50%, -50%) rotate(230deg) translateY(-28px) scale(1.2, 1.45); }
+    88%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(230deg) translateY(-74px) scale(0.5, 0.75); }
+}
+@keyframes fxDarkSpikeBurst7 {
+    0%, 37% { opacity: 0; transform: translate(-50%, -50%) rotate(270deg) translateY(0) scale(0.2, 0.2); }
+    46% { opacity: 1; transform: translate(-50%, -50%) rotate(270deg) translateY(-25px) scale(1.1, 1.35); }
+    87%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(270deg) translateY(-64px) scale(0.45, 0.7); }
+}
+@keyframes fxDarkSpikeBurst8 {
+    0%, 38% { opacity: 0; transform: translate(-50%, -50%) rotate(315deg) translateY(0) scale(0.2, 0.2); }
+    47% { opacity: 1; transform: translate(-50%, -50%) rotate(315deg) translateY(-26px) scale(1.05, 1.3); }
+    89%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(315deg) translateY(-68px) scale(0.4, 0.65); }
 }
 
 @keyframes duelKarmaEclipsedAndBanished {
     0%, 18% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
-    48% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.82); filter: brightness(0.28) hue-rotate(210deg) drop-shadow(0 0 12px #581c87); }
+    36% { left: 50%; top: 53.5%; transform: translate(-54%, -47%) scale(0.88); filter: brightness(0.35) hue-rotate(210deg) drop-shadow(0 0 12px #581c87); }
+    44% { left: 50%; top: 53.5%; transform: translate(-45%, -53%) scale(1.18); filter: brightness(1.8) drop-shadow(0 0 18px #c084fc); }
+    52% { left: 42%; top: 59%; transform: translate(-50%, -50%) scale(0.72); filter: brightness(0.3) drop-shadow(0 0 14px #7e22ce); }
     85% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.9); }
     100% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 
 @keyframes duelTenebresEclipseClaim {
-    0%, 35% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.8); }
-    64% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.3); filter: brightness(1.45) drop-shadow(0 0 24px #c084fc); }
+    0%, 30% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.8); }
+    44% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.38); filter: brightness(1.65) drop-shadow(0 0 28px #c084fc); }
+    68% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.3) drop-shadow(0 0 20px #a855f7); }
     100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 

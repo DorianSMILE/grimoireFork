@@ -1,12 +1,12 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000239';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000239';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000239';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000239';
+import { pageState } from './combat-state.js?v=1786180000240';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000240';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000240';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000240';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { showFighterPingMenu } from './combat-signals.js?v=1786180000239';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000240';
 import { renderHeroCombatSprite } from './combat-sprites.js';
 
 function isCombatLogOpen(logContainer) {
@@ -4464,11 +4464,21 @@ export function renderSpellCard(sp) {
     const effectsList = sp.effects || [];
     const choiceKeys = [...new Set(effectsList.map(e => e.requiredChoiceKey).filter(k => k != null))];
 
+    pageState.selectedSpellChoices = pageState.selectedSpellChoices || {};
+    const selectedChoiceKey = choiceKeys.length > 0
+        ? (pageState.selectedSpellChoices[sp.id] !== undefined && choiceKeys.some(k => String(k) === String(pageState.selectedSpellChoices[sp.id]))
+            ? pageState.selectedSpellChoices[sp.id]
+            : choiceKeys[0])
+        : null;
+    if (selectedChoiceKey !== null) {
+        pageState.selectedSpellChoices[sp.id] = selectedChoiceKey;
+    }
+
     let optionSelectorHtml = '';
     if (choiceKeys.length > 0) {
         optionSelectorHtml = `
             <select class="spell-choice-mini" id="choice-select-${sp.id}" onclick="event.stopPropagation()" onchange="window.updateSpellCardState(${sp.id})" style="background: rgba(15, 23, 42, 0.8); color: #e2e8f0; border: 1px solid var(--glass-border); border-radius: 4px; padding: 0 0.2rem; font-size: 0.75rem; height: 1.2rem; margin-left: auto; outline: none; cursor: pointer; pointer-events: auto;">
-                ${choiceKeys.map(k => `<option value="${k}">${k}</option>`).join('')}
+                ${choiceKeys.map(k => `<option value="${k}"${String(k) === String(selectedChoiceKey) ? ' selected' : ''}>${k}</option>`).join('')}
             </select>
         `;
     }
@@ -4661,7 +4671,7 @@ export function renderSpellCard(sp) {
 
     }
 
-    let effectsSummary = getCalculatedSpellEffectsSummaryHtml ? getCalculatedSpellEffectsSummaryHtml(sp, avail) : getSpellEffectsSummaryHtml(sp);
+    let effectsSummary = getCalculatedSpellEffectsSummaryHtml ? getCalculatedSpellEffectsSummaryHtml(sp, avail, selectedChoiceKey) : getSpellEffectsSummaryHtml(sp, selectedChoiceKey);
 
     const tooltipAttrs = effectsSummary ? 'data-prefer-top onmouseenter="window.showGlobalTooltip(this)" onmouseleave="window.hideGlobalTooltip()"' : '';
 

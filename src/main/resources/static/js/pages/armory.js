@@ -328,11 +328,12 @@ async function submitPersonnage() {
     }
 
     const activeWheelNode = document.querySelector('#charVoieOptions .voie-star-node.is-active');
+    const activeSpiritNode = document.querySelector('#charSpiritOptions .spirit-tri-node.is-active');
     const checkedSpiritRadio = document.querySelector('#charSpiritOptions input[name="charSpiritRadio"]:checked');
     const selectedSpiritCard = document.querySelector('#charSpiritOptions .spirit-radio-card.is-selected input[name="charSpiritRadio"]');
 
     const voieIdVal = document.getElementById('charVoie')?.value || (activeWheelNode ? activeWheelNode.getAttribute('data-value') : '') || '';
-    const spiritIdVal = document.getElementById('charSpirit')?.value || (checkedSpiritRadio ? checkedSpiritRadio.value : '') || (selectedSpiritCard ? selectedSpiritCard.value : '') || '';
+    const spiritIdVal = document.getElementById('charSpirit')?.value || (activeSpiritNode ? activeSpiritNode.getAttribute('data-value') : '') || (checkedSpiritRadio ? checkedSpiritRadio.value : '') || (selectedSpiritCard ? selectedSpiritCard.value : '') || '';
 
     if (!pageState.editingId && (!voieIdVal || !spiritIdVal)) {
         if (!voieIdVal && !spiritIdVal) {
@@ -506,12 +507,12 @@ function getVoieInfo(nom) {
 }
 
 function getSpiritInfo(nom) {
-    if (!nom) return { icon: 'trip_origin', color: '#94a3b8', cardClass: 'spirit-card-none', textClass: 'text-muted' };
+    if (!nom) return { key: 'none', icon: 'trip_origin', color: '#94a3b8', cardClass: 'spirit-card-none', nodeClass: 'spirit-node-none', textClass: 'text-muted' };
     const n = nom.toLowerCase();
-    if (n.includes('esprit')) return { icon: 'blur_on', color: '#38bdf8', cardClass: 'spirit-card-esprit', textClass: 'text-info' };
-    if (n.includes('ténèbres') || n.includes('tenebres')) return { icon: 'dark_mode', color: '#c084fc', cardClass: 'spirit-card-tenebres', textClass: 'text-purple' };
-    if (n.includes('karma')) return { icon: 'all_inclusive', color: '#e7d198', cardClass: 'spirit-card-karma', textClass: 'text-gold' };
-    return { icon: 'psychology', color: '#a78bfa', cardClass: 'spirit-card-default', textClass: 'text-purple' };
+    if (n.includes('esprit')) return { key: 'esprit', icon: 'blur_on', color: '#38bdf8', cardClass: 'spirit-card-esprit', nodeClass: 'spirit-node-esprit', textClass: 'text-info' };
+    if (n.includes('ténèbres') || n.includes('tenebres')) return { key: 'tenebres', icon: 'dark_mode', color: '#c084fc', cardClass: 'spirit-card-tenebres', nodeClass: 'spirit-node-tenebres', textClass: 'text-purple' };
+    if (n.includes('karma')) return { key: 'karma', icon: 'all_inclusive', color: '#e7d198', cardClass: 'spirit-card-karma', nodeClass: 'spirit-node-karma', textClass: 'text-gold' };
+    return { key: 'default', icon: 'psychology', color: '#a78bfa', cardClass: 'spirit-card-default', nodeClass: 'spirit-node-default', textClass: 'text-purple' };
 }
 
 function syncVoieWheelSelection(val, dispatchEvent = false) {
@@ -674,6 +675,27 @@ function renderVoieStarWheel() {
     syncVoieWheelSelection(currentVal, false);
 }
 
+const SPIRIT_ANIM_CLASSES = [
+    'anim-init-esprit',
+    'anim-init-karma',
+    'anim-init-tenebres',
+    'anim-duel-esprit-tenebres',
+    'anim-duel-tenebres-karma',
+    'anim-duel-karma-esprit',
+    'anim-duel-tenebres-esprit',
+    'anim-duel-esprit-karma',
+    'anim-duel-karma-tenebres'
+];
+
+function getSpiritTriangleOrderIndex(nom) {
+    if (!nom) return 99;
+    const clean = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (clean.includes('esprit')) return 0;   // Sommet haut
+    if (clean.includes('karma')) return 1;    // Sommet bas-gauche
+    if (clean.includes('tenebres')) return 2; // Sommet bas-droite
+    return 99;
+}
+
 function syncSpiritRadioSelection(val, dispatchEvent = false) {
     const strVal = val !== undefined && val !== null ? String(val) : '';
     const hiddenInput = document.getElementById('charSpirit');
@@ -681,27 +703,73 @@ function syncSpiritRadioSelection(val, dispatchEvent = false) {
         hiddenInput.value = strVal;
     }
 
+    const selectedSpirit = strVal ? pageState.spiritualites.find(x => String(x.id) === strVal) : null;
+    const nextInfo = selectedSpirit ? getSpiritInfo(selectedSpirit.nom) : getSpiritInfo('');
+    const nextKey = selectedSpirit ? nextInfo.key : 'none';
+    const prevKey = pageState.lastSpiritKey || 'none';
+    pageState.lastSpiritKey = nextKey;
+
     const container = document.getElementById('charSpiritOptions');
+    const stage = document.getElementById('charSpiritStage') || (container ? container.closest('.spirit-triangle-stage') : null);
+
     if (container) {
-        const cards = container.querySelectorAll('.spirit-radio-card');
-        cards.forEach(card => {
-            const radio = card.querySelector('input[type="radio"]');
-            const isMatch = radio && String(radio.value) === strVal;
+        const nodes = container.querySelectorAll('.spirit-tri-node');
+        nodes.forEach(node => {
+            const radio = node.querySelector('input[type="radio"]');
+            const isMatch = String(node.getAttribute('data-value')) === strVal && strVal !== '';
             if (radio) radio.checked = Boolean(isMatch);
-            card.classList.toggle('is-selected', Boolean(isMatch));
+            node.classList.toggle('is-active', Boolean(isMatch));
+            node.setAttribute('aria-checked', isMatch ? 'true' : 'false');
         });
+    }
+
+    if (stage && container) {
+        if (pageState.spiritAnimTimer) {
+            clearTimeout(pageState.spiritAnimTimer);
+            pageState.spiritAnimTimer = null;
+        }
+        stage.classList.remove(...SPIRIT_ANIM_CLASSES);
+        container.querySelectorAll('.spirit-tri-node').forEach(n => {
+            n.classList.remove('is-duel-victim', 'is-duel-attacker');
+        });
+
+        if (dispatchEvent && nextKey !== 'none' && nextKey !== prevKey) {
+            void stage.offsetWidth;
+            const attackerNode = container.querySelector(`.spirit-tri-node[data-spirit-key="${nextKey}"]`);
+            if (prevKey === 'none') {
+                const animClass = `anim-init-${nextKey}`;
+                if (attackerNode) attackerNode.classList.add('is-duel-attacker');
+                stage.classList.add(animClass);
+                pageState.spiritAnimTimer = setTimeout(() => {
+                    stage.classList.remove(animClass);
+                    if (attackerNode) attackerNode.classList.remove('is-duel-attacker');
+                }, 820);
+            } else {
+                const animClass = `anim-duel-${prevKey}-${nextKey}`;
+                const victimNode = container.querySelector(`.spirit-tri-node[data-spirit-key="${prevKey}"]`);
+                if (victimNode) victimNode.classList.add('is-duel-victim');
+                if (attackerNode) attackerNode.classList.add('is-duel-attacker');
+                stage.classList.add(animClass);
+                pageState.spiritAnimTimer = setTimeout(() => {
+                    stage.classList.remove(animClass);
+                    if (victimNode) victimNode.classList.remove('is-duel-victim');
+                    if (attackerNode) attackerNode.classList.remove('is-duel-attacker');
+                }, 1240);
+            }
+        }
     }
 
     const labelEl = document.getElementById('charSpiritLabel');
     if (labelEl) {
-        if (strVal) {
-            const s = pageState.spiritualites.find(x => String(x.id) === strVal);
-            if (s) {
-                const info = getSpiritInfo(s.nom);
-                labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon ${info.textClass}">${info.icon}</span> ${s.nom}`;
-            }
+        if (selectedSpirit) {
+            labelEl.className = `spirit-triangle-center is-selected ${nextInfo.nodeClass}`;
+            labelEl.innerHTML = `<span class="spirit-triangle-center-sub">Spiritualité active</span>`;
         } else {
-            labelEl.innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+            labelEl.className = 'spirit-triangle-center';
+            labelEl.innerHTML = `
+                <span class="material-symbols-outlined spirit-triangle-center-icon text-muted">change_history</span>
+                <span class="spirit-triangle-center-title">Choisir</span>
+            `;
         }
     }
 
@@ -728,18 +796,64 @@ function renderSpiritRadios() {
 
     const currentVal = String(document.getElementById('charSpirit')?.value || '');
     const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    const orderedSpirits = [...pageState.spiritualites].sort(
+        (a, b) => getSpiritTriangleOrderIndex(a.nom) - getSpiritTriangleOrderIndex(b.nom)
+    );
 
     let html = `
-        <label class="spirit-radio-card spirit-card-none ${currentVal === '' ? 'is-selected' : ''}" onclick="window.selectSpiritRadio('')">
-            <input type="radio" name="charSpiritRadio" class="spirit-radio-input" value="" ${currentVal === '' ? 'checked' : ''} />
-            <span class="spirit-radio-icon-box">
-                <span class="material-symbols-outlined">block</span>
-            </span>
-            <span class="spirit-radio-label">Aucune</span>
-        </label>
+        <svg class="spirit-triangle-svg" viewBox="0 0 240 240" aria-hidden="true">
+            <circle cx="120" cy="126" r="94" class="spirit-tri-orbit" />
+            <polygon points="120,34 200,174 40,174" class="spirit-tri-poly-main" />
+            <polygon points="120,188 68,96 172,96" class="spirit-tri-poly-alt" />
+            <line x1="120" y1="36" x2="120" y2="128" class="spirit-tri-axis spirit-axis-esprit" />
+            <line x1="42" y1="173" x2="120" y2="128" class="spirit-tri-axis spirit-axis-karma" />
+            <line x1="198" y1="173" x2="120" y2="128" class="spirit-tri-axis spirit-axis-tenebres" />
+            <circle cx="120" cy="128" r="35" class="spirit-tri-sanctum-ring" />
+        </svg>
+
+        <div class="spirit-duel-fx" aria-hidden="true">
+            <span class="fx-init-pulse fx-pulse-1"></span>
+            <span class="fx-init-pulse fx-pulse-2"></span>
+
+            <!-- Duel Esprit -> Ténèbres : Assombrissement, Fissures, Éclats & Jaillissement -->
+            <svg class="fx-shatter-cracks" viewBox="0 0 100 100">
+                <path d="M50,50 L20,16 M50,50 L84,22 M50,50 L14,62 M50,50 L88,70 M50,50 L48,90 M35,34 L62,28 M34,64 L68,62" />
+            </svg>
+            <span class="fx-shard shard-1"></span>
+            <span class="fx-shard shard-2"></span>
+            <span class="fx-shard shard-3"></span>
+            <span class="fx-shard shard-4"></span>
+            <span class="fx-shard shard-5"></span>
+            <span class="fx-shard shard-6"></span>
+            <span class="fx-abyss-burst"></span>
+
+            <!-- Duel Ténèbres -> Karma : 3 Projectiles Karmiques & Transposition -->
+            <span class="fx-karma-proj proj-1"></span>
+            <span class="fx-karma-proj proj-2"></span>
+            <span class="fx-karma-proj proj-3"></span>
+            <span class="fx-transpose-beam"></span>
+            <span class="fx-transpose-ring ring-center"></span>
+            <span class="fx-transpose-ring ring-corner"></span>
+
+            <!-- Duel Karma -> Esprit : Rayon Céleste & Halo -->
+            <span class="fx-celestial-beam"></span>
+            <span class="fx-celestial-halo"></span>
+
+            <!-- Duel Ténèbres -> Esprit : Supernova Purificatrice -->
+            <span class="fx-supernova-core"></span>
+            <span class="fx-supernova-wave"></span>
+
+            <!-- Duel Esprit -> Karma : Sceau des Balances -->
+            <span class="fx-karma-seal seal-outer"></span>
+            <span class="fx-karma-seal seal-inner"></span>
+
+            <!-- Duel Karma -> Ténèbres : Éclipse Vorace -->
+            <span class="fx-eclipse-disc"></span>
+            <span class="fx-eclipse-corona"></span>
+        </div>
     `;
 
-    pageState.spiritualites.forEach(s => {
+    orderedSpirits.forEach(s => {
         const info = getSpiritInfo(s.nom);
         const sIdStr = String(s.id);
         const isSelected = currentVal === sIdStr;
@@ -747,8 +861,13 @@ function renderSpiritRadios() {
         const descHtml = s.description || 'Description générique.';
 
         html += `
-            <label
-                class="spirit-radio-card ${info.cardClass} ${isSelected ? 'is-selected' : ''}"
+            <button
+                type="button"
+                role="radio"
+                aria-checked="${isSelected ? 'true' : 'false'}"
+                class="spirit-tri-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
+                data-value="${s.id}"
+                data-spirit-key="${info.key}"
                 data-child-tooltip="true"
                 data-prefer-top
                 onclick="window.selectSpiritRadio('${s.id}')"
@@ -756,11 +875,12 @@ function renderSpiritRadios() {
                 onmouseleave="hideGlobalTooltip()"
             >
                 <input type="radio" name="charSpiritRadio" class="spirit-radio-input" value="${s.id}" ${isSelected ? 'checked' : ''} />
-                <span class="spirit-radio-icon-box">
-                    <span class="material-symbols-outlined">${info.icon}</span>
+                <span class="spirit-tri-node-inner">
+                    <span class="spirit-tri-node-medallion">
+                        <span class="material-symbols-outlined">${info.icon}</span>
+                    </span>
+                    <span class="spirit-tri-node-name">${s.nom}</span>
                 </span>
-                <span class="spirit-radio-label">${s.nom}</span>
-                <span class="material-symbols-outlined spirit-radio-info-dot">info</span>
                 <template class="tooltip-data">
                     <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
                         <span class="material-symbols-outlined text-lg">${info.icon}</span>
@@ -772,11 +892,12 @@ function renderSpiritRadios() {
                         <span class="font-italic whitespace-pre-wrap">${passiveHtml}</span>
                     </div>
                 </template>
-            </label>
+            </button>
         `;
     });
 
     charSpiritOptions.innerHTML = html;
+    syncSpiritRadioSelection(currentVal, false);
 }
 
 function populateSelects() {

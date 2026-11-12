@@ -460,8 +460,8 @@
 
 .armory-affiliations-grid {
     display: grid;
-    grid-template-columns: minmax(228px, 1.15fr) minmax(168px, 0.9fr);
-    gap: 1.1rem;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 0.9rem;
     align-items: stretch;
 }
 
@@ -475,19 +475,7 @@
 
 .armory-affil-spirit-col {
     border-left: 1px dashed rgba(255, 255, 255, 0.08);
-    padding-left: 1.05rem;
-}
-
-.armory-affil-spirit-col .spirit-radio-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.armory-affil-spirit-col .spirit-radio-grid {
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
+    padding-left: 0.9rem;
 }
 
 @media (max-width: 640px) {
@@ -500,10 +488,6 @@
         padding-left: 0;
         border-top: 1px dashed rgba(255, 255, 255, 0.08);
         padding-top: 0.85rem;
-    }
-
-    .armory-affil-spirit-col .spirit-radio-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -843,45 +827,74 @@
     color: #f87171;
 }
 
-/* ===== Spiritualité Radio Cards (4 boutons radio sans point interne) ===== */
-.armory-spirit-hint {
-    font-size: 0.7rem;
-    color: #64748b;
-    font-style: italic;
-}
-
-.spirit-radio-wrapper {
+/* ===== Triangle Mystique des Spiritualités (3 Sommets & Duels au Centre) ===== */
+.spirit-triangle-wrapper {
     width: 100%;
-    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    padding: 0.35rem 0 0.2rem;
     outline: none;
 }
 
-.spirit-radio-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.spirit-radio-card {
+.spirit-triangle-stage {
     position: relative;
+    width: 228px;
+    height: 228px;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 10px;
-    background: rgba(2, 6, 23, 0.5);
-    border: 1.5px solid rgba(255, 255, 255, 0.09);
-    cursor: pointer;
+    justify-content: center;
     user-select: none;
-    transition: all 0.2s ease;
-    min-height: 46px;
 }
 
-.spirit-radio-card:hover {
-    background: rgba(30, 41, 59, 0.75);
-    border-color: rgba(255, 255, 255, 0.22);
-    transform: translateY(-1px);
+.spirit-triangle-ring {
+    position: absolute;
+    inset: 0;
+}
+
+.spirit-triangle-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.spirit-tri-orbit {
+    fill: none;
+    stroke: rgba(148, 163, 184, 0.2);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 4;
+}
+
+.spirit-tri-poly-main {
+    fill: rgba(56, 189, 248, 0.04);
+    stroke: rgba(231, 209, 152, 0.32);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+}
+
+.spirit-tri-poly-alt {
+    fill: rgba(192, 132, 252, 0.03);
+    stroke: rgba(192, 132, 252, 0.2);
+    stroke-width: 1.1;
+    stroke-dasharray: 3 3;
+    stroke-linejoin: round;
+}
+
+.spirit-tri-axis {
+    stroke-width: 1.2;
+    stroke-dasharray: 3 3;
+    opacity: 0.45;
+}
+
+.spirit-axis-esprit { stroke: #38bdf8; }
+.spirit-axis-karma { stroke: #e7d198; }
+.spirit-axis-tenebres { stroke: #c084fc; }
+
+.spirit-tri-sanctum-ring {
+    fill: rgba(2, 6, 23, 0.4);
+    stroke: rgba(231, 209, 152, 0.25);
+    stroke-width: 1.2;
 }
 
 .spirit-radio-input {
@@ -892,135 +905,776 @@
     pointer-events: none;
 }
 
-.spirit-radio-icon-box {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
+/* Couleurs & Positions des 3 Sommets du Triangle */
+.spirit-node-esprit {
+    --spirit-color: #38bdf8;
+    --voie-color: #38bdf8;
+    left: 50%;
+    top: 15.5%;
+}
+
+.spirit-node-karma {
+    --spirit-color: #e7d198;
+    --voie-color: #e7d198;
+    left: 18.5%;
+    top: 73.5%;
+}
+
+.spirit-node-tenebres {
+    --spirit-color: #c084fc;
+    --voie-color: #c084fc;
+    left: 81.5%;
+    top: 73.5%;
+}
+
+.spirit-node-default,
+.spirit-node-none {
+    --spirit-color: #94a3b8;
+    --voie-color: #94a3b8;
+}
+
+.spirit-tri-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    z-index: 4;
+    outline: none;
+    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.35s ease,
+                filter 0.35s ease;
+    will-change: left, top, transform, filter;
+}
+
+/* Coulissement au centre du triangle quand sélectionné */
+.spirit-tri-node.is-active {
+    left: 50%;
+    top: 53.5%;
+    z-index: 7;
+}
+
+.spirit-tri-node-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.14rem;
+}
+
+.spirit-tri-node-medallion {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.94);
+    border: 1.5px solid var(--spirit-color, #94a3b8);
+    color: var(--spirit-color, #94a3b8);
+    display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    flex-shrink: 0;
-    transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.05);
+    transition: all 0.28s ease;
 }
 
-.spirit-radio-icon-box .material-symbols-outlined {
-    font-size: 1.15rem;
+.spirit-tri-node-medallion .material-symbols-outlined {
+    font-size: 1.25rem;
+    transition: transform 0.28s ease;
 }
 
-.spirit-radio-label {
+.spirit-tri-node-name {
     font-family: 'Outfit', sans-serif;
-    font-size: 0.88rem;
+    font-size: 0.66rem;
     font-weight: 600;
     color: #cbd5e1;
-    flex: 1;
+    background: rgba(2, 6, 23, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.05rem 0.42rem;
+    border-radius: 999px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    transition: all 0.25s ease;
 }
 
-.spirit-radio-info-dot {
-    font-size: 0.9rem !important;
-    color: rgba(148, 163, 184, 0.45);
-    transition: color 0.2s ease;
+.spirit-tri-node:hover {
+    z-index: 8;
 }
 
-.spirit-radio-card:hover .spirit-radio-info-dot {
-    color: #e2e8f0;
+.spirit-tri-node:hover .spirit-tri-node-medallion {
+    transform: scale(1.12);
+    box-shadow: 0 0 16px var(--spirit-color, #38bdf8);
 }
 
-/* Variant: Aucune */
-.spirit-card-none .spirit-radio-icon-box {
+.spirit-tri-node:hover .spirit-tri-node-name {
+    color: #ffffff;
+    border-color: var(--spirit-color, #38bdf8);
+}
+
+.spirit-tri-node.is-active .spirit-tri-node-medallion {
+    width: 48px;
+    height: 48px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(15, 23, 42, 0.96) 75%);
+    border-width: 2px;
+    border-color: var(--spirit-color, #fbbf24);
+    box-shadow: 0 0 22px var(--spirit-color, #38bdf8), 0 0 10px rgba(255, 255, 255, 0.35);
+}
+
+.spirit-tri-node.is-active .spirit-tri-node-medallion .material-symbols-outlined {
+    font-size: 1.45rem;
+}
+
+.spirit-tri-node.is-active .spirit-tri-node-name {
+    color: #ffffff;
+    background: rgba(15, 23, 42, 0.96);
+    border-color: var(--spirit-color, #fbbf24);
+    font-weight: 700;
+}
+
+/* Sanctuaire central du Triangle */
+.spirit-triangle-center {
+    position: absolute;
+    left: 50%;
+    top: 53.5%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(30, 41, 59, 0.92) 0%, rgba(2, 6, 23, 0.96) 100%);
+    border: 1.5px dashed rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.55), inset 0 0 12px rgba(255, 255, 255, 0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.3rem;
+    gap: 0.08rem;
+    pointer-events: none;
+    transition: all 0.35s ease;
+}
+
+.spirit-triangle-center.is-selected {
+    border-style: solid;
+    border-color: var(--spirit-color, #38bdf8);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.65), 0 0 18px var(--spirit-color, rgba(56, 189, 248, 0.35));
+    justify-content: flex-end;
+    padding-bottom: 0.18rem;
+}
+
+.spirit-triangle-center-icon {
+    font-size: 1.25rem !important;
+    color: #64748b;
+    opacity: 0.85;
+}
+
+.spirit-triangle-center-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
     color: #94a3b8;
 }
 
-.spirit-card-none.is-selected {
-    background: rgba(30, 41, 59, 0.9);
-    border-color: rgba(148, 163, 184, 0.55);
-    box-shadow: 0 0 12px rgba(148, 163, 184, 0.15);
+.spirit-triangle-center-sub {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.54rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--spirit-color, #fbbf24);
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
-.spirit-card-none.is-selected .spirit-radio-label {
-    color: #f8fafc;
+/* ===== Couche FX des Animations & Duels de Spiritualité ===== */
+.spirit-duel-fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    overflow: visible;
 }
 
-/* Variant: Esprit (Cyan) */
-.spirit-card-esprit .spirit-radio-icon-box {
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.1);
-    border-color: rgba(56, 189, 248, 0.25);
+.spirit-duel-fx > * {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
-.spirit-card-esprit:hover {
-    border-color: rgba(56, 189, 248, 0.45);
+/* --- 1. Sélections Initiales (Aucune -> Spiritualité) --- */
+.fx-init-pulse {
+    left: 50%;
+    top: 53.5%;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.4);
+    border: 2px solid #38bdf8;
 }
 
-.spirit-card-esprit.is-selected {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.92));
+/* 1A. Init Esprit : Onde Astrale Cyan */
+.spirit-triangle-stage.anim-init-esprit .spirit-node-esprit.is-duel-attacker {
+    animation: spiritInitEspritNode 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spirit-triangle-stage.anim-init-esprit .fx-pulse-1 {
     border-color: #38bdf8;
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.28), inset 0 0 10px rgba(56, 189, 248, 0.12);
+    box-shadow: 0 0 16px #38bdf8;
+    animation: spiritPulseExpand 0.75s ease-out 0.15s forwards;
+}
+.spirit-triangle-stage.anim-init-esprit .fx-pulse-2 {
+    border-color: #bae6fd;
+    animation: spiritPulseExpand 0.75s ease-out 0.3s forwards;
 }
 
-.spirit-card-esprit.is-selected .spirit-radio-icon-box {
-    background: rgba(56, 189, 248, 0.22);
-    border-color: #38bdf8;
+@keyframes spiritInitEspritNode {
+    0% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(0.92); filter: brightness(1.4) drop-shadow(0 0 12px #38bdf8); }
+    55% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.22); filter: brightness(1.6) drop-shadow(0 0 22px #38bdf8); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 
-.spirit-card-esprit.is-selected .spirit-radio-label {
-    color: #e0f2fe;
+/* 1B. Init Karma : Spirale d'Équilibre Dorée */
+.spirit-triangle-stage.anim-init-karma .spirit-node-karma.is-duel-attacker {
+    animation: spiritInitKarmaNode 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-
-/* Variant: Karma (Or) */
-.spirit-card-karma .spirit-radio-icon-box {
-    color: #e7d198;
-    background: rgba(231, 209, 152, 0.12);
-    border-color: rgba(231, 209, 152, 0.28);
-}
-
-.spirit-card-karma:hover {
-    border-color: rgba(231, 209, 152, 0.5);
-}
-
-.spirit-card-karma.is-selected {
-    background: linear-gradient(135deg, rgba(231, 209, 152, 0.24), rgba(15, 23, 42, 0.92));
+.spirit-triangle-stage.anim-init-karma .fx-pulse-1 {
     border-color: #e7d198;
-    box-shadow: 0 0 18px rgba(231, 209, 152, 0.28), inset 0 0 10px rgba(231, 209, 152, 0.12);
+    box-shadow: 0 0 16px #e7d198;
+    animation: spiritPulseExpand 0.75s ease-out 0.15s forwards;
+}
+.spirit-triangle-stage.anim-init-karma .fx-pulse-2 {
+    border-color: #fef08a;
+    border-style: dashed;
+    animation: spiritKarmaRingSpin 0.78s ease-out 0.1s forwards;
 }
 
-.spirit-card-karma.is-selected .spirit-radio-icon-box {
-    background: rgba(231, 209, 152, 0.22);
-    border-color: #e7d198;
+@keyframes spiritInitKarmaNode {
+    0% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.92) rotate(-25deg); }
+    60% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.2) rotate(8deg); filter: brightness(1.45) drop-shadow(0 0 18px #e7d198); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1) rotate(0deg); filter: brightness(1); }
 }
 
-.spirit-card-karma.is-selected .spirit-radio-label {
-    color: #fef3c7;
+@keyframes spiritKarmaRingSpin {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    45% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.75) rotate(120deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2) rotate(240deg); }
 }
 
-/* Variant: Ténèbres (Violet) */
-.spirit-card-tenebres .spirit-radio-icon-box {
-    color: #c084fc;
-    background: rgba(192, 132, 252, 0.12);
-    border-color: rgba(192, 132, 252, 0.28);
+/* 1C. Init Ténèbres : Vortex d'Abîme Violet */
+.spirit-triangle-stage.anim-init-tenebres .spirit-node-tenebres.is-duel-attacker {
+    animation: spiritInitTenebresNode 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-
-.spirit-card-tenebres:hover {
-    border-color: rgba(192, 132, 252, 0.5);
-}
-
-.spirit-card-tenebres.is-selected {
-    background: linear-gradient(135deg, rgba(192, 132, 252, 0.24), rgba(15, 23, 42, 0.92));
+.spirit-triangle-stage.anim-init-tenebres .fx-pulse-1 {
     border-color: #c084fc;
-    box-shadow: 0 0 18px rgba(192, 132, 252, 0.3), inset 0 0 10px rgba(192, 132, 252, 0.12);
+    background: radial-gradient(circle, rgba(88, 28, 135, 0.7) 0%, transparent 70%);
+    animation: spiritAbyssVortex 0.78s ease-in-out forwards;
 }
 
-.spirit-card-tenebres.is-selected .spirit-radio-icon-box {
-    background: rgba(192, 132, 252, 0.22);
-    border-color: #c084fc;
+@keyframes spiritInitTenebresNode {
+    0% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); }
+    40% { left: 58%; top: 58%; transform: translate(-50%, -50%) scale(0.35); opacity: 0.45; filter: brightness(0.4) drop-shadow(0 0 14px #581c87); }
+    75% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.26); opacity: 1; filter: brightness(1.4) drop-shadow(0 0 22px #c084fc); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 
-.spirit-card-tenebres.is-selected .spirit-radio-label {
-    color: #f3e8ff;
+@keyframes spiritAbyssVortex {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(2.1); }
+    45% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.3); }
+    75% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.9); box-shadow: 0 0 24px #c084fc; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+}
+
+@keyframes spiritPulseExpand {
+    0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.6); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.35); }
+}
+
+/* ==========================================================================
+   DUEL 1 : ESPRIT -> TÉNÈBRES (Assombrissement, Fissures, Brisure & Jaillissement)
+   ========================================================================== */
+.fx-shatter-cracks {
+    left: 50%;
+    top: 53.5%;
+    width: 78px;
+    height: 78px;
+    transform: translate(-50%, -50%);
+    fill: none;
+    stroke: #e879f9;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px #38bdf8) drop-shadow(0 0 10px #a855f7);
+}
+
+.fx-shard {
+    left: 50%;
+    top: 53.5%;
+    width: 11px;
+    height: 15px;
+    background: linear-gradient(135deg, #38bdf8 0%, #581c87 65%, #c084fc 100%);
+    clip-path: polygon(50% 0%, 100% 60%, 35% 100%, 0% 45%);
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+.fx-abyss-burst {
+    left: 50%;
+    top: 53.5%;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.2);
+    background: radial-gradient(circle, rgba(192, 132, 252, 0.85) 0%, rgba(59, 7, 100, 0.75) 55%, transparent 75%);
+    border: 2px solid #c084fc;
+}
+
+.spirit-triangle-stage.anim-duel-esprit-tenebres .spirit-node-esprit.is-duel-victim {
+    z-index: 7;
+    animation: duelEspritDarkenAndShatter 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.spirit-triangle-stage.anim-duel-esprit-tenebres .spirit-node-tenebres.is-duel-attacker {
+    z-index: 8;
+    animation: duelTenebresEruptFromCore 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shatter-cracks {
+    animation: fxCracksAppear 1.2s ease-out forwards;
+}
+
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-abyss-burst {
+    animation: fxAbyssEruption 1.2s ease-out forwards;
+}
+
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-1 { animation: fxShardFly1 1.2s ease-out forwards; }
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-2 { animation: fxShardFly2 1.2s ease-out forwards; }
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-3 { animation: fxShardFly3 1.2s ease-out forwards; }
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-4 { animation: fxShardFly4 1.2s ease-out forwards; }
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-5 { animation: fxShardFly5 1.2s ease-out forwards; }
+.spirit-triangle-stage.anim-duel-esprit-tenebres .fx-shard.shard-6 { animation: fxShardFly6 1.2s ease-out forwards; }
+
+@keyframes duelEspritDarkenAndShatter {
+    0% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); opacity: 1; }
+    15% { left: 50%; top: 53.5%; transform: translate(-53%, -49%) scale(1.04); filter: brightness(0.55) hue-rotate(45deg) saturate(1.8); }
+    30% { left: 50%; top: 53.5%; transform: translate(-47%, -52%) scale(0.96); filter: brightness(0.32) hue-rotate(75deg) saturate(2.5) drop-shadow(0 0 12px #581c87); }
+    46% { left: 50%; top: 53.5%; transform: translate(-52%, -48%) scale(1.16); filter: brightness(0.22) contrast(2) drop-shadow(0 0 16px #c084fc); opacity: 1; }
+    54% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.45); filter: brightness(2.2); opacity: 0; }
+    72% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(0.65); filter: brightness(0.7); opacity: 0; }
+    100% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); opacity: 1; }
+}
+
+@keyframes duelTenebresEruptFromCore {
+    0% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.9); opacity: 0.85; }
+    35% { left: 54%; top: 56%; transform: translate(-50%, -50%) scale(0.15); opacity: 0; }
+    50% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.25); opacity: 1; filter: brightness(1.8) drop-shadow(0 0 24px #c084fc); }
+    74% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.34); opacity: 1; filter: brightness(1.5) drop-shadow(0 0 28px #a855f7); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes fxCracksAppear {
+    0%, 14% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    35% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
+    52% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+    62%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.55); }
+}
+
+@keyframes fxAbyssEruption {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+    56% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 30px #c084fc; }
+    88%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes fxShardFly1 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(25deg); }
+    92%, 100% { opacity: 0; transform: translate(-48px, -54px) scale(0.3) rotate(190deg); }
+}
+@keyframes fxShardFly2 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(-20deg); }
+    92%, 100% { opacity: 0; transform: translate(44px, -48px) scale(0.3) rotate(-175deg); }
+}
+@keyframes fxShardFly3 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(40deg); }
+    92%, 100% { opacity: 0; transform: translate(-58px, 8px) scale(0.3) rotate(220deg); }
+}
+@keyframes fxShardFly4 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(-35deg); }
+    92%, 100% { opacity: 0; transform: translate(54px, 12px) scale(0.3) rotate(-210deg); }
+}
+@keyframes fxShardFly5 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(15deg); }
+    92%, 100% { opacity: 0; transform: translate(-28px, 48px) scale(0.3) rotate(160deg); }
+}
+@keyframes fxShardFly6 {
+    0%, 48% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+    54% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(-45deg); }
+    92%, 100% { opacity: 0; transform: translate(32px, 50px) scale(0.3) rotate(-195deg); }
+}
+
+/* ==========================================================================
+   DUEL 2 : TÉNÈBRES -> KARMA (3 Petits Projectiles Dorés & Transposition Instantanée)
+   ========================================================================== */
+.fx-karma-proj {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #fde047 45%, #eab308 100%);
+    box-shadow: 0 0 12px #fde047, 0 0 20px #e7d198;
+    transform: translate(-50%, -50%);
+}
+
+.fx-transpose-beam {
+    left: 34%;
+    top: 63.5%;
+    width: 86px;
+    height: 3px;
+    background: linear-gradient(90deg, #fde047, #ffffff, #e7d198);
+    box-shadow: 0 0 14px #fde047;
+    transform: translate(-50%, -50%) rotate(-32deg) scaleX(0);
+}
+
+.fx-transpose-ring {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid #fde047;
+    box-shadow: 0 0 18px #e7d198, inset 0 0 12px #fde047;
+    transform: translate(-50%, -50%) scale(0.2);
+}
+
+.fx-transpose-ring.ring-center { left: 50%; top: 53.5%; }
+.fx-transpose-ring.ring-corner { left: 18.5%; top: 73.5%; }
+
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-karma-proj.proj-1 {
+    animation: fxKarmaProjectileShot 0.24s cubic-bezier(0.4, 0, 0.2, 1) 0.02s forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-karma-proj.proj-2 {
+    animation: fxKarmaProjectileShot 0.24s cubic-bezier(0.4, 0, 0.2, 1) 0.20s forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-karma-proj.proj-3 {
+    animation: fxKarmaProjectileShot 0.24s cubic-bezier(0.4, 0, 0.2, 1) 0.38s forwards;
+}
+
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-transpose-beam {
+    animation: fxTransposeBeamFlash 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-transpose-ring.ring-center,
+.spirit-triangle-stage.anim-duel-tenebres-karma .fx-transpose-ring.ring-corner {
+    animation: fxTransposeRingFlash 1.2s ease-out forwards;
+}
+
+.spirit-triangle-stage.anim-duel-tenebres-karma .spirit-node-tenebres.is-duel-victim {
+    z-index: 7;
+    animation: duelTenebresHitAndTransposed 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.spirit-triangle-stage.anim-duel-tenebres-karma .spirit-node-karma.is-duel-attacker {
+    z-index: 8;
+    animation: duelKarmaShootAndTranspose 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fxKarmaProjectileShot {
+    0% { opacity: 1; left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.7); }
+    80% { opacity: 1; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.35); }
+    100% { opacity: 0; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(2.1); }
+}
+
+@keyframes duelTenebresHitAndTransposed {
+    0%, 16% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+    20% { left: 50%; top: 53.5%; transform: translate(-42%, -56%) scale(0.92); filter: brightness(2) drop-shadow(0 0 12px #fde047); }
+    28% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.98); filter: brightness(1); }
+    36% { left: 50%; top: 53.5%; transform: translate(-41%, -44%) scale(0.88); filter: brightness(2.2) drop-shadow(0 0 14px #fde047); }
+    44% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(1.1); }
+    52% { left: 50%; top: 53.5%; transform: translate(-38%, -54%) scale(0.82); filter: brightness(2.6) drop-shadow(0 0 18px #fde047); }
+    58% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.25, 0.12); filter: brightness(3); opacity: 0.2; }
+    63% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.15); filter: brightness(2); opacity: 1; }
+    84% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.04); filter: brightness(1.1); }
+    100% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes duelKarmaShootAndTranspose {
+    0% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 0 10px #fde047); }
+    16% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.14); }
+    34% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.18); filter: brightness(1.3) drop-shadow(0 0 16px #fde047); }
+    56% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.15, 1.35); filter: brightness(3); opacity: 0.2; }
+    62% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.32); filter: brightness(1.8) drop-shadow(0 0 24px #fde047); opacity: 1; }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); opacity: 1; }
+}
+
+@keyframes fxTransposeBeamFlash {
+    0%, 54% { opacity: 0; transform: translate(-50%, -50%) rotate(-32deg) scaleX(0); }
+    60% { opacity: 1; transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.15); }
+    76%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(-32deg) scaleX(0); }
+}
+
+@keyframes fxTransposeRingFlash {
+    0%, 54% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    61% { opacity: 1; transform: translate(-50%, -50%) scale(1.35); }
+    82%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+}
+
+/* ==========================================================================
+   DUEL 3 : KARMA -> ESPRIT (Rayon Céleste de Pureté & Descente d'Esprit)
+   ========================================================================== */
+.fx-celestial-beam {
+    left: 50%;
+    top: 15.5%;
+    width: 14px;
+    height: 92px;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: top center;
+    background: linear-gradient(180deg, #ffffff 0%, #38bdf8 55%, rgba(56, 189, 248, 0) 100%);
+    box-shadow: 0 0 20px #38bdf8, 0 0 34px #bae6fd;
+    border-radius: 999px;
+}
+
+.fx-celestial-halo {
+    left: 50%;
+    top: 53.5%;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2.5px solid #7dd3fc;
+    box-shadow: 0 0 22px #38bdf8;
+    transform: translate(-50%, -50%) scale(0.3);
+}
+
+.spirit-triangle-stage.anim-duel-karma-esprit .fx-celestial-beam {
+    animation: fxCelestialBeamStrike 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-esprit .fx-celestial-halo {
+    animation: fxCelestialHaloBurst 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-esprit .spirit-node-karma.is-duel-victim {
+    z-index: 7;
+    animation: duelKarmaSweptByBeam 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-esprit .spirit-node-esprit.is-duel-attacker {
+    z-index: 8;
+    animation: duelEspritRideBeam 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fxCelestialBeamStrike {
+    0%, 10% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+    28%, 58% { opacity: 1; transform: translateX(-50%) scaleY(1.08); }
+    80%, 100% { opacity: 0; transform: translateX(-50%) scaleY(1.2) scaleX(0.1); }
+}
+
+@keyframes fxCelestialHaloBurst {
+    0%, 24% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    52% { opacity: 1; transform: translate(-50%, -50%) scale(1.35); }
+    90%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes duelKarmaSweptByBeam {
+    0%, 22% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); }
+    45% { left: 50%; top: 51%; transform: translate(-50%, -50%) scale(0.84); filter: brightness(2) drop-shadow(0 0 18px #38bdf8); }
+    100% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes duelEspritRideBeam {
+    0%, 32% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(1.22); filter: brightness(1.6) drop-shadow(0 0 20px #38bdf8); }
+    68% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.28); filter: brightness(1.5) drop-shadow(0 0 24px #38bdf8); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+/* ==========================================================================
+   DUEL 4 : TÉNÈBRES -> ESPRIT (Plongeon Astral & Supernova Purificatrice)
+   ========================================================================== */
+.fx-supernova-core {
+    left: 50%;
+    top: 53.5%;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #7dd3fc 45%, rgba(56, 189, 248, 0) 75%);
+    transform: translate(-50%, -50%) scale(0.1);
+}
+
+.fx-supernova-wave {
+    left: 50%;
+    top: 53.5%;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 3px solid #e0f2fe;
+    box-shadow: 0 0 26px #38bdf8, inset 0 0 16px #ffffff;
+    transform: translate(-50%, -50%) scale(0.2);
+}
+
+.spirit-triangle-stage.anim-duel-tenebres-esprit .fx-supernova-core {
+    animation: fxSupernovaCoreFlash 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-esprit .fx-supernova-wave {
+    animation: fxSupernovaWaveBlast 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-esprit .spirit-node-tenebres.is-duel-victim {
+    z-index: 7;
+    animation: duelTenebresPurifiedByNova 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spirit-triangle-stage.anim-duel-tenebres-esprit .spirit-node-esprit.is-duel-attacker {
+    z-index: 8;
+    animation: duelEspritMeteorDive 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fxSupernovaCoreFlash {
+    0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+    48% { opacity: 1; transform: translate(-50%, -50%) scale(1.65); }
+    85%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+}
+
+@keyframes fxSupernovaWaveBlast {
+    0%, 40% { opacity: 0; transform: translate(-50%, -50%) scale(0.25); }
+    52% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
+    92%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.45); }
+}
+
+@keyframes duelEspritMeteorDive {
+    0% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(1.1); }
+    22% { left: 50%; top: 11%; transform: translate(-50%, -50%) scale(1.25); filter: brightness(1.8) drop-shadow(0 0 18px #ffffff); }
+    46% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.36); filter: brightness(2.2) drop-shadow(0 0 28px #38bdf8); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes duelTenebresPurifiedByNova {
+    0%, 40% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+    48% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.25); filter: brightness(3) invert(0.2); }
+    78% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.88); filter: brightness(1.2); }
+    100% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+/* ==========================================================================
+   DUEL 5 : ESPRIT -> KARMA (Sceau des Balances & Rebond Karmique)
+   ========================================================================== */
+.fx-karma-seal {
+    left: 50%;
+    top: 53.5%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.fx-karma-seal.seal-outer {
+    width: 68px;
+    height: 68px;
+    border: 2px dashed #fde047;
+    box-shadow: 0 0 16px rgba(231, 209, 152, 0.65);
+}
+
+.fx-karma-seal.seal-inner {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #e7d198;
+    box-shadow: inset 0 0 12px rgba(253, 224, 71, 0.5);
+}
+
+.spirit-triangle-stage.anim-duel-esprit-karma .fx-karma-seal.seal-outer {
+    animation: fxKarmaSealOuterSpin 1.2s ease-in-out forwards;
+}
+.spirit-triangle-stage.anim-duel-esprit-karma .fx-karma-seal.seal-inner {
+    animation: fxKarmaSealInnerSpin 1.2s ease-in-out forwards;
+}
+.spirit-triangle-stage.anim-duel-esprit-karma .spirit-node-esprit.is-duel-victim {
+    z-index: 7;
+    animation: duelEspritSealedAndRebounded 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spirit-triangle-stage.anim-duel-esprit-karma .spirit-node-karma.is-duel-attacker {
+    z-index: 8;
+    animation: duelKarmaGlideIntoSeal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fxKarmaSealOuterSpin {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(1.6) rotate(0deg); }
+    30%, 55% { opacity: 1; transform: translate(-50%, -50%) scale(0.92) rotate(140deg); }
+    85%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.85) rotate(280deg); }
+}
+
+@keyframes fxKarmaSealInnerSpin {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(1.4) rotate(0deg); }
+    30%, 55% { opacity: 1; transform: translate(-50%, -50%) scale(0.78) rotate(-160deg); }
+    85%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6) rotate(-300deg); }
+}
+
+@keyframes duelEspritSealedAndRebounded {
+    0%, 15% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); }
+    48% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.74) rotate(-18deg); filter: sepia(0.85) brightness(1.3) drop-shadow(0 0 14px #fde047); }
+    82% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(1.06) rotate(0deg); filter: brightness(1.1); }
+    100% { left: 50%; top: 15.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes duelKarmaGlideIntoSeal {
+    0%, 38% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1.12) rotate(15deg); filter: drop-shadow(0 0 14px #e7d198); }
+    72% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.26) rotate(0deg); filter: brightness(1.4) drop-shadow(0 0 22px #fde047); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+/* ==========================================================================
+   DUEL 6 : KARMA -> TÉNÈBRES (Éclipse Vorace & Engloutissement Abyssal)
+   ========================================================================== */
+.fx-eclipse-disc {
+    left: 68%;
+    top: 65%;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #020617;
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 22px #c084fc, inset 0 0 16px #581c87;
+    transform: translate(-50%, -50%) scale(0.5);
+}
+
+.fx-eclipse-corona {
+    left: 50%;
+    top: 53.5%;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2.5px solid #c084fc;
+    box-shadow: 0 0 26px #a855f7;
+    transform: translate(-50%, -50%) scale(0.4);
+}
+
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-eclipse-disc {
+    animation: fxEclipseCreepAcross 1.2s ease-in-out forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-tenebres .fx-eclipse-corona {
+    animation: fxEclipseCoronaPulse 1.2s ease-out forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-tenebres .spirit-node-karma.is-duel-victim {
+    z-index: 7;
+    animation: duelKarmaEclipsedAndBanished 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spirit-triangle-stage.anim-duel-karma-tenebres .spirit-node-tenebres.is-duel-attacker {
+    z-index: 8;
+    animation: duelTenebresEclipseClaim 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fxEclipseCreepAcross {
+    0% { opacity: 0; left: 74%; top: 68%; transform: translate(-50%, -50%) scale(0.4); }
+    35%, 52% { opacity: 0.96; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.08); }
+    75%, 100% { opacity: 0; left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.2); }
+}
+
+@keyframes fxEclipseCoronaPulse {
+    0%, 42% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(1.38); }
+    92%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.15); }
+}
+
+@keyframes duelKarmaEclipsedAndBanished {
+    0%, 18% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+    48% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(0.82); filter: brightness(0.28) hue-rotate(210deg) drop-shadow(0 0 12px #581c87); }
+    85% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.9); }
+    100% { left: 18.5%; top: 73.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+
+@keyframes duelTenebresEclipseClaim {
+    0%, 35% { left: 81.5%; top: 73.5%; transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.8); }
+    64% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1.3); filter: brightness(1.45) drop-shadow(0 0 24px #c084fc); }
+    100% { left: 50%; top: 53.5%; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 
 .armory-section-title {

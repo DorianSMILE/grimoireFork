@@ -26,7 +26,7 @@ export function ArmoryPage() {
       const armoryCssLink = document.querySelector<HTMLLinkElement>(
         'link[href*="/styles/pages/armory.css"]'
       );
-      const targetCssHref = '/styles/pages/armory.css?v=1786180000013';
+      const targetCssHref = '/styles/pages/armory.css?v=1786180000014';
       if (armoryCssLink && !armoryCssLink.href.endsWith(targetCssHref)) {
         armoryCssLink.href = targetCssHref;
       }
@@ -34,7 +34,7 @@ export function ArmoryPage() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
       const spiderUrl = '/js/pages/hero-spider.js?v=19';
-      const armoryUrl = '/js/pages/armory.js?v=120';
+      const armoryUrl = '/js/pages/armory.js?v=121';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -199,7 +199,7 @@ export function ArmoryPage() {
                     </div>
                   </div>
 
-                  {/* Colonne Droite : Spiritualité (4 Boutons Radio empilés) */}
+                  {/* Colonne Droite : Spiritualité (Triangle Mystique à 3 choix) */}
                   <div className="armory-affil-spirit-col">
                     <div className="armory-field flex-1">
                       <div className="armory-field-header">
@@ -229,26 +229,20 @@ export function ArmoryPage() {
                       </div>
 
                       <div
-                        className="spirit-radio-wrapper"
+                        className="spirit-triangle-wrapper"
                         id="charSpiritWrapper"
                         role="radiogroup"
-                        aria-label="Choix de la Spiritualité"
+                        aria-label="Triangle mystique des Spiritualités"
                         tabIndex={0}
                       >
-                        <div className="spirit-radio-grid" id="charSpiritOptions">
-                          <label className="spirit-radio-card spirit-card-none is-selected">
-                            <input
-                              type="radio"
-                              name="charSpiritRadio"
-                              className="spirit-radio-input"
-                              value=""
-                              defaultChecked
-                            />
-                            <span className="spirit-radio-icon-box">
-                              <span className="material-symbols-outlined">block</span>
+                        <div className="spirit-triangle-stage" id="charSpiritStage">
+                          <div className="spirit-triangle-ring" id="charSpiritOptions"></div>
+                          <div className="spirit-triangle-center" id="charSpiritLabel">
+                            <span className="material-symbols-outlined spirit-triangle-center-icon text-muted">
+                              change_history
                             </span>
-                            <span className="spirit-radio-label">Aucune</span>
-                          </label>
+                            <span className="spirit-triangle-center-title">Choisir</span>
+                          </div>
                         </div>
                         <input type="hidden" id="charSpirit" defaultValue="" />
                       </div>

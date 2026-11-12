@@ -123,6 +123,8 @@ declare global {
     initiateCombatCast?: (spellId: number | null) => void;
     endTurn?: () => Promise<void>;
     promptFlee?: () => void;
+    showNotif?: (message: string, isError?: boolean) => void;
+    showModal?: (options: unknown) => Promise<boolean>;
     GrimoireTutorial?: { stop?: () => void };
   }
 }

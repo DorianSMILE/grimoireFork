@@ -1889,14 +1889,14 @@ window.closeEntryModal = function () {
     document.getElementById('entryModal').classList.remove('active');
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════
 // CO-OP LOBBY
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════
 
 let coopLobbyId = null;       // multiSessionId du lobby actif (hôte)
 let coopLobbySSE = null;      // SSE EventSource pour les events du lobby
 
-// â”€â”€â”€ Toggle co-op / solo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Toggle co-op / solo ────────────────────────────────────────────────────
 
 window.onCoopToggleChange = function () {
     const isCoopMode = document.getElementById('coopModeToggle').checked;
@@ -1917,7 +1917,7 @@ window.onCoopToggleChange = function () {
     }
 };
 
-// â”€â”€â”€ Synchroniser l'état du bouton co-op avec la sélection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Synchroniser l'état du bouton co-op avec la sélection ─────────────────
 // (appelé par updateHeroCountDisplay ou directement)
 const _origUpdateHeroCount = window.updateHeroCountDisplay;
 window.updateHeroCountDisplay = function () {
@@ -1938,7 +1938,7 @@ window.updateHeroCountDisplay = function () {
     }
 };
 
-// â”€â”€â”€ Création du lobby (hôte) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Création du lobby (hôte) ───────────────────────────────────────────────
 
 window.createCoopLobby = async function () {
     if (pageState.selectedCharIds.length === 0) {
@@ -1991,7 +1991,7 @@ window.createCoopLobby = async function () {
         }
 
         document.getElementById('lobbyWaitingStatus').innerHTML =
-            '<span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle; animation: spin 1s linear infinite;">autorenew</span> En attente du joueur 2...';
+            '<span class="material-symbols-outlined">autorenew</span> En attente du joueur 2...';
         const overlay = document.getElementById('lobbyWaitingOverlay');
         overlay.style.display = 'flex';
         
@@ -2030,16 +2030,16 @@ window.createCoopLobby = async function () {
 function onLobbyReady(lobby) {
     if (coopLobbySSE) { coopLobbySSE.close(); coopLobbySSE = null; }
     document.getElementById('lobbyWaitingStatus').innerHTML =
-        '<span style="color:#4ade80; font-size:1rem;">âœ” Joueur 2 connecté ! Lancement...</span>';
+        '<span class="lobby-status-ready"><span class="material-symbols-outlined">check_circle</span> Joueur 2 connecté ! Lancement du donjon...</span>';
 
-    // Courte pause puis redirect vers combat.html en tant qu'hôte
+    // Courte pause puis redirect vers /combat en tant qu'hôte
     setTimeout(() => {
         closeLobbyOverlay();
         window.location.href = `/combat?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
     }, 1200);
 }
 
-// â”€â”€â”€ Annulation du lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Annulation du lobby ─────────────────────────────────────────────────────
 
 window.cancelCoopLobby = async function () {
     if (!coopLobbyId) { closeLobbyOverlay(); return; }
@@ -2178,7 +2178,7 @@ function onGuestUpdate(data) {
 }
 
 
-// â”€â”€â”€ Modal Rejoindre un lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Modal Rejoindre un lobby ─────────────────────────────────────────────────
 
 let joinSelectedCharIds = [];
 let joinSelectedConsumableIds = [];

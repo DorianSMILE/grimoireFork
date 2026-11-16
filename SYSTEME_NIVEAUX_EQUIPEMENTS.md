@@ -103,16 +103,24 @@ Chaque Secret du jeu (plus le tronc générique) possède **2 types d'anomalies 
 | **Up 5 (`+4 → +5`)** | **2** | **2** | `6 000 Or × Mult_Rareté` |
 | **TOTAL (`+0 → +5`)** | **6 Catalyseurs** | **4 Éveils** | *Multiplicateur Rareté : Légendaire (×1) · Maudit (×1.5) · Épique (×2) · Relique (×3)* |
 
-### B. Table des Duos (Niv. 4 & Niv. 5) alignée sur les Secrets de la BDD
+### B. Table des 12 Duos (Niv. 4 & Niv. 5) — 11 Spiritualités + Générique
 
-| Secret en BDD (`requiredSecret`) | Spiritualité d'Anomalie | Catalyseur (Niveau 4) | Anomalie d'Éveil (Niveau 5) | Exemple de Craft Onglet Éveil (Ingrédients BDD existants) |
+| Secret / Contexte | Spiritualité (`SpiritualiteType`) | Catalyseur (Niveau 4) | Anomalie d'Éveil (Niveau 5) | Exemple de Craft Onglet Éveil |
 | :--- | :--- | :--- | :--- | :--- |
 | **Secret du Chaos** | `DESTRUCTION` | Éclat de Chaos | **Cœur de Cendre** | `Braise Ardente` (Lvl 2) + `Crâne sanglant` (Lvl 3) + Or + XP Spirit |
 | **Secret du Destin** | `KARMA` | Fragment du Destin | **Prisme Karmique** | `Orbe Catalytique Stabilisé` (Lvl 2) + `Cristal de vision` (Lvl 3) + Or + XP Spirit |
 | **Secret de l'Éther** | `ESPRIT` | Souffle d'Éther | **Cœur Empyréen** | `Orbe d'espoir` (Lvl 2) + `Cœur séraphin` (Lvl 3) + Or + XP Spirit |
 | **Secret des Abysses** | `TENEBRES` | Résidu Abyssal | **Noyau Néant** | `Cristal corrompu` (Lvl 2) + `Orbe démoniaque` (Lvl 2) + `Métal palpitant` (Lvl 2) + Or + XP Spirit |
 | **Secret de l'Abondance** | `CREATION` | Sève Mutagène | **Ambre Parasitaire** | `Métal purulent` (Lvl 2) + `Orbe parasitée` (Lvl 3) + Or + XP Spirit |
+| *Voie Conviction (Lave/Cristal)* | `CONVICTION` | Braises de Conviction | **Cœur de Lave Pure** | `Fibre Incandescente` (Lvl 2) + `Cœur de Basalte` (Lvl 3) + Or + XP Spirit |
+| *Voie Sûreté (Eau/Glace/Pression)* | `SURETE` | Larme de Pression | **Perle des Profondeurs** | `Sablier de Vapeur` (Lvl 2) + `Orbe Sous-Pression` (Lvl 3) + Or + XP Spirit |
+| *Voie Raison (Air/Vide/Gravité)* | `RAISON` | Ondes de Gravité | **Singularité Lucide** | `Cristal Résonnant` (Lvl 2) + `Orbe de Distorsion` (Lvl 3) + Or + XP Spirit |
+| *Voie Violence (Combustion/Fureur)* | `VIOLENCE` | Éclat Déflagrant | **Noyau de Fureur** | `Métal Fragmenté` (Lvl 2) + `Cœur Furieux` (Lvl 3) + Or + XP Spirit |
+| *Voie Trahison (Acide/Poison/Corrosion)* | `TRAHISON` | Fiole Corrosive | **Venin Souverain** | `Métal Corrodé` (Lvl 2) + `Crâne Empoisonné` (Lvl 3) + Or + XP Spirit |
+| *Voie Consolidation (Terre/Métal/Atome)* | `CONSOLIDATION` | Noyau Tellurique | **Monolithe Éternel** | `Cube Atomique` (Lvl 2) + `Cœur Lithique` (Lvl 3) + Or + XP Spirit |
 | **Aucun Secret (`null`)** | *Générique* | Poussière d'Éveil | **Pierre d'Ascension** | Mix d'anomalies Lvl 2/3 multi-spiritualités + Or & XP Spirit majorés |
+
+*(Les 6 Voies sans anomalies en BDD reçoivent également leurs anomalies de base Niv. 1–3 thématiques : Lave/Verre pour Conviction, Eau/Glace/Pression pour Sûreté, Air/Vide/Gravité pour Raison, Combustion/Fragmentation pour Violence, Acide/Poison/Corrosion pour Trahison, Terre/Métal/Atome pour Consolidation.)*
 
 ### C. Règle d'Unicité & Multi-Recettes (Backend)
 - **Pourquoi `level = 4/5` seul ne suffit pas :** Un simple niveau `4` ou `5` sur `Anomalie` mélangerait les catalyseurs aux anomalies Lvl 1–3 dans les Coffres et ferait apparaître leurs recettes dans l'Alchimie classique.
@@ -204,8 +212,12 @@ La page **Alchimie** (`/alchemy`) est scindée en **2 onglets distincts** (sans 
    - **Sous-section Catalyseurs & Éveils :** Recettes dédiées (`GIVE_CATALYST` / `GIVE_AWAKENING`) des **6 Catalyseurs (Niv. 4)** et **6 Anomalies d'Éveil (Niv. 5)** à partir d'anomalies Lvl 1–3 + Or + XP Spiritualité.
    - **Sous-section Atelier d'Éveil :** Liste des équipements éligibles du joueur (`LEGENDAIRE`, `EPIQUE`, `RELIQUE`, `MAUDIT`), équipés ou en coffre, avec preview avant/après (`+up → +(up+1)`) calculée par le serveur, coût (Catalyseur Niv. 4 / Éveil Niv. 5 + Or) et bouton d'éveil.
 
-### C. Séparation dans les Coffres (`/vault`) & Liens Contextuels (`/armory`, `/vault`)
+### C. Séparation dans les Coffres (`/vault`), Tri & Liens Contextuels (`/armory`, `/vault`)
 - **Séparation visuelle dans les Coffres :** Les anomalies de base (`Niv. 1–3`) restent séparées des **Catalyseurs (`Niv. 4`)** et **Anomalies d'Éveil (`Niv. 5`)** via un filtre/sous-onglet dédié et des badges visuels distincts, évitant tout mélange brouillon.
+- **Stacking & Tri par niveau d'éveil :**
+  - Les équipements non équipés similaires sont groupés **uniquement s'ils partagent le même `(name, rarity, upgradeLevel)`** (un item `+0` et un item `+2` restent séparés).
+  - Ajout d'un tri **Niveau d'éveil (Élevé / Faible)** dans les Coffres.
+- **Démantèlement en quantité :** Quand un stack contient plusieurs équipements identiques du même palier (`stackCount > 1`), la modale de démantèlement permet de choisir la quantité (`1..stackCount`) avec preview cumulée d'Or et d'anomalies restituées.
 - **Liens directs vers l'Éveil :** Sur les équipements équipés (**Armurerie**) et les équipements éligibles (**Coffres**), un lien **Éveiller** pointe vers `/alchemy?tab=awakening&equipId={id}`.
 - **Règle d'activation stricte (calculée côté back dans le DTO) :**
   - Cliquable **uniquement si `upgradeReady == true`** (`unlockedAwakening == true`, item éligible, `upgradeLevel < 5`, joueur possède Catalyseur/Éveil + Or requis pour le palier suivant, et porteur non engagé en combat actif).

@@ -1123,11 +1123,15 @@ function renderPersonnages() {
                     if (eq.specialEffect && eq.specialEffect !== 'NONE') {
                         effectStar = `<span class="material-symbols-outlined text-xs text-purple ml-1">auto_awesome</span>`;
                     }
-                    return `<span class="char-equip-chip ${rarityClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()" style="cursor: pointer;">
+                    const upLvl = Number(eq.upgradeLevel || 0);
+                    const upChipBadge = upLvl > 0
+                        ? `<span class="equip-upgrade-badge ${upLvl >= 5 ? 'is-max' : ''}">+${upLvl}</span>`
+                        : '';
+                    return `<span class="char-equip-chip ${rarityClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''} text-sm" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
-                        ${eq.name}${effectStar}
+                        ${eq.name}${upChipBadge}${effectStar}
                         <template class="tooltip-data">
-                            <div class="${rarityClass} font-bold mb-1 text-base">${eq.name}</div>
+                            <div class="${rarityClass} font-bold mb-1 text-base">${eq.name}${upChipBadge}</div>
                             <div class="eq-stats-container mt-2">
                                 ${eqStatsHtml || '<div class="text-muted text-sm font-italic">Aucun bonus</div>'}
                                 ${eqSpecialEffectHtml}
@@ -1318,6 +1322,21 @@ function renderEquipModal() {
                 </div>`;
             }
 
+            const upLvl = Number(equipped.upgradeLevel || 0);
+            const upBadge = upLvl > 0
+                ? `<span class="equip-upgrade-badge ${upLvl >= 5 ? 'is-max' : ''}">+${upLvl}</span>`
+                : '';
+            let awakenLinkHtml = '';
+            if (equipped.upgradeEligible && upLvl < 5) {
+                const safeReason = String(equipped.upgradeMissingReason || 'Éveil indisponible')
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;');
+                awakenLinkHtml = equipped.upgradeReady
+                    ? `<a href="/alchemy?tab=awakening&equipId=${equipped.id}" class="equip-awaken-btn is-ready" title="Éveiller l'équipement"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></a>`
+                    : `<span class="equip-awaken-btn is-disabled" title="${safeReason}"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></span>`;
+            }
+
             return `
                 <div class="equip-slot-card equipped" data-slot="${slotKey}">
                     <div class="equip-slot-header">
@@ -1325,11 +1344,14 @@ function renderEquipModal() {
                             <span class="material-symbols-outlined text-lg ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                             ${slotInfo.label}
                         </span>
-                        <button class="eq-unequip-btn" onclick="unequipItem(${equipped.id})" title="Retirer">
-                            <span class="material-symbols-outlined text-sm">close</span>
-                        </button>
+                        <div class="flex items-center gap-1">
+                            ${awakenLinkHtml}
+                            <button class="eq-unequip-btn" onclick="unequipItem(${equipped.id})" title="Retirer">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="equip-slot-item-name ${rarityClass}">${equipped.name}</div>
+                    <div class="equip-slot-item-name ${rarityClass}">${equipped.name}${upBadge}</div>
                     <div class="equip-slot-stats">
                         ${statsChips || '<span class="opacity-40">Aucun bonus</span>'}
                         ${specialEffectHtml}
@@ -1461,6 +1483,12 @@ function renderEquipModal() {
                 </div>`;
         }
     }).join('');
+
+    if (window.currentUser?.awakeningTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive()) {
+        if (container.querySelector('.equip-awaken-btn.is-ready')) {
+            window.GrimoireTutorial.startPhase('AWAKENING');
+        }
+    }
 }
 
 function updateTavernePassivesPreview() {

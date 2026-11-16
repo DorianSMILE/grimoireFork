@@ -162,54 +162,193 @@ window.deleteAnomalie = function (idsStr) {
     });
 }
 
+function getAnomalieCategoryType(eq) {
+    const tName = typeof eq?.anomalieType === 'object' ? eq.anomalieType?.name : eq?.anomalieType;
+    if (tName === 'CATALYSEUR' || eq?.level === 4) return 'CATALYSEUR';
+    if (tName === 'EVEIL' || eq?.level === 5) return 'EVEIL';
+    return 'STANDARD';
+}
+
+function escapeAttr(val) {
+    return String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function renderDismantlePreviewContent(previewBox, sim) {
+    previewBox.textContent = '';
+    if (!sim) {
+        const loading = document.createElement('p');
+        loading.className = 'text-xs text-muted m-0';
+        loading.textContent = 'Calcul du démantèlement...';
+        previewBox.appendChild(loading);
+        return;
+    }
+    if (!sim.canDismantle) {
+        const err = document.createElement('p');
+        err.className = 'text-xs text-error m-0 font-semibold';
+        err.textContent = sim.blockedReason || 'Démantèlement impossible.';
+        previewBox.appendChild(err);
+        return;
+    }
+
+    const goldRow = document.createElement('div');
+    goldRow.className = 'dismantle-gold-row';
+    const goldLabel = document.createElement('span');
+    goldLabel.textContent = 'Or récupéré';
+    const goldVal = document.createElement('span');
+    goldVal.textContent = `+${Math.round(sim.goldReward || 0)} Or`;
+    goldRow.appendChild(goldLabel);
+    goldRow.appendChild(goldVal);
+    previewBox.appendChild(goldRow);
+
+    const rewards = sim.anomalyRewards || {};
+    const entries = Object.entries(rewards);
+    if (entries.length > 0) {
+        const list = document.createElement('div');
+        list.className = 'dismantle-anomalies-list';
+        const header = document.createElement('div');
+        header.className = 'text-xs font-semibold text-purple-300';
+        header.textContent = 'Ingrédients bruts restitués :';
+        list.appendChild(header);
+
+        entries.forEach(([name, count]) => {
+            const row = document.createElement('div');
+            row.className = 'dismantle-anomaly-row';
+            const nSpan = document.createElement('span');
+            nSpan.textContent = name;
+            const cSpan = document.createElement('span');
+            cSpan.className = 'font-bold text-success';
+            cSpan.textContent = `+${count}`;
+            row.appendChild(nSpan);
+            row.appendChild(cSpan);
+            list.appendChild(row);
+        });
+        previewBox.appendChild(list);
+    }
+}
+
+async function refreshDismantlePreview() {
+    const ctx = window.currentDeleteCtx;
+    const previewBox = document.getElementById('dismantlePreviewBox');
+    if (!ctx || !previewBox) return;
+
+    let qty = 1;
+    const qtyInput = document.getElementById('deleteQuantityInput');
+    if (qtyInput) {
+        qty = parseInt(qtyInput.value, 10) || 1;
+        if (qty > ctx.maxQty) qty = ctx.maxQty;
+        if (qty < 1) qty = 1;
+        qtyInput.value = qty;
+    }
+
+    const selectedIds = ctx.ids.slice(0, qty).map(Number);
+    try {
+        const res = await globalFetch('/api/equipments/dismantle/batch/simulate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipmentIds: selectedIds })
+        });
+        if (res && res.ok) {
+            const sim = await res.json();
+            ctx.lastSim = sim;
+            renderDismantlePreviewContent(previewBox, sim);
+        } else if (res) {
+            const err = await res.json().catch(() => null);
+            renderDismantlePreviewContent(previewBox, {
+                canDismantle: false,
+                blockedReason: err?.error || 'Simulation impossible.'
+            });
+        }
+    } catch (e) {
+        renderDismantlePreviewContent(previewBox, {
+            canDismantle: false,
+            blockedReason: 'Erreur réseau lors de la simulation.'
+        });
+    }
+}
+
 function vaultDeleteEquipment(idsStr) {
-    const ids = String(idsStr).split(',');
+    const ids = String(idsStr).split(',').filter(Boolean);
     const maxQty = ids.length;
     const firstId = Number(ids[0]);
     const eq = pageState.allEquipments.find(e => e.id === firstId && !e.isAnomalie);
     if (!eq) return;
 
-    const weight = +Number(eq._weight).toFixed(1);
-    window.currentDeleteCtx = { eq, maxQty, weight };
+    // Cas Admin supprimant un modèle de référence
+    if (window.isAdmin && eq.isTemplate) {
+        showModal({
+            title: "Supprimer le modèle ?",
+            body: `Voulez-vous supprimer le modèle <strong class="text-white">${escapeAttr(eq.name)}</strong> ?`,
+            icon: 'warning',
+            confirmText: 'Supprimer',
+            onConfirm: async () => {
+                const res = await globalFetch(`/api/equipments/${firstId}`, { method: 'DELETE' });
+                if (res && res.ok) {
+                    showNotif('Modèle supprimé.');
+                    await loadEquipments();
+                } else {
+                    showNotif('Impossible de supprimer ce modèle.', true);
+                }
+            }
+        });
+        return;
+    }
 
-    let qtyHtml = ``;
+    const upLvl = Number(eq.upgradeLevel || 0);
+    const upBadge = upLvl > 0 ? ` <span class="equip-upgrade-badge">+${upLvl}</span>` : '';
+    window.currentDeleteCtx = { eq, ids, maxQty, lastSim: null };
+
+    let qtyHtml = '';
     if (maxQty > 1) {
         qtyHtml = `
             <div class="mt-4 flex items-center justify-center gap-3">
-                <label for="deleteQuantityInput" style="color: var(--text-muted);">Quantité :</label>
-                <input type="number" id="deleteQuantityInput" value="1" min="1" max="${maxQty}" oninput="if(window.updateDeleteModalPrice) window.updateDeleteModalPrice();" style="background: var(--bg-surface-light, #1e293b); color: white; border: 1px solid var(--border-color, #334155); border-radius: 4px; padding: 4px 8px; width: 60px; text-align: center; outline: none;">
+                <label for="deleteQuantityInput" class="dismantle-modal-label">Quantité (max ${maxQty}) :</label>
+                <input type="number" id="deleteQuantityInput" value="1" min="1" max="${maxQty}" class="dismantle-qty-input">
             </div>
         `;
     }
 
     showModal({
-        title: "Détruire l'équipement ?",
-        body: `Voulez-vous vraiment détruire <strong class="text-white">${eq.name}</strong> ?<br><br>Vous récupérerez <strong class="text-amber-400" id="deletePriceContainer">${weight}</strong> <span class="material-symbols-outlined align-middle text-amber-300" style="font-size: 1.1em; margin-top: -2px;">monetization_on</span>.${qtyHtml}`,
+        title: "Démanteler l'équipement ?",
+        body: `Voulez-vous démanteler <strong class="text-white">${escapeAttr(eq.name)}</strong>${upBadge} ?${qtyHtml}<div id="dismantlePreviewBox" class="dismantle-preview-box">Calcul du démantèlement...</div>`,
         icon: 'warning',
-        confirmText: `Oui, détruire`,
+        confirmText: 'Démanteler',
         onConfirm: async () => {
             let qtyToDel = 1;
             const input = document.getElementById('deleteQuantityInput');
-            if (input) qtyToDel = parseInt(input.value, 10) || 1;
+            if (input) qtyToDel = Math.min(maxQty, Math.max(1, parseInt(input.value, 10) || 1));
+            const targetIds = ids.slice(0, qtyToDel).map(Number);
 
             try {
-                let successCount = 0;
-                for (let i = 0; i < qtyToDel; i++) {
-                    const res = await globalFetch(`/api/equipments/${ids[i]}`, { method: 'DELETE' });
-                    if (res.ok) successCount++;
-                }
-                if (successCount > 0) {
-                    showNotif(`${successCount} équipement(s) détruit(s).`);
+                const res = await globalFetch('/api/equipments/dismantle/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ equipmentIds: targetIds })
+                });
+                const data = res ? await res.json().catch(() => null) : null;
+                if (res && res.ok && data) {
+                    const anoCount = Object.values(data.anomalyRewards || {}).reduce((acc, v) => acc + Number(v || 0), 0);
+                    const msg = anoCount > 0
+                        ? `${data.quantity}x démantelé : +${Math.round(data.goldReward)} Or et +${anoCount} ingrédient(s).`
+                        : `${data.quantity}x démantelé : +${Math.round(data.goldReward)} Or.`;
+                    showNotif(msg);
                     await loadEquipments();
                     if (window.checkAuthStatus) window.checkAuthStatus();
                 } else {
-                    showNotif('Impossible de détruire cet objet (lié).', true);
+                    showNotif(data?.error || 'Impossible de démanteler cet équipement.', true);
                 }
             } catch (e) {
                 showNotif('Erreur réseau.', true);
             }
         }
     });
+
+    setTimeout(() => {
+        const qtyInput = document.getElementById('deleteQuantityInput');
+        if (qtyInput) {
+            qtyInput.addEventListener('input', refreshDismantlePreview);
+        }
+        refreshDismantlePreview();
+    }, 30);
 }
 
 function groupEquipments(list) {
@@ -223,7 +362,7 @@ function groupEquipments(list) {
         }
 
         let ownerLabel = eq.personnage ? eq.personnage.name : eq.ownerUsername;
-        let key = eq.isAnomalie ? `ANO_${eq.name}_${eq.level || 1}` : `EQ_${eq.name}_${eq.rarity?.name || eq.rarity}_${eq.level || 1}`;
+        let key = eq.isAnomalie ? `ANO_${eq.name}_${eq.level || 1}` : `EQ_${eq.name}_${eq.rarity?.name || eq.rarity}_${eq.upgradeLevel || 0}`;
         if (window.isAdmin) {
             key += `_${ownerLabel}`;
         }
@@ -352,6 +491,41 @@ function getDungeonLootButtonHtml(eq) {
     `;
 }
 
+function ensureVaultAnomalySubfilters(show) {
+    const toolbar = document.querySelector('.vault-toolbar');
+    if (!toolbar || !toolbar.parentElement) return;
+    let bar = document.getElementById('vaultAnomalySubfilters');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'vaultAnomalySubfilters';
+        bar.className = 'vault-anomaly-subfilters is-hidden';
+        const defs = [
+            { key: 'ALL', label: 'Toutes les anomalies' },
+            { key: 'STANDARD', label: 'Anomalies (Niv. 1–3)' },
+            { key: 'CATALYSEUR', label: 'Catalyseurs (Niv. 4)' },
+            { key: 'EVEIL', label: "Anomalies d'Éveil (Niv. 5)" }
+        ];
+        if (!pageState.anomalySubFilter) pageState.anomalySubFilter = 'ALL';
+        defs.forEach(d => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `vault-anomaly-pill ${pageState.anomalySubFilter === d.key ? 'is-active' : ''}`;
+            btn.dataset.subfilter = d.key;
+            btn.textContent = d.label;
+            btn.addEventListener('click', () => {
+                pageState.anomalySubFilter = d.key;
+                bar.querySelectorAll('.vault-anomaly-pill').forEach(p => {
+                    p.classList.toggle('is-active', p.dataset.subfilter === d.key);
+                });
+                filterVault();
+            });
+            bar.appendChild(btn);
+        });
+        toolbar.parentElement.insertBefore(bar, toolbar.nextSibling);
+    }
+    bar.classList.toggle('is-hidden', !show);
+}
+
 function filterVault() {
     const searchName = document.getElementById('searchItemName').value.toLowerCase();
     const searchOwner = document.getElementById('searchOwnerName')?.value.toLowerCase() || '';
@@ -363,6 +537,7 @@ function filterVault() {
     const filterAnomalie = document.getElementById('filterAnomalieOnly')?.checked;
     const filterNonLootable = document.getElementById('filterNonLootableOnly')?.checked;
     const filterCraftable = document.getElementById('filterCraftableOnly')?.checked;
+    ensureVaultAnomalySubfilters(Boolean(filterAnomalie));
 
     let filtered = pageState.allEquipments.filter(eq => {
         if (filterNonLootable) {
@@ -387,6 +562,10 @@ function filterVault() {
         }
 
         if (!matchMainType) return false;
+
+        if (eq.isAnomalie && filterAnomalie && pageState.anomalySubFilter && pageState.anomalySubFilter !== 'ALL') {
+            if (getAnomalieCategoryType(eq) !== pageState.anomalySubFilter) return false;
+        }
 
         const matchName = !searchName || eq.name.toLowerCase().includes(searchName);
         const matchOwner = !searchOwner || (eq.ownerUsername && eq.ownerUsername.toLowerCase().includes(searchOwner));
@@ -475,6 +654,16 @@ function filterVault() {
 
         if (sortVault === 'weight_desc') return b._weight - a._weight;
         if (sortVault === 'weight_asc') return a._weight - b._weight;
+        if (sortVault === 'level_desc') {
+            const diff = (b.upgradeLevel || 0) - (a.upgradeLevel || 0);
+            if (diff !== 0) return diff;
+            return (b.level || 0) - (a.level || 0);
+        }
+        if (sortVault === 'level_asc') {
+            const diff = (a.upgradeLevel || 0) - (b.upgradeLevel || 0);
+            if (diff !== 0) return diff;
+            return (a.level || 0) - (b.level || 0);
+        }
 
         return 0;
     });
@@ -552,6 +741,8 @@ function renderGrid(equipments) {
                         <div class="vault-card-name flex items-center gap-1" style="color: ${spColor};">
                             <span class="material-symbols-outlined flex-shrink-0 opacity-80 text-xl">${catIcon}</span>
                             <span class="word-break leading-tight">${eq.name}</span>
+                            ${getAnomalieCategoryType(eq) === 'CATALYSEUR' ? '<span class="vault-anomaly-type-badge type-catalyst">Catalyseur</span>' : ''}
+                            ${getAnomalieCategoryType(eq) === 'EVEIL' ? '<span class="vault-anomaly-type-badge type-eveil">Éveil</span>' : ''}
                         </div>
                         ${adminOwnerHtml ? `<div>${adminOwnerHtml}</div>` : ''}
                     </div>
@@ -658,6 +849,7 @@ function renderGrid(equipments) {
                         </div>
                         <div class="vault-card-name word-break">
                             ${eq.name}
+                            ${(eq.upgradeLevel && eq.upgradeLevel > 0) ? `<span class="equip-upgrade-badge ${eq.upgradeLevel >= 5 ? 'is-max' : ''}">+${eq.upgradeLevel}</span>` : ''}
                         </div>
                         ${adminOwnerHtml ? `<div class="mt-1">${adminOwnerHtml}</div>` : ''}
                     </div>
@@ -666,10 +858,15 @@ function renderGrid(equipments) {
                             ${window.isAdmin ? `<button class="vault-btn-edit" onclick="editEquipment(${eq.id})" title="Modifier l'objet">
                                 <span class="material-symbols-outlined">edit</span>
                             </button>` : ''}
-                            ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="Détruire l'objet">
+                            ${(window.isAdmin || eq.ownerUsername === window.currentUser?.username) ? `<button class="vault-btn-delete" onclick="deleteEquipment('${eq.stackIds ? eq.stackIds.join(',') : eq.id}')" title="Démanteler l'objet">
                                 <span class="material-symbols-outlined">delete</span>
                             </button>` : ''}
                         </div>
+                        ${(eq.upgradeEligible && (eq.upgradeLevel || 0) < 5 && (window.isAdmin || eq.ownerUsername === window.currentUser?.username))
+                            ? (eq.upgradeReady
+                                ? `<a href="/alchemy?tab=awakening&equipId=${eq.id}" class="equip-awaken-btn is-ready" title="Éveiller l'équipement"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></a>`
+                                : `<span class="equip-awaken-btn is-disabled" title="${escapeAttr(eq.upgradeMissingReason || 'Éveil indisponible')}"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></span>`)
+                            : ''}
                         ${getDungeonLootButtonHtml(eq)}
                     </div>
                 </div>
@@ -688,6 +885,12 @@ function renderGrid(equipments) {
                 </div>
             </div>`;
     }).join('');
+
+    if (window.currentUser?.awakeningTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive()) {
+        if (document.querySelector('#vaultGrid .equip-awaken-btn.is-ready')) {
+            window.GrimoireTutorial.startPhase('AWAKENING');
+        }
+    }
 }
 
 // Init

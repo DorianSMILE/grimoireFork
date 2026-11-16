@@ -191,6 +191,7 @@ public class AnomalieController {
         existing.setCategory(anomalieDetails.getCategory());
         existing.setDescription(anomalieDetails.getDescription());
         existing.setLevel(anomalieDetails.getLevel());
+        existing.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(existing.getLevel()));
         existing.setMagicObject(anomalieDetails.isMagicObject());
 
         List<Anomalie> sameAnomalies = anomalieRepository.findByName(originalName);
@@ -201,6 +202,7 @@ public class AnomalieController {
                 a.setCategory(existing.getCategory());
                 a.setDescription(existing.getDescription());
                 a.setLevel(existing.getLevel());
+                a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(existing.getLevel()));
                 a.setMagicObject(existing.isMagicObject());
             }
 
@@ -246,7 +248,9 @@ public class AnomalieController {
                     a.setSpiritualite(anomalie.getSpiritualite());
                     a.setCategory(anomalie.getCategory());
                     a.setDescription(anomalie.getDescription());
-                    a.setLevel(anomalie.getLevel() != null ? anomalie.getLevel() : 1);
+                    int lvl = anomalie.getLevel() != null ? anomalie.getLevel() : 1;
+                    a.setLevel(lvl);
+                    a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(lvl));
                     a.setMagicObject(anomalie.isMagicObject());
                 }
 
@@ -256,6 +260,10 @@ public class AnomalieController {
                 return ResponseEntity.ok(existing);
             }
         }
+
+        int lvl = anomalie.getLevel() != null ? anomalie.getLevel() : 1;
+        anomalie.setLevel(lvl);
+        anomalie.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(lvl));
 
         boolean isAdmin = "ADMIN".equals(userOpt.get().getRole());
         if (isAdmin) {

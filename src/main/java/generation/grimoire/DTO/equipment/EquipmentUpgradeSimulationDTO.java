@@ -1,0 +1,32 @@
+package generation.grimoire.dto.equipment;
+
+public record EquipmentUpgradeSimulationDTO(
+        Long equipmentId,
+        String equipmentName,
+        String rarity,
+        String rarityLabel,
+        String slot,
+        String slotLabel,
+        String requiredSecret,
+        String specialEffect,
+        int currentLevel,
+        int nextLevel,
+        int maxLevel,
+        boolean eligible,
+        boolean maxReached,
+        boolean unlockedAwakening,
+        boolean inActiveCombat,
+        boolean canUpgrade,
+        String missingReason,
+        double goldCost,
+        double userGold,
+        String catalystName,
+        int catalystRequired,
+        int catalystOwned,
+        String awakeningName,
+        int awakeningRequired,
+        int awakeningOwned,
+        EquipmentStatsSnapshotDTO currentStats,
+        EquipmentStatsSnapshotDTO nextStats,
+        EquipmentStatsSnapshotDTO deltas
+) {}

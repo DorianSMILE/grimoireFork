@@ -1,6 +1,7 @@
 package generation.grimoire.entity;
 
 import generation.grimoire.enumeration.AnomalieCategory;
+import generation.grimoire.enumeration.AnomalieType;
 import generation.grimoire.enumeration.SpiritualiteType;
 import generation.grimoire.entity.auth.AppUser;
 import jakarta.persistence.*;
@@ -40,6 +41,10 @@ public class Anomalie {
 
     @Column(nullable = false)
     private Integer level = 1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(32) default 'STANDARD'")
+    private AnomalieType anomalieType = AnomalieType.STANDARD;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
     @com.fasterxml.jackson.annotation.JsonProperty("magicObject")

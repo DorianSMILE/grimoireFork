@@ -132,6 +132,14 @@ async function updateRewardNameInput() {
         if (type === 'UNLOCK_FEATURE') {
             levelInput.disabled = false;
             levelInput.style.opacity = '1';
+        } else if (type === 'GIVE_CATALYST') {
+            levelInput.disabled = true;
+            levelInput.style.opacity = '0.5';
+            levelInput.value = 4;
+        } else if (type === 'GIVE_AWAKENING') {
+            levelInput.disabled = true;
+            levelInput.style.opacity = '0.5';
+            levelInput.value = 5;
         } else {
             levelInput.disabled = true;
             levelInput.style.opacity = '0.5';
@@ -142,8 +150,14 @@ async function updateRewardNameInput() {
     let optionsHtml = '';
     let displayLabel = 'Choisir un objet...';
 
-    if (type === 'GIVE_ANOMALY') {
-        pageState.allAnomalies.forEach(a => {
+    if (type === 'GIVE_ANOMALY' || type === 'GIVE_CATALYST' || type === 'GIVE_AWAKENING') {
+        const filteredAnoms = pageState.allAnomalies.filter(a => {
+            const lvl = a.level || 1;
+            if (type === 'GIVE_CATALYST') return lvl === 4;
+            if (type === 'GIVE_AWAKENING') return lvl === 5;
+            return lvl <= 3;
+        });
+        filteredAnoms.forEach(a => {
             const catIcon = a.category ? (getCategoryIcon(a.category)) : 'star';
             const spiriColor = a.spiritualite ? getSpiritualiteColor(a.spiritualite) : '#a855f7';
             optionsHtml += `<div class="custom-option" data-value="${a.name}">
@@ -421,15 +435,16 @@ function renderAdminRecipesList() {
         }
 
         let rewardHtml = '';
-        if (r.rewardType === 'GIVE_ANOMALY') {
+        if (r.rewardType === 'GIVE_ANOMALY' || r.rewardType === 'GIVE_CATALYST' || r.rewardType === 'GIVE_AWAKENING') {
             const aTemp = pageState.allAnomalies.find(a => a.name === r.rewardName);
+            const typeTag = r.rewardType === 'GIVE_CATALYST' ? ' [Catalyseur Niv. 4]' : (r.rewardType === 'GIVE_AWAKENING' ? ' [Éveil Niv. 5]' : '');
             if (aTemp) {
                 const catIcon = aTemp.category ? (getCategoryIcon(aTemp.category)) : 'star';
                 const spiriColor = aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';
                 const tooltipData = getAnomalyTooltipHTML(aTemp, r.rewardName);
-                rewardHtml = `<span class="anomaly-badge cursor-help" style="border-color: ${spiriColor}; background: linear-gradient(${spiriColor}25, ${spiriColor}25), #1e293b; color: ${spiriColor};" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}"><span class="material-symbols-outlined" style="font-size: 1rem; color: ${spiriColor};">${catIcon}</span> ${r.rewardQuantity}x ${r.rewardName}</span>`;
+                rewardHtml = `<span class="anomaly-badge cursor-help" style="border-color: ${spiriColor}; background: linear-gradient(${spiriColor}25, ${spiriColor}25), #1e293b; color: ${spiriColor};" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()" data-tooltip-html="${tooltipData.replace(/"/g, '&quot;')}"><span class="material-symbols-outlined" style="font-size: 1rem; color: ${spiriColor};">${catIcon}</span> ${r.rewardQuantity}x ${r.rewardName}${typeTag}</span>`;
             } else {
-                rewardHtml = `<span class="text-green-500">${r.rewardType} - ${r.rewardQuantity}x ${r.rewardName} (Niv. ${r.rewardLevel})</span>`;
+                rewardHtml = `<span class="text-green-500">${r.rewardType} - ${r.rewardQuantity}x ${r.rewardName} (Niv. ${r.rewardLevel})${typeTag}</span>`;
             }
         } else if (r.rewardType === 'GIVE_CONSUMABLE') {
             const consTemp = pageState.allConsumables.find(c => c.name === r.rewardName);

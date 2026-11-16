@@ -5,6 +5,7 @@ import generation.grimoire.entity.auth.AppUser;
 import generation.grimoire.entity.pve.Donjon;
 import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.model.pve.CombatSession;
+import generation.grimoire.repository.AnomalieRepository;
 import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
@@ -13,6 +14,7 @@ import generation.grimoire.repository.pve.HuntingQuestEntryRepository;
 import generation.grimoire.security.JwtService;
 import generation.grimoire.security.RefreshTokenService;
 import generation.grimoire.service.AlchemyService;
+import generation.grimoire.service.equipment.EquipmentAwakeningService;
 import generation.grimoire.service.pve.CombatService;
 import generation.grimoire.service.pve.DungeonTutorialService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +52,8 @@ public class AuthController {
     private final EquipmentRepository equipmentRepository;
     private final CombatService combatService;
     private final DungeonTutorialService dungeonTutorialService;
+    private final EquipmentAwakeningService equipmentAwakeningService;
+    private final AnomalieRepository anomalieRepository;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService,
@@ -59,7 +63,9 @@ public class AuthController {
             PersonnageRepository personnageRepository,
             EquipmentRepository equipmentRepository,
             CombatService combatService,
-            DungeonTutorialService dungeonTutorialService) {
+            DungeonTutorialService dungeonTutorialService,
+            EquipmentAwakeningService equipmentAwakeningService,
+            AnomalieRepository anomalieRepository) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -72,6 +78,8 @@ public class AuthController {
         this.equipmentRepository = equipmentRepository;
         this.combatService = combatService;
         this.dungeonTutorialService = dungeonTutorialService;
+        this.equipmentAwakeningService = equipmentAwakeningService;
+        this.anomalieRepository = anomalieRepository;
     }
 
     @PostMapping("/register")
@@ -130,6 +138,11 @@ public class AuthController {
             res.put("unlockedAlchemy", u.isUnlockedAlchemy());
             res.put("unlockedShop", dungeonTutorialService.hasCompletedAllLevel1FreeDungeons(u, allDungeons));
             res.put("shopLockMessage", "Terminez plus de donjons libres avant de débloquer la boutique.");
+            boolean isAdminRole = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+            boolean unlockedAwakening = isAdminRole || dungeonTutorialService.hasCompletedLevel3Dungeon(u, allDungeons);
+            res.put("unlockedAwakening", unlockedAwakening);
+            res.put("awakeningTutorialCompleted", u.isAwakeningTutorialCompleted());
             int huntingClaimableCount = 0;
             java.time.LocalDate todayParis = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Paris"));
             for (generation.grimoire.entity.pve.HuntingQuestEntry e : huntingQuestEntryRepository.findByAccountName(u.getUsername())) {
@@ -246,6 +259,21 @@ public class AuthController {
             res.put("shopTutorialActive", shopTutorialActive);
             boolean combatTutorialActive = !u.isCombatTutorialCompleted();
             res.put("combatTutorialActive", combatTutorialActive);
+
+            boolean awakeningTutorialActive = false;
+            if (unlockedAwakening && !u.isAwakeningTutorialCompleted()) {
+                List<Equipment> playerEqs = equipmentRepository.findByUser_Username(u.getUsername()).stream()
+                        .filter(e -> !e.isTemplate())
+                        .toList();
+                if (!playerEqs.isEmpty()) {
+                    var anomalies = anomalieRepository.findByOwnerUsername(u.getUsername());
+                    var statuses = equipmentAwakeningService.computeUpgradeStatuses(
+                            u, isAdmin, true, playerEqs, anomalies);
+                    awakeningTutorialActive = statuses.values().stream()
+                            .anyMatch(EquipmentAwakeningService.UpgradeStatus::ready);
+                }
+            }
+            res.put("awakeningTutorialActive", awakeningTutorialActive);
         });
 
         return ResponseEntity.ok()
@@ -365,11 +393,17 @@ public class AuthController {
             user.setCombatTutorialCompleted(true);
         } else if ("EQUIP_ARMORY".equals(phase) || "EQUIP_NAV".equals(phase)) {
             user.setEquipTutorialCompleted(true);
+        } else if ("AWAKENING".equals(phase)) {
+            user.setAwakeningTutorialCompleted(true);
         } else {
             user.setTutorialCompleted(true);
         }
         userRepository.save(user);
-        return ResponseEntity.ok(Map.of("tutorialCompleted", user.isTutorialCompleted(), "equipTutorialCompleted", user.isEquipTutorialCompleted(), "tutorialPhase", "NONE"));
+        return ResponseEntity.ok(Map.of(
+                "tutorialCompleted", user.isTutorialCompleted(),
+                "equipTutorialCompleted", user.isEquipTutorialCompleted(),
+                "awakeningTutorialCompleted", user.isAwakeningTutorialCompleted(),
+                "tutorialPhase", "NONE"));
     }
 
     @PostMapping("/tutorial/reset")
@@ -387,6 +421,7 @@ public class AuthController {
         user.setEquipTutorialCompleted(false);
         user.setShopTutorialCompleted(false);
         user.setCombatTutorialCompleted(false);
+        user.setAwakeningTutorialCompleted(false);
         userRepository.save(user);
         return ResponseEntity.ok(Map.of("message", "Tutoriels réinitialisés avec succès !"));
     }

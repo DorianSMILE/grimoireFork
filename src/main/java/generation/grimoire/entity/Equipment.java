@@ -47,6 +47,9 @@ public class Equipment {
 
     private int specialEffectValue = 0;
 
+    @Column(name = "upgrade_level", nullable = false, columnDefinition = "integer default 0")
+    private int upgradeLevel = 0;
+
     // Bonus de stats accordés par cet équipement
     private int bonusHealthMax = 0;
     private int bonusManaMax = 0;

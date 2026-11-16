@@ -185,4 +185,18 @@ public class DungeonTutorialService {
         Set<Long> completedIds = user.getCompletedDungeons() != null ? user.getCompletedDungeons() : Collections.emptySet();
         return completedIds.containsAll(level1FreeIds);
     }
+
+    /**
+     * Vérifie si l'utilisateur a terminé au moins un donjon de niveau recommandé >= 3
+     * (condition de déblocage automatique de l'Atelier d'Éveil).
+     */
+    public boolean hasCompletedLevel3Dungeon(AppUser user, List<DonjonRepository.DonjonLightProjection> allDungeons) {
+        if (user == null || allDungeons == null || allDungeons.isEmpty()) return false;
+        Set<Long> completedIds = user.getCompletedDungeons() != null ? user.getCompletedDungeons() : Collections.emptySet();
+        if (completedIds.isEmpty()) return false;
+
+        return allDungeons.stream()
+                .filter(d -> d.recommendedLevel() >= 3)
+                .anyMatch(d -> completedIds.contains(d.id()));
+    }
 }

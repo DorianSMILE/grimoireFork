@@ -44,6 +44,12 @@ public class EquipmentResponseDTO {
     private java.util.List<DungeonDropSourceDTO> dungeonSources = new java.util.ArrayList<>();
     private java.util.List<String> alchemyRecipes = new java.util.ArrayList<>();
 
+    private int upgradeLevel;
+    private int maxUpgradeLevel = 5;
+    private boolean upgradeEligible;
+    private boolean upgradeReady;
+    private String upgradeMissingReason;
+
     @Data
     public static class PersonnageRef {
         private Long id;

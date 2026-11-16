@@ -174,16 +174,21 @@ function canCraftRecipe(r) {
     return true;
 }
 
+function isAwakeningCraftType(rewardType) {
+    return rewardType === 'GIVE_CATALYST' || rewardType === 'GIVE_AWAKENING';
+}
+
 function renderRecipesList() {
     const container = document.getElementById('playerRecipesList');
     if (!container) return;
     container.innerHTML = '';
 
     const unlockedSecrets = window.currentUser?.unlockedSecrets || {};
+    const classicRecipes = (pageState.allRecipes || []).filter(r => !isAwakeningCraftType(r.rewardType));
 
     let hasUnseen = false;
-    if (pageState.allRecipes && window.currentUser) {
-        for (const r of pageState.allRecipes) {
+    if (window.currentUser) {
+        for (const r of classicRecipes) {
             if (window.currentUser.seenAlchemyRecipes?.includes(r.id)) continue;
             if (r.rewardType === 'UNLOCK_FEATURE') {
                 const currentLevel = unlockedSecrets[r.rewardName] || 0;
@@ -206,7 +211,7 @@ function renderRecipesList() {
     }
     window.lastFilterType = filterType;
 
-    const visibleRecipes = pageState.allRecipes.filter(r => {
+    const visibleRecipes = classicRecipes.filter(r => {
         if (filterType === 'NOUVEAUTE') {
             if (window.initialSeenRecipes && window.initialSeenRecipes.includes(r.id)) return false;
             if (!window.initialSeenRecipes && window.currentUser?.seenAlchemyRecipes.includes(r.id)) return false;
@@ -363,9 +368,10 @@ function getItemStyle(name, defaultType) {
 
 
 
-function renderCauldron(r, preserveInput = false) {
+function renderCauldron(r, preserveInput = false, targetPanelId = null) {
     if (!r) return;
-    const container = document.getElementById('cauldronPanel');
+    const resolvedTargetId = targetPanelId || (pageState.activeTab === 'awakening' ? 'awakeningRightPanel' : 'cauldronPanel');
+    const container = document.getElementById(resolvedTargetId);
     if (!container) return;
     const prevCrafterVal = document.getElementById('crafterSelect')?.value || null;
     pageState.customSelectSetups = [];
@@ -552,7 +558,9 @@ function renderCauldron(r, preserveInput = false) {
         resultType = 'CONSUMABLE';
     } else if (r.rewardType === 'GIVE_EQUIPMENT') {
         resultType = 'EQUIPMENT';
-    } else if (r.rewardType === 'GIVE_ANOMALY' || r.rewardType === 'UPGRADE_ANOMALY') {
+    } else if (r.rewardType === 'GIVE_ANOMALY' || r.rewardType === 'UPGRADE_ANOMALY' || r.rewardType === 'GIVE_CATALYST' || r.rewardType === 'GIVE_AWAKENING') {
+        if (r.rewardType === 'GIVE_CATALYST') resultLabel = "Catalyseur (Niv. 4)";
+        else if (r.rewardType === 'GIVE_AWAKENING') resultLabel = "Anomalie d'Éveil (Niv. 5)";
         resultType = 'ANOMALY';
     } else if (r.rewardType === 'GIVE_SPIRIT_XP') {
         resultLabel = "XP Spiritualité";
@@ -915,6 +923,13 @@ async function craftSelected() {
                     .then(data => {
                         pageState.allRecipes = data;
                         renderRecipesList();
+                        if (pageState.activeTab === 'awakening' && window.AlchemyAwakening) {
+                            window.AlchemyAwakening.renderRecipesOnly(
+                                pageState.allRecipes,
+                                pageState.selectedRecipe,
+                                selectAwakeningRecipe
+                            );
+                        }
                     })
                     .catch(e => console.error(e));
             });
@@ -923,6 +938,11 @@ async function craftSelected() {
             fetchUserInventory(),
             fetchUserCharacters(true)
         ]);
+        if (pageState.activeTab === 'awakening' && window.AlchemyAwakening) {
+            await window.AlchemyAwakening.refreshEquipmentsOnly({
+                onAfterUpgrade: () => fetchUserInventory()
+            });
+        }
         setTimeout(() => {
             renderCauldron(pageState.selectedRecipe);
             const msgObj = document.getElementById('craftMessage');
@@ -938,7 +958,8 @@ async function craftSelected() {
 }
 
 function createMagicParticles() {
-    const container = document.getElementById('cauldronPanel');
+    const activeTargetId = pageState.activeTab === 'awakening' ? 'awakeningRightPanel' : 'cauldronPanel';
+    const container = document.getElementById(activeTargetId) || document.getElementById('cauldronPanel');
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
@@ -1008,4 +1029,180 @@ window.normalizeCraftQuantity = function (input) {
 
 window.renderRecipesList = renderRecipesList;
 window.craftSelected = craftSelected;
+window.canCraftRecipe = canCraftRecipe;
+
+function selectAwakeningRecipe(recipe, cardEl) {
+    pageState.selectedRecipe = recipe;
+    pageState.craftQuantity = 1;
+    document.querySelectorAll('.awakening-craft-item, .awakening-equip-item').forEach(el => {
+        el.classList.remove('is-selected');
+    });
+    if (cardEl) cardEl.classList.add('is-selected');
+    renderCauldron(recipe, false, 'awakeningRightPanel');
+}
+
+async function ensureAwakeningScriptLoaded() {
+    if (window.AlchemyAwakening) return;
+    await new Promise((resolve) => {
+        const existing = document.querySelector('script[data-alchemy-awakening]');
+        if (existing) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = '/js/pages/alchemy-awakening.js?v=1';
+        script.dataset.alchemyAwakening = '1';
+        script.onload = resolve;
+        script.onerror = resolve;
+        document.body.appendChild(script);
+    });
+}
+
+function ensureAlchemyTabsStructure() {
+    const cauldron = document.getElementById('cauldronPanel');
+    const classicRow = cauldron ? cauldron.parentElement : null;
+    const alchemyMain = classicRow ? classicRow.parentElement : null;
+    if (!alchemyMain || !classicRow) return null;
+
+    classicRow.id = 'alchemyClassicWorkspace';
+
+    let tabsBar = document.getElementById('alchemyTabsBar');
+    if (!tabsBar) {
+        tabsBar = document.createElement('div');
+        tabsBar.id = 'alchemyTabsBar';
+        tabsBar.className = 'alchemy-tabs-bar';
+
+        const classicBtn = document.createElement('button');
+        classicBtn.type = 'button';
+        classicBtn.className = 'alchemy-tab-btn is-active';
+        classicBtn.dataset.tab = 'classic';
+        const classicIcon = document.createElement('span');
+        classicIcon.className = 'material-symbols-outlined text-lg';
+        classicIcon.textContent = 'science';
+        const classicLabel = document.createElement('span');
+        classicLabel.textContent = 'Alchimie Classique';
+        classicBtn.appendChild(classicIcon);
+        classicBtn.appendChild(classicLabel);
+        classicBtn.addEventListener('click', () => switchAlchemyTab('classic'));
+
+        const awkBtn = document.createElement('button');
+        awkBtn.type = 'button';
+        awkBtn.className = 'alchemy-tab-btn';
+        awkBtn.dataset.tab = 'awakening';
+        const awkIcon = document.createElement('span');
+        awkIcon.className = 'material-symbols-outlined text-lg';
+        awkIcon.textContent = 'upgrade';
+        const awkLabel = document.createElement('span');
+        awkLabel.textContent = 'Éveil & Catalyseurs';
+        const lockBadge = document.createElement('span');
+        lockBadge.id = 'awakeningTabLockBadge';
+        lockBadge.className = 'alchemy-tab-lock-badge is-hidden';
+        lockBadge.textContent = 'Donjon Niv. 3';
+        awkBtn.appendChild(awkIcon);
+        awkBtn.appendChild(awkLabel);
+        awkBtn.appendChild(lockBadge);
+        awkBtn.addEventListener('click', () => switchAlchemyTab('awakening'));
+
+        tabsBar.appendChild(classicBtn);
+        tabsBar.appendChild(awkBtn);
+        alchemyMain.insertBefore(tabsBar, classicRow);
+    }
+
+    let awkWorkspace = document.getElementById('alchemyAwakeningWorkspace');
+    if (!awkWorkspace) {
+        awkWorkspace = document.createElement('div');
+        awkWorkspace.id = 'alchemyAwakeningWorkspace';
+        awkWorkspace.className = 'awakening-workspace is-hidden';
+        alchemyMain.insertBefore(awkWorkspace, classicRow.nextSibling);
+    }
+
+    return { tabsBar, classicRow, awkWorkspace };
+}
+
+function updateAwakeningTabLockUi() {
+    const unlocked = Boolean(window.isAdmin || window.currentUser?.unlockedAwakening);
+    const awkBtn = document.querySelector('#alchemyTabsBar .alchemy-tab-btn[data-tab="awakening"]');
+    const lockBadge = document.getElementById('awakeningTabLockBadge');
+    if (awkBtn) awkBtn.classList.toggle('is-locked', !unlocked);
+    if (lockBadge) lockBadge.classList.toggle('is-hidden', unlocked);
+}
+
+async function switchAlchemyTab(tabName, preselectedEquipId = null) {
+    const structs = ensureAlchemyTabsStructure();
+    if (!structs) return;
+
+    const targetTab = tabName === 'awakening' ? 'awakening' : 'classic';
+    pageState.activeTab = targetTab;
+
+    document.querySelectorAll('#alchemyTabsBar .alchemy-tab-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.tab === targetTab);
+    });
+
+    structs.classicRow.classList.toggle('is-hidden', targetTab === 'awakening');
+    structs.awkWorkspace.classList.toggle('is-hidden', targetTab !== 'awakening');
+    updateAwakeningTabLockUi();
+
+    if (targetTab === 'awakening') {
+        await ensureAwakeningScriptLoaded();
+        const unlocked = Boolean(window.isAdmin || window.currentUser?.unlockedAwakening);
+        if (window.AlchemyAwakening) {
+            await window.AlchemyAwakening.renderWorkspace(structs.awkWorkspace, {
+                unlockedAwakening: unlocked,
+                allRecipes: pageState.allRecipes || [],
+                selectedRecipe: pageState.selectedRecipe,
+                preselectedEquipId: preselectedEquipId || pageState.preselectedEquipId,
+                onSelectRecipe: selectAwakeningRecipe,
+                onAfterUpgrade: () => fetchUserInventory()
+            });
+            maybeStartAwakeningTutorialInAlchemy();
+        }
+    }
+}
+
+function maybeStartAwakeningTutorialInAlchemy() {
+    if (!window.GrimoireTutorial) return;
+    const isUnlocked = Boolean(window.isAdmin || window.currentUser?.unlockedAwakening);
+    const shouldStart = Boolean(window.currentUser?.awakeningTutorialActive && isUnlocked);
+    const hasTargets = Boolean(document.getElementById('awakeningCatalystsPanel'));
+    if (!shouldStart || !hasTargets) return;
+
+    if (!window.GrimoireTutorial.isActive()) {
+        window.GrimoireTutorial.startPhase('AWAKENING').then(() => {
+            if (document.getElementById('awakeningPreviewPanel')) {
+                window.GrimoireTutorial.goToStepByName('AWAKENING_TAB_CATALYSTS');
+            }
+        });
+    }
+}
+
+function syncAlchemyTabFromUrlAndRefresh() {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get('tab');
+    const urlEquipId = params.get('equipId');
+    if (urlEquipId) {
+        pageState.preselectedEquipId = Number(urlEquipId);
+    }
+    const resolvedTab = urlTab === 'awakening' || urlEquipId ? 'awakening' : (pageState.activeTab || 'classic');
+    switchAlchemyTab(resolvedTab, pageState.preselectedEquipId);
+}
+
+const _baseInitAlchemyPage = window.initAlchemyPage;
+window.initAlchemyPage = async function () {
+    pageState.activeTab = null;
+    pageState.preselectedEquipId = null;
+    ensureAlchemyTabsStructure();
+    if (typeof _baseInitAlchemyPage === 'function') {
+        await _baseInitAlchemyPage();
+    }
+    syncAlchemyTabFromUrlAndRefresh();
+};
+
+window.addEventListener('authLoaded', () => {
+    if (document.getElementById('cauldronPanel')) {
+        updateAwakeningTabLockUi();
+        if (pageState.activeTab === 'awakening') {
+            switchAlchemyTab('awakening', pageState.preselectedEquipId);
+        }
+    }
+});
 

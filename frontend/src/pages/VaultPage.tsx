@@ -344,6 +344,14 @@ export function VaultPage() {
                   <span className="material-symbols-outlined cs-icon text-muted">science_off</span>{' '}
                   Non craftables d&apos;abord
                 </div>
+                <div className="custom-option" data-value="level_desc">
+                  <span className="material-symbols-outlined cs-icon text-warning">upgrade</span>{' '}
+                  Niveau d&apos;éveil (Élevé)
+                </div>
+                <div className="custom-option" data-value="level_asc">
+                  <span className="material-symbols-outlined cs-icon text-muted">upgrade</span>{' '}
+                  Niveau d&apos;éveil (Faible)
+                </div>
               </div>
               <input type="hidden" id="sortVault" defaultValue="rarity_desc" />
             </div>
@@ -1239,6 +1247,14 @@ export function VaultPage() {
                     <div className="custom-option" data-value="3">
                       <span className="material-symbols-outlined cs-icon text-power">looks_3</span>
                       Niveau 3
+                    </div>
+                    <div className="custom-option" data-value="4">
+                      <span className="material-symbols-outlined cs-icon text-mana">bolt</span>{' '}
+                      Niveau 4 (Catalyseur)
+                    </div>
+                    <div className="custom-option" data-value="5">
+                      <span className="material-symbols-outlined cs-icon text-warning">upgrade</span>{' '}
+                      Niveau 5 (Éveil)
                     </div>
                   </div>
                   <input type="hidden" id="anomalieLevel" defaultValue="1" />

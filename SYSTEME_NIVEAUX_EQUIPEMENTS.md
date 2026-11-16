@@ -33,13 +33,28 @@ Pour que les petites statistiques progressent réellement sur 5 paliers sans ren
 
 ### Détails des formules d'arrondi (`up` de `0` à `5`)
 
-1. **Statistique classique positive (`StatBase > 0`) :**
+1. **Statistique classique positive (`StatBase >= 2`) :**
    $$\text{Stat}(\text{up}) = \text{round}\Big( \text{StatBase} \times \big[ 1 + \text{up} \times R_{\text{pos}} \times M_{\text{slot, stat}} \big] \Big)$$
 
-2. **Statistique classique négative (`StatBase < 0`, contrepartie sur l'item) :**
-   $$\text{Stat}(\text{up}) = \text{round}\Big( \text{StatBase} \times \big[ 1 + \text{up} \times R_{\text{neg}} \big] \Big)$$
+2. **Cas des petites statistiques unitaires (`StatBase == 1`) — Seuil adaptatif selon le frein $M_{\text{slot, stat}}$ :**
+   Avec un arrondi classique (`+50%`), une stat à `1` stagnerait à `1` jusqu'au `+5` sur presque tous les slots freinés. Pour garantir une progression proportionnelle au frein :
+   - Soit le bonus cumulé $\Delta(\text{up}) = \text{up} \times R_{\text{pos}} \times M_{\text{slot, stat}}$.
+   - La stat passe à **`2`** dès que le bonus cumulé atteint **`+20%`** ($\Delta(\text{up}) \ge 0.20$), ou **au plus tard au palier `+5`** :
+   $$\text{Stat}_{=1}(\text{up}) = \begin{cases} \max\big(2,\ \text{round}(1 + \Delta(\text{up}))\big) & \text{si } \Delta(\text{up}) \ge 0.20 \text{ ou } \text{up} = 5 \\ 1 & \text{sinon} \end{cases}$$
 
-3. **Effet spécial passif ou Malédiction (`specialEffectValue != 0`) :**
+   | Multiplicateur d'affinité $M_{\text{slot, stat}}$ | Légendaire (`8%`) | Épique (`10%`) | Relique (`12%`) | Maudit (`14%`) |
+   | :--- | :---: | :---: | :---: | :---: |
+   | **Frein fort (`0.50`)** *(Régen Mana Anneau)* | **Palier `+5`** | **Palier `+4`** | **Palier `+4`** | **Palier `+3`** |
+   | **Frein fort (`0.60`)** *(Vitesse Bottes)* | **Palier `+5`** | **Palier `+4`** | **Palier `+3`** | **Palier `+3`** |
+   | **Frein moyen (`0.65`–`0.80`)** *(Crit/PV armures)* | **Palier `+4`** | **Palier `+3`** | **Palier `+3`** | **Palier `+2`** |
+   | **Standard (`0.85`–`1.20`)** *(Slots neutres/1M)* | **Palier `+3`** | **Palier `+2`–`+3`** | **Palier `+2`** | **Palier `+2`** |
+   | **Boosté (`1.25`–`1.40`)** *(Force/Pow 2M, Déf Sec.)* | **Palier `+2`** | **Palier `+2`** | **Palier `+2`** | **Palier `+2`** |
+
+3. **Statistique classique négative (`StatBase < 0`, contrepartie sur l'item) :**
+   $$\text{Stat}(\text{up}) = \text{round}\Big( \text{StatBase} \times \big[ 1 + \text{up} \times R_{\text{neg}} \big] \Big)$$
+   *(Les contreparties à `-1` conservent l'arrondi standard et ne doublent pas artificiellement.)*
+
+4. **Effet spécial passif ou Malédiction (`specialEffectValue != 0`) :**
    $$\text{Effet}(\text{up}) = \text{round}\Big( \text{EffetBase} \times \big[ 1 + \text{up} \times R_{\text{eff}} \big] \Big)$$
    - *Exception de sécurité :* Si `specialEffect == CHEAT_DEATH` et que la valeur de base vaut `1` (ex. *Bottes d'Hermès*, *Lancinante*), la valeur reste fixe à `1`.
 
@@ -67,28 +82,30 @@ Chaque couple `(Slot, Stat)` possède un multiplicateur d'affinité $M_{\text{sl
 
 ---
 
-## 4. Système d'Amélioration & Anomalies Spéciales par Secret
+## 4. Système d'Amélioration — Catalyseurs (Niv. 4) & Anomalies d'Éveil (Niv. 5)
 
-Chaque Secret du jeu possède **2 anomalies d'amélioration** :
-1. **Anomalie Simple (Tier 1) :**
-   - **Obtention :** Loot en donjon (lié au Secret) OU Craft Alchimie (mix d'anomalies Lvl 1/2 du Secret + Or + XP Spiritualité).
-2. **Anomalie Compliquée (Tier 2) :**
-   - **Obtention :** Loot rare (Boss du Secret) OU Craft Alchimie coûteux (mix d'anomalies Lvl 2/3 du Secret + gros coût Or + gros coût XP Spiritualité).
+Chaque Secret du jeu (plus le tronc générique) possède **2 types d'anomalies dédiés à l'amélioration**, distincts des anomalies de base (Niveaux 1, 2 et 3) :
+1. **Catalyseur (`Anomalie` Niveau 4) :**
+   - **Rôle :** Requis aux paliers `+1`, `+2`, `+4`, `+5`.
+   - **Obtention :** Loot en donjon (lié au Secret) OU Craft dans l'onglet **Éveil & Catalyseurs** (mix d'anomalies Lvl 1/2 du Secret + Or + XP Spiritualité).
+2. **Anomalie d'Éveil (`Anomalie` Niveau 5) :**
+   - **Rôle :** Requis aux paliers majeurs `+3`, `+4`, `+5`.
+   - **Obtention :** Loot rare (Boss du Secret) OU Craft coûteux dans l'onglet **Éveil & Catalyseurs** (mix d'anomalies Lvl 2/3 du Secret + gros coût Or + gros coût XP Spiritualité).
 
 ### A. Courbe de Coût par Palier d'Amélioration
 
-| Palier Cible | Anomalie Simple requise | Anomalie Compliquée requise | Coût Or additionnel *(Base × Mult. Rareté)* |
+| Palier Cible | Catalyseur (Niv. 4) | Anomalie d'Éveil (Niv. 5) | Coût Or additionnel *(Base × Mult. Rareté)* |
 | :---: | :---: | :---: | :--- |
 | **Up 1 (`+0 → +1`)** | **1** | 0 | `500 Or × Mult_Rareté` |
 | **Up 2 (`+1 → +2`)** | **2** | 0 | `1 000 Or × Mult_Rareté` |
 | **Up 3 (`+2 → +3`)** | 0 | **1** | `2 000 Or × Mult_Rareté` |
 | **Up 4 (`+3 → +4`)** | **1** | **1** | `3 500 Or × Mult_Rareté` |
 | **Up 5 (`+4 → +5`)** | **2** | **2** | `6 000 Or × Mult_Rareté` |
-| **TOTAL (`+0 → +5`)** | **6 Simples** | **4 Compliquées** | *Multiplicateur Rareté : Légendaire (×1) · Maudit (×1.5) · Épique (×2) · Relique (×3)* |
+| **TOTAL (`+0 → +5`)** | **6 Catalyseurs** | **4 Éveils** | *Multiplicateur Rareté : Légendaire (×1) · Maudit (×1.5) · Épique (×2) · Relique (×3)* |
 
-### B. Table des Duos d'Anomalies alignée sur les Secrets et Anomalies de la BDD
+### B. Table des Duos (Niv. 4 & Niv. 5) alignée sur les Secrets de la BDD
 
-| Secret en BDD (`requiredSecret`) | Spiritualité d'Anomalie | Anomalie Simple (Tier 1) | Anomalie Compliquée (Tier 2) | Exemple de Craft Alchimie (Ingrédients BDD existants) |
+| Secret en BDD (`requiredSecret`) | Spiritualité d'Anomalie | Catalyseur (Niveau 4) | Anomalie d'Éveil (Niveau 5) | Exemple de Craft Onglet Éveil (Ingrédients BDD existants) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Secret du Chaos** | `DESTRUCTION` | Éclat de Chaos | **Cœur de Cendre** | `Braise Ardente` (Lvl 2) + `Crâne sanglant` (Lvl 3) + Or + XP Spirit |
 | **Secret du Destin** | `KARMA` | Fragment du Destin | **Prisme Karmique** | `Orbe Catalytique Stabilisé` (Lvl 2) + `Cristal de vision` (Lvl 3) + Or + XP Spirit |
@@ -96,6 +113,13 @@ Chaque Secret du jeu possède **2 anomalies d'amélioration** :
 | **Secret des Abysses** | `TENEBRES` | Résidu Abyssal | **Noyau Néant** | `Cristal corrompu` (Lvl 2) + `Orbe démoniaque` (Lvl 2) + `Métal palpitant` (Lvl 2) + Or + XP Spirit |
 | **Secret de l'Abondance** | `CREATION` | Sève Mutagène | **Ambre Parasitaire** | `Métal purulent` (Lvl 2) + `Orbe parasitée` (Lvl 3) + Or + XP Spirit |
 | **Aucun Secret (`null`)** | *Générique* | Poussière d'Éveil | **Pierre d'Ascension** | Mix d'anomalies Lvl 2/3 multi-spiritualités + Or & XP Spirit majorés |
+
+### C. Règle d'Unicité & Multi-Recettes (Backend)
+- **Pourquoi `level = 4/5` seul ne suffit pas :** Un simple niveau `4` ou `5` sur `Anomalie` mélangerait les catalyseurs aux anomalies Lvl 1–3 dans les Coffres et ferait apparaître leurs recettes dans l'Alchimie classique.
+- **Unicité par Secret, flexibilité par Recettes :**
+  - Chaque **Secret** ne possède qu'**1 Catalyseur (Niv. 4)** et **1 Anomalie d'Éveil (Niv. 5)** canoniques (table 4.B). Le mapping backend se fait **par Secret** (ex. `SecretAwakeningMapping`), jamais par simple couple `(spiritualite, level)` — ce qui évite toute collision si plusieurs Secrets partagent une Spiritualité.
+  - En revanche, l'admin peut créer **plusieurs recettes (`AlchemyRecipe`)** menant au **même** Catalyseur ou à la **même** Anomalie d'Éveil (voies de craft alternatives selon les donjons farmés).
+  - *Extension future possible :* Si plusieurs catalyseurs distincts coexistent un jour sur un même Secret/Voie, l'éveil devra cibler un nom/tag exact plutôt qu'une requête par niveau. D'ici là, `1 Secret = 1 Catalyseur Niv. 4 + 1 Éveil Niv. 5` reste le modèle le plus lisible.
 
 ---
 
@@ -161,3 +185,80 @@ Chaque Secret du jeu possède **2 anomalies d'amélioration** :
    - Le frein sur les **PV (`0.75`)** et **Armure/Résist (`0.85`–`0.90`)** des Plastrons/Casques empêche les DPT équipés de pièces maudites d'atteindre le plafond de 90% de réduction ou 450+ PV.
    - Le frein sur la **Vitesse (`0.60`)**, le **Critique (`0.65`–`0.90`)** et la **Régen Mana des Anneaux (`0.50`)** évite la saturation des jauges de mana et du 100% critique passif.
    - La hausse modérée des **contreparties négatives (`50%` du taux positif)** et des **malédictions (`+5% / palier`)** préserve l'identité risquée des objets Maudits et des Reliques à malus.
+
+---
+
+## 7. Parcours UX — Déblocage, Onglet Alchimie, Liens & Tutoriel
+
+### A. Condition de Déblocage (`unlockedAwakening`)
+L'Atelier d'Éveil (onglet 2 d'Alchimie, craft des Catalyseurs/Éveils et amélioration d'équipements) suit la même logique de progression que le déblocage automatique de la Boutique :
+- **Prérequis serveur :** Avoir **terminé au moins 1 donjon de niveau recommandé $\ge 3$** (`user.getCompletedDungeons()` contient un donjon avec `recommendedLevel >= 3`), sauf `ADMIN`.
+- **Avant ce palier (`unlockedAwakening == false`) :**
+  - L'onglet **Éveil & Catalyseurs** dans `/alchemy` affiche un écran verrouillé explicite (*« Terminez un donjon de niveau 3 pour débloquer l'Atelier d'Éveil »*).
+  - Les liens **Éveiller** dans Armurerie/Coffres restent désactivés/masqués et les endpoints `/upgrade` + recettes `GIVE_CATALYST` / `GIVE_AWAKENING` sont bloqués côté serveur (`403`).
+
+### B. Séparation Alchimie Classique vs Onglet "Éveil & Catalyseurs" (`/alchemy`)
+La page **Alchimie** (`/alchemy`) est scindée en **2 onglets distincts** (sans ajouter de page dans la navbar) :
+1. **Onglet 1 — Alchimie Classique :** Conserve uniquement les recettes classiques (`GIVE_ANOMALY` Lvl 1–3, consommables, équipements, secrets, XP Spiritualité). Les recettes de Catalyseurs (Niv. 4) et d'Anomalies d'Éveil (Niv. 5) en sont **totalement exclues**.
+2. **Onglet 2 — Éveil & Catalyseurs :** Accessible une fois `unlockedAwakening == true`, regroupe exclusivement tout le cycle d'amélioration des équipements :
+   - **Sous-section Catalyseurs & Éveils :** Recettes dédiées (`GIVE_CATALYST` / `GIVE_AWAKENING`) des **6 Catalyseurs (Niv. 4)** et **6 Anomalies d'Éveil (Niv. 5)** à partir d'anomalies Lvl 1–3 + Or + XP Spiritualité.
+   - **Sous-section Atelier d'Éveil :** Liste des équipements éligibles du joueur (`LEGENDAIRE`, `EPIQUE`, `RELIQUE`, `MAUDIT`), équipés ou en coffre, avec preview avant/après (`+up → +(up+1)`) calculée par le serveur, coût (Catalyseur Niv. 4 / Éveil Niv. 5 + Or) et bouton d'éveil.
+
+### C. Séparation dans les Coffres (`/vault`) & Liens Contextuels (`/armory`, `/vault`)
+- **Séparation visuelle dans les Coffres :** Les anomalies de base (`Niv. 1–3`) restent séparées des **Catalyseurs (`Niv. 4`)** et **Anomalies d'Éveil (`Niv. 5`)** via un filtre/sous-onglet dédié et des badges visuels distincts, évitant tout mélange brouillon.
+- **Liens directs vers l'Éveil :** Sur les équipements équipés (**Armurerie**) et les équipements éligibles (**Coffres**), un lien **Éveiller** pointe vers `/alchemy?tab=awakening&equipId={id}`.
+- **Règle d'activation stricte (calculée côté back dans le DTO) :**
+  - Cliquable **uniquement si `upgradeReady == true`** (`unlockedAwakening == true`, item éligible, `upgradeLevel < 5`, joueur possède Catalyseur/Éveil + Or requis pour le palier suivant, et porteur non engagé en combat actif).
+  - Si `upgradeReady == false` sur item éligible `< +5` (après déblocage de l'Atelier), reste non-cliquable/grisé avec motif retourné par le serveur (ex. *"Manque : 1× Éclat de Chaos, 500 Or"*).
+
+### D. Tutoriel Guidé du Premier Éveil (`phase = "AWAKENING"`)
+Intégré au moteur SSOT existant (`TutorialStep` + `GrimoireTutorial`) sur le modèle des tutoriels `ARMORY` / `EQUIP` / `SHOP` :
+- **Persistance & Déclenchement (`AppUser.awakeningTutorialCompleted = false`) :**
+  - `AuthController` expose `awakeningTutorialActive = true` dès que `unlockedAwakening == true`, `!awakeningTutorialCompleted` **ET** que le joueur possède pour la **première fois tout le nécessaire pour effectuer une 1re upgrade** (au moins 1 équipement éligible à `< +5` avec `upgradeReady == true`).
+- **Enchaînement des étapes (`TutorialStep`) :**
+  1. `AWAKENING_DISCOVER_LINK` *(sur Armurerie ou Coffres)* : Cible le lien **Éveiller** qui vient de s'activer → explique qu'un équipement rare peut désormais monter de `+0` à `+5` et invite à cliquer pour ouvrir l'Atelier d'Éveil.
+  2. `AWAKENING_TAB_CATALYSTS` *(à l'arrivée sur `/alchemy?tab=awakening`)* : Cible la section **Catalyseurs (Niv. 4) & Anomalies d'Éveil (Niv. 5)** → explique la différence entre Catalyseurs (paliers `+1, +2, +4, +5`) et Anomalies d'Éveil (paliers `+3, +4, +5`), liés au Secret de l'objet (ou génériques).
+  3. `AWAKENING_PREVIEW_STATS` : Cible le **panneau comparatif avant/après** → explique les multiplicateurs de rareté, les affinités de slot (boosts/freins) et l'impact sur les éventuelles contreparties/malédictions.
+  4. `AWAKENING_EXECUTE` : Cible le bouton **"Éveiller l'équipement"** → valide le 1er éveil et rappelle que le démantèlement futur d'un objet éveillé restitue une partie des ingrédients de craft.
+
+---
+
+## 8. Démantèlement Partiel (Recyclage des Équipements)
+
+Remplace ou complète la suppression sèche (`delete` sans contrepartie) dans les **Coffres** (`/vault`) pour les équipements non équipés (hors consommables) :
+
+### A. Restitution d'Or selon la Rareté
+- **Or de base (toutes raretés, `+0`) :** Pourcentage fixe du prix de référence (`calculateShopPrice()`) — ex. **`25%`** de `calculateShopPrice()` (arrondi à l'entier supérieur). Comme `calculateShopPrice()` intègre déjà `rarity.shopMultiplier` (`1.0` Commun → `6.0` Relique), la valeur en Or croît naturellement avec la rareté et le poids de l'objet.
+- **Bonus d'Or si éveillé (`+1` à `+5`) :** Restitution d'une fraction (ex. **`30%`**) de l'Or total investi dans les paliers validés.
+
+### B. Restitution Partielle des Ingrédients d'Éveil (`upgradeLevel >= 1`)
+- Pour un item éveillé au palier `up >= 1`, le joueur ne récupère **jamais** directement les Catalyseurs (Niv. 4) ou Anomalies d'Éveil (Niv. 5) finis, ni de quoi recrafter l'intégralité de son éveil.
+- Il récupère une **fraction stricte** des **ingrédients bruts** (`requiredAnomalies` des `AlchemyRecipe` de type `GIVE_CATALYST` / `GIVE_AWAKENING` du Secret de l'objet) :
+  - Pour chaque ingrédient $i$ présent dans les recettes des Catalyseurs (Niv. 4) et Éveils (Niv. 5) consommés :
+    $$\text{Qté rendue}_i = \min\Big(\text{Qté dépensée totale}_i - 1,\ \big\lfloor \text{Qté dépensée totale}_i \times 0.35 \big\rfloor\Big)$$
+  - **Plancher de garantie (`up >= 1`) :** Si tous les arrondis tombent à `0` (cas d'un item `+1` n'ayant consommé qu'un seul Catalyseur Niv. 4), le démantèlement garantit **1 exemplaire** du premier ingrédient de la recette du Catalyseur (jamais assez pour recrafter le Catalyseur complet).
+- **Source Unique de Vérité (SSOT) :** Le service de démantèlement lit dynamiquement `AlchemyRecipe.requiredAnomalies` en base pour le Secret concerné. Si une recette est ajustée en admin, le rendement du démantèlement reste automatiquement cohérent.
+
+---
+
+## 9. Architecture Technique & Cas Limites (SSOT)
+
+1. **Modèle de données (`Equipment.java`, `Anomalie.java`, `AlchemyRecipe.java`, `AppUser.java`) :**
+   - `Equipment` : conserver `bonus*` et `specialEffectValue` comme **valeurs de base `+0`** (zéro dérive d'arrondi, zéro migration destructive) et ajouter `upgradeLevel` (`int`, défaut `0`, borné `[0, 5]`).
+   - `Anomalie` : supporter les niveaux `4` (**Catalyseur**) et `5` (**Anomalie d'Éveil**) + champ explicite `AnomalieType` (`STANDARD`, `CATALYSEUR`, `EVEIL`) pour isoler proprement les filtres Coffres/Admin sans dépendre uniquement du numéro de niveau. Ajouter les options `Niveau 4` et `Niveau 5` dans l'admin Coffres (`VaultPage`).
+   - `RecipeRewardType` / `AlchemyRecipe` : ajouter **`GIVE_CATALYST`** et **`GIVE_AWAKENING`** dans `RecipeRewardType` (et dans `AlchemyAdminPage`) afin que l'Alchimie classique exclue ces recettes et que seul l'onglet 2 les affiche.
+   - `AppUser` : ajouter `awakeningTutorialCompleted` (`boolean`, défaut `false`).
+2. **Calcul côté Serveur (`EquipmentScalingService` & `SecretAwakeningMapping`) :**
+   - `EquipmentScalingService` centralise `getEffectiveStats(Equipment)` utilisé par `Personnage`, `CombatRoomService` et `EquipmentMapper`.
+   - `SecretAwakeningMapping` (SSOT) associe chaque `requiredSecret` (+ `null` générique) à son unique **Catalyseur (Niv. 4)** et son unique **Anomalie d'Éveil (Niv. 5)**, évitant toute ambiguïté entre Spiritualités.
+   - `calculateShopPrice()` et le ratio de qualité `weight / maxWeight` dans les Coffres restent basés sur les stats `+0` (le niveau `+up` est affiché en badge distinct).
+   - Les slots `@Deprecated ARME` et `ANNEAU` sont mappés respectivement vers `ARME_GAUCHE` et `ANNEAU_GAUCHE` dans la matrice $M_{\text{slot, stat}}$.
+3. **Endpoints API REST (Backend = Cerveau) :**
+   - `POST /api/equipments/{id}/upgrade/simulate` → retourne stats actuelles, stats au palier `+1`, deltas, coût (Or + Catalyseur Niv. 4 / Éveil Niv. 5) et `canUpgrade` / `missingReason`.
+   - `POST /api/equipments/{id}/upgrade` → transaction atomique vérifiant **`unlockedAwakening` (donjon niv. ≥ 3 terminé)**, possession, rareté éligible, `upgradeLevel < 5`, **personnage non engagé en combat/donjon actif**, solde Or et Anomalies ; consomme les ressources et incrémente `upgradeLevel`.
+   - `AlchemyService` : vérifie également `unlockedAwakening` avant d'exécuter un craft `GIVE_CATALYST` / `GIVE_AWAKENING`, et `AuthController` expose `unlockedAwakening` via `DungeonTutorialService` (sur le modèle de `unlockedShop`).
+   - `POST /api/equipments/{id}/dismantle/simulate` & `POST /api/equipments/{id}/dismantle` → prévisualise puis exécute le démantèlement partiel (Or + anomalies ingrédients).
+   - Extension de `POST /api/auth/tutorial/complete` et `/reset` pour gérer la phase `AWAKENING`.
+4. **Front-End (`vault.js`, `armory.js`, `alchemy.js`, `alchemy-admin.js`, `tutorial.js`) :**
+   - `groupEquipments()` dans `vault.js` inclut `eq.upgradeLevel || 0` dans la clé de groupement pour ne jamais fusionner des items de paliers différents.
+   - Zéro formule de scaling ou de démantèlement en JS : tout vient du DTO `EquipmentResponseDTO` et des endpoints `/simulate`.

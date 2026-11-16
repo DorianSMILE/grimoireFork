@@ -70,6 +70,50 @@ body.is-combat-page,
     background: radial-gradient(circle at center, rgba(30, 41, 59, 0.5), transparent 80%);
 }
 
+/* ─── Combat Loading State ─── */
+.combat-loading-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.96), rgba(5, 5, 5, 0.98));
+    z-index: 80;
+    pointer-events: auto;
+}
+
+.combat-loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    text-align: center;
+    padding: 2.25rem 3.5rem;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(168, 85, 247, 0.2);
+}
+
+.combat-loading-spinner {
+    font-size: 3.5rem;
+    color: #c084fc;
+}
+
+.combat-loading-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.02em;
+}
+
+.combat-loading-sub {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
 .fighter {
     width: 300px;
     background: rgba(15, 23, 42, 0.8);

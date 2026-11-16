@@ -44,12 +44,12 @@ public class DataInitializerService {
         @Transactional
         public void initStandardEntities() {
                 try {
-                    entityManager.createNativeQuery("UPDATE user_achievement SET achievement_code = 'MALEDICTION' WHERE achievement_code = 'CURIEUX'").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE app_user SET active_title = 'L''imprononçable' WHERE active_title = 'Le Curieux'").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE user_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE user_custom_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_achievement SET achievement_code = 'MALEDICTION' WHERE achievement_code = 'CURIEUX'").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE app_user SET active_title = 'L''imprononçable' WHERE active_title = 'Le Curieux'").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_custom_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
                 } catch (Exception e) {
-                    log.debug("Migration achievement updates skipped: {}", e.getMessage());
+                        log.debug("Migration achievement updates skipped: {}", e.getMessage());
                 }
 
                 log.info("Initialisation des entités de référence (Voies, Spiritualités)...");
@@ -100,7 +100,7 @@ public class DataInitializerService {
                 passifsVoies.put("Voie de Trahison",
                                 "Une fois par tour, vos [c=physic]attaques physiques[/c] infligent des [c=brut]dégâts bruts[/c] bonus [c=heal]qui vous soignent[/c] :\n[ul][li][c=brut]+10%[/c] de base[/li][li][c=brut]+20%[/c] si la cible a moins de 50% [c=pv]PV[/c][/li][li][c=brut]+15%[/c] si elle a un malus[/li][/ul]\n \nÀ chaque niveau, vous gagnez : [c=physic]+1 Force[/c], [c=speed]+1 Vitesse[/c] et [c=crit]+2 Critique[/c].");
                 passifsVoies.put("Voie de la Consolidation",
-                                "Au début de chaque tour :\nSi vous avez plus de 20% de vos [c=pv]PV max[/c], vous perdez 5% de vos [c=pv]PV max[/c] et gagnez un [c=shield]Bouclier[/c] équivalent à 10% de vos [c=pv]PV actuel[/c] (dure 2 tours).\nSi vous avez 20% de vos [c=pv]PV max[/c] ou moins, vous gagnez [c=armor]+20% d'Armure[/c] et de [c=resist]Résistance[/c] pendant 1 tour.\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c], [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
+                                "Au début de chaque tour :\nSi vous avez plus de 20% de vos [c=pv]PV max[/c], vous perdez 5% de vos [c=pv]PV max[/c] et gagnez un [c=shield]Bouclier[/c] équivalent à 10% de vos [c=pv]PV actuel[/c] (dure 2 tours).\nSi vous avez 20% de vos [c=pv]PV max[/c] ou moins, vous gagnez [c=armor]+25% d'Armure[/c] et de [c=resist]Résistance[/c] pendant 2 tours.\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c], [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
                 passifsVoies.put("Voie de la Conviction",
                                 "La Conviction est une force brute inarrêtable dénuée de mécanique complexe, se reposant entièrement sur des statistiques écrasantes.\nDès le niveau 1, elle offre une [c=mana]Régénération de Mana[/c] colossale (25/tour), en contrepartie, ces sorts coûtent plus cher.\n \nÀ chaque niveau, vous gagnez : [c=power]+1 Puissance[/c], [c=resist]+2 Résistance[/c], [c=pv]+7 PV[/c], [c=mana]+20 Mana[/c] et [c=mana]+4 Régen Mana[/c].");
                 passifsVoies.put("Voie de la Création",
@@ -108,7 +108,7 @@ public class DataInitializerService {
                 passifsVoies.put("Voie de la Destruction",
                                 "Accumule de la [c=crit]Chaleur[/c] en lançant des sorts.\nLorsque la chaleur atteint [c=warning]100[/c], le prochain sort lancé est entièrement [c=mana]gratuit[/c].\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+2 Puissance[/c] et [c=mana]+2 Régen Mana[/c].");
                 passifsVoies.put("Voie de la Violence",
-                                "Gère des cumuls d'[c=crimson]Inspiration[/c] ou d'[c=power]Expiration[/c] (max 7) en lançant les sorts correspondants.\nLancer un sort de l'autre type (Swap) consomme les cumuls actuels et octroie un bonus pendant 3 tours si vous avez 4 cumuls ou plus :\n[ul][li]Swap entre 4-6 cumuls d'[c=power]Expiration[/c] : [c=physic]+30% Force[/c] | à 7 cumuls : [c=physic]+60% Force[/c][/li][li]Swap entre 4-6 cumuls d'[c=crimson]Inspiration[/c] : [c=crit]+100% Critique[/c] | à 7 cumuls : [c=crit]+200% Critique[/c][/li][/ul]Attention : Si vous avez 6 cumuls ou plus, chaque nouveau sort du [b]même type[/b] que vous lancez vous infligera une [c=crit]Brûlure[/c] (15% [c=power]Puissance[/c] + 15% [c=physic]Force[/c] par tour, pendant 3 tours).\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+1 Puissance[/c] et [c=physic]+1 Force[/c].");
+                                "Gère des cumuls d'[c=crimson]Inspiration[/c] ou d'[c=power]Expiration[/c] (max 7) en lançant les sorts correspondants.\nLancer un sort de l'autre type (Swap) consomme les cumuls actuels et octroie un bonus pendant 3 tours si vous avez 4 cumuls ou plus :\n[ul][li]Swap entre 4-6 cumuls d'[c=power]Expiration[/c] : [c=physic]+30% Force[/c] | à 7 cumuls : [c=physic]+60% Force[/c][/li][li]Swap entre 4-6 cumuls d'[c=crimson]Inspiration[/c] : [c=crit]+100% Critique[/c] | à 7 cumuls : [c=crit]+200% Critique[/c][/li][/ul]Attention : À 6 cumuls ou plus, chaque sort du [b]même type[/b] que vous lancez vous infligera une [c=crit]Brûlure[/c] (15% [c=power]Puissance[/c] + 15% [c=physic]Force[/c] par tour, pendant 3 tours).\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+1 Puissance[/c] et [c=physic]+1 Force[/c].");
 
                 String[] voies = {
                                 "Voie de la Raison", "Voie de la Sûreté", "Voie de Trahison",
@@ -183,7 +183,7 @@ public class DataInitializerService {
                 for (Spiritualite sp : spiritualiteRepository.findAll()) {
                         if ("Esprit".equals(sp.getNom())) {
                                 sp.setPassiveDescription(
-                                                "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins [c=pv]20% de vos PV max[/c] ET [c=mana]20% de votre Mana max[/c].\nDe plus, au début de votre tour, vous régénérez [c=mana]10% de votre Mana actuel[/c]. Si vos PV sont sous les 20%, vous obtenez un [c=shield]Bouclier (5% PV max)[/c] (dure 1 tour).\n \nÀ chaque niveau, vous gagnez : [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
+                                                "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins [c=pv]20% de vos PV max[/c] ET [c=mana]20% de votre Mana max[/c].\nDe plus, au début de votre tour, vous régénérez [c=mana]10% de votre Mana actuel[/c].\nSi vos PV sont sous les 20%, vous obtenez un [c=shield]Bouclier (5% PV max)[/c] (dure 2 tour).\n \nÀ chaque niveau, vous gagnez : [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
                         } else if ("Ténèbres".equals(sp.getNom())) {
                                 sp.setPassiveDescription(
                                                 "Sauf pour les sorts de base, le lancement nécessite d'avoir [c=pv]80% ou moins de vos PV max[/c] OU [c=mana]80% ou moins de votre Mana max[/c].\nDe plus, à chaque début de tour, vous gagnez un bonus aux [c=physic]dégâts physiques[/c] équivalent à 10% de vos [c=pv]PV manquants[/c] et aux [c=purple]dégâts magiques[/c] équivalent à 10% de votre [c=mana]Mana manquant[/c] (dure 1 tour).\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c] et [c=mana]+5 Mana[/c].");

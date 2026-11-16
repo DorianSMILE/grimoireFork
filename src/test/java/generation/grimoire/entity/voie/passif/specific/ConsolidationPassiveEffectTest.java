@@ -59,8 +59,26 @@ class ConsolidationPassiveEffectTest {
         passive.onTurnStart(hero);
         
         assertThat(hero.getActiveBuffs()).hasSize(2);
-        assertThat(hero.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.ARMURE && b.getModifier() == 0.20)).isTrue();
-        assertThat(hero.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.RESISTANCE && b.getModifier() == 0.20)).isTrue();
+        assertThat(hero.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.ARMURE && b.getModifier() == 0.25 && b.getDuration() == 2)).isTrue();
+        assertThat(hero.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.RESISTANCE && b.getModifier() == 0.25 && b.getDuration() == 2)).isTrue();
         assertThat(hero.getTotalShield()).isEqualTo(0);
+    }
+
+    @Test
+    void armorAndResistanceShouldLastTwoTurns() {
+        hero.setHealthMax(100);
+        hero.setHealthCurrent(20);
+
+        passive.onTurnStart(hero);
+        assertThat(hero.getActiveBuffs()).hasSize(2);
+
+        // Fin tour 1
+        hero.updateBuffs();
+        assertThat(hero.getActiveBuffs()).hasSize(2);
+        assertThat(hero.getActiveBuffs()).allMatch(b -> b.getDuration() == 1);
+
+        // Fin tour 2
+        hero.updateBuffs();
+        assertThat(hero.getActiveBuffs()).isEmpty();
     }
 }

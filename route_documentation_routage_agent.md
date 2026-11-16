@@ -27,10 +27,10 @@ L'objectif est d'optimiser la consommation de tokens, d'éliminer les dépendanc
                         +----------------------------+----------------------------+
                         |                                                         |
                         v                                                         v
-             [Niveaux 1 à 3 : Flash]                                   [Niveaux 4 et 5 : Argon]
-        • 1 : gemini-3.8-flash-low                                • 4 : gemini-4-argon-medium
-        • 2 : gemini-3.8-flash-medium                             • 5 : gemini-4-argon-high
-        • 3 : gemini-3.8-flash-high                                (ou repli Flash High)
+            [Niveaux 1 à 3 : Hydrogen]                                [Niveaux 4 et 5 : Carbon]
+       • 1 : gemini-4-hydrogen-low                               • 4 : gemini-4-carbon-medium
+       • 2 : gemini-4-hydrogen-medium                            • 5 : gemini-4-carbon-high
+       • 3 : gemini-4-hydrogen-high                               (repli Argon / Hydrogen High)
                         |                                                         |
                         +----------------------------+----------------------------+
                                                      |
@@ -59,11 +59,11 @@ L'objectif est d'optimiser la consommation de tokens, d'éliminer les dépendanc
 
 | Niveau | Modèle Gemini cible | Usage typique | Portée & Réflexion |
 | :---: | :--- | :--- | :--- |
-| **1** | `gemini-3.8-flash-low` | Typo, renommage local, modification de constante, log, DTO/record simple, explication de code. | 1 fichier, action mécanique directe sans choix de conception. |
-| **2** | `gemini-3.8-flash-medium` | Endpoint CRUD, binding UI/DOM, validation, règle de gestion ciblée, test Mockito, bug avec stack trace claire. | 1 à 3 fichiers, patterns connus (niveau par défaut). |
-| **3** | `gemini-3.8-flash-high` | Concurrence (deadlock, duplication), performance/freeze, bug silencieux/intermittent, question ouverte, système complet (loot, météo). | Multi-couches, conception ou enquête à l'aveugle. |
-| **4** | `gemini-4-argon-medium` | Refonte d'architecture (hexagonale), migration de module, audit de sécurité complet de l'application, bug bloquant récurrent. | Restructuration majeure transversale. |
-| **5** | `gemini-4-argon-high` | Migration complète de stack (ex: Spring Boot vers Quarkus), refonte intégrale de la persistance ou crise bloquante critique. | Ultime niveau (choix manuel recommandé). |
+| **1** | `gemini-4-hydrogen-low` | Typo, renommage local, modification de constante numérique/texte, suppression de log, question courte. | 1 fichier, action mécanique directe sans design ni diagnostic. |
+| **2** | `gemini-4-hydrogen-medium` | Endpoint CRUD, style UI/CSS, loader/icônes, binding DOM/API, validation DTO, test Mockito, exception Java/SQL nommée. | 1 à 3 fichiers, patterns connus (niveau par défaut). |
+| **3** | `gemini-4-hydrogen-high` | Concurrence, performance/mémoire, bug silencieux/intermittent, question ouverte, mécanique multi-couches, refonte d'un seul module/page. | Multi-couches, conception ou enquête complexe rapide (~3.5x plus rapide qu'Argon à intelligence égale). |
+| **4** | `gemini-4-carbon-medium` | Refonte globale d'une couche (tout le front/back/API), audit de sécurité complet de l'application, impasse après plusieurs échecs. | Restructuration majeure transversale ou débogage frontier profond (repli `gemini-4-argon-medium` via `-UseArgon`). |
+| **5** | `gemini-4-carbon-high` | Migration complète de stack, refonte intégrale critique ou crise bloquante majeure. | Puissance maximale Carbon (choix manuel `-Level 5`, repli `gemini-4-argon-high` via `-UseArgon`). |
 
 ---
 
@@ -179,17 +179,20 @@ Affiche le niveau calculé, le modèle sélectionné et la ligne de commande `ag
 .\route.ps1 "Refais le système de combat pour supporter les altérations d'état" -DryRun
 ```
 
-#### 3. Forçage manuel d'un niveau (`-Level 1..5`)
-Bypasse Ollama et force un modèle précis (idéal pour les urgences ou pour déclencher Argon High) :
+#### 3. Forçage manuel d'un niveau (`-Level 1..5`) et repli Argon (`-UseArgon`)
+Bypasse Ollama et force un modèle précis (idéal pour les urgences, déclencher Carbon High, ou économiser le quota Carbon avec `-UseArgon`) :
 ```powershell
-# Forcer Flash Low (Niveau 1)
+# Forcer Hydrogen Low (Niveau 1)
 .\route.ps1 "Renomme hp en hitPoints dans Monster" -Level 1
 
-# Forcer Flash High (Niveau 3)
+# Forcer Hydrogen High (Niveau 3)
 .\route.ps1 "Pourquoi la quête ne se valide pas ?" -Level 3
 
-# Forcer Argon High (Niveau 5)
+# Forcer Carbon High (Niveau 5)
 .\route.ps1 "Refonte complète de l'architecture réseau et multi-joueur" -Level 5
+
+# Économiser le quota Carbon en basculant les niveaux 4/5 sur Argon
+.\route.ps1 "Fais un audit complet de sécurité" -UseArgon
 ```
 
 ---

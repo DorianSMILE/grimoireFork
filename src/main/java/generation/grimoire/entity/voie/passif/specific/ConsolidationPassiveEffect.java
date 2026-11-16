@@ -20,9 +20,6 @@ public class ConsolidationPassiveEffect extends VoiePassiveEffect {
 
     @Override
     public void onTurnStart(Personnage personnage) {
-        // Supprimer tous les anciens buffs de consolidation
-        personnage.getActiveBuffs().removeIf(b -> SOURCE_NAME.equals(b.getSourceName()));
-        
         int maxHp = personnage.getHealthMax();
         int currentHp = personnage.getHealthCurrent();
         double threshold = maxHp * 0.20;
@@ -36,9 +33,9 @@ public class ConsolidationPassiveEffect extends VoiePassiveEffect {
             
             System.out.println(personnage.getName() + " perd " + hpCost + " PV et gagne un bouclier de " + shieldAmount + " (Consolidation).");
         } else {
-            addModifierBuff(personnage, StatType.ARMURE, 0.20);
-            addModifierBuff(personnage, StatType.RESISTANCE, 0.20);
-            System.out.println(personnage.getName() + " bénéficie de +20% d'armure et de résistance magique (Consolidation - Urgence).");
+            addModifierBuff(personnage, StatType.ARMURE, 0.25);
+            addModifierBuff(personnage, StatType.RESISTANCE, 0.25);
+            System.out.println(personnage.getName() + " bénéficie de +25% d'armure et de résistance magique (Consolidation - Urgence).");
         }
     }
 
@@ -47,7 +44,7 @@ public class ConsolidationPassiveEffect extends VoiePassiveEffect {
         buff.setStatAffected(stat);
         buff.setModifier(modifier);
         buff.setFlatValue(0);
-        buff.setDuration(1);
+        buff.setDuration(2);
         buff.setSourceName(SOURCE_NAME);
         personnage.getActiveBuffs().add(buff);
     }

@@ -172,6 +172,15 @@
             gap: 0.4rem;
         }
 
+.effect-line {
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.effect-line.is-choice-inactive {
+    opacity: 0.32;
+    filter: grayscale(0.9);
+}
+
 .indicator{
             width: 8px;
             height: 8px;

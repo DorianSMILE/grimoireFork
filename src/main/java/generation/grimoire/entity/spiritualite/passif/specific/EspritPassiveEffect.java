@@ -29,7 +29,7 @@ public class EspritPassiveEffect extends SpiritualitePassiveEffect {
         if (personnage.getHealthCurrent() < (personnage.getHealthMax() * 0.20)) {
             int shieldAmount = (int) (personnage.getHealthMax() * 0.05);
             if (shieldAmount > 0) {
-                personnage.addShield(shieldAmount, 1, "Passif Esprit");
+                personnage.addShield(shieldAmount, 2, "Passif Esprit");
                 System.out.println(personnage.getName() + " reçoit un bouclier de " + shieldAmount + " via l'Esprit.");
             }
         }

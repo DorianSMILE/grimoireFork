@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000239';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000239';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000239';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000239';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000239';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000240';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000241';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000240';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000240';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000241';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000239';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000240';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -183,6 +183,20 @@ window.promptFlee = function () {
 let _combatTutorialObserver = null;
 
 window.initCombatPage = async function () {
+    const combatLoadingStateEl = document.getElementById('combatLoadingState');
+    if (combatLoadingStateEl) {
+        combatLoadingStateEl.classList.remove('is-hidden');
+    }
+    const headerCombatIcon = document.getElementById('headerCombatIcon');
+    if (headerCombatIcon) {
+        headerCombatIcon.classList.add('animate-spin');
+        headerCombatIcon.textContent = 'autorenew';
+    }
+    const headerDungeonName = document.getElementById('headerDungeonName');
+    if (headerDungeonName) {
+        headerDungeonName.textContent = 'Chargement du combat...';
+    }
+
     pageState.lastCombatLogCount = 0;
     pageState.renderedCombatLogs = [];
     pageState.renderedLogSessionId = null;
@@ -205,6 +219,7 @@ window.initCombatPage = async function () {
     pageState.sessionId = null;
     pageState.currentSessionData = null;
     pageState.combatEquipments = {};
+    pageState.selectedSpellChoices = {};
 
     window.dungeonMusic = null;
 
@@ -398,11 +413,16 @@ window.updateSpellCardState = function (spellId) {
     let dynamicReason = null;
 
     const choiceSelect = document.getElementById(`choice-select-${spellId}`);
+    const currentChoiceKey = choiceSelect ? choiceSelect.value : null;
+    if (currentChoiceKey !== null) {
+        pageState.selectedSpellChoices = pageState.selectedSpellChoices || {};
+        pageState.selectedSpellChoices[spellId] = currentChoiceKey;
+    }
+
     if (isCastable) {
         let activeEffects = sp.effects || [];
 
         if (choiceSelect) {
-            const currentChoiceKey = choiceSelect.value;
             activeEffects = activeEffects.filter(e => {
                 if (e.requiredChoiceKey == null) return true;
                 return String(e.requiredChoiceKey) === String(currentChoiceKey);
@@ -510,6 +530,37 @@ window.updateSpellCardState = function (spellId) {
 
     const card = document.getElementById(`spell-card-${spellId}`);
     if (card) {
+        if (currentChoiceKey !== null) {
+            const tooltipDataTpl = card.querySelector('template.tooltip-data');
+            if (tooltipDataTpl) {
+                const refreshedSummary = typeof getCalculatedSpellEffectsSummaryHtml === 'function'
+                    ? getCalculatedSpellEffectsSummaryHtml(sp, avail, currentChoiceKey)
+                    : getSpellEffectsSummaryHtml(sp, currentChoiceKey);
+                if (refreshedSummary) {
+                    tooltipDataTpl.innerHTML = refreshedSummary;
+                }
+            }
+            const syncChoiceLines = (rootEl) => {
+                if (!rootEl) return;
+                rootEl.querySelectorAll('.effect-line[data-choice-key]').forEach(lineEl => {
+                    const lineKey = lineEl.getAttribute('data-choice-key');
+                    lineEl.classList.toggle('is-choice-inactive', String(lineKey) !== String(currentChoiceKey));
+                });
+            };
+            const globalTooltip = document.getElementById('globalFixedTooltip');
+            if (globalTooltip && globalTooltip.classList.contains('is-visible')) {
+                syncChoiceLines(globalTooltip);
+                const rawTplInTooltip = globalTooltip.querySelector('template.raw-tooltip-data');
+                if (rawTplInTooltip && rawTplInTooltip.content) {
+                    syncChoiceLines(rawTplInTooltip.content);
+                }
+            }
+            const effectTooltip = document.getElementById('effectFixedTooltip');
+            if (effectTooltip && effectTooltip.classList.contains('is-visible')) {
+                syncChoiceLines(effectTooltip);
+            }
+        }
+
         if (isCastable) {
             card.classList.remove('spell-disabled');
             card.setAttribute('onclick', `initiateCombatCast(${spellId})`);

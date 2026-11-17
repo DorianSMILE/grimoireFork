@@ -627,6 +627,11 @@ function renderCauldron(r, preserveInput = false, targetPanelId = null) {
         }
     }
 
+    const isAwakeningPanel = resolvedTargetId === 'awakeningRightPanel';
+    const reqsListClass = isAwakeningPanel
+        ? 'flex flex-col gap-1'
+        : 'custom-scrollbar flex flex-col gap-1 max-h-[180px] overflow-y-auto pr-1';
+
     container.innerHTML = `
                 <div class="w-full flex flex-col items-center justify-start text-left my-auto">
                     <div class="mb-2 text-center">
@@ -637,7 +642,7 @@ function renderCauldron(r, preserveInput = false, targetPanelId = null) {
 
                     <div style="width: 100%; max-width: 500px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 12px; padding: 0.75rem 1rem;">
                         <h3 style="margin-top: 0; color: #e2e8f0; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.35rem; margin-bottom: 0.5rem; text-align: left;">Ingrédients Requis</h3>
-                        <div id="cauldronReqsList" class="custom-scrollbar flex flex-col gap-1 max-h-[180px] overflow-y-auto pr-1">
+                        <div id="cauldronReqsList" class="${reqsListClass}">
                             ${reqsHTML || '<span class="text-muted text-xs">Aucun coût matériel.</span>'}
                         </div>
                         

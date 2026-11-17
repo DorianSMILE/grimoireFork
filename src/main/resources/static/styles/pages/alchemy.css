@@ -314,7 +314,9 @@
 .awakening-right-panel {
     flex: 1.6;
     max-width: none;
-    max-height: 700px;
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
     padding: 1.85rem 2.25rem;
     align-items: stretch;
     text-align: left;

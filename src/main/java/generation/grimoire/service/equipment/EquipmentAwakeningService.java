@@ -334,7 +334,7 @@ public class EquipmentAwakeningService {
         if (anomalies == null) return counts;
         for (Anomalie a : anomalies) {
             if (a == null || a.isTemplate() || a.getName() == null) continue;
-            counts.merge(a.getName().toLowerCase(), 1, Integer::sum);
+            counts.merge(a.getName().toLowerCase(), 1, (x, y) -> (x != null ? x : 0) + (y != null ? y : 0));
         }
         return counts;
     }

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import generation.grimoire.enumeration.DamageType;
 import generation.grimoire.enumeration.StatType;
 import generation.grimoire.enumeration.TrapEffectType;
@@ -390,7 +391,7 @@ public class CombatRoomService {
                             Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(entry.getSpecialItemName());
                             if (template != null) {
                                 Anomalie clone = cloneAnomalieForUser(template, u);
-                                anomalieRepository.save(clone);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 u.getDiscoveredItems().add(clone.getName());
                                 session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (ajouté à l'inventaire).");
                             }
@@ -492,7 +493,7 @@ public class CombatRoomService {
                             java.util.List<Anomalie> templates = anomalieRepository.findByName(itemReward);
                             if (!templates.isEmpty()) {
                                 Anomalie clone = cloneAnomalieForUser(templates.get(0), u);
-                                anomalieRepository.save(clone);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (Item Spécial) !");
                             }
                         }
@@ -539,7 +540,7 @@ public class CombatRoomService {
                         java.util.List<Anomalie> templates = anomalieRepository.findByName(itemReward);
                         if (!templates.isEmpty()) {
                             Anomalie clone = cloneAnomalieForUser(templates.get(0), u);
-                            anomalieRepository.save(clone);
+                            anomalieRepository.save(Objects.requireNonNull(clone));
                             session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (Item Spécial) !");
                         }
                     }
@@ -1253,7 +1254,7 @@ target.getActiveBuffs().add(effect);
                 Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(itemName);
                 if (template != null) {
                     Anomalie newAnomaly = cloneAnomalieForUser(template, user);
-                    anomalieRepository.save(newAnomaly);
+                    anomalieRepository.save(Objects.requireNonNull(newAnomaly));
                     user.getDiscoveredItems().add(newAnomaly.getName());
                 }
             }
@@ -1584,7 +1585,7 @@ target.getActiveBuffs().add(effect);
                             if (user != null && !rewardedUsernames.contains(user.getUsername())) {
                                 rewardedUsernames.add(user.getUsername());
                                 Anomalie clone = cloneAnomalieForUser(template, user);
-                                anomalieRepository.save(clone);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 user.getDiscoveredItems().add(clone.getName());
                                 session.logInteractionResult(user.getUsername(), "Objet trouvé : " + anomalyName + " (ajouté à l'inventaire).");
                             }

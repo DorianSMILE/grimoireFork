@@ -267,7 +267,7 @@ public class AuthController {
                     var statuses = equipmentAwakeningService.computeUpgradeStatuses(
                             u, isAdmin, true, playerEqs, anomalies);
                     awakeningTutorialActive = statuses.values().stream()
-                            .anyMatch(EquipmentAwakeningService.UpgradeStatus::ready);
+                            .anyMatch(s -> s != null && s.ready());
                 }
             }
             res.put("awakeningTutorialActive", awakeningTutorialActive);

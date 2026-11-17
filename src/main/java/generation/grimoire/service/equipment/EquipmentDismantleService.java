@@ -110,7 +110,7 @@ public class EquipmentDismantleService {
             equipmentRepository.deleteById(Objects.requireNonNull(eq.getId()));
         }
 
-        userRepository.save(owner);
+        userRepository.save(Objects.requireNonNull(owner));
         achievementService.onEquipmentRecycled(owner, items.size());
         achievementService.onGoldChanged(owner);
 
@@ -164,7 +164,9 @@ public class EquipmentDismantleService {
 
             if (up >= 1) {
                 Map<String, Integer> perItemRefund = computePartialIngredientsRefund(eq, up, allRecipes);
-                perItemRefund.forEach((name, qty) -> totalAnomalies.merge(name, qty, Integer::sum));
+                perItemRefund.forEach((name, qty) -> {
+                    if (qty != null) totalAnomalies.merge(name, qty, (a, b) -> (a != null ? a : 0) + (b != null ? b : 0));
+                });
             }
         }
 
@@ -195,13 +197,13 @@ public class EquipmentDismantleService {
         if (catalystsSpent > 0 && catalystRecipe != null && catalystRecipe.getRequiredAnomalies() != null) {
             for (Map.Entry<String, Integer> entry : catalystRecipe.getRequiredAnomalies().entrySet()) {
                 if (fallbackFirstIngredient == null) fallbackFirstIngredient = entry.getKey();
-                totalSpentIngredients.merge(entry.getKey(), entry.getValue() * catalystsSpent, Integer::sum);
+                totalSpentIngredients.merge(entry.getKey(), entry.getValue() * catalystsSpent, (a, b) -> (a != null ? a : 0) + (b != null ? b : 0));
             }
         }
         if (awakeningsSpent > 0 && awakeningRecipe != null && awakeningRecipe.getRequiredAnomalies() != null) {
             for (Map.Entry<String, Integer> entry : awakeningRecipe.getRequiredAnomalies().entrySet()) {
                 if (fallbackFirstIngredient == null) fallbackFirstIngredient = entry.getKey();
-                totalSpentIngredients.merge(entry.getKey(), entry.getValue() * awakeningsSpent, Integer::sum);
+                totalSpentIngredients.merge(entry.getKey(), entry.getValue() * awakeningsSpent, (a, b) -> (a != null ? a : 0) + (b != null ? b : 0));
             }
         }
 

@@ -32,7 +32,6 @@ public class EquipmentController {
     private final generation.grimoire.service.RenameCascadeService renameCascadeService;
     private final EquipmentMapper equipmentMapper;
     private final generation.grimoire.service.pve.DungeonLootTrackerService dungeonLootTrackerService;
-    private final generation.grimoire.service.AchievementService achievementService;
     private final EquipmentAwakeningService equipmentAwakeningService;
     private final EquipmentDismantleService equipmentDismantleService;
     private final AnomalieRepository anomalieRepository;
@@ -44,7 +43,6 @@ public class EquipmentController {
             generation.grimoire.service.RenameCascadeService renameCascadeService,
             EquipmentMapper equipmentMapper,
             generation.grimoire.service.pve.DungeonLootTrackerService dungeonLootTrackerService,
-            generation.grimoire.service.AchievementService achievementService,
             EquipmentAwakeningService equipmentAwakeningService,
             EquipmentDismantleService equipmentDismantleService,
             AnomalieRepository anomalieRepository) {
@@ -55,7 +53,6 @@ public class EquipmentController {
         this.renameCascadeService = renameCascadeService;
         this.equipmentMapper = equipmentMapper;
         this.dungeonLootTrackerService = dungeonLootTrackerService;
-        this.achievementService = achievementService;
         this.equipmentAwakeningService = equipmentAwakeningService;
         this.equipmentDismantleService = equipmentDismantleService;
         this.anomalieRepository = anomalieRepository;

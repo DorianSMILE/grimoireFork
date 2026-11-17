@@ -435,6 +435,7 @@ class AlchemyServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void craftRecipe_awakeningUnlocked_createsLevel5EveilAnomaly() {
         AlchemyRecipe awkRecipe = new AlchemyRecipe();
         awkRecipe.setId(3L);
@@ -474,6 +475,7 @@ class AlchemyServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void craftRecipe_catalystLevelIndependentFromType() {
         AlchemyRecipe catRecipe = new AlchemyRecipe();
         catRecipe.setId(4L);

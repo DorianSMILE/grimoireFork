@@ -557,7 +557,29 @@
 .awakening-rarity-legendaire { color: #eab308; }
 .awakening-rarity-epique { color: #ef4444; }
 .awakening-rarity-relique { color: #a855f7; }
-.awakening-rarity-maudit { color: #dc2626; }
+.awakening-rarity-maudit { color: #fda4af; text-shadow: 0 0 8px rgba(127, 29, 29, 0.95); }
+
+.awakening-equip-rarity-legendaire {
+    border-left: 3px solid #eab308;
+    background: linear-gradient(90deg, rgba(234, 179, 8, 0.14) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-epique {
+    border-left: 3px solid #ef4444;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.14) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-relique {
+    border-left: 3px solid #a855f7;
+    background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-maudit {
+    border-color: rgba(153, 27, 27, 0.65);
+    border-left: 3px solid #7f1d1d;
+    background: linear-gradient(90deg, rgba(127, 29, 29, 0.42) 0%, rgba(20, 8, 12, 0.72) 72%);
+    box-shadow: inset 0 0 12px rgba(127, 29, 29, 0.25);
+}
+.awakening-equip-rarity-maudit:hover {
+    border-color: rgba(190, 18, 60, 0.85);
+}
 
 .awakening-equip-controls {
     display: flex;
@@ -572,10 +594,98 @@
     gap: 0.45rem;
 }
 
+.awakening-craft-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.awakening-craft-spirit-wrap {
+    flex: 1 1 145px;
+    min-width: 135px;
+    z-index: 38;
+}
+
 @media (max-width: 520px) {
     .awakening-equip-filters {
         grid-template-columns: 1fr;
     }
+}
+
+.awakening-craft-search {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Couleurs Voies & Spiritualités + tons des combobox */
+.awakening-spirit-raison        { --spirit-color: #3b82f6; --spirit-rgb: 59, 130, 246; }
+.awakening-spirit-surete        { --spirit-color: #00e5cc; --spirit-rgb: 0, 229, 204; }
+.awakening-spirit-trahison      { --spirit-color: #ed5677; --spirit-rgb: 237, 86, 119; }
+.awakening-spirit-consolidation { --spirit-color: #99674c; --spirit-rgb: 153, 103, 76; }
+.awakening-spirit-conviction    { --spirit-color: #b74c0b; --spirit-rgb: 183, 76, 11; }
+.awakening-spirit-creation      { --spirit-color: #10b981; --spirit-rgb: 16, 185, 129; }
+.awakening-spirit-destruction   { --spirit-color: #ff4444; --spirit-rgb: 255, 68, 68; }
+.awakening-spirit-violence      { --spirit-color: #a70740; --spirit-rgb: 167, 7, 64; }
+.awakening-spirit-esprit        { --spirit-color: #38bdf8; --spirit-rgb: 56, 189, 248; }
+.awakening-spirit-tenebres      { --spirit-color: #c084fc; --spirit-rgb: 192, 132, 252; }
+.awakening-spirit-karma         { --spirit-color: #e7d198; --spirit-rgb: 231, 209, 152; }
+
+.awakening-tone-level      { --combo-color: #f59e0b; --combo-rgb: 245, 158, 11; }
+.awakening-tone-lvl-0      { --combo-color: #94a3b8; --combo-rgb: 148, 163, 184; }
+.awakening-tone-lvl-1      { --combo-color: #10b981; --combo-rgb: 16, 185, 129; }
+.awakening-tone-lvl-2      { --combo-color: #38bdf8; --combo-rgb: 56, 189, 248; }
+.awakening-tone-lvl-3      { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+.awakening-tone-lvl-4      { --combo-color: #f59e0b; --combo-rgb: 245, 158, 11; }
+.awakening-tone-lvl-5      { --combo-color: #ef4444; --combo-rgb: 239, 68, 68; }
+.awakening-tone-rarity     { --combo-color: #c084fc; --combo-rgb: 192, 132, 252; }
+.awakening-tone-legendaire { --combo-color: #eab308; --combo-rgb: 234, 179, 8; }
+.awakening-tone-epique     { --combo-color: #ef4444; --combo-rgb: 239, 68, 68; }
+.awakening-tone-relique    { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+.awakening-tone-maudit     { --combo-color: #9f1239; --combo-rgb: 159, 18, 57; }
+.awakening-tone-slot       { --combo-color: #38bdf8; --combo-rgb: 56, 189, 248; }
+.awakening-tone-spirit     { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+
+.awakening-custom-select[class*="awakening-spirit-"] {
+    --combo-color: var(--spirit-color);
+    --combo-rgb: var(--spirit-rgb);
+}
+
+.awakening-spirit-icon {
+    color: var(--spirit-color, #94a3b8);
+}
+
+.awakening-craft-item[class*="awakening-spirit-"] {
+    border-left: 3px solid var(--spirit-color);
+    background: linear-gradient(90deg, rgba(var(--spirit-rgb), 0.15) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+
+.awakening-craft-item[class*="awakening-spirit-"]:hover {
+    border-color: rgba(var(--spirit-rgb), 0.72);
+}
+
+.awakening-craft-item.is-selected[class*="awakening-spirit-"] {
+    border-color: var(--spirit-color);
+    box-shadow: 0 0 14px rgba(var(--spirit-rgb), 0.25);
+}
+
+.awakening-craft-title {
+    color: var(--spirit-color, #ffffff);
+}
+
+.awakening-spirit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--spirit-color, #cbd5e1);
+    border: 1px solid rgba(var(--spirit-rgb, 148, 163, 184), 0.45);
+    background: rgba(var(--spirit-rgb, 148, 163, 184), 0.14);
 }
 
 .awakening-equip-search {
@@ -600,8 +710,15 @@
     font-size: 0.78rem;
     min-height: 34px;
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.88);
-    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(135deg, rgba(var(--combo-rgb, 148, 163, 184), 0.14), rgba(15, 23, 42, 0.92));
+    border: 1px solid rgba(var(--combo-rgb, 148, 163, 184), 0.42);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.awakening-custom-select .custom-select-trigger:hover,
+.awakening-custom-select.open .custom-select-trigger {
+    border-color: var(--combo-color, #f59e0b);
+    box-shadow: 0 0 12px rgba(var(--combo-rgb, 245, 158, 11), 0.28);
 }
 
 .awakening-custom-select .cs-label {
@@ -623,9 +740,21 @@
     padding: 0.45rem 0.6rem;
     font-size: 0.78rem;
     color: #e2e8f0;
+    border-left: 2px solid transparent;
+}
+
+.awakening-custom-select .custom-option[class*="awakening-spirit-"] {
+    --combo-color: var(--spirit-color);
+    --combo-rgb: var(--spirit-rgb);
+}
+
+.awakening-custom-select .custom-option[class*="awakening-tone-"],
+.awakening-custom-select .custom-option[class*="awakening-spirit-"] {
+    border-left-color: rgba(var(--combo-rgb, 148, 163, 184), 0.45);
 }
 
 .awakening-custom-select .custom-option:hover,
 .awakening-custom-select .custom-option.selected {
-    background: rgba(245, 158, 11, 0.16);
+    background: rgba(var(--combo-rgb, 245, 158, 11), 0.18);
+    border-left-color: var(--combo-color, #f59e0b);
 }

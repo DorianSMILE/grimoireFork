@@ -2,18 +2,135 @@
 (function () {
     const awakeningState = {
         userEquipments: [],
+        anomalyTemplatesByName: new Map(),
         selectedEquipmentId: null,
         selectedSimulation: null,
         craftFilter: 'ALL',
+        craftSpiritFilter: 'ALL',
         searchTerm: '',
         equipSearchTerm: '',
-        equipSortBy: 'ready_desc',
         equipLevelFilter: 'ALL',
         equipRarityFilter: 'ALL',
         equipSlotFilter: 'ALL',
+        equipSpiritFilter: 'ALL',
         isExecuting: false,
         userGold: 0
     };
+
+    const SPIRIT_DEFS = [
+        { key: 'CONVICTION',    label: 'Conviction',    icon: 'volcano' },
+        { key: 'SURETE',        label: 'Sûreté',        icon: 'water_drop' },
+        { key: 'RAISON',        label: 'Raison',        icon: 'psychology' },
+        { key: 'VIOLENCE',      label: 'Violence',      icon: 'explosion' },
+        { key: 'TRAHISON',      label: 'Trahison',      icon: 'visibility_off' },
+        { key: 'CONSOLIDATION', label: 'Consolidation', icon: 'foundation' },
+        { key: 'DESTRUCTION',   label: 'Destruction',   icon: 'local_fire_department' },
+        { key: 'CREATION',      label: 'Création',      icon: 'eco' },
+        { key: 'KARMA',         label: 'Karma',         icon: 'all_inclusive' },
+        { key: 'ESPRIT',        label: 'Esprit',        icon: 'blur_on' },
+        { key: 'TENEBRES',      label: 'Ténèbres',      icon: 'dark_mode' }
+    ];
+
+    const SPIRIT_DEF_MAP = Object.fromEntries(SPIRIT_DEFS.map(d => [d.key, d]));
+
+    const SECRET_TO_SPIRIT = {
+        'SECRET DU CHAOS': 'DESTRUCTION',
+        'SECRET DU DESTIN': 'KARMA',
+        "SECRET DE L'ETHER": 'ESPRIT',
+        'SECRET DES ABYSSES': 'TENEBRES',
+        "SECRET DE L'ABONDANCE": 'CREATION',
+        'SECRET DE LA PRESERVATION': 'CONSOLIDATION',
+        'SECRET DE LA SERENITE': 'SURETE',
+        'SECRET DE LA CHASSE': 'TRAHISON',
+        'SECRET DU CARNAGE': 'VIOLENCE',
+        'SECRET DE LA JOIE': 'CONVICTION',
+        'SECRET DU SAVOIR': 'RAISON',
+        'VOIE CONVICTION': 'CONVICTION',
+        'VOIE SURETE': 'SURETE',
+        'VOIE RAISON': 'RAISON',
+        'VOIE VIOLENCE': 'VIOLENCE',
+        'VOIE TRAHISON': 'TRAHISON',
+        'VOIE CONSOLIDATION': 'CONSOLIDATION'
+    };
+
+    function normalizeTextKey(val) {
+        return String(val || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toUpperCase();
+    }
+
+    function getSpiritDef(spKey) {
+        const key = normalizeTextKey(spKey);
+        return SPIRIT_DEF_MAP[key] || null;
+    }
+
+    function getSpiritClass(spKey) {
+        const def = getSpiritDef(spKey);
+        return def ? `awakening-spirit-${def.key.toLowerCase()}` : '';
+    }
+
+    function getSpiritFilterOptions(includeGeneric) {
+        const opts = [];
+        if (includeGeneric) {
+            opts.push({ value: 'GENERIC', label: 'Générique', icon: 'shield', iconClass: 'text-muted' });
+        }
+        SPIRIT_DEFS.forEach(d => {
+            const spCls = getSpiritClass(d.key);
+            opts.push({
+                value: d.key,
+                label: d.label,
+                icon: d.icon,
+                iconClass: `awakening-spirit-icon ${spCls}`,
+                toneClass: spCls
+            });
+        });
+        return opts;
+    }
+
+    function resolveEquipmentSpiritKey(eq) {
+        if (!eq || !eq.requiredSecret) return 'GENERIC';
+        const norm = normalizeTextKey(eq.requiredSecret);
+        if (!norm) return 'GENERIC';
+        if (SECRET_TO_SPIRIT[norm]) return SECRET_TO_SPIRIT[norm];
+        for (const d of SPIRIT_DEFS) {
+            if (norm.includes(d.key)) return d.key;
+        }
+        return 'OTHER';
+    }
+
+    function resolveRecipeSpiritKey(recipe) {
+        if (!recipe) return '';
+        const tmpl = awakeningState.anomalyTemplatesByName.get(String(recipe.rewardName || '').trim().toLowerCase());
+        return tmpl?.spiritualite ? normalizeTextKey(tmpl.spiritualite) : '';
+    }
+
+    function syncAnomalyTemplatesMap(templates) {
+        if (!Array.isArray(templates) || templates.length === 0) return;
+        const map = new Map();
+        templates.forEach(t => {
+            if (t && t.name) map.set(String(t.name).trim().toLowerCase(), t);
+        });
+        awakeningState.anomalyTemplatesByName = map;
+    }
+
+    async function ensureAnomalyTemplatesLoaded(providedTemplates) {
+        if (Array.isArray(providedTemplates) && providedTemplates.length > 0) {
+            syncAnomalyTemplatesMap(providedTemplates);
+            return;
+        }
+        if (awakeningState.anomalyTemplatesByName.size > 0) return;
+        try {
+            const res = await globalFetch('/api/anomalies/all-templates');
+            if (res && res.ok) {
+                const list = await res.json();
+                syncAnomalyTemplatesMap(list);
+            }
+        } catch (e) {
+            console.error('Erreur chargement templates anomalies pour éveil:', e);
+        }
+    }
 
     const ELIGIBLE_RARITIES_FALLBACK = [
         { name: 'LEGENDAIRE', label: 'Légendaire' },
@@ -51,7 +168,13 @@
             : ELIGIBLE_RARITIES_FALLBACK;
         return (rawList.length > 0 ? rawList : ELIGIBLE_RARITIES_FALLBACK).map(r => {
             const vis = RARITY_VISUALS[r.name] || { icon: 'star', iconClass: 'text-muted' };
-            return { value: r.name, label: r.label, icon: vis.icon, iconClass: vis.iconClass };
+            return {
+                value: r.name,
+                label: r.label,
+                icon: vis.icon,
+                iconClass: vis.iconClass,
+                toneClass: `awakening-tone-${r.name.toLowerCase()}`
+            };
         });
     }
 
@@ -74,7 +197,8 @@
                 value: d.value,
                 label: d.exactLabel || slotLabels[d.value]?.label || d.fallback,
                 icon: vis.icon,
-                iconClass: vis.iconClass
+                iconClass: vis.iconClass,
+                toneClass: 'awakening-tone-slot'
             };
         });
     }
@@ -125,35 +249,14 @@
         return window.SLOT_LABELS?.[key]?.label || eq.slot?.label || key || 'Objet';
     }
 
-    function compareEquipments(a, b, sortBy) {
-        const nameCmp = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+    function compareEquipments(a, b) {
+        const readyDiff = (b.upgradeReady ? 1 : 0) - (a.upgradeReady ? 1 : 0);
+        if (readyDiff !== 0) return readyDiff;
         const lvlDiffDesc = (Number(b.upgradeLevel) || 0) - (Number(a.upgradeLevel) || 0);
+        if (lvlDiffDesc !== 0) return lvlDiffDesc;
         const rarityDiffDesc = getEquipmentRarityRank(b) - getEquipmentRarityRank(a);
-        const typeCmp = getEquipmentSlotLabel(a).localeCompare(getEquipmentSlotLabel(b), 'fr', { sensitivity: 'base' });
-
-        switch (sortBy) {
-            case 'rarity_desc':
-                return rarityDiffDesc || lvlDiffDesc || nameCmp;
-            case 'rarity_asc':
-                return (-rarityDiffDesc) || lvlDiffDesc || nameCmp;
-            case 'level_desc':
-                return lvlDiffDesc || rarityDiffDesc || nameCmp;
-            case 'level_asc':
-                return (-lvlDiffDesc) || rarityDiffDesc || nameCmp;
-            case 'type_asc':
-                return typeCmp || rarityDiffDesc || lvlDiffDesc || nameCmp;
-            case 'type_desc':
-                return (-typeCmp) || rarityDiffDesc || lvlDiffDesc || nameCmp;
-            case 'name_asc':
-                return nameCmp || lvlDiffDesc;
-            case 'name_desc':
-                return (-nameCmp) || lvlDiffDesc;
-            case 'ready_desc':
-            default: {
-                const readyDiff = (b.upgradeReady ? 1 : 0) - (a.upgradeReady ? 1 : 0);
-                return readyDiff || lvlDiffDesc || rarityDiffDesc || nameCmp;
-            }
-        }
+        if (rarityDiffDesc !== 0) return rarityDiffDesc;
+        return (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
     }
 
     function buildOptionContent(opt) {
@@ -166,7 +269,22 @@
         return frag;
     }
 
-    function createCustomComboSelect(id, ariaLabel, options, currentValue, onChange, extraClass) {
+    function applyWrapperToneClass(wrapper, options, value, baseToneClass) {
+        const allTones = new Set();
+        if (baseToneClass) allTones.add(baseToneClass);
+        options.forEach(o => { if (o.toneClass) allTones.add(o.toneClass); });
+        allTones.forEach(cls => wrapper.classList.remove(cls));
+
+        const chosen = options.find(o => o.value === value);
+        const activeTone = chosen?.toneClass || baseToneClass;
+        if (activeTone) wrapper.classList.add(activeTone);
+
+        wrapper.querySelectorAll('.custom-option').forEach(el => {
+            el.classList.toggle('selected', el.getAttribute('data-value') === String(value));
+        });
+    }
+
+    function createCustomComboSelect(id, ariaLabel, options, currentValue, onChange, extraClass, baseToneClass) {
         const wrapper = createEl('div', `custom-select-wrapper awakening-custom-select ${extraClass || ''}`.trim());
         wrapper.tabIndex = 0;
 
@@ -182,7 +300,12 @@
 
         const listEl = createEl('div', 'custom-select-options custom-scrollbar');
         options.forEach(opt => {
-            const optEl = createEl('div', `custom-option ${opt.value === currentValue ? 'selected' : ''}`.trim());
+            const cls = [
+                'custom-option',
+                opt.toneClass || '',
+                opt.value === currentValue ? 'selected' : ''
+            ].filter(Boolean).join(' ');
+            const optEl = createEl('div', cls);
             optEl.setAttribute('data-value', opt.value);
             optEl.appendChild(buildOptionContent(opt));
             listEl.appendChild(optEl);
@@ -192,11 +315,15 @@
         hiddenInput.type = 'hidden';
         hiddenInput.id = id;
         hiddenInput.value = currentValue;
-        hiddenInput.addEventListener('change', () => onChange(hiddenInput.value));
+        hiddenInput.addEventListener('change', () => {
+            applyWrapperToneClass(wrapper, options, hiddenInput.value, baseToneClass);
+            onChange(hiddenInput.value);
+        });
 
         wrapper.appendChild(trigger);
         wrapper.appendChild(listEl);
         wrapper.appendChild(hiddenInput);
+        applyWrapperToneClass(wrapper, options, currentValue, baseToneClass);
         return wrapper;
     }
 
@@ -271,6 +398,7 @@
         const lvlFilter = awakeningState.equipLevelFilter;
         const rarityFilter = awakeningState.equipRarityFilter;
         const slotFilter = awakeningState.equipSlotFilter;
+        const spiritFilter = awakeningState.equipSpiritFilter;
 
         const filtered = allEligible.filter(eq => {
             if (lvlFilter !== 'ALL' && Number(eq.upgradeLevel || 0) !== Number(lvlFilter)) {
@@ -282,17 +410,22 @@
             if (!matchesSlotFilter(eq, slotFilter)) {
                 return false;
             }
+            if (spiritFilter !== 'ALL' && resolveEquipmentSpiritKey(eq) !== spiritFilter) {
+                return false;
+            }
             if (!query) return true;
+            const spLabel = getSpiritDef(resolveEquipmentSpiritKey(eq))?.label || '';
             const haystacks = [
                 eq.name,
                 getEquipmentSlotLabel(eq),
                 eq.requiredSecret,
+                spLabel,
                 eq.personnage?.name
             ];
             return haystacks.some(v => v && String(v).toLowerCase().includes(query));
         });
 
-        filtered.sort((a, b) => compareEquipments(a, b, awakeningState.equipSortBy));
+        filtered.sort(compareEquipments);
 
         if (filtered.length === 0) {
             container.appendChild(createEl('p', 'text-xs text-muted italic p-2', 'Aucun équipement correspondant.'));
@@ -315,7 +448,10 @@
 
             const topRow = createEl('div', 'flex items-center justify-between gap-2');
             const nameWrap = createEl('div', 'flex items-center gap-1.5 min-w-0');
-            const rarityKey = getEquipmentRarityKey(eq);
+            const rarityKey = getEquipmentRarityKey(eq).toUpperCase();
+            const rarityVis = RARITY_VISUALS[rarityKey] || { icon: 'star', iconClass: 'text-muted' };
+            card.classList.add(`awakening-equip-rarity-${rarityKey.toLowerCase()}`);
+            nameWrap.appendChild(createEl('span', `material-symbols-outlined text-sm shrink-0 ${rarityVis.iconClass}`, rarityVis.icon));
             const nameSpan = createEl('span', `font-bold text-sm truncate ${getRarityClass(rarityKey)}`, eq.name);
             const lvl = Number(eq.upgradeLevel || 0);
             const lvlBadge = createEl('span', `awakening-level-badge ${lvl >= 5 ? 'is-max' : ''}`, `+${lvl}`);
@@ -360,17 +496,25 @@
             if (awakeningState.craftFilter !== 'ALL' && r.rewardType !== awakeningState.craftFilter) {
                 return false;
             }
-            if (awakeningState.searchTerm && !String(r.name || '').toLowerCase().includes(awakeningState.searchTerm)) {
+            const spKey = resolveRecipeSpiritKey(r);
+            if (awakeningState.craftSpiritFilter !== 'ALL' && spKey !== awakeningState.craftSpiritFilter) {
                 return false;
+            }
+            if (awakeningState.searchTerm) {
+                const spLabel = getSpiritDef(spKey)?.label || '';
+                const text = `${r.name || ''} ${r.description || ''} ${spLabel}`.toLowerCase();
+                if (!text.includes(awakeningState.searchTerm)) return false;
             }
             return true;
         });
 
         filtered.sort((a, b) => {
-            if (a.rewardType !== b.rewardType) {
-                return a.rewardType === 'GIVE_CATALYST' ? -1 : 1;
-            }
-            return (a.name || '').localeCompare(b.name || '');
+            const typeCmp = a.rewardType === b.rewardType ? 0 : (a.rewardType === 'GIVE_CATALYST' ? -1 : 1);
+            const spA = getSpiritDef(resolveRecipeSpiritKey(a))?.label || '';
+            const spB = getSpiritDef(resolveRecipeSpiritKey(b))?.label || '';
+            const spCmp = spA.localeCompare(spB, 'fr', { sensitivity: 'base' });
+            const nameCmp = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+            return typeCmp || spCmp || nameCmp;
         });
 
         if (filtered.length === 0) {
@@ -381,8 +525,13 @@
         filtered.forEach(r => {
             const isSelected = selectedRecipe && Number(selectedRecipe.id) === Number(r.id);
             const canCraft = typeof window.canCraftRecipe === 'function' ? window.canCraftRecipe(r) : false;
+            const spKey = resolveRecipeSpiritKey(r);
+            const spDef = getSpiritDef(spKey);
+            const spClass = getSpiritClass(spKey);
+
             const classes = [
                 'awakening-craft-item',
+                spClass,
                 isSelected ? 'is-selected' : '',
                 canCraft ? 'craftable-pulse' : ''
             ].filter(Boolean).join(' ');
@@ -394,21 +543,77 @@
             });
 
             const header = createEl('div', 'flex items-center justify-between gap-2');
-            const title = createEl('span', 'font-bold text-sm text-white', r.name);
+            const rewardTmpl = awakeningState.anomalyTemplatesByName.get(String(r.rewardName || '').trim().toLowerCase());
+            const catIcon = rewardTmpl?.category && typeof getCategoryIcon === 'function'
+                ? getCategoryIcon(rewardTmpl.category)
+                : 'star';
+            const titleWrap = createEl('div', 'flex items-center gap-1.5 min-w-0');
+            titleWrap.appendChild(createEl('span', `material-symbols-outlined text-base shrink-0 awakening-spirit-icon ${spClass}`, catIcon));
+            const title = createEl('span', 'font-bold text-sm awakening-craft-title truncate', r.name);
+            titleWrap.appendChild(title);
+            attachAnomalyTooltip(titleWrap, rewardTmpl, r.rewardName || r.name);
+
+            const badgesWrap = createEl('div', 'flex items-center gap-1.5 shrink-0');
+            if (spDef) {
+                const spBadge = createEl('span', 'awakening-spirit-badge');
+                spBadge.appendChild(createEl('span', 'material-symbols-outlined text-xs', spDef.icon));
+                spBadge.appendChild(createEl('span', '', spDef.label));
+                badgesWrap.appendChild(spBadge);
+            }
+
             const isCat = r.rewardType === 'GIVE_CATALYST';
             const badge = createEl(
                 'span',
                 `awakening-status-pill ${isCat ? 'awakening-type-catalyst' : 'awakening-type-eveil'}`,
                 isCat ? 'Catalyseur' : 'Éveil'
             );
-            header.appendChild(title);
-            header.appendChild(badge);
+            badgesWrap.appendChild(badge);
+
+            header.appendChild(titleWrap);
+            header.appendChild(badgesWrap);
 
             const desc = createEl('p', 'text-xs text-muted m-0', r.description || '');
             card.appendChild(header);
             card.appendChild(desc);
             container.appendChild(card);
         });
+    }
+
+    function attachAnomalyTooltip(el, tmpl, fallbackName) {
+        if (!el || !tmpl || typeof getAnomalyTooltipHTML !== 'function') return;
+        const html = getAnomalyTooltipHTML(tmpl, fallbackName || tmpl.name);
+        if (!html) return;
+        const color = tmpl.spiritualite && typeof getSpiritualiteColor === 'function'
+            ? getSpiritualiteColor(tmpl.spiritualite)
+            : '#a855f7';
+        el.classList.add('cursor-help');
+        el.setAttribute('data-tooltip-html', html);
+        el.setAttribute('data-color', color);
+        el.addEventListener('mouseenter', () => window.showGlobalTooltip?.(el));
+        el.addEventListener('mouseleave', () => window.hideGlobalTooltip?.());
+    }
+
+    function buildAwakeningAnomalyCostRow(name, typeLabel, owned, required) {
+        const ok = owned >= required;
+        const tmpl = awakeningState.anomalyTemplatesByName.get(String(name || '').trim().toLowerCase());
+        const catIcon = tmpl?.category && typeof getCategoryIcon === 'function'
+            ? getCategoryIcon(tmpl.category)
+            : 'star';
+        const spCls = tmpl?.spiritualite ? getSpiritClass(tmpl.spiritualite) : '';
+
+        const row = createEl('div', `awakening-cost-row ${ok ? 'is-ok' : 'is-missing'}`);
+        const left = createEl('div', 'flex items-center gap-2 min-w-0');
+        left.appendChild(createEl('span', `material-symbols-outlined text-lg shrink-0 awakening-spirit-icon ${spCls}`, catIcon));
+        left.appendChild(createEl('span', 'truncate', `${required}x ${name} (${typeLabel})`));
+
+        const right = createEl('div', 'flex items-center gap-1.5 shrink-0 font-bold');
+        right.appendChild(createEl('span', 'material-symbols-outlined text-base', ok ? 'check_circle' : 'cancel'));
+        right.appendChild(createEl('span', '', `${owned} / ${required}`));
+
+        row.appendChild(left);
+        row.appendChild(right);
+        attachAnomalyTooltip(row, tmpl, name);
+        return row;
     }
 
     function renderSimulationView(rightPanel, sim, callbacks) {
@@ -449,25 +654,27 @@
             costBox.appendChild(createEl('h3', 'm-0 text-sm font-bold text-slate-200', `Coût pour atteindre +${sim.nextLevel}`));
 
             if (sim.catalystRequired > 0) {
-                const okCat = sim.catalystOwned >= sim.catalystRequired;
-                const row = createEl('div', `awakening-cost-row ${okCat ? 'is-ok' : 'is-missing'}`);
-                row.appendChild(createEl('span', '', `${sim.catalystName} (Catalyseur)`));
-                row.appendChild(createEl('span', 'font-bold', `${sim.catalystOwned} / ${sim.catalystRequired}`));
-                costBox.appendChild(row);
+                costBox.appendChild(
+                    buildAwakeningAnomalyCostRow(sim.catalystName, 'Catalyseur', sim.catalystOwned, sim.catalystRequired)
+                );
             }
 
             if (sim.awakeningRequired > 0) {
-                const okAwk = sim.awakeningOwned >= sim.awakeningRequired;
-                const row = createEl('div', `awakening-cost-row ${okAwk ? 'is-ok' : 'is-missing'}`);
-                row.appendChild(createEl('span', '', `${sim.awakeningName} (Éveil)`));
-                row.appendChild(createEl('span', 'font-bold', `${sim.awakeningOwned} / ${sim.awakeningRequired}`));
-                costBox.appendChild(row);
+                costBox.appendChild(
+                    buildAwakeningAnomalyCostRow(sim.awakeningName, 'Éveil', sim.awakeningOwned, sim.awakeningRequired)
+                );
             }
 
             const okGold = sim.userGold >= sim.goldCost;
             const goldRow = createEl('div', `awakening-cost-row ${okGold ? 'is-ok' : 'is-missing'}`);
-            goldRow.appendChild(createEl('span', '', 'Or requis'));
-            goldRow.appendChild(createEl('span', 'font-bold', `${Math.floor(sim.userGold)} / ${Math.round(sim.goldCost)} Or`));
+            const goldLeft = createEl('div', 'flex items-center gap-2');
+            goldLeft.appendChild(createEl('span', 'material-symbols-outlined text-amber-400 text-lg', 'monetization_on'));
+            goldLeft.appendChild(createEl('span', '', 'Or requis'));
+            const goldRight = createEl('div', 'flex items-center gap-1.5 font-bold');
+            goldRight.appendChild(createEl('span', 'material-symbols-outlined text-base', okGold ? 'check_circle' : 'cancel'));
+            goldRight.appendChild(createEl('span', '', `${Math.floor(sim.userGold)} / ${Math.round(sim.goldCost)} Or`));
+            goldRow.appendChild(goldLeft);
+            goldRow.appendChild(goldRight);
             costBox.appendChild(goldRow);
 
             wrapper.appendChild(costBox);
@@ -634,7 +841,15 @@
 
     async function renderWorkspace(host, options) {
         if (!host) return;
-        const { unlockedAwakening, allRecipes, selectedRecipe, preselectedEquipId, onSelectRecipe, onAfterUpgrade } = options;
+        const {
+            unlockedAwakening,
+            allRecipes,
+            allAnomalyTemplates,
+            selectedRecipe,
+            preselectedEquipId,
+            onSelectRecipe,
+            onAfterUpgrade
+        } = options;
 
         if (!unlockedAwakening) {
             renderLockedView(host);
@@ -642,7 +857,10 @@
         }
 
         const callbacks = { onAfterUpgrade };
-        await loadUserEquipments();
+        await Promise.all([
+            loadUserEquipments(),
+            ensureAnomalyTemplatesLoaded(allAnomalyTemplates)
+        ]);
 
         host.textContent = '';
 
@@ -667,30 +885,24 @@
             renderEquipmentsList(equipListEl, callbacks);
         });
 
-        const equipSortSelect = createCustomComboSelect(
-            'awakeningEquipSort',
-            'Trier les équipements à éveiller',
+        const spiritFilterSelect = createCustomComboSelect(
+            'awakeningFilterSecret',
+            'Filtrer par voie ou spiritualité',
             [
-                { value: 'ready_desc', label: 'Prêts d\'abord', icon: 'check_circle', iconClass: 'text-success' },
-                { value: 'rarity_desc', label: 'Rareté (Meilleurs)', icon: 'stars', iconClass: 'text-warning' },
-                { value: 'rarity_asc', label: 'Rareté (Pires)', icon: 'stars', iconClass: 'text-muted' },
-                { value: 'level_desc', label: 'Éveil (+5 → +0)', icon: 'upgrade', iconClass: 'text-warning' },
-                { value: 'level_asc', label: 'Éveil (+0 → +5)', icon: 'upgrade', iconClass: 'text-muted' },
-                { value: 'type_asc', label: 'Type (A-Z)', icon: 'category', iconClass: 'text-mana' },
-                { value: 'type_desc', label: 'Type (Z-A)', icon: 'category', iconClass: 'text-muted' },
-                { value: 'name_asc', label: 'Nom (A-Z)', icon: 'sort_by_alpha', iconClass: 'text-muted' },
-                { value: 'name_desc', label: 'Nom (Z-A)', icon: 'sort_by_alpha', iconClass: 'text-muted' }
+                { value: 'ALL', label: 'Voies / Spirit.', icon: 'auto_awesome', iconClass: 'text-power' },
+                ...getSpiritFilterOptions(true)
             ],
-            awakeningState.equipSortBy,
+            awakeningState.equipSpiritFilter,
             val => {
-                awakeningState.equipSortBy = val || 'ready_desc';
+                awakeningState.equipSpiritFilter = val || 'ALL';
                 renderEquipmentsList(equipListEl, callbacks);
             },
-            'awakening-sort-select-wrap'
+            'awakening-sort-select-wrap',
+            'awakening-tone-spirit'
         );
 
         equipControls.appendChild(equipSearchInput);
-        equipControls.appendChild(equipSortSelect);
+        equipControls.appendChild(spiritFilterSelect);
         leftPanel.appendChild(equipControls);
 
         const equipFilters = createEl('div', 'awakening-equip-filters');
@@ -699,47 +911,53 @@
             'awakeningFilterLevel',
             'Filtrer par niveau d\'éveil',
             [
-                { value: 'ALL', label: 'Tous', icon: 'upgrade', iconClass: 'text-muted' },
-                { value: '0', label: 'Niveau +0', icon: 'radio_button_unchecked', iconClass: 'text-muted' },
-                { value: '1', label: 'Niveau +1', icon: 'looks_one', iconClass: 'text-success' },
-                { value: '2', label: 'Niveau +2', icon: 'looks_two', iconClass: 'text-mana' },
-                { value: '3', label: 'Niveau +3', icon: 'looks_3', iconClass: 'text-power' },
-                { value: '4', label: 'Niveau +4', icon: 'looks_4', iconClass: 'text-warning' },
-                { value: '5', label: 'Niveau +5', icon: 'looks_5', iconClass: 'text-crit' }
+                { value: 'ALL', label: 'Éveil', icon: 'upgrade', iconClass: 'text-warning', toneClass: 'awakening-tone-level' },
+                { value: '0', label: 'Niveau +0', icon: 'radio_button_unchecked', iconClass: 'text-muted', toneClass: 'awakening-tone-lvl-0' },
+                { value: '1', label: 'Niveau +1', icon: 'looks_one', iconClass: 'text-success', toneClass: 'awakening-tone-lvl-1' },
+                { value: '2', label: 'Niveau +2', icon: 'looks_two', iconClass: 'text-mana', toneClass: 'awakening-tone-lvl-2' },
+                { value: '3', label: 'Niveau +3', icon: 'looks_3', iconClass: 'text-power', toneClass: 'awakening-tone-lvl-3' },
+                { value: '4', label: 'Niveau +4', icon: 'looks_4', iconClass: 'text-warning', toneClass: 'awakening-tone-lvl-4' },
+                { value: '5', label: 'Niveau +5', icon: 'looks_5', iconClass: 'text-crit', toneClass: 'awakening-tone-lvl-5' }
             ],
             awakeningState.equipLevelFilter,
             val => {
                 awakeningState.equipLevelFilter = val || 'ALL';
                 renderEquipmentsList(equipListEl, callbacks);
-            }
+            },
+            '',
+            'awakening-tone-level'
         );
 
         const rarityFilterSelect = createCustomComboSelect(
             'awakeningFilterRarity',
             'Filtrer par rareté',
             [
-                { value: 'ALL', label: 'Raretés', icon: 'star', iconClass: 'text-muted' },
+                { value: 'ALL', label: 'Raretés', icon: 'stars', iconClass: 'text-power' },
                 ...getEligibleRarityOptions()
             ],
             awakeningState.equipRarityFilter,
             val => {
                 awakeningState.equipRarityFilter = val || 'ALL';
                 renderEquipmentsList(equipListEl, callbacks);
-            }
+            },
+            '',
+            'awakening-tone-rarity'
         );
 
         const slotFilterSelect = createCustomComboSelect(
             'awakeningFilterSlot',
             'Filtrer par type d\'item',
             [
-                { value: 'ALL', label: 'Types', icon: 'category', iconClass: 'text-muted' },
+                { value: 'ALL', label: 'Types', icon: 'category', iconClass: 'text-mana' },
                 ...getEligibleSlotOptions()
             ],
             awakeningState.equipSlotFilter,
             val => {
                 awakeningState.equipSlotFilter = val || 'ALL';
                 renderEquipmentsList(equipListEl, callbacks);
-            }
+            },
+            '',
+            'awakening-tone-slot'
         );
 
         equipFilters.appendChild(levelFilterSelect);
@@ -758,6 +976,8 @@
         catHeader.appendChild(createEl('span', '', 'Catalyseurs & Éveils'));
         catHeader.appendChild(createEl('span', 'material-symbols-outlined text-base', 'bolt'));
         catSection.appendChild(catHeader);
+
+        const craftTopBar = createEl('div', 'awakening-craft-top-bar');
 
         const filterPills = createEl('div', 'awakening-filter-pills');
         [
@@ -779,9 +999,28 @@
             });
             filterPills.appendChild(pill);
         });
-        catSection.appendChild(filterPills);
 
-        const searchInput = createEl('input', 'form-control text-xs');
+        const recipeSpiritSelect = createCustomComboSelect(
+            'awakeningRecipeSpiritFilter',
+            'Filtrer par voie ou spiritualité',
+            [
+                { value: 'ALL', label: 'Voies / Spirit.', icon: 'auto_awesome', iconClass: 'text-power' },
+                ...getSpiritFilterOptions(false)
+            ],
+            awakeningState.craftSpiritFilter,
+            val => {
+                awakeningState.craftSpiritFilter = val || 'ALL';
+                renderAwakeningRecipesList(recipesListEl, allRecipes, selectedRecipe, onSelectRecipe);
+            },
+            'awakening-craft-spirit-wrap',
+            'awakening-tone-spirit'
+        );
+
+        craftTopBar.appendChild(filterPills);
+        craftTopBar.appendChild(recipeSpiritSelect);
+        catSection.appendChild(craftTopBar);
+
+        const searchInput = createEl('input', 'form-control text-xs awakening-craft-search');
         searchInput.type = 'text';
         searchInput.placeholder = 'Filtrer catalyseur ou anomalie d\'éveil...';
         searchInput.value = awakeningState.searchTerm;

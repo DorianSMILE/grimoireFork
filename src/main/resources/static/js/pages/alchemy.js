@@ -1050,7 +1050,7 @@ async function ensureAwakeningScriptLoaded() {
             return;
         }
         const script = document.createElement('script');
-        script.src = '/js/pages/alchemy-awakening.js?v=4';
+        script.src = '/js/pages/alchemy-awakening.js?v=7';
         script.dataset.alchemyAwakening = '1';
         script.onload = resolve;
         script.onerror = resolve;
@@ -1149,6 +1149,7 @@ async function switchAlchemyTab(tabName, preselectedEquipId = null) {
             await window.AlchemyAwakening.renderWorkspace(structs.awkWorkspace, {
                 unlockedAwakening: unlocked,
                 allRecipes: pageState.allRecipes || [],
+                allAnomalyTemplates: pageState.allAnomalyTemplates || [],
                 selectedRecipe: pageState.selectedRecipe,
                 preselectedEquipId: preselectedEquipId || pageState.preselectedEquipId,
                 onSelectRecipe: selectAwakeningRecipe,

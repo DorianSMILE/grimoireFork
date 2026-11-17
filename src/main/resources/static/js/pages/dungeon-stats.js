@@ -501,11 +501,14 @@ window.resetTutorials = function () {
                             window.currentUser.equipTutorialActive = true;
                             window.currentUser.shopTutorialActive = true;
                             window.currentUser.combatTutorialActive = true;
+                            window.currentUser.awakeningTutorialActive = true;
                         }
+                        window._lastAuthFetchAt = 0;
                         try {
+                            localStorage.removeItem('grimoire_cached_user_v1');
                             sessionStorage.removeItem('grimoire_app_meta_v1');
                             sessionStorage.removeItem('grimoire_app_meta_v2');
-                            ['/dungeons.html', '/armory.html', '/shop.html', '/combat.html', '/js/components/tutorial.js?v=9', '/styles/ui/tutorial.css?v=3'].forEach(u => {
+                            ['/dungeons', '/armory', '/shop', '/combat', '/js/components/tutorial.js?v=10', '/styles/ui/tutorial.css?v=3'].forEach(u => {
                                 fetch(u, { cache: 'reload', credentials: 'same-origin' }).catch(() => {});
                             });
                         } catch (_) {}

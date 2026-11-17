@@ -6,6 +6,7 @@
 (function () {
     const tutorialState = {
         active: false,
+        starting: false,
         phase: null,
         steps: [],
         currentIndex: 0,
@@ -471,6 +472,13 @@
             tutorialState.actionHintEl.classList.add('is-hidden');
 
             const isLast = tutorialState.currentIndex === tutorialState.steps.length - 1;
+            if (isLast && step.advanceTrigger !== 'submit') {
+                tutorialState.nextBtnEl.setAttribute('popovertarget', 'grimoireTutorialPopover');
+                tutorialState.nextBtnEl.setAttribute('popovertargetaction', 'hide');
+            } else {
+                tutorialState.nextBtnEl.removeAttribute('popovertarget');
+                tutorialState.nextBtnEl.removeAttribute('popovertargetaction');
+            }
             if (step.advanceTrigger === 'submit') {
                 tutorialState.nextBtnLabelEl.textContent = 'Forger';
                 if (tutorialState.nextBtnIconEl) tutorialState.nextBtnIconEl.textContent = 'arrow_forward';
@@ -577,9 +585,33 @@
         }
     }
 
+    function syncCachedUserTutorialState() {
+        if (!window.currentUser) return;
+        try {
+            const raw = localStorage.getItem('grimoire_cached_user_v1');
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return;
+            parsed.tutorialCompleted = window.currentUser.tutorialCompleted;
+            parsed.tutorialPhase = window.currentUser.tutorialPhase;
+            parsed.equipTutorialActive = window.currentUser.equipTutorialActive;
+            parsed.shopTutorialActive = window.currentUser.shopTutorialActive;
+            parsed.combatTutorialActive = window.currentUser.combatTutorialActive;
+            parsed.awakeningTutorialActive = window.currentUser.awakeningTutorialActive;
+            localStorage.setItem('grimoire_cached_user_v1', JSON.stringify(parsed));
+        } catch (_) {}
+    }
+
     function stopTutorial() {
         const stopCb = tutorialState.options && tutorialState.options.onStop;
+        const lastTarget = tutorialState.highlightedEl;
+        const shouldRestoreFocus = Boolean(
+            lastTarget &&
+            tutorialState.popoverEl &&
+            tutorialState.popoverEl.contains(document.activeElement)
+        );
         tutorialState.active = false;
+        tutorialState.starting = false;
         clearStepBindings();
         if (typeof stopCb === 'function') {
             try { stopCb(); } catch (_) {}
@@ -590,6 +622,9 @@
             if (typeof tutorialState.popoverEl.hidePopover === 'function') {
                 try { tutorialState.popoverEl.hidePopover(); } catch (_) {}
             }
+        }
+        if (shouldRestoreFocus && document.body.contains(lastTarget) && typeof lastTarget.focus === 'function') {
+            try { lastTarget.focus({ preventScroll: true }); } catch (_) {}
         }
     }
 
@@ -609,11 +644,14 @@
                 window.currentUser.tutorialCompleted = true;
                 window.currentUser.tutorialPhase = 'NONE';
             }
+            syncCachedUserTutorialState();
         }
         if (markOnServer && typeof window.globalFetch === 'function') {
             try {
                 await window.globalFetch(`/api/auth/tutorial/complete?phase=${encodeURIComponent(currentPhase)}`, {
                     method: 'POST',
+                    credentials: 'same-origin',
+                    keepalive: true,
                     silent: true
                 });
             } catch (_) {}
@@ -621,20 +659,27 @@
     }
 
     async function startPhase(phaseName, options = {}) {
-        const allSteps = await ensureTutorialStepsLoaded();
-        const phaseSteps = allSteps
-            .filter(s => s.phase === phaseName)
-            .sort((a, b) => (parseInt(a.stepOrder, 10) || 0) - (parseInt(b.stepOrder, 10) || 0));
+        if (tutorialState.active || tutorialState.starting) return false;
+        tutorialState.starting = true;
+        try {
+            const allSteps = await ensureTutorialStepsLoaded();
+            const phaseSteps = allSteps
+                .filter(s => s.phase === phaseName)
+                .sort((a, b) => (parseInt(a.stepOrder, 10) || 0) - (parseInt(b.stepOrder, 10) || 0));
 
-        if (phaseSteps.length === 0) return;
+            if (phaseSteps.length === 0) return false;
 
-        tutorialState.phase = phaseName;
-        tutorialState.steps = phaseSteps;
-        tutorialState.currentIndex = 0;
-        tutorialState.options = options || {};
-        tutorialState.active = true;
+            tutorialState.phase = phaseName;
+            tutorialState.steps = phaseSteps;
+            tutorialState.currentIndex = 0;
+            tutorialState.options = options || {};
+            tutorialState.active = true;
 
-        renderCurrentStep();
+            renderCurrentStep();
+            return true;
+        } finally {
+            tutorialState.starting = false;
+        }
     }
 
     function repositionActivePopover() {

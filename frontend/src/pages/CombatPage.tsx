@@ -18,7 +18,7 @@ export function CombatPage() {
         await importDynamic('/js/services/auth.js?v=32');
         if (cancelled) return;
 
-        await importDynamic('/js/combat/combat-state.js?v=1786180000242');
+        await importDynamic('/js/combat/combat-state.js?v=1786180000243');
         if (cancelled) return;
 
         if (typeof window.initCombatPage === 'function') {

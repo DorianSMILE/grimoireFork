@@ -399,6 +399,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "tutorialCompleted", user.isTutorialCompleted(),
                 "equipTutorialCompleted", user.isEquipTutorialCompleted(),
+                "shopTutorialCompleted", user.isShopTutorialCompleted(),
+                "combatTutorialCompleted", user.isCombatTutorialCompleted(),
                 "awakeningTutorialCompleted", user.isAwakeningTutorialCompleted(),
                 "tutorialPhase", "NONE"));
     }

@@ -5,6 +5,7 @@
         anomalyTemplatesByName: new Map(),
         selectedEquipmentId: null,
         selectedSimulation: null,
+        leftSubTab: 'equipments',
         craftFilter: 'ALL',
         craftSpiritFilter: 'ALL',
         searchTerm: '',
@@ -28,7 +29,8 @@
         { key: 'CREATION',      label: 'Création',      icon: 'eco' },
         { key: 'KARMA',         label: 'Karma',         icon: 'all_inclusive' },
         { key: 'ESPRIT',        label: 'Esprit',        icon: 'blur_on' },
-        { key: 'TENEBRES',      label: 'Ténèbres',      icon: 'dark_mode' }
+        { key: 'TENEBRES',      label: 'Ténèbres',      icon: 'dark_mode' },
+        { key: 'UNIVERSEL',     label: 'Universel',     icon: 'public' }
     ];
 
     const SPIRIT_DEF_MAP = Object.fromEntries(SPIRIT_DEFS.map(d => [d.key, d]));
@@ -71,11 +73,8 @@
         return def ? `awakening-spirit-${def.key.toLowerCase()}` : '';
     }
 
-    function getSpiritFilterOptions(includeGeneric) {
+    function getSpiritFilterOptions() {
         const opts = [];
-        if (includeGeneric) {
-            opts.push({ value: 'GENERIC', label: 'Générique', icon: 'shield', iconClass: 'text-muted' });
-        }
         SPIRIT_DEFS.forEach(d => {
             const spCls = getSpiritClass(d.key);
             opts.push({
@@ -90,9 +89,9 @@
     }
 
     function resolveEquipmentSpiritKey(eq) {
-        if (!eq || !eq.requiredSecret) return 'GENERIC';
+        if (!eq || !eq.requiredSecret) return 'UNIVERSEL';
         const norm = normalizeTextKey(eq.requiredSecret);
-        if (!norm) return 'GENERIC';
+        if (!norm) return 'UNIVERSEL';
         if (SECRET_TO_SPIRIT[norm]) return SECRET_TO_SPIRIT[norm];
         for (const d of SPIRIT_DEFS) {
             if (norm.includes(d.key)) return d.key;
@@ -473,7 +472,7 @@
             const slotVis = SLOT_VISUALS[slotKey] || { icon: 'category', iconClass: 'text-muted' };
             const slotLabel = getEquipmentSlotLabel(eq);
             const carrierText = eq.personnage?.name ? `Porté par ${eq.personnage.name}` : 'En coffre';
-            const secretText = eq.requiredSecret || 'Équipement générique';
+            const secretText = eq.requiredSecret || 'Universel (sans Secret)';
             const leftMeta = createEl('span', 'flex items-center gap-1 min-w-0 truncate');
             leftMeta.appendChild(createEl('span', `material-symbols-outlined text-xs ${slotVis.iconClass}`, slotVis.icon));
             leftMeta.appendChild(createEl('span', 'truncate', `${slotLabel} · ${carrierText}`));
@@ -862,15 +861,35 @@
             ensureAnomalyTemplatesLoaded(allAnomalyTemplates)
         ]);
 
+        if (preselectedEquipId) {
+            awakeningState.selectedEquipmentId = Number(preselectedEquipId);
+            awakeningState.leftSubTab = 'equipments';
+        }
+
         host.textContent = '';
 
-        // Panneau gauche : Équipements éligibles + Catalyseurs & Éveils
-        const leftPanel = createEl('div', 'awakening-left-panel custom-scrollbar');
+        // Panneau gauche : Sous-onglets Équipements éligibles / Catalyseurs & Éveils
+        const leftPanel = createEl('div', 'awakening-left-panel');
 
-        const eqHeader = createEl('h3', 'awakening-section-title');
-        eqHeader.appendChild(createEl('span', '', 'Équipements éligibles'));
-        eqHeader.appendChild(createEl('span', 'material-symbols-outlined text-base', 'shield'));
-        leftPanel.appendChild(eqHeader);
+        const subTabsBar = createEl('div', 'awakening-left-subtabs');
+        const eqSubTabBtn = createEl('button', 'awakening-subtab-btn');
+        eqSubTabBtn.type = 'button';
+        eqSubTabBtn.dataset.subtab = 'equipments';
+        eqSubTabBtn.appendChild(createEl('span', 'material-symbols-outlined text-base', 'shield'));
+        eqSubTabBtn.appendChild(createEl('span', '', 'Équipements éligibles'));
+
+        const recSubTabBtn = createEl('button', 'awakening-subtab-btn');
+        recSubTabBtn.type = 'button';
+        recSubTabBtn.dataset.subtab = 'recipes';
+        recSubTabBtn.appendChild(createEl('span', 'material-symbols-outlined text-base', 'bolt'));
+        recSubTabBtn.appendChild(createEl('span', '', 'Catalyseurs & Éveils'));
+
+        subTabsBar.appendChild(eqSubTabBtn);
+        subTabsBar.appendChild(recSubTabBtn);
+        leftPanel.appendChild(subTabsBar);
+
+        const equipSection = createEl('div', 'awakening-subtab-section');
+        equipSection.id = 'awakeningEquipPanel';
 
         const equipControls = createEl('div', 'awakening-equip-controls');
 
@@ -890,7 +909,7 @@
             'Filtrer par voie ou spiritualité',
             [
                 { value: 'ALL', label: 'Voies / Spirit.', icon: 'auto_awesome', iconClass: 'text-power' },
-                ...getSpiritFilterOptions(true)
+                ...getSpiritFilterOptions()
             ],
             awakeningState.equipSpiritFilter,
             val => {
@@ -903,7 +922,7 @@
 
         equipControls.appendChild(equipSearchInput);
         equipControls.appendChild(spiritFilterSelect);
-        leftPanel.appendChild(equipControls);
+        equipSection.appendChild(equipControls);
 
         const equipFilters = createEl('div', 'awakening-equip-filters');
 
@@ -963,19 +982,15 @@
         equipFilters.appendChild(levelFilterSelect);
         equipFilters.appendChild(rarityFilterSelect);
         equipFilters.appendChild(slotFilterSelect);
-        leftPanel.appendChild(equipFilters);
+        equipSection.appendChild(equipFilters);
 
-        const equipListEl = createEl('div', 'flex flex-col gap-2');
+        const equipListEl = createEl('div', 'awakening-scroll-list custom-scrollbar');
         equipListEl.id = 'awakeningEquipList';
-        leftPanel.appendChild(equipListEl);
+        equipSection.appendChild(equipListEl);
+        leftPanel.appendChild(equipSection);
 
-        const catSection = createEl('div', 'flex flex-col gap-2 mt-2');
+        const catSection = createEl('div', 'awakening-subtab-section');
         catSection.id = 'awakeningCatalystsPanel';
-
-        const catHeader = createEl('h3', 'awakening-section-title');
-        catHeader.appendChild(createEl('span', '', 'Catalyseurs & Éveils'));
-        catHeader.appendChild(createEl('span', 'material-symbols-outlined text-base', 'bolt'));
-        catSection.appendChild(catHeader);
 
         const craftTopBar = createEl('div', 'awakening-craft-top-bar');
 
@@ -1005,7 +1020,7 @@
             'Filtrer par voie ou spiritualité',
             [
                 { value: 'ALL', label: 'Voies / Spirit.', icon: 'auto_awesome', iconClass: 'text-power' },
-                ...getSpiritFilterOptions(false)
+                ...getSpiritFilterOptions()
             ],
             awakeningState.craftSpiritFilter,
             val => {
@@ -1030,11 +1045,24 @@
         });
         catSection.appendChild(searchInput);
 
-        const recipesListEl = createEl('div', 'flex flex-col gap-2');
+        const recipesListEl = createEl('div', 'awakening-scroll-list custom-scrollbar');
         recipesListEl.id = 'awakeningRecipesList';
         catSection.appendChild(recipesListEl);
 
         leftPanel.appendChild(catSection);
+
+        function applyLeftSubTab(tab) {
+            const resolved = tab === 'recipes' ? 'recipes' : 'equipments';
+            awakeningState.leftSubTab = resolved;
+            eqSubTabBtn.classList.toggle('is-active', resolved === 'equipments');
+            recSubTabBtn.classList.toggle('is-active', resolved === 'recipes');
+            equipSection.classList.toggle('is-hidden', resolved !== 'equipments');
+            catSection.classList.toggle('is-hidden', resolved !== 'recipes');
+        }
+
+        eqSubTabBtn.addEventListener('click', () => applyLeftSubTab('equipments'));
+        recSubTabBtn.addEventListener('click', () => applyLeftSubTab('recipes'));
+        applyLeftSubTab(awakeningState.leftSubTab);
 
         // Panneau droit : Aperçu Éveil ou Chaudron
         const rightPanel = createEl('div', 'alchemy-panel awakening-right-panel custom-scrollbar');
@@ -1049,10 +1077,6 @@
 
         host.appendChild(leftPanel);
         host.appendChild(rightPanel);
-
-        if (preselectedEquipId) {
-            awakeningState.selectedEquipmentId = Number(preselectedEquipId);
-        }
 
         if (window.initGlobalCustomSelect) {
             window.initGlobalCustomSelect();

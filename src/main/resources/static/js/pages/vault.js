@@ -177,7 +177,7 @@ function escapeAttr(val) {
 
 const DISMANTLE_SPIRIT_KEYS = [
     'tenebres', 'esprit', 'karma', 'violence', 'trahison',
-    'surete', 'raison', 'destruction', 'creation', 'conviction', 'consolidation'
+    'surete', 'raison', 'destruction', 'creation', 'conviction', 'consolidation', 'universel'
 ];
 
 function getDismantleSpiritClass(sp) {
@@ -782,7 +782,8 @@ function renderGrid(equipments) {
                 'DESTRUCTION': '#ff0000',
                 'CREATION': '#10b981',
                 'CONVICTION': '#b74c0b',
-                'CONSOLIDATION': '#99674c'
+                'CONSOLIDATION': '#99674c',
+                'UNIVERSEL': '#cbd5e1'
             };
             const spColor = spColors[eq.spiritualite] || '#d946ef';
 

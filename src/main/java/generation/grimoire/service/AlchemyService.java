@@ -371,7 +371,7 @@ public class AlchemyService {
                     }
                     anomaly.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : fallbackType);
                 } else {
-                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA);
+                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
                     anomaly.setCategory(generation.grimoire.enumeration.AnomalieCategory.AUTRE);
                 }
 
@@ -427,7 +427,7 @@ public class AlchemyService {
                 upgraded.setSpiritualite(template.getSpiritualite());
                 upgraded.setCategory(template.getCategory());
             } else {
-                upgraded.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA);
+                upgraded.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
                 upgraded.setCategory(generation.grimoire.enumeration.AnomalieCategory.AUTRE);
             }
             

@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -367,7 +368,24 @@ public class DataInitializerService {
                 }
         }
 
+        private void migrateUniversalAnomaliesSpiritualite(List<String> universalNames) {
+                for (String name : universalNames) {
+                        List<generation.grimoire.entity.Anomalie> matches = anomalieRepository.findByName(name);
+                        List<generation.grimoire.entity.Anomalie> toUpdate = new ArrayList<>();
+                        for (generation.grimoire.entity.Anomalie a : matches) {
+                                if (a.getSpiritualite() != generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL) {
+                                        a.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
+                                        toUpdate.add(a);
+                                }
+                        }
+                        if (!toUpdate.isEmpty()) {
+                                anomalieRepository.saveAll(toUpdate);
+                        }
+                }
+        }
+
         private void initAwakeningAnomaliesAndRecipes() {
+                migrateUniversalAnomaliesSpiritualite(List.of("Poussière d'Éveil", "Pierre d'Ascension"));
                 List<generation.grimoire.entity.Anomalie> templates = anomalieRepository.findByIsTemplateTrue();
                 java.util.Set<String> existingTemplateNames = new java.util.HashSet<>();
                 for (generation.grimoire.entity.Anomalie a : templates) {
@@ -438,7 +456,7 @@ public class DataInitializerService {
                         new SeedAnomalieSpec("Éclat Déflagrant", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.METAL, 4, "Catalyseur explosif amplifiant la brutalité des artefacts de Violence."),
                         new SeedAnomalieSpec("Fiole Corrosive", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur venimeux imprégnant l'acier des armes de Trahison."),
                         new SeedAnomalieSpec("Noyau Tellurique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 4, "Catalyseur minéral renforçant la structure des équipements de Consolidation."),
-                        new SeedAnomalieSpec("Poussière d'Éveil", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 4, "Catalyseur universel raffiné permettant d'éveiller tout équipement sans Secret.")
+                        new SeedAnomalieSpec("Poussière d'Éveil", generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 4, "Catalyseur universel raffiné permettant d'éveiller tout équipement sans Secret.")
                 );
 
                 List<SeedAnomalieSpec> eveilSpecs = List.of(
@@ -453,7 +471,7 @@ public class DataInitializerService {
                         new SeedAnomalieSpec("Noyau de Fureur", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil détonante libérant l'énergie pure de la Violence."),
                         new SeedAnomalieSpec("Venin Souverain", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.CRANE, 5, "Anomalie d'éveil acide parachevant les reliques les plus perfides."),
                         new SeedAnomalieSpec("Monolithe Éternel", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.CUBE, 5, "Anomalie d'éveil tellurique inébranlable scellant la Consolidation."),
-                        new SeedAnomalieSpec("Pierre d'Ascension", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 5, "Anomalie d'éveil universelle gravée de runes transversales d'ascension.")
+                        new SeedAnomalieSpec("Pierre d'Ascension", generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 5, "Anomalie d'éveil universelle gravée de runes transversales d'ascension.")
                 );
 
                 int createdAnomalies = 0;

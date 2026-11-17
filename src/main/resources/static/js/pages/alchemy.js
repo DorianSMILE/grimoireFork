@@ -1047,7 +1047,7 @@ async function ensureAwakeningScriptLoaded() {
             return;
         }
         const script = document.createElement('script');
-        script.src = '/js/pages/alchemy-awakening.js?v=7';
+        script.src = '/js/pages/alchemy-awakening.js?v=9';
         script.dataset.alchemyAwakening = '1';
         script.onload = resolve;
         script.onerror = resolve;

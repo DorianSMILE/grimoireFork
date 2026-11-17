@@ -141,6 +141,8 @@ class EquipmentAwakeningServiceTest {
 
         assertEquals("Poussière d'Éveil", sim.catalystName());
         assertEquals("Pierre d'Ascension", sim.awakeningName());
+        assertEquals(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL,
+                new SecretAwakeningMapping().resolveForSecret(null).spiritualite());
         assertFalse(sim.canUpgrade());
         assertEquals(11, sim.nextStats().bonusStrength()); // 10 * (1 + 0.08 * 1.25 * 1) = 11
         assertEquals(1, sim.deltas().bonusStrength());

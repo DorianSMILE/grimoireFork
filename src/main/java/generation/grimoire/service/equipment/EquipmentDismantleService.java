@@ -93,7 +93,7 @@ public class EquipmentDismantleService {
                         a.setLevel(template.getLevel());
                         a.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : AnomalieType.MAGIQUE);
                     } else {
-                        a.setSpiritualite(SpiritualiteType.KARMA);
+                        a.setSpiritualite(SpiritualiteType.UNIVERSEL);
                         a.setCategory(AnomalieCategory.AUTRE);
                         a.setLevel(1);
                         a.setAnomalieType(AnomalieType.MATERIAU);

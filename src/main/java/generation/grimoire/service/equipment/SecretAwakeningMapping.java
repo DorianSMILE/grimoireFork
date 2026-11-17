@@ -31,7 +31,7 @@ public class SecretAwakeningMapping {
 
     private static final AwakeningDuo GENERIC_DUO = new AwakeningDuo(
             null,
-            SpiritualiteType.KARMA,
+            SpiritualiteType.UNIVERSEL,
             "Poussière d'Éveil",
             "Pierre d'Ascension"
     );

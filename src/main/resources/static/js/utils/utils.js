@@ -31,6 +31,7 @@ function getSpiritualiteColor(sp) {
     if (normalized.includes('CREATION')) return '#10b981';
     if (normalized.includes('CONVICTION')) return '#b74c0b';
     if (normalized.includes('CONSOLIDATION')) return '#99674c';
+    if (normalized.includes('UNIVERSEL')) return '#cbd5e1';
 
     return '#cbd5e1';
 }
@@ -54,6 +55,7 @@ function getSpiritualiteIcon(sp) {
     if (normalized.includes('CREATION')) return 'eco';
     if (normalized.includes('CONVICTION')) return 'volcano';
     if (normalized.includes('CONSOLIDATION')) return 'foundation';
+    if (normalized.includes('UNIVERSEL')) return 'public';
 
     return 'radio_button_unchecked';
 }

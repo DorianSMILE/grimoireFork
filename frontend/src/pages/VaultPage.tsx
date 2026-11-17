@@ -18,7 +18,7 @@ export function VaultPage() {
     async function bootVault() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const vaultUrl = '/js/pages/vault.js?v=112';
+      const vaultUrl = '/js/pages/vault.js?v=113';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -1168,6 +1168,12 @@ export function VaultPage() {
                         foundation
                       </span>
                       Consolidation
+                    </div>
+                    <div className="custom-option" data-value="UNIVERSEL">
+                      <span className="material-symbols-outlined cs-icon text-slate-300">
+                        public
+                      </span>
+                      Universel
                     </div>
                   </div>
                   <input type="hidden" id="anomalieSpiritualite" defaultValue="TENEBRES" />

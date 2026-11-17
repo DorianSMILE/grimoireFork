@@ -38,9 +38,25 @@ const pageState = {
     allEquipments: [],
     taverneCollapsed: false,
     armoryCollapsed: false,
-    initialLayoutApplied: false
+    initialLayoutApplied: false,
+    charactersLoaded: false,
+    arrivalCuePlayed: false,
+    arrivalCueCleanup: null
 };
 window.pageState = pageState;
+
+function isRosterPanelLocked() {
+    if (pageState.charactersLoaded) {
+        if (!window.isAdmin && window.charLimitData && typeof window.charLimitData.currentCharacters === 'number') {
+            return window.charLimitData.currentCharacters <= 0;
+        }
+        return pageState.personnages.length === 0;
+    }
+    if (window.currentUser && !window.isAdmin && typeof window.currentUser.currentCharacters === 'number') {
+        return window.currentUser.currentCharacters <= 0;
+    }
+    return false;
+}
 
 function applyArmoryLayoutState() {
     const mainEl = document.getElementById('armoryMain');
@@ -48,6 +64,9 @@ function applyArmoryLayoutState() {
     const rosterCol = document.getElementById('armoryRosterCol');
     const taverneDock = document.getElementById('taverneCollapsedDock');
     const armoryDock = document.getElementById('armoryCollapsedDock');
+    const dockExpandIcon = document.getElementById('armoryDockExpandIcon');
+    const btnCollapseTaverne = document.getElementById('btnCollapseTaverne');
+    const btnCollapseArmory = document.getElementById('btnCollapseArmory');
 
     const expandTaverneIcon = document.getElementById('btnExpandTaverneIcon');
     const expandTaverneLabel = document.getElementById('btnExpandTaverneLabel');
@@ -55,6 +74,12 @@ function applyArmoryLayoutState() {
     const expandArmoryLabel = document.getElementById('btnExpandArmoryLabel');
 
     if (!mainEl) return;
+
+    const rosterLocked = isRosterPanelLocked();
+    if (rosterLocked) {
+        pageState.armoryCollapsed = true;
+        pageState.taverneCollapsed = false;
+    }
 
     if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
         mainEl.classList.add('is-taverne-expanded');
@@ -88,9 +113,51 @@ function applyArmoryLayoutState() {
         if (expandArmoryIcon) expandArmoryIcon.textContent = 'open_in_full';
         if (expandArmoryLabel) expandArmoryLabel.textContent = 'Grand format';
     }
+
+    const taverneExpanded = String(!pageState.taverneCollapsed);
+    const armoryExpanded = String(!pageState.armoryCollapsed);
+    if (taverneDock) taverneDock.setAttribute('aria-expanded', taverneExpanded);
+    if (btnCollapseTaverne) btnCollapseTaverne.setAttribute('aria-expanded', taverneExpanded);
+    if (armoryDock) armoryDock.setAttribute('aria-expanded', armoryExpanded);
+    if (btnCollapseArmory) btnCollapseArmory.setAttribute('aria-expanded', armoryExpanded);
+
+    if (armoryDock) {
+        if (rosterLocked) {
+            armoryDock.classList.add('is-locked');
+            armoryDock.setAttribute('aria-disabled', 'true');
+            armoryDock.title = "Verrouillé — Créez votre premier personnage pour débloquer l'Armurerie";
+            if (dockExpandIcon) dockExpandIcon.textContent = 'lock';
+        } else {
+            armoryDock.classList.remove('is-locked');
+            armoryDock.setAttribute('aria-disabled', 'false');
+            armoryDock.title = "Déplier l'Armurerie (Personnages)";
+            if (dockExpandIcon) dockExpandIcon.textContent = 'chevron_left';
+        }
+    }
+
+    if (btnCollapseTaverne) {
+        if (rosterLocked) {
+            btnCollapseTaverne.classList.add('is-locked');
+            btnCollapseTaverne.setAttribute('aria-disabled', 'true');
+            btnCollapseTaverne.title = "Verrouillé — Créez un personnage avant de plier la Taverne";
+        } else {
+            btnCollapseTaverne.classList.remove('is-locked');
+            btnCollapseTaverne.setAttribute('aria-disabled', 'false');
+            btnCollapseTaverne.title = "Plier la Taverne sur le côté gauche";
+        }
+    }
 }
 
 window.toggleArmoryPanel = function (panel) {
+    if (isRosterPanelLocked()) {
+        if (typeof showNotif === 'function') {
+            showNotif("Créez d'abord un personnage pour débloquer l'affichage des personnages.", true);
+        }
+        pageState.armoryCollapsed = true;
+        pageState.taverneCollapsed = false;
+        applyArmoryLayoutState();
+        return;
+    }
     if (panel === 'taverne') {
         if (pageState.taverneCollapsed) {
             pageState.taverneCollapsed = false;
@@ -110,6 +177,15 @@ window.toggleArmoryPanel = function (panel) {
 };
 
 window.expandArmoryPanel = function (panel) {
+    if (isRosterPanelLocked()) {
+        if (typeof showNotif === 'function') {
+            showNotif("Créez d'abord un personnage pour débloquer l'affichage des personnages.", true);
+        }
+        pageState.armoryCollapsed = true;
+        pageState.taverneCollapsed = false;
+        applyArmoryLayoutState();
+        return;
+    }
     if (panel === 'taverne') {
         if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
             pageState.armoryCollapsed = false;
@@ -157,8 +233,10 @@ async function loadPersonnages() {
             let chars = await res.json();
             chars.sort((a, b) => (b.voieLevel || 1) - (a.voieLevel || 1));
             pageState.personnages = chars;
+            pageState.charactersLoaded = true;
             renderPersonnages();
             await updateCharLimitUI();
+            applyArmoryLayoutState();
         }
     } catch (e) {
         console.error('Erreur chargement personnages:', e);
@@ -176,24 +254,39 @@ async function updateCharLimitUI() {
             const absoluteMax = data.absoluteMaxCharacters || 8;
             const isMaxedOut = data.currentCharacters >= data.maxCharacters;
             const isAtAbsoluteMax = data.currentCharacters >= absoluteMax;
-            const color = (isMaxedOut && !window.isAdmin) ? '#ef4444' : '#94a3b8';
+            const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
 
-            let html = `<span class="text-sm font-medium" style="color: ${color};">${data.currentCharacters}/${data.maxCharacters}</span>`;
+            limitContainer.classList.toggle('is-slot-full', Boolean(isMaxedOut && !window.isAdmin));
+            limitContainer.classList.toggle('has-available-slot', Boolean(availableSlots > 0 && !window.isAdmin));
+            limitContainer.textContent = '';
+
+            const countSpan = document.createElement('span');
+            countSpan.id = 'charLimitText';
+            countSpan.className = 'armory-limit-count text-sm font-medium';
+            countSpan.textContent = `${data.currentCharacters}/${data.maxCharacters}`;
+            limitContainer.appendChild(countSpan);
 
             if (isMaxedOut && data.maxCharacters < absoluteMax && !window.isAdmin) {
                 const costs = { 2: 20, 3: 50, 4: 75, 5: 150, 6: 200, 7: 300 };
                 const cost = data.nextSlotCost || costs[data.maxCharacters];
-                html += `<button class="text-success ml-2 bg-success/20 border-success/40 rounded cursor-pointer px-1 py-0 flex-center" onclick="buyRosterSlot(${cost})" title="Acheter un emplacement pour ${cost} or"><span class="material-symbols-outlined text-sm">add</span></button>`;
+                const addSlotBtn = document.createElement('button');
+                addSlotBtn.type = 'button';
+                addSlotBtn.className = 'text-success ml-2 bg-success/20 border-success/40 rounded cursor-pointer px-1 py-0 flex-center';
+                addSlotBtn.title = `Acheter un emplacement pour ${cost} or`;
+                addSlotBtn.addEventListener('click', () => window.buyRosterSlot(cost));
+                const addIcon = document.createElement('span');
+                addIcon.className = 'material-symbols-outlined text-sm';
+                addIcon.textContent = 'add';
+                addSlotBtn.appendChild(addIcon);
+                limitContainer.appendChild(addSlotBtn);
             }
 
-            limitContainer.innerHTML = html;
             const dockLimitBadge = document.getElementById('taverneDockLimitBadge');
             if (dockLimitBadge) {
                 dockLimitBadge.textContent = `${data.currentCharacters}/${data.maxCharacters}`;
             }
             window.charLimitData = data;
 
-            const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
             if (window.currentUser) {
                 window.currentUser.availableCharacterSlots = availableSlots;
                 window.currentUser.currentCharacters = data.currentCharacters;
@@ -203,10 +296,12 @@ async function updateCharLimitUI() {
             const armoryBadge = document.getElementById('navArmoryBadge');
             if (armoryBadge) {
                 if (availableSlots > 0) {
-                    armoryBadge.textContent = availableSlots;
-                    armoryBadge.style.display = 'inline-block';
+                    armoryBadge.textContent = String(availableSlots);
+                    armoryBadge.classList.add('block');
+                    armoryBadge.classList.remove('hidden');
                 } else {
-                    armoryBadge.style.display = 'none';
+                    armoryBadge.classList.remove('block');
+                    armoryBadge.classList.add('hidden');
                 }
             }
 
@@ -215,7 +310,10 @@ async function updateCharLimitUI() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const hasOpenEquip = !isNaN(parseInt(urlParams.get('openEquip'), 10));
                 const isEquipTuto = Boolean(window.currentUser && window.currentUser.equipTutorialActive && pageState.personnages.length > 0);
-                if (!hasOpenEquip && !isEquipTuto) {
+                if (isRosterPanelLocked()) {
+                    pageState.armoryCollapsed = true;
+                    pageState.taverneCollapsed = false;
+                } else if (!hasOpenEquip && !isEquipTuto) {
                     if (isAtAbsoluteMax) {
                         pageState.taverneCollapsed = true;
                         pageState.armoryCollapsed = false;
@@ -230,8 +328,8 @@ async function updateCharLimitUI() {
                     pageState.armoryCollapsed = false;
                     pageState.taverneCollapsed = false;
                 }
-                applyArmoryLayoutState();
             }
+            applyArmoryLayoutState();
 
             updateSubmitButtonState();
         }
@@ -1864,16 +1962,142 @@ function bindArmorySelectListeners() {
     }
 }
 
+function stopArrivalRecruitmentCue() {
+    if (typeof pageState.arrivalCueCleanup === 'function') {
+        const fn = pageState.arrivalCueCleanup;
+        pageState.arrivalCueCleanup = null;
+        try { fn(); } catch (_) {}
+    }
+}
+
+function waitForElementAnimationEnd(el, expectedAnimPrefix, fallbackMs, registerCleanup) {
+    return new Promise((resolve) => {
+        if (!el) {
+            resolve();
+            return;
+        }
+        let settled = false;
+        const finish = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timerId);
+            el.removeEventListener('animationend', onEnd);
+            el.removeEventListener('animationcancel', onEnd);
+            resolve();
+        };
+        const onEnd = (event) => {
+            if (event.target !== el) return;
+            if ('animation' in AnimationEvent.prototype && event.animation && event.animation.effect && event.animation.effect.pseudoElement) {
+                return;
+            }
+            if (expectedAnimPrefix && event.animationName && !event.animationName.startsWith(expectedAnimPrefix)) {
+                return;
+            }
+            finish();
+        };
+        el.addEventListener('animationend', onEnd);
+        el.addEventListener('animationcancel', onEnd);
+        const timerId = setTimeout(finish, fallbackMs);
+        registerCleanup(finish);
+
+        requestAnimationFrame(() => {
+            if (settled) return;
+            if (typeof el.getAnimations === 'function') {
+                const ownAnimations = el.getAnimations().filter(a => !(a.effect && a.effect.pseudoElement));
+                if (ownAnimations.length === 0) {
+                    finish();
+                }
+            }
+        });
+    });
+}
+
+async function maybePlayArrivalRecruitmentCue() {
+    if (pageState.arrivalCuePlayed) return;
+    pageState.arrivalCuePlayed = true;
+
+    if (window.isAdmin) return;
+    const data = window.charLimitData;
+    if (!data || typeof data.currentCharacters !== 'number' || typeof data.maxCharacters !== 'number') return;
+    if (data.currentCharacters >= data.maxCharacters) return;
+    if (pageState.taverneCollapsed) return;
+
+    stopArrivalRecruitmentCue();
+
+    let cancelled = false;
+    const cleanups = [];
+    const limitContainer = document.getElementById('charLimitContainer');
+    const nameInput = document.getElementById('charName');
+    const nameCard = document.getElementById('charNameCard') || (nameInput ? nameInput.closest('.armory-form-card') : null);
+
+    const clearClasses = () => {
+        if (limitContainer) limitContainer.classList.remove('is-slot-cue-animating');
+        if (nameInput) nameInput.classList.remove('is-create-cue-animating');
+        if (nameCard) nameCard.classList.remove('is-create-card-cue');
+    };
+
+    pageState.arrivalCueCleanup = () => {
+        cancelled = true;
+        cleanups.forEach(fn => { try { fn(); } catch (_) {} });
+        clearClasses();
+    };
+
+    await new Promise((resolve) => {
+        const t = setTimeout(resolve, 180);
+        cleanups.push(() => clearTimeout(t));
+    });
+    if (cancelled || !limitContainer || !document.body.contains(limitContainer)) return;
+
+    // 1. Animation sur le compteur de personnages (ex: 0/2, 2/3)
+    void limitContainer.offsetWidth;
+    limitContainer.classList.add('is-slot-cue-animating');
+    await waitForElementAnimationEnd(limitContainer, 'armoryLimitSlotCue', 1200, (fn) => cleanups.push(fn));
+    if (limitContainer) limitContainer.classList.remove('is-slot-cue-animating');
+    if (cancelled || !nameInput || !document.body.contains(nameInput)) return;
+
+    // 2. Animation sur le champ Nom du personnage pour inviter à créer un héros
+    const onEarlyInput = () => {
+        stopArrivalRecruitmentCue();
+    };
+    nameInput.addEventListener('input', onEarlyInput, { once: true });
+    cleanups.push(() => nameInput.removeEventListener('input', onEarlyInput));
+
+    if (nameCard) {
+        void nameCard.offsetWidth;
+        nameCard.classList.add('is-create-card-cue');
+    }
+    void nameInput.offsetWidth;
+    nameInput.classList.add('is-create-cue-animating');
+
+    const waitTarget = !nameInput.classList.contains('tutorial-target-highlight') ? nameInput : (nameCard || nameInput);
+    await waitForElementAnimationEnd(waitTarget, 'armoryNameCreateCue', 1300, (fn) => cleanups.push(fn));
+
+    clearClasses();
+    pageState.arrivalCueCleanup = null;
+}
+
+function cleanupArmoryPage() {
+    stopArrivalRecruitmentCue();
+}
+
 async function initArmoryPage() {
+    stopArrivalRecruitmentCue();
     pageState.editingId = null;
     pageState.equipModalPersoId = null;
     pageState.initialLayoutApplied = false;
+    pageState.charactersLoaded = false;
+    pageState.arrivalCuePlayed = false;
 
     const urlParams = new URLSearchParams(window.location.search);
     const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
     const hasOpenEquip = !isNaN(openEquipCharId);
 
     const applyPreloadedLayout = () => {
+        if (isRosterPanelLocked()) {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+            return;
+        }
         if (!window.currentUser || typeof window.currentUser.availableCharacterSlots !== 'number' || hasOpenEquip || window.currentUser.equipTutorialActive) {
             return;
         }
@@ -1919,13 +2143,14 @@ async function initArmoryPage() {
         window.updateArmoryVoieSpider(null, null, false);
     }
 
-    if (hasOpenEquip) {
+    if (hasOpenEquip && !isRosterPanelLocked()) {
         setTimeout(() => {
             openEquipModal(openEquipCharId);
         }, 100);
     }
 
     initArmoryTutorial();
+    maybePlayArrivalRecruitmentCue();
 }
 
 window.hideEqTooltip = function () {
@@ -2026,6 +2251,7 @@ window.deleteEquipment = deleteEquipment;
 window.getVoieInfo = getVoieInfo;
 window.getSpiritInfo = getSpiritInfo;
 window.initArmoryPage = initArmoryPage;
+window.cleanupArmoryPage = cleanupArmoryPage;
 
 
 

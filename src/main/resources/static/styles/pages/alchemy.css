@@ -558,3 +558,74 @@
 .awakening-rarity-epique { color: #ef4444; }
 .awakening-rarity-relique { color: #a855f7; }
 .awakening-rarity-maudit { color: #dc2626; }
+
+.awakening-equip-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.awakening-equip-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+@media (max-width: 520px) {
+    .awakening-equip-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+.awakening-equip-search {
+    flex: 1 1 160px;
+    min-width: 0;
+    margin: 0;
+}
+
+.awakening-sort-select-wrap {
+    flex: 1 1 165px;
+    min-width: 0;
+    z-index: 40;
+}
+
+.awakening-custom-select {
+    min-width: 0;
+    z-index: 35;
+}
+
+.awakening-custom-select .custom-select-trigger {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+    min-height: 34px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.awakening-custom-select .cs-label {
+    min-width: 0;
+    overflow: hidden;
+    gap: 0.35rem;
+}
+
+.awakening-cs-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.awakening-custom-select .custom-option {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+}
+
+.awakening-custom-select .custom-option:hover,
+.awakening-custom-select .custom-option.selected {
+    background: rgba(245, 158, 11, 0.16);
+}

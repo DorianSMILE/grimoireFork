@@ -6,9 +6,199 @@
         selectedSimulation: null,
         craftFilter: 'ALL',
         searchTerm: '',
+        equipSearchTerm: '',
+        equipSortBy: 'ready_desc',
+        equipLevelFilter: 'ALL',
+        equipRarityFilter: 'ALL',
+        equipSlotFilter: 'ALL',
         isExecuting: false,
         userGold: 0
     };
+
+    const ELIGIBLE_RARITIES_FALLBACK = [
+        { name: 'LEGENDAIRE', label: 'Légendaire' },
+        { name: 'EPIQUE', label: 'Épique' },
+        { name: 'RELIQUE', label: 'Relique' },
+        { name: 'MAUDIT', label: 'Maudit' }
+    ];
+
+    const RARITY_VISUALS = {
+        LEGENDAIRE: { icon: 'workspace_premium', iconClass: 'text-warning' },
+        EPIQUE: { icon: 'whatshot', iconClass: 'text-crit' },
+        RELIQUE: { icon: 'webhook', iconClass: 'text-power' },
+        MAUDIT: { icon: 'skull', iconClass: 'text-maudit' }
+    };
+
+    const SLOT_VISUALS = {
+        CASQUE: { icon: 'masks', iconClass: 'flip-icon text-power' },
+        PLASTRON: { icon: 'shield', iconClass: 'text-mana' },
+        ANNEAU: { icon: 'diamond', iconClass: 'text-warning' },
+        ANNEAU_GAUCHE: { icon: 'diamond', iconClass: 'text-warning' },
+        ANNEAU_DROIT: { icon: 'diamond', iconClass: 'text-warning' },
+        BOTTES: { icon: 'footprint', iconClass: 'text-success' },
+        CAPE: { icon: 'carpenter', iconClass: 'text-pv' },
+        ARME: { icon: 'swords', iconClass: 'text-crit' },
+        ARME_DEUX_MAINS: { icon: 'swords', iconClass: 'text-crit' },
+        ARME_GAUCHE: { icon: 'colorize', iconClass: 'text-crit' },
+        ARME_DROITE: { icon: 'security', iconClass: 'text-crit' }
+    };
+
+    function getEligibleRarityOptions() {
+        const eligibleKeys = new Set(['LEGENDAIRE', 'EPIQUE', 'RELIQUE', 'MAUDIT']);
+        const metaList = window.GRIMOIRE_META?.equipmentRarities;
+        const rawList = (Array.isArray(metaList) && metaList.length > 0)
+            ? metaList.filter(r => r && eligibleKeys.has(r.name))
+            : ELIGIBLE_RARITIES_FALLBACK;
+        return (rawList.length > 0 ? rawList : ELIGIBLE_RARITIES_FALLBACK).map(r => {
+            const vis = RARITY_VISUALS[r.name] || { icon: 'star', iconClass: 'text-muted' };
+            return { value: r.name, label: r.label, icon: vis.icon, iconClass: vis.iconClass };
+        });
+    }
+
+    function getEligibleSlotOptions() {
+        const slotLabels = window.SLOT_LABELS || {};
+        const defs = [
+            { value: 'CASQUE', fallback: 'Casque' },
+            { value: 'PLASTRON', fallback: 'Plastron' },
+            { value: 'ANNEAU', fallback: 'Anneau' },
+            { value: 'BOTTES', fallback: 'Bottes' },
+            { value: 'CAPE', fallback: 'Cape' },
+            { value: 'ARME', fallback: 'Armes', exactLabel: 'Armes' },
+            { value: 'ARME_DEUX_MAINS', fallback: 'Arme 2M' },
+            { value: 'ARME_GAUCHE', fallback: 'Arme 1M' },
+            { value: 'ARME_DROITE', fallback: 'Arme Sec.' }
+        ];
+        return defs.map(d => {
+            const vis = SLOT_VISUALS[d.value] || { icon: 'category', iconClass: 'text-muted' };
+            return {
+                value: d.value,
+                label: d.exactLabel || slotLabels[d.value]?.label || d.fallback,
+                icon: vis.icon,
+                iconClass: vis.iconClass
+            };
+        });
+    }
+
+    function matchesSlotFilter(eq, filterVal) {
+        if (!filterVal || filterVal === 'ALL') return true;
+        const slotKey = typeof eq.slot === 'object' ? (eq.slot?.name || '') : String(eq.slot || '');
+        if (filterVal === 'ANNEAU') {
+            return slotKey === 'ANNEAU' || slotKey === 'ANNEAU_GAUCHE' || slotKey === 'ANNEAU_DROIT';
+        }
+        if (filterVal === 'ARME') {
+            return slotKey === 'ARME' || slotKey === 'ARME_GAUCHE' || slotKey === 'ARME_DROITE' || slotKey === 'ARME_DEUX_MAINS';
+        }
+        return slotKey === filterVal;
+    }
+
+    const FALLBACK_RARITY_ORDER = {
+        COMMUN: 0,
+        INHABITUEL: 1,
+        RARE: 2,
+        MYTHIQUE: 3,
+        LEGENDAIRE: 4,
+        EPIQUE: 5,
+        RELIQUE: 6,
+        MAUDIT: 7
+    };
+
+    function getEquipmentRarityKey(eq) {
+        if (!eq || !eq.rarity) return '';
+        return typeof getRarityName === 'function'
+            ? (getRarityName(eq.rarity) || '')
+            : (typeof eq.rarity === 'object' ? (eq.rarity.name || '') : String(eq.rarity));
+    }
+
+    function getEquipmentRarityRank(eq) {
+        const key = getEquipmentRarityKey(eq).toUpperCase();
+        const metaList = window.GRIMOIRE_META?.equipmentRarities;
+        if (Array.isArray(metaList) && metaList.length > 0) {
+            const idx = metaList.findIndex(r => r && r.name === key);
+            if (idx >= 0) return idx;
+        }
+        return FALLBACK_RARITY_ORDER[key] ?? -1;
+    }
+
+    function getEquipmentSlotLabel(eq) {
+        if (!eq || !eq.slot) return 'Objet';
+        const key = typeof eq.slot === 'object' ? (eq.slot.name || '') : String(eq.slot);
+        return window.SLOT_LABELS?.[key]?.label || eq.slot?.label || key || 'Objet';
+    }
+
+    function compareEquipments(a, b, sortBy) {
+        const nameCmp = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+        const lvlDiffDesc = (Number(b.upgradeLevel) || 0) - (Number(a.upgradeLevel) || 0);
+        const rarityDiffDesc = getEquipmentRarityRank(b) - getEquipmentRarityRank(a);
+        const typeCmp = getEquipmentSlotLabel(a).localeCompare(getEquipmentSlotLabel(b), 'fr', { sensitivity: 'base' });
+
+        switch (sortBy) {
+            case 'rarity_desc':
+                return rarityDiffDesc || lvlDiffDesc || nameCmp;
+            case 'rarity_asc':
+                return (-rarityDiffDesc) || lvlDiffDesc || nameCmp;
+            case 'level_desc':
+                return lvlDiffDesc || rarityDiffDesc || nameCmp;
+            case 'level_asc':
+                return (-lvlDiffDesc) || rarityDiffDesc || nameCmp;
+            case 'type_asc':
+                return typeCmp || rarityDiffDesc || lvlDiffDesc || nameCmp;
+            case 'type_desc':
+                return (-typeCmp) || rarityDiffDesc || lvlDiffDesc || nameCmp;
+            case 'name_asc':
+                return nameCmp || lvlDiffDesc;
+            case 'name_desc':
+                return (-nameCmp) || lvlDiffDesc;
+            case 'ready_desc':
+            default: {
+                const readyDiff = (b.upgradeReady ? 1 : 0) - (a.upgradeReady ? 1 : 0);
+                return readyDiff || lvlDiffDesc || rarityDiffDesc || nameCmp;
+            }
+        }
+    }
+
+    function buildOptionContent(opt) {
+        const frag = document.createDocumentFragment();
+        if (opt.icon) {
+            const iconSpan = createEl('span', `material-symbols-outlined cs-icon ${opt.iconClass || 'text-muted'}`, opt.icon);
+            frag.appendChild(iconSpan);
+        }
+        frag.appendChild(createEl('span', 'awakening-cs-text', opt.label));
+        return frag;
+    }
+
+    function createCustomComboSelect(id, ariaLabel, options, currentValue, onChange, extraClass) {
+        const wrapper = createEl('div', `custom-select-wrapper awakening-custom-select ${extraClass || ''}`.trim());
+        wrapper.tabIndex = 0;
+
+        const activeOpt = options.find(o => o.value === currentValue) || options[0];
+
+        const trigger = createEl('div', 'custom-select-trigger');
+        trigger.setAttribute('aria-label', ariaLabel);
+        const labelSpan = createEl('span', 'cs-label');
+        if (activeOpt) labelSpan.appendChild(buildOptionContent(activeOpt));
+        const arrow = createEl('span', 'material-symbols-outlined cs-arrow text-muted', 'expand_more');
+        trigger.appendChild(labelSpan);
+        trigger.appendChild(arrow);
+
+        const listEl = createEl('div', 'custom-select-options custom-scrollbar');
+        options.forEach(opt => {
+            const optEl = createEl('div', `custom-option ${opt.value === currentValue ? 'selected' : ''}`.trim());
+            optEl.setAttribute('data-value', opt.value);
+            optEl.appendChild(buildOptionContent(opt));
+            listEl.appendChild(optEl);
+        });
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.id = id;
+        hiddenInput.value = currentValue;
+        hiddenInput.addEventListener('change', () => onChange(hiddenInput.value));
+
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(listEl);
+        wrapper.appendChild(hiddenInput);
+        return wrapper;
+    }
 
     function createEl(tag, className, text) {
         const el = document.createElement(tag);
@@ -65,18 +255,9 @@
 
     function renderEquipmentsList(container, callbacks) {
         container.textContent = '';
-        const eligible = awakeningState.userEquipments.filter(eq => eq && eq.upgradeEligible);
+        const allEligible = awakeningState.userEquipments.filter(eq => eq && eq.upgradeEligible);
 
-        eligible.sort((a, b) => {
-            if (Boolean(a.upgradeReady) !== Boolean(b.upgradeReady)) {
-                return a.upgradeReady ? -1 : 1;
-            }
-            const lvlDiff = (b.upgradeLevel || 0) - (a.upgradeLevel || 0);
-            if (lvlDiff !== 0) return lvlDiff;
-            return (a.name || '').localeCompare(b.name || '');
-        });
-
-        if (eligible.length === 0) {
+        if (allEligible.length === 0) {
             const empty = createEl(
                 'p',
                 'text-xs text-muted italic p-2',
@@ -86,7 +267,39 @@
             return;
         }
 
-        eligible.forEach(eq => {
+        const query = awakeningState.equipSearchTerm;
+        const lvlFilter = awakeningState.equipLevelFilter;
+        const rarityFilter = awakeningState.equipRarityFilter;
+        const slotFilter = awakeningState.equipSlotFilter;
+
+        const filtered = allEligible.filter(eq => {
+            if (lvlFilter !== 'ALL' && Number(eq.upgradeLevel || 0) !== Number(lvlFilter)) {
+                return false;
+            }
+            if (rarityFilter !== 'ALL' && getEquipmentRarityKey(eq).toUpperCase() !== rarityFilter) {
+                return false;
+            }
+            if (!matchesSlotFilter(eq, slotFilter)) {
+                return false;
+            }
+            if (!query) return true;
+            const haystacks = [
+                eq.name,
+                getEquipmentSlotLabel(eq),
+                eq.requiredSecret,
+                eq.personnage?.name
+            ];
+            return haystacks.some(v => v && String(v).toLowerCase().includes(query));
+        });
+
+        filtered.sort((a, b) => compareEquipments(a, b, awakeningState.equipSortBy));
+
+        if (filtered.length === 0) {
+            container.appendChild(createEl('p', 'text-xs text-muted italic p-2', 'Aucun équipement correspondant.'));
+            return;
+        }
+
+        filtered.forEach(eq => {
             const isSelected = Number(awakeningState.selectedEquipmentId) === Number(eq.id);
             const classes = [
                 'awakening-equip-item',
@@ -102,7 +315,7 @@
 
             const topRow = createEl('div', 'flex items-center justify-between gap-2');
             const nameWrap = createEl('div', 'flex items-center gap-1.5 min-w-0');
-            const rarityKey = typeof getRarityName === 'function' ? getRarityName(eq.rarity) : eq.rarity;
+            const rarityKey = getEquipmentRarityKey(eq);
             const nameSpan = createEl('span', `font-bold text-sm truncate ${getRarityClass(rarityKey)}`, eq.name);
             const lvl = Number(eq.upgradeLevel || 0);
             const lvlBadge = createEl('span', `awakening-level-badge ${lvl >= 5 ? 'is-max' : ''}`, `+${lvl}`);
@@ -119,11 +332,17 @@
             topRow.appendChild(nameWrap);
             topRow.appendChild(statusPill);
 
-            const metaRow = createEl('div', 'flex items-center justify-between text-xs text-muted');
+            const metaRow = createEl('div', 'flex items-center justify-between gap-2 text-xs text-muted');
+            const slotKey = typeof eq.slot === 'object' ? (eq.slot?.name || '') : String(eq.slot || '');
+            const slotVis = SLOT_VISUALS[slotKey] || { icon: 'category', iconClass: 'text-muted' };
+            const slotLabel = getEquipmentSlotLabel(eq);
             const carrierText = eq.personnage?.name ? `Porté par ${eq.personnage.name}` : 'En coffre';
             const secretText = eq.requiredSecret || 'Équipement générique';
-            metaRow.appendChild(createEl('span', '', carrierText));
-            metaRow.appendChild(createEl('span', '', secretText));
+            const leftMeta = createEl('span', 'flex items-center gap-1 min-w-0 truncate');
+            leftMeta.appendChild(createEl('span', `material-symbols-outlined text-xs ${slotVis.iconClass}`, slotVis.icon));
+            leftMeta.appendChild(createEl('span', 'truncate', `${slotLabel} · ${carrierText}`));
+            metaRow.appendChild(leftMeta);
+            metaRow.appendChild(createEl('span', 'shrink-0', secretText));
 
             card.appendChild(topRow);
             card.appendChild(metaRow);
@@ -435,6 +654,99 @@
         eqHeader.appendChild(createEl('span', 'material-symbols-outlined text-base', 'shield'));
         leftPanel.appendChild(eqHeader);
 
+        const equipControls = createEl('div', 'awakening-equip-controls');
+
+        const equipSearchInput = createEl('input', 'form-control text-xs awakening-equip-search');
+        equipSearchInput.id = 'awakeningEquipSearch';
+        equipSearchInput.type = 'text';
+        equipSearchInput.placeholder = 'Rechercher un équipement...';
+        equipSearchInput.setAttribute('aria-label', 'Rechercher un équipement à éveiller');
+        equipSearchInput.value = awakeningState.equipSearchTerm;
+        equipSearchInput.addEventListener('input', () => {
+            awakeningState.equipSearchTerm = equipSearchInput.value.trim().toLowerCase();
+            renderEquipmentsList(equipListEl, callbacks);
+        });
+
+        const equipSortSelect = createCustomComboSelect(
+            'awakeningEquipSort',
+            'Trier les équipements à éveiller',
+            [
+                { value: 'ready_desc', label: 'Prêts d\'abord', icon: 'check_circle', iconClass: 'text-success' },
+                { value: 'rarity_desc', label: 'Rareté (Meilleurs)', icon: 'stars', iconClass: 'text-warning' },
+                { value: 'rarity_asc', label: 'Rareté (Pires)', icon: 'stars', iconClass: 'text-muted' },
+                { value: 'level_desc', label: 'Éveil (+5 → +0)', icon: 'upgrade', iconClass: 'text-warning' },
+                { value: 'level_asc', label: 'Éveil (+0 → +5)', icon: 'upgrade', iconClass: 'text-muted' },
+                { value: 'type_asc', label: 'Type (A-Z)', icon: 'category', iconClass: 'text-mana' },
+                { value: 'type_desc', label: 'Type (Z-A)', icon: 'category', iconClass: 'text-muted' },
+                { value: 'name_asc', label: 'Nom (A-Z)', icon: 'sort_by_alpha', iconClass: 'text-muted' },
+                { value: 'name_desc', label: 'Nom (Z-A)', icon: 'sort_by_alpha', iconClass: 'text-muted' }
+            ],
+            awakeningState.equipSortBy,
+            val => {
+                awakeningState.equipSortBy = val || 'ready_desc';
+                renderEquipmentsList(equipListEl, callbacks);
+            },
+            'awakening-sort-select-wrap'
+        );
+
+        equipControls.appendChild(equipSearchInput);
+        equipControls.appendChild(equipSortSelect);
+        leftPanel.appendChild(equipControls);
+
+        const equipFilters = createEl('div', 'awakening-equip-filters');
+
+        const levelFilterSelect = createCustomComboSelect(
+            'awakeningFilterLevel',
+            'Filtrer par niveau d\'éveil',
+            [
+                { value: 'ALL', label: 'Tous', icon: 'upgrade', iconClass: 'text-muted' },
+                { value: '0', label: 'Niveau +0', icon: 'radio_button_unchecked', iconClass: 'text-muted' },
+                { value: '1', label: 'Niveau +1', icon: 'looks_one', iconClass: 'text-success' },
+                { value: '2', label: 'Niveau +2', icon: 'looks_two', iconClass: 'text-mana' },
+                { value: '3', label: 'Niveau +3', icon: 'looks_3', iconClass: 'text-power' },
+                { value: '4', label: 'Niveau +4', icon: 'looks_4', iconClass: 'text-warning' },
+                { value: '5', label: 'Niveau +5', icon: 'looks_5', iconClass: 'text-crit' }
+            ],
+            awakeningState.equipLevelFilter,
+            val => {
+                awakeningState.equipLevelFilter = val || 'ALL';
+                renderEquipmentsList(equipListEl, callbacks);
+            }
+        );
+
+        const rarityFilterSelect = createCustomComboSelect(
+            'awakeningFilterRarity',
+            'Filtrer par rareté',
+            [
+                { value: 'ALL', label: 'Raretés', icon: 'star', iconClass: 'text-muted' },
+                ...getEligibleRarityOptions()
+            ],
+            awakeningState.equipRarityFilter,
+            val => {
+                awakeningState.equipRarityFilter = val || 'ALL';
+                renderEquipmentsList(equipListEl, callbacks);
+            }
+        );
+
+        const slotFilterSelect = createCustomComboSelect(
+            'awakeningFilterSlot',
+            'Filtrer par type d\'item',
+            [
+                { value: 'ALL', label: 'Types', icon: 'category', iconClass: 'text-muted' },
+                ...getEligibleSlotOptions()
+            ],
+            awakeningState.equipSlotFilter,
+            val => {
+                awakeningState.equipSlotFilter = val || 'ALL';
+                renderEquipmentsList(equipListEl, callbacks);
+            }
+        );
+
+        equipFilters.appendChild(levelFilterSelect);
+        equipFilters.appendChild(rarityFilterSelect);
+        equipFilters.appendChild(slotFilterSelect);
+        leftPanel.appendChild(equipFilters);
+
         const equipListEl = createEl('div', 'flex flex-col gap-2');
         equipListEl.id = 'awakeningEquipList';
         leftPanel.appendChild(equipListEl);
@@ -501,6 +813,10 @@
 
         if (preselectedEquipId) {
             awakeningState.selectedEquipmentId = Number(preselectedEquipId);
+        }
+
+        if (window.initGlobalCustomSelect) {
+            window.initGlobalCustomSelect();
         }
 
         renderEquipmentsList(equipListEl, callbacks);

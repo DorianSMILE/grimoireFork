@@ -18,7 +18,7 @@ export function AlchemyPage() {
     async function bootAlchemy() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const alchemyUrl = '/js/pages/alchemy.js?v=1786180000004';
+      const alchemyUrl = '/js/pages/alchemy.js?v=1786180000005';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

@@ -1050,7 +1050,7 @@ async function ensureAwakeningScriptLoaded() {
             return;
         }
         const script = document.createElement('script');
-        script.src = '/js/pages/alchemy-awakening.js?v=1';
+        script.src = '/js/pages/alchemy-awakening.js?v=4';
         script.dataset.alchemyAwakening = '1';
         script.onload = resolve;
         script.onerror = resolve;
@@ -1080,7 +1080,7 @@ function ensureAlchemyTabsStructure() {
         classicIcon.className = 'material-symbols-outlined text-lg';
         classicIcon.textContent = 'science';
         const classicLabel = document.createElement('span');
-        classicLabel.textContent = 'Alchimie Classique';
+        classicLabel.textContent = 'Alchimie';
         classicBtn.appendChild(classicIcon);
         classicBtn.appendChild(classicLabel);
         classicBtn.addEventListener('click', () => switchAlchemyTab('classic'));

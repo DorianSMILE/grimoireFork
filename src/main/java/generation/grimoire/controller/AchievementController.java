@@ -61,11 +61,11 @@ public class AchievementController {
         if (principal == null) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
-        AppUser user = userRepository.findByUsername(principal.getName()).orElse(null);
-        if (user == null) {
+        Long userId = userRepository.findIdByUsername(principal.getName()).orElse(null);
+        if (userId == null) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
-        return ResponseEntity.ok(achievementService.getPendingNotifications(user));
+        return ResponseEntity.ok(achievementService.getPendingNotificationsByUserId(userId));
     }
 
     @PostMapping("/acknowledge")
@@ -73,11 +73,11 @@ public class AchievementController {
         if (principal == null) {
             return ResponseEntity.ok(Map.of("message", "Ignoré (non authentifié)."));
         }
-        AppUser user = userRepository.findByUsername(principal.getName()).orElse(null);
-        if (user == null) {
+        Long userId = userRepository.findIdByUsername(principal.getName()).orElse(null);
+        if (userId == null) {
             return ResponseEntity.ok(Map.of("message", "Ignoré (utilisateur introuvable)."));
         }
-        achievementService.acknowledgeAllNotifications(user);
+        achievementService.acknowledgeAllNotificationsByUserId(userId);
         return ResponseEntity.ok(Map.of("message", "Notifications acquittées."));
     }
 }

@@ -701,10 +701,16 @@ public class AchievementService {
 
     @Transactional(readOnly = true)
     public List<AchievementDTO> getPendingNotifications(AppUser user) {
-        if (user == null) return Collections.emptyList();
+        if (user == null || user.getId() == null) return Collections.emptyList();
+        return getPendingNotificationsByUserId(user.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AchievementDTO> getPendingNotificationsByUserId(Long userId) {
+        if (userId == null) return Collections.emptyList();
         List<AchievementDTO> list = new ArrayList<>();
 
-        List<UserAchievement> pendingStandard = userAchievementRepository.findByUserIdAndUnlockedTrueAndNotifiedFalse(user.getId());
+        List<UserAchievement> pendingStandard = userAchievementRepository.findByUserIdAndUnlockedTrueAndNotifiedFalse(userId);
         for (UserAchievement ua : pendingStandard) {
             AchievementType type = ua.getAchievement();
             if (type == null) continue;
@@ -725,7 +731,7 @@ public class AchievementService {
             ));
         }
 
-        List<UserCustomAchievement> pendingCustom = userCustomAchievementRepository.findByUser_IdAndNotifiedFalse(user.getId());
+        List<UserCustomAchievement> pendingCustom = userCustomAchievementRepository.findByUser_IdAndNotifiedFalse(userId);
         for (UserCustomAchievement uca : pendingCustom) {
             list.add(new AchievementDTO(
                     "CUSTOM_" + uca.getId(),
@@ -749,8 +755,14 @@ public class AchievementService {
 
     @Transactional
     public void acknowledgeAllNotifications(AppUser user) {
-        if (user == null) return;
-        userAchievementRepository.markAllAsNotified(user.getId());
-        userCustomAchievementRepository.markAllAsNotified(user.getId());
+        if (user == null || user.getId() == null) return;
+        acknowledgeAllNotificationsByUserId(user.getId());
+    }
+
+    @Transactional
+    public void acknowledgeAllNotificationsByUserId(Long userId) {
+        if (userId == null) return;
+        userAchievementRepository.markAllAsNotified(userId);
+        userCustomAchievementRepository.markAllAsNotified(userId);
     }
 }

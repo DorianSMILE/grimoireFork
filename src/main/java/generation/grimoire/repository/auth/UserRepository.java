@@ -15,6 +15,9 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
 
     Optional<AppUser> findByUsername(String username);
 
+    @Query("SELECT u.id FROM AppUser u WHERE u.username = :username")
+    Optional<Long> findIdByUsername(@Param("username") String username);
+
     @Query("SELECT new generation.grimoire.repository.auth.UserRepository$UserAuthProjection(u.username, u.password, u.role) FROM AppUser u WHERE u.username = :username")
     Optional<UserAuthProjection> findAuthProjectionByUsername(@Param("username") String username);
 

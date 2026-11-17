@@ -18,7 +18,7 @@ export function DungeonStatsPage() {
     async function bootDungeonStats() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const dungeonStatsUrl = '/js/pages/dungeon-stats.js?v=3';
+      const dungeonStatsUrl = '/js/pages/dungeon-stats.js?v=4';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

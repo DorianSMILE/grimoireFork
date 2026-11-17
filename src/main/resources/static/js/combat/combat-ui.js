@@ -1,13 +1,13 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000242';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000242';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000242';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000242';
+import { pageState } from './combat-state.js?v=1786180000243';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000243';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000243';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000243';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { showFighterPingMenu } from './combat-signals.js?v=1786180000242';
-import { renderHeroCombatSprite } from './combat-sprites.js?v=1786180000242';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000243';
+import { renderHeroCombatSprite } from './combat-sprites.js?v=1786180000243';
 
 function isCombatLogOpen(logContainer) {
     return Boolean(logContainer && !logContainer.classList.contains('is-hidden'));
@@ -1357,6 +1357,14 @@ export function updateUI(data) {
                         window.renderOverlayMap('combatMainMapList');
                     }
                     vicOverlay.classList.add('show');
+                    const vicDescEl = document.getElementById('combatVictoryDesc');
+                    if (vicDescEl) {
+                        const stepNum = (data.currentRoomIndex || 0) + 1;
+                        const totalRooms = Math.max(stepNum, data.totalRooms || 1);
+                        vicDescEl.textContent = stepNum < totalRooms
+                            ? `Étape ${stepNum} / ${totalRooms} réussie — le donjon continue.`
+                            : `Étape ${stepNum} / ${totalRooms} réussie — dernier obstacle franchi !`;
+                    }
                     // Show hero HP/Mana panel as soon as combat ends (after show so overlay detection works)
                     if (typeof window.renderHeroStatsPanel === 'function') {
                         window.renderHeroStatsPanel();
@@ -2888,15 +2896,15 @@ export function updateUI(data) {
         // Trigger animation and auto-turn
         setTimeout(() => {
             const activeEnemyCard = document.querySelector(`.fighter-enemy[data-index="${activeEnemyIndex}"]`);
-            if (activeEnemyCard) {
-                activeEnemyCard.style.transform = 'translateX(-24px)';
+            if (activeEnemyCard && activeEnemyCard.isConnected) {
+                activeEnemyCard.classList.remove('enemy-attacking-left');
+                void activeEnemyCard.offsetWidth;
+                activeEnemyCard.classList.add('enemy-attacking-left');
                 setTimeout(() => {
-                    if (activeEnemyCard.classList.contains('active')) {
-                        activeEnemyCard.style.transform = 'scale(1.05)';
-                    } else {
-                        activeEnemyCard.style.transform = 'none';
+                    if (activeEnemyCard.isConnected) {
+                        activeEnemyCard.classList.remove('enemy-attacking-left');
                     }
-                }, 200);
+                }, 460);
             }
 
             setTimeout(async () => {
@@ -2918,8 +2926,8 @@ export function updateUI(data) {
                         window.showNotif("Erreur lors du tour adverse : " + (e.message || "Erreur serveur"), true);
                     }
                 }
-            }, 600); // Fetch next turn
-        }, 500); // Pause before attack animation
+            }, 550); // Fetch next turn
+        }, 450); // Pause before attack animation
     } else {
         window.isAutoTurnInProgress = false;
         // Player turn: enable buttons
@@ -3295,15 +3303,21 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         }
         let inspDanger = insp >= 6 ? ' passive-orb-pulse' : '';
         let expDanger = exp >= 6 ? ' passive-orb-pulse' : '';
+        const inspSummaryLine = c.violenceInspirationSummary
+            ? `<div class="text-xs mt-1 ${insp >= 6 ? 'text-red-400' : 'text-amber-300'}">${c.violenceInspirationSummary}</div>`
+            : '';
+        const expSummaryLine = c.violenceExpirationSummary
+            ? `<div class="text-xs mt-1 ${exp >= 6 ? 'text-red-400' : 'text-fuchsia-400'}">${c.violenceExpirationSummary}</div>`
+            : '';
         passiveOrbs.push({
             icon: 'storm', color: '#dc2626', value: `${insp}`,
             title: `Inspiration : ${insp}/7`, dangerClass: inspDanger,
-            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>${inspSummaryLine}`
         });
         passiveOrbs.push({
             icon: 'air', color: '#d946ef', value: `${exp}`,
             title: `Expiration : ${exp}/7`, dangerClass: expDanger,
-            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>${expSummaryLine}`
         });
     }
 
@@ -3349,32 +3363,56 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         });
     }
 
+    if (c.voie && c.voie.nom && c.voie.nom.toLowerCase().includes('consolidation')) {
+        const hp = c.hpCurrent !== undefined ? c.hpCurrent : c.healthCurrent;
+        const maxHp = c.hpMax !== undefined ? c.hpMax : c.healthMax;
+        const isEmergency = hp <= maxHp * 0.20;
+        const cColor = isEmergency ? '#f59e0b' : '#c2845d';
+        const cText = isEmergency ? '!' : '✓';
+        const cDanger = isEmergency ? ' passive-orb-pulse' : '';
+        const cBonusLine = c.consolidationBonusSummary
+            ? `<div class="text-xs mt-1 ${isEmergency ? 'text-red-400' : 'text-amber-300'}">${c.consolidationBonusSummary}</div>`
+            : '';
+        const cDesc = isEmergency
+            ? 'Seuil critique (≤ 20% PV) : +25% Armure & Résistance.'
+            : 'Début de tour (> 20% PV) : sacrifie 5% PV max pour 10% PV actuels en bouclier.';
+        passiveOrbs.push({
+            icon: 'foundation', color: cColor, value: cText,
+            title: isEmergency ? 'Consolidation (Urgence)' : 'Consolidation',
+            dangerClass: cDanger,
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${cColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">foundation</span><span>Consolidation${isEmergency ? ' — Urgence' : ''}</span></div><div class="text-xs" style="color:#cbd5e1;">${cDesc}</div>${cBonusLine}`
+        });
+    }
+
     const hasKarma = c.hasKarma || (c.spiritualite && c.spiritualite.nom && c.spiritualite.nom.toLowerCase().includes('karma'));
     if (hasKarma) {
         let karmaLocked = c.karmaLocked || (c.passiveStates && c.passiveStates['karma_locked'] === 1);
         let karmaHarmony = c.karmaHarmony || (c.passiveStates && c.passiveStates['karma_harmony'] === 1);
         let karmaGauge = c.karmaGauge !== undefined ? c.karmaGauge : (c.passiveStates && c.passiveStates['karma_gauge'] !== undefined ? c.passiveStates['karma_gauge'] : 0);
         let karmaLockedDuration = c.passiveStates && c.passiveStates['karma_locked_duration'] !== undefined ? c.passiveStates['karma_locked_duration'] : 0;
+        const karmaBonusLine = c.karmaBonusSummary
+            ? `<div class="text-xs mt-1 text-slate-300">${c.karmaBonusSummary}</div>`
+            : '';
 
         let kColor, kIcon, kText, kTooltip, kDanger = '';
         if (karmaLocked) {
             kColor = '#f87171'; kIcon = 'block'; kText = `${karmaLockedDuration}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>${karmaBonusLine}`;
             kDanger = ' passive-orb-pulse';
         } else if (karmaHarmony) {
             kColor = '#cbd5e1'; kIcon = 'all_inclusive'; kText = '∞';
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>${karmaBonusLine}`;
         } else if (karmaGauge < 0) {
             kColor = '#c084fc'; kIcon = 'dark_mode'; kText = `${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>${c.karmaBonusSummary ? `<div class="text-xs mt-1 text-purple-300">${c.karmaBonusSummary}</div>` : ''}`;
             if (karmaGauge <= -3) kDanger = ' passive-orb-pulse';
         } else if (karmaGauge > 0) {
             kColor = '#fde047'; kIcon = 'light_mode'; kText = `+${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>${c.karmaBonusSummary ? `<div class="text-xs mt-1 text-yellow-200">${c.karmaBonusSummary}</div>` : ''}`;
             if (karmaGauge >= 3) kDanger = ' passive-orb-pulse';
         } else {
             kColor = '#9ca3af'; kIcon = 'balance'; kText = '0';
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>${karmaBonusLine}`;
         }
         passiveOrbs.push({ icon: kIcon, color: kColor, value: kText, title: 'Karma', dangerClass: kDanger, tooltip: kTooltip });
     }
@@ -3387,7 +3425,10 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const eColor = canCast ? '#38bdf8' : '#ef4444';
         const eIcon = canCast ? 'blur_on' : 'block';
         const eText = canCast ? '✓' : '✗';
-        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const espritBonusLine = c.espritBonusSummary
+            ? `<div class="text-xs mt-1 text-sky-300">${c.espritBonusSummary}</div>`
+            : '';
+        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>${espritBonusLine}`;
         passiveOrbs.push({ icon: eIcon, color: eColor, value: eText, title: canCast ? 'Éveillé' : 'Bloqué', dangerClass: '', tooltip: eTooltip });
     }
 
@@ -3399,7 +3440,10 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const tColor = canCast ? '#c084fc' : '#ef4444';
         const tIcon = canCast ? 'nightlight_round' : 'block';
         const tText = canCast ? '✓' : '✗';
-        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const tenebreBonusLine = c.tenebreBonusSummary
+            ? `<div class="text-xs mt-1 text-purple-300">${c.tenebreBonusSummary}</div>`
+            : '';
+        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>${tenebreBonusLine}`;
         passiveOrbs.push({ icon: tIcon, color: tColor, value: tText, title: canCast ? 'Assombri' : 'Bloqué', dangerClass: '', tooltip: tTooltip });
     }
 

@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000242';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000242';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000242';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000242';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000242';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000243';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000250';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000243';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000243';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000243';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000242';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000243';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -184,8 +184,10 @@ window.promptFlee = function () {
 
 
 let _combatTutorialObserver = null;
+let _combatTutorialStarting = false;
 
 window.initCombatPage = async function () {
+    _combatTutorialStarting = false;
     const combatLoadingStateEl = document.getElementById('combatLoadingState');
     if (combatLoadingStateEl) {
         combatLoadingStateEl.classList.remove('is-hidden');
@@ -261,9 +263,15 @@ window.initCombatPage = async function () {
             window.currentUser = Object.assign(window.currentUser || {}, meData);
             const enemiesEl = document.getElementById('enemiesContainer');
             if (enemiesEl && window.currentUser.combatTutorialActive) {
-                const tryStartCombatTutorial = () => {
+                const tryStartCombatTutorial = async () => {
+                    if (_combatTutorialStarting) return;
                     if (window.currentUser && window.currentUser.combatTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive() && enemiesEl.children.length > 0) {
-                        window.GrimoireTutorial.startPhase('COMBAT_TOUR', {
+                        _combatTutorialStarting = true;
+                        if (_combatTutorialObserver) {
+                            _combatTutorialObserver.disconnect();
+                            _combatTutorialObserver = null;
+                        }
+                        const started = await window.GrimoireTutorial.startPhase('COMBAT_TOUR', {
                             onStepEnter: (step) => {
                                 const filterMap = {
                                     'COMBAT_TYPE_INSTANT': 'INSTANTANE',
@@ -280,12 +288,35 @@ window.initCombatPage = async function () {
                                 if (typeof window.applySpellFilters === 'function') window.applySpellFilters();
                             }
                         });
+                        if (started !== false) {
+                            if (window.currentUser) {
+                                window.currentUser.combatTutorialActive = false;
+                            }
+                            try {
+                                const rawCached = localStorage.getItem('grimoire_cached_user_v1');
+                                if (rawCached) {
+                                    const parsedCached = JSON.parse(rawCached);
+                                    if (parsedCached && typeof parsedCached === 'object') {
+                                        parsedCached.combatTutorialActive = false;
+                                        localStorage.setItem('grimoire_cached_user_v1', JSON.stringify(parsedCached));
+                                    }
+                                }
+                            } catch (_) {}
+                            globalFetch('/api/auth/tutorial/complete?phase=COMBAT_TOUR', {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                keepalive: true,
+                                silent: true
+                            }).catch(() => {});
+                        } else {
+                            _combatTutorialStarting = false;
+                        }
                     }
                 };
-                tryStartCombatTutorial();
                 if (_combatTutorialObserver) _combatTutorialObserver.disconnect();
-                _combatTutorialObserver = new MutationObserver(() => tryStartCombatTutorial());
+                _combatTutorialObserver = new MutationObserver(() => { tryStartCombatTutorial(); });
                 _combatTutorialObserver.observe(enemiesEl, { childList: true });
+                tryStartCombatTutorial();
             }
         }
     } catch (_) { }
@@ -375,6 +406,7 @@ window.initCombatPage = async function () {
 window.cleanupCombatPage = function () {
     closeMultiSSE();
     window.combatIsMyTurn = true;
+    _combatTutorialStarting = false;
     if (_combatTutorialObserver) {
         _combatTutorialObserver.disconnect();
         _combatTutorialObserver = null;

@@ -557,8 +557,13 @@ setInterval(() => {
     };
 
     let isChecking = false;
-    window.checkAchievementNotifications = async function () {
+    let consecutivePollErrors = 0;
+    let nextAllowedPollAt = 0;
+
+    window.checkAchievementNotifications = async function (force = false) {
         if (isChecking) return;
+        if (document.hidden && !force) return;
+        if (!force && Date.now() < nextAllowedPollAt) return;
         if (!window.currentUser && !localStorage.getItem('accessToken')) return;
         if (typeof window.globalFetch !== 'function') return;
 
@@ -566,21 +571,35 @@ setInterval(() => {
         try {
             const res = await window.globalFetch('/api/achievements/pending-notifications', { silent: true });
             if (res && res.ok) {
+                consecutivePollErrors = 0;
+                nextAllowedPollAt = 0;
                 const list = await res.json();
                 if (Array.isArray(list) && list.length > 0) {
                     list.forEach(a => window.showAchievementToast(a));
                     await window.globalFetch('/api/achievements/acknowledge', { method: 'POST', silent: true }).catch(() => {});
                 }
+            } else if (res && res.status >= 500) {
+                consecutivePollErrors = Math.min(consecutivePollErrors + 1, 4);
+                nextAllowedPollAt = Date.now() + (15000 * Math.pow(2, consecutivePollErrors));
             }
         } catch (e) {
-            // Silently ignore poll errors
+            consecutivePollErrors = Math.min(consecutivePollErrors + 1, 4);
+            nextAllowedPollAt = Date.now() + (15000 * Math.pow(2, consecutivePollErrors));
         } finally {
             isChecking = false;
         }
     };
 
     window.addEventListener('authLoaded', () => {
-        setTimeout(window.checkAchievementNotifications, 800);
+        consecutivePollErrors = 0;
+        nextAllowedPollAt = 0;
+        setTimeout(() => window.checkAchievementNotifications(true), 800);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && consecutivePollErrors === 0) {
+            window.checkAchievementNotifications();
+        }
     });
 
     setInterval(() => {

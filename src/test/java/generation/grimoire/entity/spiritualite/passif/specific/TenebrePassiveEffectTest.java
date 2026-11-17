@@ -85,4 +85,33 @@ class TenebrePassiveEffectTest {
     void onTurnStart_shouldBeNoOp() {
         assertThatCode(() -> passive.onTurnStart(hero)).doesNotThrowAnyException();
     }
+
+    @Test
+    void buildActiveBonusSummary_shouldReturnNullForNonTenebrePersonnage() {
+        assertThat(TenebrePassiveEffect.buildActiveBonusSummary(null)).isNull();
+        assertThat(TenebrePassiveEffect.buildActiveBonusSummary(hero)).isNull();
+
+        Spiritualite other = new Spiritualite();
+        other.setNom("Esprit");
+        hero.setSpiritualite(other);
+        assertThat(hero.getTenebreBonusSummary()).isNull();
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldShowRealTimePhysAndMagBonus() {
+        hero.setSpiritualite(tenebreSpiritualite);
+        hero.setHealthMax(200);
+        hero.setHealthCurrent(120); // missing 80 -> +8 phy
+        hero.setManaMax(150);
+        hero.setManaCurrent(90); // missing 60 -> +6 mag
+
+        assertThat(hero.getTenebreBonusSummary())
+                .isEqualTo("Prochain tour : +8 Dégâts Phy · +6 Dégâts Mag (1 tour)");
+
+        tenebreSpiritualite.setNom("Ténèbres");
+        hero.setHealthCurrent(200);
+        hero.setManaCurrent(150);
+        assertThat(hero.getTenebreBonusSummary())
+                .isEqualTo("Prochain tour : +0 Dégâts Phy · +0 Dégâts Mag (1 tour)");
+    }
 }

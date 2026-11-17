@@ -6,6 +6,7 @@ declare global {
   interface Window {
     toggleArmoryPanel?: (panel: 'taverne' | 'armory') => void;
     expandArmoryPanel?: (panel: 'taverne' | 'armory') => void;
+    cleanupArmoryPage?: () => void;
   }
 }
 
@@ -26,7 +27,7 @@ export function ArmoryPage() {
       const armoryCssLink = document.querySelector<HTMLLinkElement>(
         'link[href*="/styles/pages/armory.css"]'
       );
-      const targetCssHref = '/styles/pages/armory.css?v=1786180000016';
+      const targetCssHref = '/styles/pages/armory.css?v=1786180000017';
       if (armoryCssLink && !armoryCssLink.href.endsWith(targetCssHref)) {
         armoryCssLink.href = targetCssHref;
       }
@@ -34,7 +35,7 @@ export function ArmoryPage() {
       const uiUrl = '/js/ui.js?v=1786180000232';
       const authUrl = '/js/services/auth.js?v=32';
       const spiderUrl = '/js/pages/hero-spider.js?v=19';
-      const armoryUrl = '/js/pages/armory.js?v=124';
+      const armoryUrl = '/js/pages/armory.js?v=125';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -51,6 +52,7 @@ export function ArmoryPage() {
 
     return () => {
       cancelled = true;
+      window.cleanupArmoryPage?.();
       window.hideGlobalTooltip?.(true);
       window.GrimoireTutorial?.stop?.();
     };
@@ -64,6 +66,8 @@ export function ArmoryPage() {
           type="button"
           id="taverneCollapsedDock"
           className="armory-collapsed-dock dock-left is-hidden"
+          aria-controls="charFormPanel"
+          aria-expanded="true"
           onClick={() => window.toggleArmoryPanel?.('taverne')}
           title="Déplier la Taverne (Recrutement)"
         >
@@ -96,6 +100,8 @@ export function ArmoryPage() {
                 type="button"
                 id="btnCollapseTaverne"
                 className="armory-panel-toggle-btn is-fold-btn"
+                aria-controls="charFormPanel"
+                aria-expanded="true"
                 onClick={() => window.toggleArmoryPanel?.('taverne')}
                 title="Plier la Taverne sur le côté gauche"
               >
@@ -109,7 +115,7 @@ export function ArmoryPage() {
             {/* Sous-colonne Sélection (Nom, Roue en étoile, Spiritualité, Actions) */}
             <div className="taverne-selection-col">
               {/* 1. Identité du Héros */}
-              <div className="armory-form-card">
+              <div className="armory-form-card" id="charNameCard">
                 <div className="armory-field">
                   <label className="armory-field-label" htmlFor="charName">
                     <span className="armory-step-badge">1</span>
@@ -536,6 +542,8 @@ export function ArmoryPage() {
                   type="button"
                   id="btnCollapseArmory"
                   className="armory-panel-toggle-btn is-fold-btn"
+                  aria-controls="armoryRosterCol"
+                  aria-expanded="true"
                   onClick={() => window.toggleArmoryPanel?.('armory')}
                   title="Plier l'Armurerie sur le côté droit"
                 >
@@ -667,11 +675,15 @@ export function ArmoryPage() {
           type="button"
           id="armoryCollapsedDock"
           className="armory-collapsed-dock dock-right is-hidden"
+          aria-controls="armoryRosterCol"
+          aria-expanded="false"
           onClick={() => window.toggleArmoryPanel?.('armory')}
           title="Déplier l'Armurerie (Personnages)"
         >
           <span className="armory-dock-expand-icon">
-            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="material-symbols-outlined" id="armoryDockExpandIcon">
+              chevron_left
+            </span>
           </span>
           <span className="material-symbols-outlined text-info text-xl">
             shield

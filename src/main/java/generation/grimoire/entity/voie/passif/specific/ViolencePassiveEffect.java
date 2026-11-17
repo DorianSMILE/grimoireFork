@@ -24,6 +24,68 @@ public class ViolencePassiveEffect extends VoiePassiveEffect {
 
     private static final String STATE_INSPIRATION = "violence_inspiration";
     private static final String STATE_EXPIRATION = "violence_expiration";
+    private static final int OVERLOAD_THRESHOLD = 6;
+    private static final int BUFF_THRESHOLD_LOW = 4;
+    private static final int BUFF_THRESHOLD_MAX = 7;
+
+    /**
+     * Calcule les dégâts par tour de la brûlure de surcharge Violence.
+     */
+    public static int computeOverloadBurnDamage(Personnage personnage) {
+        if (personnage == null) {
+            return 0;
+        }
+        int power = PersonnageCombatHelper.getEffectiveStat(personnage, StatType.POWER);
+        int strength = PersonnageCombatHelper.getEffectiveStat(personnage, StatType.STRENGTH);
+        return (int) Math.round((power * 0.15) + (strength * 0.15));
+    }
+
+    /**
+     * Construit le libellé SSOT des cumuls d'Inspiration (gain de Critique au swap + brûlure si surcharge).
+     */
+    public static String buildInspirationSummary(Personnage personnage) {
+        return buildOrbSummary(personnage, true);
+    }
+
+    /**
+     * Construit le libellé SSOT des cumuls d'Expiration (gain de Force au swap + brûlure si surcharge).
+     */
+    public static String buildExpirationSummary(Personnage personnage) {
+        return buildOrbSummary(personnage, false);
+    }
+
+    private static String buildOrbSummary(Personnage personnage, boolean isInspiration) {
+        if (personnage == null || personnage.getVoie() == null
+                || personnage.getVoie().getNom() == null
+                || !personnage.getVoie().getNom().toLowerCase().contains("violence")) {
+            return null;
+        }
+        int count = personnage.getPassiveState(isInspiration ? STATE_INSPIRATION : STATE_EXPIRATION, 0);
+        String targetSwap = isInspiration ? "Expiration" : "Inspiration";
+        String statLabel = isInspiration ? "Crit" : "Force";
+        StatType statType = isInspiration ? StatType.CRIT : StatType.STRENGTH;
+
+        String bonusPart;
+        if (count < BUFF_THRESHOLD_LOW) {
+            bonusPart = "Prochain swap (" + targetSwap + ") : aucun bonus (requis ≥ 4 cumuls)";
+        } else {
+            double modifier = isInspiration
+                    ? (count >= BUFF_THRESHOLD_MAX ? 2.0 : 1.0)
+                    : (count >= BUFF_THRESHOLD_MAX ? 0.60 : 0.30);
+            int pct = (int) Math.round(modifier * 100);
+            int gain = PersonnageCombatHelper.simulateAddedPositiveBuffDelta(personnage, statType, modifier);
+            bonusPart = "Prochain swap (" + targetSwap + ") : +" + gain + " " + statLabel
+                    + " (+" + pct + "%, 3 tours)";
+        }
+
+        if (count >= OVERLOAD_THRESHOLD) {
+            int burnDamage = computeOverloadBurnDamage(personnage);
+            String sameCategory = isInspiration ? "Inspiration" : "Expiration";
+            return bonusPart + " · Surcharge (si " + sameCategory + ") : "
+                    + burnDamage + " Brûlure/tour (3 tours)";
+        }
+        return bonusPart;
+    }
 
     @Override
     public void onEvent(GameEvent event) {
@@ -109,9 +171,7 @@ public class ViolencePassiveEffect extends VoiePassiveEffect {
     }
 
     private void applyBurn(Personnage personnage) {
-        int power = PersonnageCombatHelper.getEffectiveStat(personnage, StatType.POWER);
-        int strength = PersonnageCombatHelper.getEffectiveStat(personnage, StatType.STRENGTH);
-        int burnDamage = (int) Math.round((power * 0.15) + (strength * 0.15));
+        int burnDamage = computeOverloadBurnDamage(personnage);
 
         BuffDebuffEffect burn = new BuffDebuffEffect();
         burn.setStatAffected(StatType.BURN);

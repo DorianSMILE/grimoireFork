@@ -19,12 +19,13 @@ public class TenebrePassiveEffect extends SpiritualitePassiveEffect {
         // Remplacé par la contrainte de lancement
     }
 
+    private static final double MISSING_STAT_DMG_RATIO = 0.10;
+
     @Override
     public void onTurnStart(Personnage personnage) {
-        int missingHp = personnage.getHealthMax() - personnage.getHealthCurrent();
-        int missingMana = personnage.getManaMax() - personnage.getManaCurrent();
-        int physBonusDmg = (int) (missingHp * 0.10);
-        int magBonusDmg = (int) (missingMana * 0.10);
+        int[] bonuses = computeTurnStartDamageBonuses(personnage);
+        int physBonusDmg = bonuses[0];
+        int magBonusDmg = bonuses[1];
 
         if (physBonusDmg > 0) {
             generation.grimoire.entity.spell.type.effect.BuffDebuffEffect physBuff = new generation.grimoire.entity.spell.type.effect.BuffDebuffEffect();
@@ -47,6 +48,36 @@ public class TenebrePassiveEffect extends SpiritualitePassiveEffect {
         if (physBonusDmg > 0 || magBonusDmg > 0) {
             System.out.println(personnage.getName() + " gagne " + physBonusDmg + " dégâts physiques et " + magBonusDmg + " dégâts magiques ce tour via Ténèbres.");
         }
+    }
+
+    /**
+     * Calcule les bonus de dégâts [physiques, magiques] gagnés au début du prochain tour.
+     */
+    public static int[] computeTurnStartDamageBonuses(Personnage personnage) {
+        if (personnage == null) {
+            return new int[] { 0, 0 };
+        }
+        int missingHp = Math.max(0, personnage.getHealthMax() - personnage.getHealthCurrent());
+        int missingMana = Math.max(0, personnage.getManaMax() - personnage.getManaCurrent());
+        int physBonusDmg = (int) (missingHp * MISSING_STAT_DMG_RATIO);
+        int magBonusDmg = (int) (missingMana * MISSING_STAT_DMG_RATIO);
+        return new int[] { physBonusDmg, magBonusDmg };
+    }
+
+    /**
+     * Construit le libellé SSOT des bonus de dégâts physiques et magiques Ténèbres pour l'affichage en combat.
+     */
+    public static String buildActiveBonusSummary(Personnage personnage) {
+        if (personnage == null || personnage.getSpiritualite() == null
+                || personnage.getSpiritualite().getNom() == null) {
+            return null;
+        }
+        String spName = personnage.getSpiritualite().getNom().toLowerCase();
+        if (!spName.contains("ténèbre") && !spName.contains("tenebre")) {
+            return null;
+        }
+        int[] bonuses = computeTurnStartDamageBonuses(personnage);
+        return "Prochain tour : +" + bonuses[0] + " Dégâts Phy · +" + bonuses[1] + " Dégâts Mag (1 tour)";
     }
 
     @Override

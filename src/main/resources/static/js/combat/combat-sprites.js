@@ -17,7 +17,7 @@
  *   - Création (/styles/sprites/creation/) : wait, poison, shield, heal, attak, bourgeons, dead
  */
 
-import { pageState } from './combat-state.js?v=1786180000242';
+import { pageState } from './combat-state.js?v=1786180000243';
 import { javaClassToCode } from '../utils/constants.js';
 
 const SPRITE_VERSION = '1786180000223';

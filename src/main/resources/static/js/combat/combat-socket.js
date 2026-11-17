@@ -1,11 +1,11 @@
 import { showFloatingTextOnElement } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000242';
-import { updateUI } from './combat-ui.js?v=1786180000242';
+import { pageState } from './combat-state.js?v=1786180000243';
+import { updateUI } from './combat-ui.js?v=1786180000250';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { handleSignalReceived } from './combat-signals.js?v=1786180000242';
-import { handleCombatSpriteLog } from './combat-sprites.js?v=1786180000242';
+import { handleSignalReceived } from './combat-signals.js?v=1786180000243';
+import { handleCombatSpriteLog } from './combat-sprites.js?v=1786180000243';
 
 
 export function processNewDeathLogs(combatLogs) {

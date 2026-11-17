@@ -734,6 +734,11 @@ public class Personnage {
         return totalManaRegen;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("karmaBonusSummary")
+    public String getKarmaBonusSummary() {
+        return generation.grimoire.entity.spiritualite.passif.specific.KarmaPassiveEffect.buildActiveBonusSummary(this);
+    }
+
     public boolean isAlly(Personnage other) {
         if (other == null)
             return false;

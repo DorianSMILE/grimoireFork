@@ -623,9 +623,12 @@
     font-size: 0.8rem;
     line-height: 1.4;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    max-width: max-content;
-    white-space: nowrap;
-    word-wrap: normal;
+    width: max-content;
+    max-width: min(680px, calc(100vw - 32px));
+    max-height: min(50vh, 520px);
+    overflow-y: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
     text-align: left;
     display: none;
     pointer-events: none;
@@ -687,7 +690,7 @@
     font-size: 0.75rem;
     line-height: 1.45;
     white-space: normal;
-    max-width: 270px;
+    max-width: 560px;
 }
 
 .custom-option:hover {

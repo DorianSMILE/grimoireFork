@@ -204,22 +204,22 @@ async function showNotif(message, isError = false) {
 }
 
 window.showGlobalTooltip = async function (el) {
-    const ui = await import('/js/ui.js?v=1786180000231');
+    const ui = await import('/js/ui.js?v=1786180000232');
     ui.showGlobalTooltip(el);
 }
 
 window.hideGlobalTooltip = async function (immediate = false) {
-    const ui = await import('/js/ui.js?v=1786180000231');
+    const ui = await import('/js/ui.js?v=1786180000232');
     ui.hideGlobalTooltip(immediate);
 }
 
 window.onChildTooltipLeave = async function (event, el) {
-    const ui = await import('/js/ui.js?v=1786180000231');
+    const ui = await import('/js/ui.js?v=1786180000232');
     ui.onChildTooltipLeave(event, el);
 }
 
 window.showEffectTooltipFromEl = async function (el) {
-    const ui = await import('/js/ui.js?v=1786180000231');
+    const ui = await import('/js/ui.js?v=1786180000232');
     ui.showEffectTooltipFromEl(el);
 }
 

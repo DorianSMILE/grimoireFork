@@ -1357,6 +1357,14 @@ export function updateUI(data) {
                         window.renderOverlayMap('combatMainMapList');
                     }
                     vicOverlay.classList.add('show');
+                    const vicDescEl = document.getElementById('combatVictoryDesc');
+                    if (vicDescEl) {
+                        const stepNum = (data.currentRoomIndex || 0) + 1;
+                        const totalRooms = Math.max(stepNum, data.totalRooms || 1);
+                        vicDescEl.textContent = stepNum < totalRooms
+                            ? `Étape ${stepNum} / ${totalRooms} réussie — le donjon continue.`
+                            : `Étape ${stepNum} / ${totalRooms} réussie — dernier obstacle franchi !`;
+                    }
                     // Show hero HP/Mana panel as soon as combat ends (after show so overlay detection works)
                     if (typeof window.renderHeroStatsPanel === 'function') {
                         window.renderHeroStatsPanel();

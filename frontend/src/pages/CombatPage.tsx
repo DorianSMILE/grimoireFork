@@ -339,10 +339,10 @@ export function CombatPage() {
 
           <div className="flex flex-col items-center justify-start bg-slate-900/80 border border-white/10 rounded-2xl p-8 md:p-12 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] max-w-[1000px] w-[90%] min-h-[400px] shadow-2xl max-h-[95vh] overflow-y-auto custom-scrollbar">
             <span className="material-symbols-outlined text-emerald mb-4 text-[5rem] flex-shrink-0">
-              emoji_events
+              award_star
             </span>
             <div className="result-title text-emerald mb-4 text-[3rem] flex-shrink-0">
-              Victoire !
+              Combat remporté !
             </div>
             <p
               className="text-muted text-xl mb-8 max-w-[600px] text-center flex-shrink-0"

@@ -78,11 +78,11 @@ export function AlchemyPage() {
         </div>
 
         <div
-          className="alchemy-main max-w-[1400px] mx-auto flex-row gap-8 items-stretch justify-center h-[calc(100vh-160px)]"
+          className="alchemy-main mx-auto flex-row gap-8 items-stretch justify-center h-[calc(100vh-160px)]"
           id="alchemyMain"
         >
           {/* Left Panel: Recipes List */}
-          <div className="panel flex-1 max-w-[450px] flex flex-col">
+          <div className="panel flex-1 max-w-[540px] flex flex-col">
             <div className="panel-title">
               <div className="flex items-center gap-[10px]">
                 <span className="material-symbols-outlined text-emerald-500">menu_book</span>

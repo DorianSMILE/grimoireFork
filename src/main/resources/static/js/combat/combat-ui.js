@@ -1,13 +1,13 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000242';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000242';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000242';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000242';
+import { pageState } from './combat-state.js?v=1786180000243';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000243';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000243';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000243';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { showFighterPingMenu } from './combat-signals.js?v=1786180000242';
-import { renderHeroCombatSprite } from './combat-sprites.js?v=1786180000242';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000243';
+import { renderHeroCombatSprite } from './combat-sprites.js?v=1786180000243';
 
 function isCombatLogOpen(logContainer) {
     return Boolean(logContainer && !logContainer.classList.contains('is-hidden'));

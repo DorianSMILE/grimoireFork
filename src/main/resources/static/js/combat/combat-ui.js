@@ -3303,15 +3303,21 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         }
         let inspDanger = insp >= 6 ? ' passive-orb-pulse' : '';
         let expDanger = exp >= 6 ? ' passive-orb-pulse' : '';
+        const inspSummaryLine = c.violenceInspirationSummary
+            ? `<div class="text-xs mt-1 ${insp >= 6 ? 'text-red-400' : 'text-amber-300'}">${c.violenceInspirationSummary}</div>`
+            : '';
+        const expSummaryLine = c.violenceExpirationSummary
+            ? `<div class="text-xs mt-1 ${exp >= 6 ? 'text-red-400' : 'text-fuchsia-400'}">${c.violenceExpirationSummary}</div>`
+            : '';
         passiveOrbs.push({
             icon: 'storm', color: '#dc2626', value: `${insp}`,
             title: `Inspiration : ${insp}/7`, dangerClass: inspDanger,
-            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#dc2626;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">storm</span><span>Inspiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${insp}/7${insp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>${inspSummaryLine}`
         });
         passiveOrbs.push({
             icon: 'air', color: '#d946ef', value: `${exp}`,
             title: `Expiration : ${exp}/7`, dangerClass: expDanger,
-            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>`
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#d946ef;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">air</span><span>Expiration (Violence)</span></div><div class="text-xs" style="color:#cbd5e1;">${exp}/7${exp >= 6 ? ' — <span style="color:#ef4444; font-weight:bold;">Attention, proche du max !</span>' : ''}</div>${expSummaryLine}`
         });
     }
 
@@ -3357,6 +3363,27 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         });
     }
 
+    if (c.voie && c.voie.nom && c.voie.nom.toLowerCase().includes('consolidation')) {
+        const hp = c.hpCurrent !== undefined ? c.hpCurrent : c.healthCurrent;
+        const maxHp = c.hpMax !== undefined ? c.hpMax : c.healthMax;
+        const isEmergency = hp <= maxHp * 0.20;
+        const cColor = isEmergency ? '#f59e0b' : '#c2845d';
+        const cText = isEmergency ? '!' : '✓';
+        const cDanger = isEmergency ? ' passive-orb-pulse' : '';
+        const cBonusLine = c.consolidationBonusSummary
+            ? `<div class="text-xs mt-1 ${isEmergency ? 'text-red-400' : 'text-amber-300'}">${c.consolidationBonusSummary}</div>`
+            : '';
+        const cDesc = isEmergency
+            ? 'Seuil critique (≤ 20% PV) : +25% Armure & Résistance.'
+            : 'Début de tour (> 20% PV) : sacrifie 5% PV max pour 10% PV actuels en bouclier.';
+        passiveOrbs.push({
+            icon: 'foundation', color: cColor, value: cText,
+            title: isEmergency ? 'Consolidation (Urgence)' : 'Consolidation',
+            dangerClass: cDanger,
+            tooltip: `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${cColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">foundation</span><span>Consolidation${isEmergency ? ' — Urgence' : ''}</span></div><div class="text-xs" style="color:#cbd5e1;">${cDesc}</div>${cBonusLine}`
+        });
+    }
+
     const hasKarma = c.hasKarma || (c.spiritualite && c.spiritualite.nom && c.spiritualite.nom.toLowerCase().includes('karma'));
     if (hasKarma) {
         let karmaLocked = c.karmaLocked || (c.passiveStates && c.passiveStates['karma_locked'] === 1);
@@ -3398,7 +3425,10 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const eColor = canCast ? '#38bdf8' : '#ef4444';
         const eIcon = canCast ? 'blur_on' : 'block';
         const eText = canCast ? '✓' : '✗';
-        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const espritBonusLine = c.espritBonusSummary
+            ? `<div class="text-xs mt-1 text-sky-300">${c.espritBonusSummary}</div>`
+            : '';
+        const eTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${eColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${eIcon}</span><span>${canCast ? 'Éveillé' : 'Bloqué'} (Esprit)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≥ 20% PV ET Mana<br/>Statut : ${canCast ? '<span style="color:#38bdf8;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>${espritBonusLine}`;
         passiveOrbs.push({ icon: eIcon, color: eColor, value: eText, title: canCast ? 'Éveillé' : 'Bloqué', dangerClass: '', tooltip: eTooltip });
     }
 
@@ -3410,7 +3440,10 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         const tColor = canCast ? '#c084fc' : '#ef4444';
         const tIcon = canCast ? 'nightlight_round' : 'block';
         const tText = canCast ? '✓' : '✗';
-        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>`;
+        const tenebreBonusLine = c.tenebreBonusSummary
+            ? `<div class="text-xs mt-1 text-purple-300">${c.tenebreBonusSummary}</div>`
+            : '';
+        const tTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:${tColor};"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">${tIcon}</span><span>${canCast ? 'Assombri' : 'Bloqué'} (Ténèbres)</span></div><div class="text-xs" style="color:#cbd5e1;">Condition : ≤ 80% PV ou Mana<br/>Statut : ${canCast ? '<span style="color:#c084fc;">Actif</span>' : '<span style="color:#ef4444;">Inactif</span>'}</div>${tenebreBonusLine}`;
         passiveOrbs.push({ icon: tIcon, color: tColor, value: tText, title: canCast ? 'Assombri' : 'Bloqué', dangerClass: '', tooltip: tTooltip });
     }
 

@@ -21,7 +21,7 @@ public class EspritPassiveEffect extends SpiritualitePassiveEffect {
 
     @Override
     public void onTurnStart(Personnage personnage) {
-        int manaRegen = (int) (personnage.getManaCurrent() * 0.10);
+        int manaRegen = computeTurnStartManaRegen(personnage);
         if (manaRegen > 0) {
             personnage.restoreMana(manaRegen);
         }
@@ -33,6 +33,36 @@ public class EspritPassiveEffect extends SpiritualitePassiveEffect {
                 System.out.println(personnage.getName() + " reçoit un bouclier de " + shieldAmount + " via l'Esprit.");
             }
         }
+    }
+
+    /**
+     * Calcule la quantité de mana régénérée au début du tour par le passif Esprit.
+     */
+    public static int computeTurnStartManaRegen(Personnage personnage) {
+        if (personnage == null) {
+            return 0;
+        }
+        return (int) (personnage.getManaCurrent() * 0.10);
+    }
+
+    /**
+     * Construit le libellé SSOT du bonus passif Esprit actif pour l'affichage en combat.
+     */
+    public static String buildActiveBonusSummary(Personnage personnage) {
+        if (personnage == null || personnage.getSpiritualite() == null
+                || personnage.getSpiritualite().getNom() == null
+                || !personnage.getSpiritualite().getNom().toLowerCase().contains("esprit")) {
+            return null;
+        }
+        int manaRegen = computeTurnStartManaRegen(personnage);
+        String summary = "Bonus actuel : +" + manaRegen + " Mana régénéré / tour (10% actuel)";
+        if (personnage.getHealthCurrent() < (personnage.getHealthMax() * 0.20)) {
+            int shieldAmount = (int) (personnage.getHealthMax() * 0.05);
+            if (shieldAmount > 0) {
+                summary += " · +" + shieldAmount + " Bouclier (2 tours)";
+            }
+        }
+        return summary;
     }
 
     @Override

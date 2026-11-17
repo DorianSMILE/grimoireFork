@@ -1,13 +1,13 @@
 import { createAnomalyBadgeHtml, getExpStats, getSpiritExpStats } from './combat-utils.js?v=1786180000234';
-import { pageState } from './combat-state.js?v=1786180000240';
-import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000240';
-import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000240';
-import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000240';
+import { pageState } from './combat-state.js?v=1786180000242';
+import { processNewDeathLogs, updateMultiTurnBanner } from './combat-socket.js?v=1786180000242';
+import { currentSpellsTab, initiateCombatCast } from './combat-spells.js?v=1786180000242';
+import { nextRoom, openStrangeDoor, acceptAlteration, useRope, openBuyModal, addLootedConsumable, openChest, resetCombatTimeoutWarning, playDungeonMusic, GAME_TIPS } from './combat-actions.js?v=1786180000242';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { showFighterPingMenu } from './combat-signals.js?v=1786180000240';
-import { renderHeroCombatSprite } from './combat-sprites.js';
+import { showFighterPingMenu } from './combat-signals.js?v=1786180000242';
+import { renderHeroCombatSprite } from './combat-sprites.js?v=1786180000242';
 
 function isCombatLogOpen(logContainer) {
     return Boolean(logContainer && !logContainer.classList.contains('is-hidden'));
@@ -2870,7 +2870,12 @@ export function updateUI(data) {
         window.isAutoTurnInProgress = true;
 
         // Disable UI
-        document.getElementById('btnAttack').disabled = true;
+        const btnAttackEnemy = document.getElementById('btnAttack');
+        if (btnAttackEnemy) {
+            btnAttackEnemy.disabled = true;
+            btnAttackEnemy.classList.add('disabled');
+            btnAttackEnemy.setAttribute('aria-disabled', 'true');
+        }
         const btnEnd = document.getElementById('btnEndTurn');
         if (btnEnd) btnEnd.disabled = true;
         const spellButtons = document.querySelectorAll('.spell-btn, .filter-chip');
@@ -2923,6 +2928,7 @@ export function updateUI(data) {
             const isChanneling = data.activePlayer && data.activePlayer.remainingChannelingTurns > 0;
             const canAttack = data.activePlayer && !data.activePlayer.banalSpellCastThisTurn && !isChanneling;
             btnAttack.disabled = !canAttack;
+            btnAttack.setAttribute('aria-disabled', String(!canAttack));
             if (!canAttack) {
                 btnAttack.classList.add('disabled');
             } else {

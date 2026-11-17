@@ -630,6 +630,67 @@ export async function showModal(options) {
 }
 window.showModal = showModal;
 
+function positionFloatingTooltip(tooltip, rect, anchorRect, { preferSide = false, preferTop = false } = {}) {
+    const gap = 8;
+    const margin = 10;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const tw = tooltip.offsetWidth;
+    const th = tooltip.offsetHeight;
+
+    const clampTop = (val) => Math.max(margin, Math.min(vh - th - margin, val));
+    const clampLeft = (val) => Math.max(margin, Math.min(vw - tw - margin, val));
+
+    if (preferSide) {
+        const refRect = anchorRect || rect;
+        const spaceLeft = refRect.left - margin - gap;
+        const spaceRight = vw - refRect.right - margin - gap;
+        if (spaceLeft >= tw) {
+            tooltip.style.top = clampTop(rect.top) + 'px';
+            tooltip.style.left = (refRect.left - tw - gap) + 'px';
+            return;
+        }
+        if (spaceRight >= tw) {
+            tooltip.style.top = clampTop(rect.top) + 'px';
+            tooltip.style.left = (refRect.right + gap) + 'px';
+            return;
+        }
+    }
+
+    const spaceAbove = rect.top - margin - gap;
+    const spaceBelow = vh - rect.bottom - margin - gap;
+    const fitsAbove = th <= spaceAbove;
+    const fitsBelow = th <= spaceBelow;
+
+    let placeTop;
+    if (preferTop) {
+        placeTop = fitsAbove ? true : (fitsBelow ? false : spaceAbove >= spaceBelow);
+    } else {
+        placeTop = fitsBelow ? false : (fitsAbove ? true : spaceAbove > spaceBelow);
+    }
+
+    const availH = placeTop ? spaceAbove : spaceBelow;
+    if (th > availH) {
+        const refRect = anchorRect || rect;
+        const spaceRight = vw - refRect.right - margin - gap;
+        const spaceLeft = refRect.left - margin - gap;
+        if (spaceRight >= tw) {
+            tooltip.style.top = clampTop(rect.top) + 'px';
+            tooltip.style.left = (refRect.right + gap) + 'px';
+            return;
+        }
+        if (spaceLeft >= tw) {
+            tooltip.style.top = clampTop(rect.top) + 'px';
+            tooltip.style.left = (refRect.left - tw - gap) + 'px';
+            return;
+        }
+    }
+
+    const topPos = placeTop ? Math.max(margin, rect.top - th - gap) : (rect.bottom + gap);
+    tooltip.style.top = topPos + 'px';
+    tooltip.style.left = clampLeft(rect.left + rect.width / 2 - tw / 2) + 'px';
+}
+
 export function showGlobalTooltip(el) {
     if (!el) return;
     let tooltip = document.getElementById('globalFixedTooltip');
@@ -650,10 +711,15 @@ export function showGlobalTooltip(el) {
         el.getAttribute('data-tooltip-position') === 'side'
     );
 
-    if (isChildTooltip) {
+    const isPassiveTooltip = el.hasAttribute('data-tooltip-passive');
+    if (isChildTooltip || isPassiveTooltip) {
         tooltip.classList.remove('is-interactive');
         tooltip.style.pointerEvents = 'none';
-        tooltip.dataset.isChild = 'true';
+        if (isChildTooltip) {
+            tooltip.dataset.isChild = 'true';
+        } else {
+            delete tooltip.dataset.isChild;
+        }
     } else {
         tooltip.classList.add('is-interactive');
         tooltip.style.pointerEvents = '';
@@ -706,59 +772,14 @@ export function showGlobalTooltip(el) {
     tooltip.classList.add('is-visible');
 
     const rect = el.getBoundingClientRect();
-    const tooltipHeight = tooltip.offsetHeight;
-    const tooltipWidth = tooltip.offsetWidth;
-
-    let topPos;
-    let leftPos;
-
-    if (isChildTooltip) {
-        const anchorRect = parentDropdown ? parentDropdown.getBoundingClientRect() : rect;
-        const spaceLeft = anchorRect.left;
-        const spaceRight = window.innerWidth - anchorRect.right;
-
-        if (spaceLeft >= tooltipWidth + 12) {
-            leftPos = anchorRect.left - tooltipWidth - 8;
-        } else if (spaceRight >= tooltipWidth + 12) {
-            leftPos = anchorRect.right + 8;
-        } else if (spaceLeft >= spaceRight) {
-            leftPos = Math.max(10, anchorRect.left - tooltipWidth - 8);
-        } else {
-            leftPos = Math.min(window.innerWidth - tooltipWidth - 10, anchorRect.right + 8);
-        }
-
-        topPos = rect.top;
-        if (topPos + tooltipHeight > window.innerHeight - 10) {
-            topPos = window.innerHeight - tooltipHeight - 10;
-        }
-        if (topPos < 10) topPos = 10;
-    } else {
-        const preferTop = el.getAttribute('data-tooltip-position') === 'top'
-            || el.hasAttribute('data-prefer-top')
-            || el.classList.contains('combat-spell-card');
-        if (preferTop) {
-            topPos = rect.top - tooltipHeight - 8;
-            if (topPos < 10) topPos = rect.bottom + 8;
-        } else {
-            topPos = rect.bottom + 8;
-            if (topPos + tooltipHeight > window.innerHeight) {
-                topPos = rect.top - tooltipHeight - 8;
-            }
-        }
-        if (topPos < 10) topPos = 10;
-        if (topPos + tooltipHeight > window.innerHeight - 10) {
-            topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
-        }
-
-        leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
-        if (leftPos < 10) leftPos = 10;
-        if (leftPos + tooltipWidth > window.innerWidth - 10) {
-            leftPos = window.innerWidth - tooltipWidth - 10;
-        }
-    }
-
-    tooltip.style.top = topPos + 'px';
-    tooltip.style.left = leftPos + 'px';
+    const anchorRect = parentDropdown ? parentDropdown.getBoundingClientRect() : rect;
+    const preferTop = el.getAttribute('data-tooltip-position') === 'top'
+        || el.hasAttribute('data-prefer-top')
+        || el.classList.contains('combat-spell-card');
+    positionFloatingTooltip(tooltip, rect, anchorRect, {
+        preferSide: isChildTooltip,
+        preferTop
+    });
 }
 
 export function hideGlobalTooltip(immediate = false) {
@@ -1118,45 +1139,10 @@ export function showEffectTooltip(el, text) {
 
     const parentTooltip = el.closest ? el.closest('#globalFixedTooltip') : null;
     const anchorRect = parentTooltip ? parentTooltip.getBoundingClientRect() : el.getBoundingClientRect();
-    const tooltipHeight = tooltip.offsetHeight;
-    const tooltipWidth = tooltip.offsetWidth;
-
-    let topPos;
-    let leftPos;
-
-    if (parentTooltip) {
-        topPos = anchorRect.top - tooltipHeight - 8;
-        leftPos = anchorRect.left + anchorRect.width / 2 - tooltipWidth / 2;
-        if (topPos < 10) {
-            if (anchorRect.right + tooltipWidth + 12 <= window.innerWidth) {
-                topPos = Math.max(10, anchorRect.top);
-                leftPos = anchorRect.right + 8;
-            } else if (anchorRect.left - tooltipWidth - 12 >= 0) {
-                topPos = Math.max(10, anchorRect.top);
-                leftPos = anchorRect.left - tooltipWidth - 8;
-            } else {
-                topPos = anchorRect.bottom + 8;
-            }
-        }
-    } else {
-        topPos = anchorRect.bottom + 8;
-        leftPos = anchorRect.left + anchorRect.width / 2 - tooltipWidth / 2;
-        if (topPos + tooltipHeight > window.innerHeight) {
-            topPos = anchorRect.top - tooltipHeight - 8;
-        }
-    }
-
-    if (leftPos < 10) leftPos = 10;
-    if (leftPos + tooltipWidth > window.innerWidth - 10) {
-        leftPos = window.innerWidth - tooltipWidth - 10;
-    }
-    if (topPos < 10) topPos = 10;
-    if (topPos + tooltipHeight > window.innerHeight - 10) {
-        topPos = Math.max(10, window.innerHeight - tooltipHeight - 10);
-    }
-
-    tooltip.style.top = topPos + 'px';
-    tooltip.style.left = leftPos + 'px';
+    positionFloatingTooltip(tooltip, anchorRect, anchorRect, {
+        preferSide: false,
+        preferTop: Boolean(parentTooltip)
+    });
 }
 
 export function showEffectTooltipFromEl(el) {

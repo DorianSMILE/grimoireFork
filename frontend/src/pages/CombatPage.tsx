@@ -18,7 +18,7 @@ export function CombatPage() {
         await importDynamic('/js/services/auth.js?v=32');
         if (cancelled) return;
 
-        await importDynamic('/js/combat/combat-state.js?v=1786180000241');
+        await importDynamic('/js/combat/combat-state.js?v=1786180000242');
         if (cancelled) return;
 
         if (typeof window.initCombatPage === 'function') {
@@ -460,15 +460,28 @@ export function CombatPage() {
 
         <div className="csp-sidebar csp-sidebar-right">
           <button
-            className="action-btn attack mb-2 w-full justify-center whitespace-nowrap"
+            className="action-btn attack disabled mb-2 w-full justify-center whitespace-nowrap"
             id="btnAttack"
             type="button"
-            onClick={() => window.initiateCombatCast?.(null)}
-            disabled
+            aria-disabled="true"
+            onClick={(e) => {
+              if (
+                e.currentTarget.disabled ||
+                e.currentTarget.classList.contains('disabled') ||
+                e.currentTarget.classList.contains('pending-cast')
+              ) {
+                return;
+              }
+              window.initiateCombatCast?.(null);
+            }}
           >
             <span className="material-symbols-outlined">swords</span>
             Attaque
           </button>
+          <div
+            id="btnAttackPending"
+            className="action-btn attack pending-cast mb-2 w-full justify-center is-hidden"
+          ></div>
 
           <div className="flex-1"></div>
 

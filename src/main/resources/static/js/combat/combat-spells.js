@@ -1,9 +1,9 @@
-import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000240';
-import { updateUI } from './combat-ui.js?v=1786180000240';
+import { pageState, setButtonsProcessing } from './combat-state.js?v=1786180000242';
+import { updateUI } from './combat-ui.js?v=1786180000242';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { triggerCombatActionSprite } from './combat-sprites.js';
+import { triggerCombatActionSprite } from './combat-sprites.js?v=1786180000242';
 
 
 export function initiateCombatCast(spellId) {
@@ -120,10 +120,11 @@ export function initiateCombatCast(spellId) {
     }
 
     const cardEl = spellId ? document.getElementById(`spell-card-${spellId}`) : document.getElementById('btnAttack');
+    const pendingAttackEl = document.getElementById('btnAttackPending');
 
     // Disable all other buttons (except flee)
     document.querySelectorAll('.combat-spell-card, .action-btn:not(.flee), .filter-radio, .filter-chip').forEach(btn => {
-        if (btn !== cardEl) {
+        if (btn !== cardEl && btn !== pendingAttackEl) {
             btn.classList.add('disabled');
         }
     });
@@ -167,15 +168,21 @@ export function initiateCombatCast(spellId) {
         }
         cardEl.appendChild(overlay);
     } else if (cardEl) {
-        // Attack button
-        cardEl.dataset.originalHtml = cardEl.innerHTML;
-        if (multiEnemy) {
-            cardEl.innerHTML = `<div class="flex-col items-center gap-xs"><span class="text-xs text-subtle">Ciblez un ennemi</span> <button class="btn-combat-danger" onclick="event.stopPropagation(); cancelCombatCast()" >Annuler</button></div>`;
+        // Attack button: render action buttons in sibling container to avoid nesting <button> inside <button>
+        const targetContainer = pendingAttackEl || cardEl;
+        if (pendingAttackEl) {
+            cardEl.classList.add('is-hidden');
+            pendingAttackEl.classList.remove('is-hidden', 'disabled');
         } else {
-            cardEl.innerHTML = `
+            cardEl.dataset.originalHtml = cardEl.innerHTML;
+        }
+        if (multiEnemy) {
+            targetContainer.innerHTML = `<div class="flex-col items-center gap-xs"><span class="text-xs text-subtle">Ciblez un ennemi</span> <button class="btn-combat-danger" type="button" onclick="event.stopPropagation(); cancelCombatCast()" >Annuler</button></div>`;
+        } else {
+            targetContainer.innerHTML = `
                 <div class="flex-center gap-sm">
-                    <button class="btn-combat-success" onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" >Lancer</button>
-                    <button class="btn-combat-danger" onclick="event.stopPropagation(); cancelCombatCast()" >Annuler</button>
+                    <button class="btn-combat-success" type="button" onclick="event.stopPropagation(); confirmCombatCast(null, 'direct')" >Lancer</button>
+                    <button class="btn-combat-danger" type="button" onclick="event.stopPropagation(); cancelCombatCast()" >Annuler</button>
                 </div>
             `;
             enemyCards.forEach(card => card.classList.add('target-highlight'));
@@ -291,29 +298,45 @@ export function cancelCombatCast() {
     if (prompt) prompt.remove();
 
     // Remove pending-cast styles and restore buttons
+    const pendingAttackEl = document.getElementById('btnAttackPending');
+    if (pendingAttackEl) {
+        pendingAttackEl.classList.add('is-hidden');
+        pendingAttackEl.innerHTML = '';
+    }
     document.querySelectorAll('.pending-cast').forEach(el => {
-        el.classList.remove('pending-cast');
+        if (el !== pendingAttackEl) {
+            el.classList.remove('pending-cast');
+        }
         const overlay = el.querySelector('.spell-cast-overlay');
         if (overlay) overlay.remove();
 
         // Restore original content if we replaced it (for attack button)
-        if (el.id === 'btnAttack' && el.dataset.originalHtml) {
-            el.innerHTML = el.dataset.originalHtml;
+        if (el.id === 'btnAttack') {
+            el.classList.remove('is-hidden');
+            if (el.dataset.originalHtml) {
+                el.innerHTML = el.dataset.originalHtml;
+            }
         }
     });
 
     // Enable all buttons
     document.querySelectorAll('.combat-spell-card, .action-btn, .filter-radio').forEach(btn => {
-        btn.classList.remove('disabled');
-        btn.classList.remove('disabled');
+        if (btn !== pendingAttackEl) {
+            btn.classList.remove('disabled');
+        }
     });
 
     // Attack button specific disable check
     const btnAttack = document.getElementById('btnAttack');
-    const isPlayerChanneling = pageState.currentSessionData && pageState.currentSessionData.activePlayer && pageState.currentSessionData.activePlayer.remainingChannelingTurns > 0;
-    if (btnAttack && pageState.currentSessionData && pageState.currentSessionData.activePlayer && (pageState.currentSessionData.activePlayer.banalSpellCastThisTurn || isPlayerChanneling)) {
-        btnAttack.classList.add('disabled');
-        btnAttack.classList.add('disabled');
+    if (btnAttack) {
+        btnAttack.classList.remove('is-hidden');
+        const isPlayerChanneling = pageState.currentSessionData && pageState.currentSessionData.activePlayer && pageState.currentSessionData.activePlayer.remainingChannelingTurns > 0;
+        const cannotAttack = Boolean(pageState.currentSessionData && pageState.currentSessionData.activePlayer && (pageState.currentSessionData.activePlayer.banalSpellCastThisTurn || isPlayerChanneling));
+        btnAttack.disabled = cannotAttack;
+        btnAttack.setAttribute('aria-disabled', String(cannotAttack));
+        if (cannotAttack) {
+            btnAttack.classList.add('disabled');
+        }
     }
 
     pageState.pendingCastSpellId = null;

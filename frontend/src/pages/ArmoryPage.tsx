@@ -31,10 +31,10 @@ export function ArmoryPage() {
         armoryCssLink.href = targetCssHref;
       }
 
-      const uiUrl = '/js/ui.js?v=2';
+      const uiUrl = '/js/ui.js?v=1786180000232';
       const authUrl = '/js/services/auth.js?v=32';
       const spiderUrl = '/js/pages/hero-spider.js?v=19';
-      const armoryUrl = '/js/pages/armory.js?v=123';
+      const armoryUrl = '/js/pages/armory.js?v=124';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

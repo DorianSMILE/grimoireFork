@@ -1,13 +1,13 @@
 import { shakeStyle } from './combat-utils.js?v=1786180000234';
-import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000240';
-import { updateUI, renderSpells } from './combat-ui.js?v=1786180000241';
-import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000240';
-import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000240';
-import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000241';
+import { initMultiSSE, closeMultiSSE } from './combat-socket.js?v=1786180000242';
+import { updateUI, renderSpells } from './combat-ui.js?v=1786180000242';
+import { currentSpellsTab, setCurrentSpellsTab, initiateCombatCast, confirmCombatCast, cancelCombatCast, doAction } from './combat-spells.js?v=1786180000242';
+import { endTurn, nextRoom, openStrangeDoor, acceptAlteration, useRope, buyMerchantItem, openBuyModal, closeBuyModal, addLootedConsumable, openChest } from './combat-actions.js?v=1786180000242';
+import { loadAnomaliesCombat, resumeCombat, startCombat, fetchCombatEquipments } from './combat-init.js?v=1786180000242';
 import * as ui from '../ui.js?v=1786180000231';
 import { getSpellEffectsSummaryHtml, getCalculatedSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
-import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000240';
+import { initCombatSignals, showFighterPingMenu } from './combat-signals.js?v=1786180000242';
 
 window.showFighterPingMenu = showFighterPingMenu;
 
@@ -97,13 +97,16 @@ pageState.pendingNeedsAlly = false;
 export function setButtonsProcessing(isProc) {
     const buttons = document.querySelectorAll('.action-btn:not(.flee), .btn');
     buttons.forEach(btn => {
+        if (btn.id === 'btnAttackPending') return;
         if (isProc) {
             btn.disabled = true;
             btn.classList.add('disabled');
+            if (btn.id === 'btnAttack') btn.setAttribute('aria-disabled', 'true');
         } else {
             if (!btn.classList.contains('waiting-ready') && !btn.classList.contains('is-disabled')) {
                 btn.disabled = false;
                 btn.classList.remove('disabled');
+                if (btn.id === 'btnAttack') btn.setAttribute('aria-disabled', 'false');
             }
         }
     });
@@ -220,6 +223,20 @@ window.initCombatPage = async function () {
     pageState.currentSessionData = null;
     pageState.combatEquipments = {};
     pageState.selectedSpellChoices = {};
+    window.combatIsMyTurn = true;
+
+    const btnAttackInit = document.getElementById('btnAttack');
+    if (btnAttackInit) {
+        btnAttackInit.disabled = true;
+        btnAttackInit.classList.add('disabled');
+        btnAttackInit.classList.remove('is-hidden', 'pending-cast');
+        btnAttackInit.setAttribute('aria-disabled', 'true');
+    }
+    const btnAttackPendingInit = document.getElementById('btnAttackPending');
+    if (btnAttackPendingInit) {
+        btnAttackPendingInit.classList.add('is-hidden');
+        btnAttackPendingInit.innerHTML = '';
+    }
 
     window.dungeonMusic = null;
 
@@ -357,6 +374,7 @@ window.initCombatPage = async function () {
 
 window.cleanupCombatPage = function () {
     closeMultiSSE();
+    window.combatIsMyTurn = true;
     if (_combatTutorialObserver) {
         _combatTutorialObserver.disconnect();
         _combatTutorialObserver = null;

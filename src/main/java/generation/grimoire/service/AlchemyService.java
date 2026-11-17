@@ -329,14 +329,12 @@ public class AlchemyService {
         if (recipe.getRewardType() == RecipeRewardType.GIVE_ANOMALY
                 || recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
                 || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
-            int level = recipe.getRewardLevel();
-            AnomalieType anomType = AnomalieType.fromLevel(level);
+            int level = Math.max(1, recipe.getRewardLevel());
+            AnomalieType fallbackType = AnomalieType.MAGIQUE;
             if (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST) {
-                level = 4;
-                anomType = AnomalieType.CATALYSEUR;
+                fallbackType = AnomalieType.CATALYSEUR;
             } else if (recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
-                level = 5;
-                anomType = AnomalieType.EVEIL;
+                fallbackType = AnomalieType.EVEIL;
             }
             for (int i = 0; i < recipe.getRewardQuantity(); i++) {
                 Anomalie anomaly = new Anomalie();
@@ -344,23 +342,23 @@ public class AlchemyService {
                 anomaly.setOwnerUsername(username);
                 anomaly.setUser(user);
                 anomaly.setLevel(level);
-                anomaly.setAnomalieType(anomType);
-                
-                // Cherche un template existant pour copier la spiritualité et la catégorie
+                anomaly.setAnomalieType(fallbackType);
+
+                // Cherche un template existant pour copier spiritualité, catégorie, niveau et type
                 Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
                 if (template != null) {
                     anomaly.setSpiritualite(template.getSpiritualite());
                     anomaly.setCategory(template.getCategory());
                     anomaly.setDescription(template.getDescription());
-                    anomaly.setMagicObject(template.isMagicObject());
-                    if (template.getAnomalieType() != null) {
-                        anomaly.setAnomalieType(template.getAnomalieType());
+                    if (template.getLevel() != null) {
+                        anomaly.setLevel(template.getLevel());
                     }
+                    anomaly.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : fallbackType);
                 } else {
-                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA); 
+                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA);
                     anomaly.setCategory(generation.grimoire.enumeration.AnomalieCategory.AUTRE);
                 }
-                
+
                 anomalieRepository.save(anomaly);
             }
             if (user != null) user.getDiscoveredItems().add(recipe.getRewardName());

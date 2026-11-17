@@ -116,6 +116,21 @@ public class EnumMetaController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/anomalie-types")
+    public List<Map<String, String>> getAnomalieTypes() {
+        return Arrays.stream(AnomalieType.values())
+                .map(e -> {
+                    Map<String, String> m = new LinkedHashMap<>();
+                    m.put("name", e.name());
+                    m.put("label", e.getLabel());
+                    m.put("description", e.getDescription());
+                    m.put("icon", e.getIcon());
+                    m.put("cssClass", e.getCssClass());
+                    return m;
+                })
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/stat-types")
     public List<Map<String, String>> getStatTypes() {
         return Arrays.stream(StatType.values())
@@ -175,6 +190,7 @@ public class EnumMetaController {
         allMeta.put("sources", getSources());
         allMeta.put("consumableCategories", getConsumableCategories());
         allMeta.put("anomalieCategories", getAnomalieCategories());
+        allMeta.put("anomalieTypes", getAnomalieTypes());
         allMeta.put("statTypes", getStatTypes());
         allMeta.put("castingTypes", getCastingTypes());
         allMeta.put("tutorialSteps", getTutorialSteps());

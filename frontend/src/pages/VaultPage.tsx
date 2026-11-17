@@ -1189,34 +1189,36 @@ export function VaultPage() {
                 </div>
               </div>
 
-              <div className="mb-6 flex-between bg-black/20 p-4 rounded-lg border border-purple-500/20">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm text-slate-50 font-medium flex-center-gap">
-                    <span
-                      className="material-symbols-outlined text-fuchsia-500 text-lg"
-                      id="anomalieMagicToggleIcon"
-                    >
-                      star
+              <div className="eq-create-field mb-4">
+                <label>Type d&apos;Anomalie</label>
+                <div className="custom-select-wrapper z-10" id="anomalieTypeWrapper" tabIndex={0}>
+                  <div className="custom-select-trigger" id="anomalieTypeTrigger">
+                    <span className="cs-label" id="anomalieTypeLabel">
+                      <span className="material-symbols-outlined cs-icon text-fuchsia-400">star</span>{' '}
+                      Magique
                     </span>
-                    <span id="anomalieMagicToggleText">Magique</span>
-                  </span>
-                  <span className="text-muted text-xs">
-                    Désactivez pour en faire un Matériau.
-                  </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">expand_more</span>
+                  </div>
+                  <div className="custom-select-options" id="anomalieTypeOptions">
+                    <div className="custom-option" data-value="MAGIQUE">
+                      <span className="material-symbols-outlined cs-icon text-fuchsia-400">star</span>{' '}
+                      Magique
+                    </div>
+                    <div className="custom-option" data-value="MATERIAU">
+                      <span className="material-symbols-outlined cs-icon text-amber-500">category</span>{' '}
+                      Matériau
+                    </div>
+                    <div className="custom-option" data-value="CATALYSEUR">
+                      <span className="material-symbols-outlined cs-icon text-sky-400">bolt</span>{' '}
+                      Catalyseur
+                    </div>
+                    <div className="custom-option" data-value="EVEIL">
+                      <span className="material-symbols-outlined cs-icon text-amber-400">auto_awesome</span>{' '}
+                      Éveil
+                    </div>
+                  </div>
+                  <input type="hidden" id="anomalieType" defaultValue="MAGIQUE" />
                 </div>
-                <label className="magic-toggle-switch" htmlFor="anomalieMagicToggle">
-                  <input
-                    className="magic-toggle-input"
-                    type="checkbox"
-                    id="anomalieMagicToggle"
-                    aria-label="Statut magique"
-                    defaultChecked
-                    onChange={(e) => window.onAnomalieMagicToggleChange?.(e.currentTarget)}
-                  />
-                  <span className="anomalie-slider-bg">
-                    <span className="anomalie-slider-thumb"></span>
-                  </span>
-                </label>
               </div>
 
               <div className="eq-create-field mb-6">
@@ -1249,12 +1251,12 @@ export function VaultPage() {
                       Niveau 3
                     </div>
                     <div className="custom-option" data-value="4">
-                      <span className="material-symbols-outlined cs-icon text-mana">bolt</span>{' '}
-                      Niveau 4 (Catalyseur)
+                      <span className="material-symbols-outlined cs-icon text-mana">looks_4</span>{' '}
+                      Niveau 4
                     </div>
                     <div className="custom-option" data-value="5">
-                      <span className="material-symbols-outlined cs-icon text-warning">upgrade</span>{' '}
-                      Niveau 5 (Éveil)
+                      <span className="material-symbols-outlined cs-icon text-warning">looks_5</span>{' '}
+                      Niveau 5
                     </div>
                   </div>
                   <input type="hidden" id="anomalieLevel" defaultValue="1" />

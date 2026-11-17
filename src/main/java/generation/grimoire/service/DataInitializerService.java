@@ -39,7 +39,45 @@ public class DataInitializerService {
         private final generation.grimoire.repository.AlchemyRecipeRepository alchemyRecipeRepository;
         private final generation.grimoire.repository.PersonnageRepository personnageRepository;
         private final jakarta.persistence.EntityManager entityManager;
+        private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
+        @jakarta.annotation.PostConstruct
+        public void migrateLegacyAnomalieTypes() {
+                try {
+                        List<String> tables = jdbcTemplate.queryForList(
+                                        "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'anomalie' LIMIT 1",
+                                        String.class);
+                        if (tables.isEmpty()) {
+                                return;
+                        }
+                        String tableName = tables.get(0);
+                        Integer colCount = jdbcTemplate.queryForObject(
+                                        "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'is_magic_object'",
+                                        Integer.class,
+                                        tableName);
+                        if (colCount != null && colCount > 0) {
+                                int updated = jdbcTemplate.update(
+                                                "UPDATE `" + tableName + "` SET anomalie_type = CASE " +
+                                                "WHEN anomalie_type IN ('CATALYSEUR', 'EVEIL') THEN anomalie_type " +
+                                                "WHEN is_magic_object = 0 THEN 'MATERIAU' " +
+                                                "ELSE 'MAGIQUE' END " +
+                                                "WHERE anomalie_type = 'STANDARD' OR anomalie_type IS NULL OR anomalie_type = ''");
+                                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` DROP COLUMN is_magic_object");
+                                log.info("Migration anomalie_type effectuée ({} lignes mises à jour, colonne is_magic_object supprimée).", updated);
+                        } else {
+                                int updated = jdbcTemplate.update(
+                                                "UPDATE `" + tableName + "` SET anomalie_type = 'MAGIQUE' " +
+                                                "WHERE anomalie_type = 'STANDARD' OR anomalie_type IS NULL OR anomalie_type = ''");
+                                if (updated > 0) {
+                                        log.info("Migration anomalie_type STANDARD -> MAGIQUE ({} lignes).", updated);
+                                }
+                        }
+                } catch (Exception e) {
+                        log.warn("Migration anomalie_type ignorée ou échouée : {}", e.getMessage());
+                }
+        }
+
+        @org.springframework.core.annotation.Order(1)
         @EventListener(ApplicationReadyEvent.class)
         @Transactional
         public void initStandardEntities() {
@@ -336,9 +374,8 @@ public class DataInitializerService {
                         if (a.getName() != null) {
                                 existingTemplateNames.add(a.getName().toLowerCase());
                         }
-                        generation.grimoire.enumeration.AnomalieType expectedType = generation.grimoire.enumeration.AnomalieType.fromLevel(a.getLevel());
-                        if (a.getAnomalieType() != expectedType) {
-                                a.setAnomalieType(expectedType);
+                        if (a.getAnomalieType() == null) {
+                                a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.MAGIQUE);
                                 anomalieRepository.save(a);
                         }
                 }
@@ -388,71 +425,41 @@ public class DataInitializerService {
                         new SeedAnomalieSpec("Cœur Lithique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 3, "Noyau tellurique massif qui ancre la matière environnante dans la roche.")
                 );
 
-                // 2. 12 Catalyseurs (Niv. 4) + 12 Anomalies d'Éveil (Niv. 5)
-                List<SeedAnomalieSpec> awakeningAnomalies = List.of(
-                        // 5 Secrets existants
+                // 2. 12 Catalyseurs + 12 Anomalies d'Éveil
+                List<SeedAnomalieSpec> catalystSpecs = List.of(
                         new SeedAnomalieSpec("Éclat de Chaos", generation.grimoire.enumeration.SpiritualiteType.DESTRUCTION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 4, "Catalyseur incandescent stabilisant les flammes du Secret du Chaos."),
-                        new SeedAnomalieSpec("Cœur de Cendre", generation.grimoire.enumeration.SpiritualiteType.DESTRUCTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil ultime concentrant la braise primordiale du Chaos."),
-
                         new SeedAnomalieSpec("Fragment du Destin", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.JETON, 4, "Catalyseur équilibrant la balance karmique d'une relique du Destin."),
-                        new SeedAnomalieSpec("Prisme Karmique", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil révélant les fils invisibles du Secret du Destin."),
-
                         new SeedAnomalieSpec("Souffle d'Éther", generation.grimoire.enumeration.SpiritualiteType.ESPRIT, generation.grimoire.enumeration.AnomalieCategory.ORBE, 4, "Catalyseur lumineux purifiant l'aura des artefacts de l'Éther."),
-                        new SeedAnomalieSpec("Cœur Empyréen", generation.grimoire.enumeration.SpiritualiteType.ESPRIT, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil rayonnante scellant la transcendance de l'Éther."),
-
                         new SeedAnomalieSpec("Résidu Abyssal", generation.grimoire.enumeration.SpiritualiteType.TENEBRES, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur obscur distillant la substance froide des Abysses."),
-                        new SeedAnomalieSpec("Noyau Néant", generation.grimoire.enumeration.SpiritualiteType.TENEBRES, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil engloutissant la lumière pour éveiller les reliques abyssales."),
-
                         new SeedAnomalieSpec("Sève Mutagène", generation.grimoire.enumeration.SpiritualiteType.CREATION, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur organique accélérant la croissance des artefacts d'Abondance."),
-                        new SeedAnomalieSpec("Ambre Parasitaire", generation.grimoire.enumeration.SpiritualiteType.CREATION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil symbiotique décuplant la vitalité d'une relique."),
-
-                        // 6 Voies complémentaires
                         new SeedAnomalieSpec("Braises de Conviction", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 4, "Catalyseur de lave cristallisée fortifiant les équipements de Conviction."),
-                        new SeedAnomalieSpec("Cœur de Lave Pure", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil en fusion absolue forgée au cœur de la Conviction."),
-
                         new SeedAnomalieSpec("Larme de Pression", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur aqueux condensé stabilisant les reliques de Sûreté."),
-                        new SeedAnomalieSpec("Perle des Profondeurs", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil abyssale impénétrable forgée sous la pression."),
-
                         new SeedAnomalieSpec("Ondes de Gravité", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.CUBE, 4, "Catalyseur vibratoire accordant les artefacts liés à la Raison."),
-                        new SeedAnomalieSpec("Singularité Lucide", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil gravitationnelle concentrant la rigueur de la Raison."),
-
                         new SeedAnomalieSpec("Éclat Déflagrant", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.METAL, 4, "Catalyseur explosif amplifiant la brutalité des artefacts de Violence."),
-                        new SeedAnomalieSpec("Noyau de Fureur", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil détonante libérant l'énergie pure de la Violence."),
-
                         new SeedAnomalieSpec("Fiole Corrosive", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur venimeux imprégnant l'acier des armes de Trahison."),
-                        new SeedAnomalieSpec("Venin Souverain", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.CRANE, 5, "Anomalie d'éveil acide parachevant les reliques les plus perfides."),
-
                         new SeedAnomalieSpec("Noyau Tellurique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 4, "Catalyseur minéral renforçant la structure des équipements de Consolidation."),
-                        new SeedAnomalieSpec("Monolithe Éternel", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.CUBE, 5, "Anomalie d'éveil tellurique inébranlable scellant la Consolidation."),
+                        new SeedAnomalieSpec("Poussière d'Éveil", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 4, "Catalyseur universel raffiné permettant d'éveiller tout équipement sans Secret.")
+                );
 
-                        // Générique (sans Secret requis)
-                        new SeedAnomalieSpec("Poussière d'Éveil", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 4, "Catalyseur universel raffiné permettant d'éveiller tout équipement sans Secret."),
+                List<SeedAnomalieSpec> eveilSpecs = List.of(
+                        new SeedAnomalieSpec("Cœur de Cendre", generation.grimoire.enumeration.SpiritualiteType.DESTRUCTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil ultime concentrant la braise primordiale du Chaos."),
+                        new SeedAnomalieSpec("Prisme Karmique", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil révélant les fils invisibles du Secret du Destin."),
+                        new SeedAnomalieSpec("Cœur Empyréen", generation.grimoire.enumeration.SpiritualiteType.ESPRIT, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil rayonnante scellant la transcendance de l'Éther."),
+                        new SeedAnomalieSpec("Noyau Néant", generation.grimoire.enumeration.SpiritualiteType.TENEBRES, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil engloutissant la lumière pour éveiller les reliques abyssales."),
+                        new SeedAnomalieSpec("Ambre Parasitaire", generation.grimoire.enumeration.SpiritualiteType.CREATION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil symbiotique décuplant la vitalité d'une relique."),
+                        new SeedAnomalieSpec("Cœur de Lave Pure", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil en fusion absolue forgée au cœur de la Conviction."),
+                        new SeedAnomalieSpec("Perle des Profondeurs", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil abyssale impénétrable forgée sous la pression."),
+                        new SeedAnomalieSpec("Singularité Lucide", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil gravitationnelle concentrant la rigueur de la Raison."),
+                        new SeedAnomalieSpec("Noyau de Fureur", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil détonante libérant l'énergie pure de la Violence."),
+                        new SeedAnomalieSpec("Venin Souverain", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.CRANE, 5, "Anomalie d'éveil acide parachevant les reliques les plus perfides."),
+                        new SeedAnomalieSpec("Monolithe Éternel", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.CUBE, 5, "Anomalie d'éveil tellurique inébranlable scellant la Consolidation."),
                         new SeedAnomalieSpec("Pierre d'Ascension", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 5, "Anomalie d'éveil universelle gravée de runes transversales d'ascension.")
                 );
 
-                List<SeedAnomalieSpec> allToSeed = new java.util.ArrayList<>(baseMissing);
-                allToSeed.addAll(awakeningAnomalies);
-
                 int createdAnomalies = 0;
-                for (SeedAnomalieSpec spec : allToSeed) {
-                        if (existingTemplateNames.contains(spec.name().toLowerCase())) {
-                                continue;
-                        }
-                        generation.grimoire.entity.Anomalie a = new generation.grimoire.entity.Anomalie();
-                        a.setName(spec.name());
-                        a.setSpiritualite(spec.spiritualite());
-                        a.setCategory(spec.category());
-                        a.setLevel(spec.level());
-                        a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(spec.level()));
-                        a.setDescription(spec.description());
-                        a.setMagicObject(spec.level() >= 4);
-                        a.setTemplate(true);
-                        a.setOwnerUsername("MODELE");
-                        a.setUser(null);
-                        anomalieRepository.save(a);
-                        existingTemplateNames.add(spec.name().toLowerCase());
-                        createdAnomalies++;
-                }
+                createdAnomalies += seedMissingAnomalies(baseMissing, generation.grimoire.enumeration.AnomalieType.MATERIAU, existingTemplateNames);
+                createdAnomalies += seedMissingAnomalies(catalystSpecs, generation.grimoire.enumeration.AnomalieType.CATALYSEUR, existingTemplateNames);
+                createdAnomalies += seedMissingAnomalies(eveilSpecs, generation.grimoire.enumeration.AnomalieType.EVEIL, existingTemplateNames);
 
                 // 3. 24 recettes alchimiques (12 Catalyseurs + 12 Éveils)
                 List<generation.grimoire.entity.AlchemyRecipe> existingRecipes = alchemyRecipeRepository.findAll();
@@ -586,6 +593,32 @@ public class DataInitializerService {
                 if (createdAnomalies > 0 || createdRecipes > 0) {
                         log.info("Éveil initialisé : {} anomalies et {} recettes créées.", createdAnomalies, createdRecipes);
                 }
+        }
+
+        private int seedMissingAnomalies(
+                        List<SeedAnomalieSpec> specs,
+                        generation.grimoire.enumeration.AnomalieType type,
+                        java.util.Set<String> existingTemplateNames) {
+                int created = 0;
+                for (SeedAnomalieSpec spec : specs) {
+                        if (existingTemplateNames.contains(spec.name().toLowerCase())) {
+                                continue;
+                        }
+                        generation.grimoire.entity.Anomalie a = new generation.grimoire.entity.Anomalie();
+                        a.setName(spec.name());
+                        a.setSpiritualite(spec.spiritualite());
+                        a.setCategory(spec.category());
+                        a.setLevel(spec.level());
+                        a.setAnomalieType(type);
+                        a.setDescription(spec.description());
+                        a.setTemplate(true);
+                        a.setOwnerUsername("MODELE");
+                        a.setUser(null);
+                        anomalieRepository.save(a);
+                        existingTemplateNames.add(spec.name().toLowerCase());
+                        created++;
+                }
+                return created;
         }
 
         private record SeedAnomalieSpec(

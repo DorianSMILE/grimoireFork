@@ -144,6 +144,19 @@ function applyMeta(allMeta) {
         });
     }
 
+    window.ANOMALIE_TYPES = {};
+    if (allMeta.anomalieTypes) {
+        allMeta.anomalieTypes.forEach(t => {
+            window.ANOMALIE_TYPES[t.name] = {
+                name: t.name,
+                label: t.label,
+                description: t.description,
+                icon: t.icon,
+                cssClass: t.cssClass
+            };
+        });
+    }
+
     if (allMeta.castingTypes) {
         window.CASTING_TYPES = window.CASTING_TYPES || {};
         allMeta.castingTypes.forEach(ct => {

@@ -14,6 +14,7 @@ public class HuntingQuestScheduler {
     private final HuntingQuestService huntingQuestService;
 
     /** Au démarrage de l'app, s'assurer qu'on a des quêtes actives */
+    @org.springframework.core.annotation.Order(10)
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         try {

@@ -91,13 +91,12 @@ public class EquipmentDismantleService {
                         a.setCategory(template.getCategory());
                         a.setDescription(template.getDescription());
                         a.setLevel(template.getLevel());
-                        a.setMagicObject(template.isMagicObject());
-                        a.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : AnomalieType.fromLevel(template.getLevel()));
+                        a.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : AnomalieType.MAGIQUE);
                     } else {
                         a.setSpiritualite(SpiritualiteType.KARMA);
                         a.setCategory(AnomalieCategory.AUTRE);
                         a.setLevel(1);
-                        a.setAnomalieType(AnomalieType.STANDARD);
+                        a.setAnomalieType(AnomalieType.MATERIAU);
                     }
                     createdAnomalies.add(a);
                 }

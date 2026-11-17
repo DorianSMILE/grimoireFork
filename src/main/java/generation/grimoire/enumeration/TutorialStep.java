@@ -331,8 +331,8 @@ public enum TutorialStep {
     AWAKENING_TAB_CATALYSTS(
             "AWAKENING",
             2,
-            "2. Catalyseurs (Niv. 4) & Éveils (Niv. 5)",
-            "Cet onglet regroupe les Catalyseurs (Niv. 4, requis pour +1/+2/+4/+5) et les Anomalies d'Éveil (Niv. 5, requis pour +3/+4/+5) liés au Secret ou au tronc générique de l'objet.",
+            "2. Catalyseurs & Anomalies d'Éveil",
+            "Cet onglet regroupe les Catalyseurs (requis pour +1/+2/+4/+5) et les Anomalies d'Éveil (requis pour +3/+4/+5) liés au Secret ou au tronc générique de l'objet.",
             "bolt",
             "#awakeningCatalystsPanel",
             "right",

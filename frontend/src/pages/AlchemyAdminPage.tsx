@@ -154,11 +154,11 @@ export function AlchemyAdminPage() {
                       </div>
                       <div className="custom-option" data-value="GIVE_CATALYST">
                         <span className="material-symbols-outlined cs-icon text-sky">bolt</span>{' '}
-                        Catalyseur (Niv. 4)
+                        Catalyseur
                       </div>
                       <div className="custom-option" data-value="GIVE_AWAKENING">
                         <span className="material-symbols-outlined cs-icon text-amber-400">upgrade</span>{' '}
-                        Anomalie d&apos;Éveil (Niv. 5)
+                        Anomalie d&apos;Éveil
                       </div>
                       <div className="custom-option" data-value="GIVE_CONSUMABLE">
                         <span className="material-symbols-outlined cs-icon text-success">
@@ -261,11 +261,11 @@ export function AlchemyAdminPage() {
                     </div>
                     <div className="custom-option" data-value="GIVE_CATALYST">
                       <span className="material-symbols-outlined cs-icon text-sky">bolt</span>{' '}
-                      Catalyseur (Niv. 4)
+                      Catalyseur
                     </div>
                     <div className="custom-option" data-value="GIVE_AWAKENING">
                       <span className="material-symbols-outlined cs-icon text-amber-400">upgrade</span>{' '}
-                      Anomalie d&apos;Éveil (Niv. 5)
+                      Anomalie d&apos;Éveil
                     </div>
                     <div className="custom-option" data-value="GIVE_CONSUMABLE">
                       <span className="material-symbols-outlined cs-icon text-success">

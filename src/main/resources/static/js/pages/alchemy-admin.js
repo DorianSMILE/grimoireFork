@@ -132,14 +132,6 @@ async function updateRewardNameInput() {
         if (type === 'UNLOCK_FEATURE') {
             levelInput.disabled = false;
             levelInput.style.opacity = '1';
-        } else if (type === 'GIVE_CATALYST') {
-            levelInput.disabled = true;
-            levelInput.style.opacity = '0.5';
-            levelInput.value = 4;
-        } else if (type === 'GIVE_AWAKENING') {
-            levelInput.disabled = true;
-            levelInput.style.opacity = '0.5';
-            levelInput.value = 5;
         } else {
             levelInput.disabled = true;
             levelInput.style.opacity = '0.5';
@@ -152,10 +144,12 @@ async function updateRewardNameInput() {
 
     if (type === 'GIVE_ANOMALY' || type === 'GIVE_CATALYST' || type === 'GIVE_AWAKENING') {
         const filteredAnoms = pageState.allAnomalies.filter(a => {
-            const lvl = a.level || 1;
-            if (type === 'GIVE_CATALYST') return lvl === 4;
-            if (type === 'GIVE_AWAKENING') return lvl === 5;
-            return lvl <= 3;
+            const aType = typeof getAnomalieTypeName === 'function'
+                ? getAnomalieTypeName(a)
+                : (typeof a.anomalieType === 'object' ? a.anomalieType?.name : a.anomalieType);
+            if (type === 'GIVE_CATALYST') return aType === 'CATALYSEUR';
+            if (type === 'GIVE_AWAKENING') return aType === 'EVEIL';
+            return aType === 'MAGIQUE' || aType === 'MATERIAU' || !aType;
         });
         filteredAnoms.forEach(a => {
             const catIcon = a.category ? (getCategoryIcon(a.category)) : 'star';
@@ -437,7 +431,7 @@ function renderAdminRecipesList() {
         let rewardHtml = '';
         if (r.rewardType === 'GIVE_ANOMALY' || r.rewardType === 'GIVE_CATALYST' || r.rewardType === 'GIVE_AWAKENING') {
             const aTemp = pageState.allAnomalies.find(a => a.name === r.rewardName);
-            const typeTag = r.rewardType === 'GIVE_CATALYST' ? ' [Catalyseur Niv. 4]' : (r.rewardType === 'GIVE_AWAKENING' ? ' [Éveil Niv. 5]' : '');
+            const typeTag = r.rewardType === 'GIVE_CATALYST' ? ' [Catalyseur]' : (r.rewardType === 'GIVE_AWAKENING' ? ' [Éveil]' : '');
             if (aTemp) {
                 const catIcon = aTemp.category ? (getCategoryIcon(aTemp.category)) : 'star';
                 const spiriColor = aTemp.spiritualite ? getSpiritualiteColor(aTemp.spiritualite) : '#a855f7';

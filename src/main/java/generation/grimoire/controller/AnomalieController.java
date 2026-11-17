@@ -2,6 +2,7 @@ package generation.grimoire.controller;
 
 import generation.grimoire.entity.Anomalie;
 import generation.grimoire.entity.auth.AppUser;
+import generation.grimoire.enumeration.AnomalieType;
 import generation.grimoire.repository.AnomalieRepository;
 import generation.grimoire.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,7 +121,7 @@ public class AnomalieController {
                 newAno.setCategory(template.getCategory());
                 newAno.setDescription(template.getDescription());
                 newAno.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                newAno.setMagicObject(template.isMagicObject());
+                newAno.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : AnomalieType.MAGIQUE);
                 newAno.setOwnerUsername(adminUser.getUsername());
                 newAno.setUser(adminUser);
                 toSave.add(newAno);
@@ -190,9 +191,11 @@ public class AnomalieController {
         existing.setSpiritualite(anomalieDetails.getSpiritualite());
         existing.setCategory(anomalieDetails.getCategory());
         existing.setDescription(anomalieDetails.getDescription());
-        existing.setLevel(anomalieDetails.getLevel());
-        existing.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(existing.getLevel()));
-        existing.setMagicObject(anomalieDetails.isMagicObject());
+        existing.setLevel(anomalieDetails.getLevel() != null ? anomalieDetails.getLevel() : 1);
+        AnomalieType resolvedType = anomalieDetails.getAnomalieType() != null
+                ? anomalieDetails.getAnomalieType()
+                : (existing.getAnomalieType() != null ? existing.getAnomalieType() : AnomalieType.MAGIQUE);
+        existing.setAnomalieType(resolvedType);
 
         List<Anomalie> sameAnomalies = anomalieRepository.findByName(originalName);
         if (sameAnomalies != null) {
@@ -202,8 +205,7 @@ public class AnomalieController {
                 a.setCategory(existing.getCategory());
                 a.setDescription(existing.getDescription());
                 a.setLevel(existing.getLevel());
-                a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(existing.getLevel()));
-                a.setMagicObject(existing.isMagicObject());
+                a.setAnomalieType(existing.getAnomalieType());
             }
 
             renameCascadeService.cascadeAnomalyRename(originalName, existing.getName());
@@ -242,16 +244,18 @@ public class AnomalieController {
                 }
 
                 String originalName = existing.getName();
+                AnomalieType targetType = anomalie.getAnomalieType() != null
+                        ? anomalie.getAnomalieType()
+                        : (existing.getAnomalieType() != null ? existing.getAnomalieType() : AnomalieType.MAGIQUE);
+                int lvl = anomalie.getLevel() != null ? anomalie.getLevel() : 1;
                 List<Anomalie> sameAnomalies = anomalieRepository.findByName(originalName);
                 for (Anomalie a : sameAnomalies) {
                     a.setName(anomalie.getName());
                     a.setSpiritualite(anomalie.getSpiritualite());
                     a.setCategory(anomalie.getCategory());
                     a.setDescription(anomalie.getDescription());
-                    int lvl = anomalie.getLevel() != null ? anomalie.getLevel() : 1;
                     a.setLevel(lvl);
-                    a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(lvl));
-                    a.setMagicObject(anomalie.isMagicObject());
+                    a.setAnomalieType(targetType);
                 }
 
                 renameCascadeService.cascadeAnomalyRename(originalName, anomalie.getName());
@@ -263,7 +267,9 @@ public class AnomalieController {
 
         int lvl = anomalie.getLevel() != null ? anomalie.getLevel() : 1;
         anomalie.setLevel(lvl);
-        anomalie.setAnomalieType(generation.grimoire.enumeration.AnomalieType.fromLevel(lvl));
+        if (anomalie.getAnomalieType() == null) {
+            anomalie.setAnomalieType(AnomalieType.MAGIQUE);
+        }
 
         boolean isAdmin = "ADMIN".equals(userOpt.get().getRole());
         if (isAdmin) {

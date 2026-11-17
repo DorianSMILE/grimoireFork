@@ -1,4 +1,4 @@
-// Module dédié à l'Onglet 2 d'Alchimie : Catalyseurs (Niv. 4), Anomalies d'Éveil (Niv. 5) et Atelier d'Éveil (+0 à +5)
+// Module dédié à l'Onglet 2 d'Alchimie : Catalyseurs, Anomalies d'Éveil et Atelier d'Éveil (+0 à +5)
 (function () {
     const awakeningState = {
         userEquipments: [],
@@ -47,7 +47,7 @@
         const desc = createEl(
             'p',
             'text-sm text-muted max-w-[460px]',
-            "Terminez au moins un donjon de niveau 3 pour débloquer la forge des Catalyseurs (Niv. 4), des Anomalies d'Éveil (Niv. 5) et l'amélioration des équipements."
+            "Terminez au moins un donjon de niveau 3 pour débloquer la forge des Catalyseurs, des Anomalies d'Éveil et l'amélioration des équipements."
         );
         const link = createEl('a', 'awakening-locked-link');
         link.href = '/dungeons';
@@ -180,7 +180,7 @@
             const badge = createEl(
                 'span',
                 `awakening-status-pill ${isCat ? 'awakening-type-catalyst' : 'awakening-type-eveil'}`,
-                isCat ? 'Catalyseur Niv. 4' : 'Éveil Niv. 5'
+                isCat ? 'Catalyseur' : 'Éveil'
             );
             header.appendChild(title);
             header.appendChild(badge);
@@ -232,7 +232,7 @@
             if (sim.catalystRequired > 0) {
                 const okCat = sim.catalystOwned >= sim.catalystRequired;
                 const row = createEl('div', `awakening-cost-row ${okCat ? 'is-ok' : 'is-missing'}`);
-                row.appendChild(createEl('span', '', `${sim.catalystName} (Catalyseur Niv. 4)`));
+                row.appendChild(createEl('span', '', `${sim.catalystName} (Catalyseur)`));
                 row.appendChild(createEl('span', 'font-bold', `${sim.catalystOwned} / ${sim.catalystRequired}`));
                 costBox.appendChild(row);
             }
@@ -240,7 +240,7 @@
             if (sim.awakeningRequired > 0) {
                 const okAwk = sim.awakeningOwned >= sim.awakeningRequired;
                 const row = createEl('div', `awakening-cost-row ${okAwk ? 'is-ok' : 'is-missing'}`);
-                row.appendChild(createEl('span', '', `${sim.awakeningName} (Éveil Niv. 5)`));
+                row.appendChild(createEl('span', '', `${sim.awakeningName} (Éveil)`));
                 row.appendChild(createEl('span', 'font-bold', `${sim.awakeningOwned} / ${sim.awakeningRequired}`));
                 costBox.appendChild(row);
             }
@@ -450,8 +450,8 @@
         const filterPills = createEl('div', 'awakening-filter-pills');
         [
             { key: 'ALL', label: 'Tous' },
-            { key: 'GIVE_CATALYST', label: 'Catalyseurs (Niv. 4)' },
-            { key: 'GIVE_AWAKENING', label: 'Éveils (Niv. 5)' }
+            { key: 'GIVE_CATALYST', label: 'Catalyseurs' },
+            { key: 'GIVE_AWAKENING', label: 'Éveils' }
         ].forEach(f => {
             const pill = createEl(
                 'button',

@@ -332,29 +332,44 @@
     color: #e9d5ff;
 }
 
-.vault-anomaly-type-badge {
+.vault-anomaly-type-tag {
     display: inline-flex;
     align-items: center;
-    padding: 0.1rem 0.42rem;
+    padding: 0.06rem 0.4rem;
     border-radius: 5px;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-left: 0.35rem;
+    letter-spacing: 0.03em;
 }
 
-.vault-anomaly-type-badge.type-catalyst {
+.vault-anomaly-type-tag.type-magique {
+    background: rgba(236, 72, 153, 0.15);
+    border: 1px solid rgba(236, 72, 153, 0.45);
+    color: #f472b6;
+}
+
+.vault-anomaly-type-tag.type-materiau {
+    background: rgba(180, 83, 9, 0.18);
+    border: 1px solid rgba(217, 119, 6, 0.45);
+    color: #fbbf24;
+}
+
+.vault-anomaly-type-tag.type-catalyst {
     background: rgba(56, 189, 248, 0.18);
     border: 1px solid rgba(56, 189, 248, 0.55);
     color: #7dd3fc;
 }
 
-.vault-anomaly-type-badge.type-eveil {
+.vault-anomaly-type-tag.type-eveil {
     background: rgba(245, 158, 11, 0.2);
     border: 1px solid rgba(245, 158, 11, 0.65);
     color: #fcd34d;
 }
+
+.vault-anomaly-type-icon.type-magique { color: #f472b6; }
+.vault-anomaly-type-icon.type-materiau { color: #d97706; }
+.vault-anomaly-type-icon.type-catalyst { color: #38bdf8; }
+.vault-anomaly-type-icon.type-eveil { color: #f59e0b; }
 
 .dismantle-preview-box {
     margin-top: 0.9rem;

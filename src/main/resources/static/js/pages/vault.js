@@ -163,10 +163,12 @@ window.deleteAnomalie = function (idsStr) {
 }
 
 function getAnomalieCategoryType(eq) {
+    if (typeof getAnomalieTypeName === 'function') {
+        return getAnomalieTypeName(eq);
+    }
     const tName = typeof eq?.anomalieType === 'object' ? eq.anomalieType?.name : eq?.anomalieType;
-    if (tName === 'CATALYSEUR' || eq?.level === 4) return 'CATALYSEUR';
-    if (tName === 'EVEIL' || eq?.level === 5) return 'EVEIL';
-    return 'STANDARD';
+    if (tName === 'CATALYSEUR' || tName === 'EVEIL' || tName === 'MAGIQUE' || tName === 'MATERIAU') return tName;
+    return eq?.magicObject === false ? 'MATERIAU' : 'MAGIQUE';
 }
 
 function escapeAttr(val) {
@@ -500,10 +502,11 @@ function ensureVaultAnomalySubfilters(show) {
         bar.id = 'vaultAnomalySubfilters';
         bar.className = 'vault-anomaly-subfilters is-hidden';
         const defs = [
-            { key: 'ALL', label: 'Toutes les anomalies' },
-            { key: 'STANDARD', label: 'Anomalies (Niv. 1–3)' },
-            { key: 'CATALYSEUR', label: 'Catalyseurs (Niv. 4)' },
-            { key: 'EVEIL', label: "Anomalies d'Éveil (Niv. 5)" }
+            { key: 'ALL', label: 'Tous les types' },
+            { key: 'MAGIQUE', label: 'Magiques' },
+            { key: 'MATERIAU', label: 'Matériaux' },
+            { key: 'CATALYSEUR', label: 'Catalyseurs' },
+            { key: 'EVEIL', label: "Éveils" }
         ];
         if (!pageState.anomalySubFilter) pageState.anomalySubFilter = 'ALL';
         defs.forEach(d => {
@@ -704,14 +707,9 @@ function renderGrid(equipments) {
             const spColor = spColors[eq.spiritualite] || '#d946ef';
 
             const catIcon = window.CATEGORY_ICONS[eq.category] || 'category';
-
-            let typeIcon = 'star';
-            let nameIcon = catIcon;
-            let typeStr = 'Magique';
-            if (eq.magicObject === false) {
-                typeIcon = 'category';
-                typeStr = 'Matériau';
-            }
+            const typeInfo = typeof getAnomalieTypeInfo === 'function'
+                ? getAnomalieTypeInfo(eq)
+                : { name: getAnomalieCategoryType(eq), label: 'Magique', icon: 'star', badgeClass: 'type-magique' };
 
             const badgeHtml = (eq.stackCount && eq.stackCount > 1)
                 ? `<div class="stack-count-badge">x${eq.stackCount}</div>`
@@ -734,15 +732,14 @@ function renderGrid(equipments) {
                 ${badgeHtml}
                 <div class="vault-card-header">
                     <div class="vault-card-name-group">
-                        <div class="vault-card-slot">
-                            <span class="material-symbols-outlined text-sm" style="color: ${spColor};">${typeIcon}</span>
-                            ${typeStr} <span class="opacity-50 ml-1">${eq.spiritualite}</span>
+                        <div class="vault-card-slot flex items-center gap-1.5 flex-wrap">
+                            <span class="material-symbols-outlined text-sm vault-anomaly-type-icon ${typeInfo.badgeClass}">${typeInfo.icon}</span>
+                            <span class="vault-anomaly-type-tag ${typeInfo.badgeClass}">${typeInfo.label}</span>
+                            <span class="opacity-50">${eq.spiritualite}</span>
                         </div>
                         <div class="vault-card-name flex items-center gap-1" style="color: ${spColor};">
                             <span class="material-symbols-outlined flex-shrink-0 opacity-80 text-xl">${catIcon}</span>
                             <span class="word-break leading-tight">${eq.name}</span>
-                            ${getAnomalieCategoryType(eq) === 'CATALYSEUR' ? '<span class="vault-anomaly-type-badge type-catalyst">Catalyseur</span>' : ''}
-                            ${getAnomalieCategoryType(eq) === 'EVEIL' ? '<span class="vault-anomaly-type-badge type-eveil">Éveil</span>' : ''}
                         </div>
                         ${adminOwnerHtml ? `<div>${adminOwnerHtml}</div>` : ''}
                     </div>
@@ -896,25 +893,6 @@ function renderGrid(equipments) {
 // Init
 window.filterVault = filterVault;
 
-window.onAnomalieMagicToggleChange = function (inputEl) {
-    const el = inputEl || document.getElementById('anomalieMagicToggle');
-    if (!el) return;
-    const sliderBg = el.nextElementSibling;
-    if (sliderBg) {
-        sliderBg.style.backgroundColor = el.checked ? '#d946ef' : 'rgba(255, 255, 255, 0.1)';
-        if (sliderBg.children[0]) {
-            sliderBg.children[0].style.transform = el.checked ? 'translateX(16px)' : 'translateX(0)';
-        }
-    }
-    const textEl = document.getElementById('anomalieMagicToggleText');
-    if (textEl) textEl.innerText = el.checked ? 'Magique' : 'Matériau';
-    const iconEl = document.getElementById('anomalieMagicToggleIcon');
-    if (iconEl) {
-        iconEl.innerText = el.checked ? 'star' : 'category';
-        iconEl.style.color = el.checked ? '#d946ef' : '#94a3b8';
-    }
-};
-
 async function applyVaultAuthState() {
     if (!document.getElementById('searchItemName')) return;
 
@@ -1005,14 +983,6 @@ window.initVaultPage = async function () {
                     row.classList.add('hidden');
                 }
             }
-        });
-    }
-
-    const toggleMagic = document.getElementById('anomalieMagicToggle');
-    if (toggleMagic && !toggleMagic.dataset.vaultBound) {
-        toggleMagic.dataset.vaultBound = 'true';
-        toggleMagic.addEventListener('change', function () {
-            window.onAnomalieMagicToggleChange(this);
         });
     }
 
@@ -1241,12 +1211,11 @@ window.openCreateAnomalieModal = function () {
         window.renderAnomalieCategorySelect();
     }
 
-    const toggleMagic = document.getElementById('anomalieMagicToggle');
-    if (toggleMagic) {
-        toggleMagic.checked = true;
-        // Trigger onchange manually
-        toggleMagic.dispatchEvent(new Event('change'));
-    }
+    const typeInput = document.getElementById('anomalieType');
+    if (typeInput) typeInput.value = 'MAGIQUE';
+    const typeLabel = document.getElementById('anomalieTypeLabel');
+    const defaultTypeOpt = document.querySelector('#anomalieTypeOptions .custom-option[data-value="MAGIQUE"]');
+    if (typeLabel && defaultTypeOpt) typeLabel.innerHTML = defaultTypeOpt.innerHTML;
 
     document.getElementById('anomalieCreateModal').classList.add('show');
 
@@ -1269,6 +1238,9 @@ window.editAnomalie = function (id) {
     document.getElementById('anomalieSpiritualite').value = eq.spiritualite || 'TENEBRES';
     document.getElementById('anomalieCategory').value = eq.category || 'AUTRE';
     document.getElementById('anomalieLevel').value = eq.level || 1;
+    const resolvedType = getAnomalieCategoryType(eq);
+    const typeInput = document.getElementById('anomalieType');
+    if (typeInput) typeInput.value = resolvedType;
 
     if (window.renderAnomalieCategorySelect) {
         window.renderAnomalieCategorySelect();
@@ -1285,18 +1257,15 @@ window.editAnomalie = function (id) {
         const option = document.querySelector(`#anomalieCategoryOptions .custom-option[data-value="${eq.category || 'AUTRE'}"]`);
         if (option) catLabel.innerHTML = option.innerHTML;
     }
+    const typeLabel = document.getElementById('anomalieTypeLabel');
+    if (typeLabel) {
+        const option = document.querySelector(`#anomalieTypeOptions .custom-option[data-value="${resolvedType}"]`);
+        if (option) typeLabel.innerHTML = option.innerHTML;
+    }
     const lvlLabel = document.getElementById('anomalieLevelLabel');
     if (lvlLabel) {
         const option = document.querySelector(`#anomalieLevelOptions .custom-option[data-value="${eq.level || 1}"]`);
         if (option) lvlLabel.innerHTML = option.innerHTML;
-    }
-
-    const isMagic = eq.magicObject !== false;
-    const toggleMagic = document.getElementById('anomalieMagicToggle');
-    if (toggleMagic) {
-        toggleMagic.checked = isMagic;
-        // Trigger onchange manually to update UI
-        toggleMagic.dispatchEvent(new Event('change'));
     }
 
     document.getElementById('anomalieCreateModal').classList.add('show');
@@ -1312,8 +1281,7 @@ window.submitAnomalie = async function () {
     const spiritualite = document.getElementById('anomalieSpiritualite').value;
     const category = document.getElementById('anomalieCategory').value;
     const description = document.getElementById('anomalieDescription').value.trim();
-    const toggleMagic = document.getElementById('anomalieMagicToggle');
-    const isMagicObject = toggleMagic ? toggleMagic.checked : true;
+    const anomalieType = document.getElementById('anomalieType')?.value || 'MAGIQUE';
 
     if (!name) {
         showNotif("Veuillez entrer un nom pour l'anomalie.", true);
@@ -1327,7 +1295,7 @@ window.submitAnomalie = async function () {
         category: category,
         description: description,
         level: parseInt(document.getElementById('anomalieLevel').value) || 1,
-        magicObject: isMagicObject
+        anomalieType: anomalieType
     };
 
     try {

@@ -559,8 +559,8 @@ function renderCauldron(r, preserveInput = false, targetPanelId = null) {
     } else if (r.rewardType === 'GIVE_EQUIPMENT') {
         resultType = 'EQUIPMENT';
     } else if (r.rewardType === 'GIVE_ANOMALY' || r.rewardType === 'UPGRADE_ANOMALY' || r.rewardType === 'GIVE_CATALYST' || r.rewardType === 'GIVE_AWAKENING') {
-        if (r.rewardType === 'GIVE_CATALYST') resultLabel = "Catalyseur (Niv. 4)";
-        else if (r.rewardType === 'GIVE_AWAKENING') resultLabel = "Anomalie d'Éveil (Niv. 5)";
+        if (r.rewardType === 'GIVE_CATALYST') resultLabel = "Catalyseur";
+        else if (r.rewardType === 'GIVE_AWAKENING') resultLabel = "Anomalie d'Éveil";
         resultType = 'ANOMALY';
     } else if (r.rewardType === 'GIVE_SPIRIT_XP') {
         resultLabel = "XP Spiritualité";

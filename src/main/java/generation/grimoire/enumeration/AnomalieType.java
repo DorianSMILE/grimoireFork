@@ -6,9 +6,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum AnomalieType {
-    STANDARD("Anomalie", "Matériau ou relique alchimique classique (Niv. 1–3)", "star", "anomaly-type-standard"),
-    CATALYSEUR("Catalyseur", "Anomalie de niveau 4 utilisée pour l'éveil d'équipement", "bolt", "anomaly-type-catalyst"),
-    EVEIL("Anomalie d'Éveil", "Anomalie de niveau 5 utilisée pour les éveils majeurs", "auto_awesome", "anomaly-type-awakening");
+    MAGIQUE("Magique", "Anomalie magique utilisée sur les autels et en alchimie", "star", "anomaly-type-magic"),
+    MATERIAU("Matériau", "Matériau brut utilisé en alchimie", "category", "anomaly-type-material"),
+    CATALYSEUR("Catalyseur", "Catalyseur utilisé pour l'éveil d'équipement", "bolt", "anomaly-type-catalyst"),
+    EVEIL("Éveil", "Anomalie d'éveil utilisée pour les paliers supérieurs d'équipement", "auto_awesome", "anomaly-type-awakening");
 
     private final String label;
     private final String description;
@@ -28,21 +29,13 @@ public enum AnomalieType {
     public String getIcon() { return icon; }
     public String getCssClass() { return cssClass; }
 
-    public static AnomalieType fromLevel(Integer level) {
-        if (level == null) return STANDARD;
-        return switch (level) {
-            case 4 -> CATALYSEUR;
-            case 5 -> EVEIL;
-            default -> STANDARD;
-        };
-    }
-
     @JsonCreator
     public static AnomalieType fromNode(JsonNode node) {
-        if (node == null || node.isNull()) return STANDARD;
-        if (node.isObject() && node.has("name")) {
-            return AnomalieType.valueOf(node.get("name").asText());
+        if (node == null || node.isNull()) return MAGIQUE;
+        String raw = (node.isObject() && node.has("name")) ? node.get("name").asText() : node.asText();
+        if (raw == null || raw.isBlank() || "STANDARD".equalsIgnoreCase(raw)) {
+            return MAGIQUE;
         }
-        return AnomalieType.valueOf(node.asText());
+        return AnomalieType.valueOf(raw);
     }
 }

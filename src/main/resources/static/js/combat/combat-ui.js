@@ -2005,7 +2005,8 @@ export function updateUI(data) {
                                     anomalyCounts[a.name] = (anomalyCounts[a.name] || 0) + 1;
                                 });
                                 const eligible = anomalies.filter(a => {
-                                    if (!a.magicObject || a.spiritualite !== data.currentRoom.altarRequiredSpirituality) return false;
+                                    const tName = typeof getAnomalieTypeName === 'function' ? getAnomalieTypeName(a) : (a.magicObject ? 'MAGIQUE' : 'MATERIAU');
+                                    if (tName !== 'MAGIQUE' || a.spiritualite !== data.currentRoom.altarRequiredSpirituality) return false;
                                     if (uniqueNames.has(a.name)) return false;
                                     uniqueNames.add(a.name);
                                     a.stock = anomalyCounts[a.name];

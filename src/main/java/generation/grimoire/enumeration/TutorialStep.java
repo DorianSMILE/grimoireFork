@@ -316,6 +316,50 @@ public enum TutorialStep {
             "top",
             "manual",
             ""
+    ),
+    AWAKENING_DISCOVER_LINK(
+            "AWAKENING",
+            1,
+            "1. Éveil d'Équipement disponible !",
+            "Un de vos équipements rares possède désormais tout le nécessaire pour être éveillé (+0 à +5). Cliquez sur « Éveiller » pour ouvrir l'Atelier d'Éveil en Alchimie.",
+            "upgrade",
+            ".equip-awaken-btn.is-ready",
+            "bottom",
+            "click",
+            ".equip-awaken-btn.is-ready"
+    ),
+    AWAKENING_TAB_CATALYSTS(
+            "AWAKENING",
+            2,
+            "2. Catalyseurs & Anomalies d'Éveil",
+            "Cet onglet regroupe les Catalyseurs (requis pour +1/+2/+4/+5) et les Anomalies d'Éveil (requis pour +3/+4/+5) liés au Secret ou au tronc générique de l'objet.",
+            "bolt",
+            "#awakeningCatalystsPanel",
+            "right",
+            "manual",
+            ""
+    ),
+    AWAKENING_PREVIEW_STATS(
+            "AWAKENING",
+            3,
+            "3. Aperçu & Affinités de Slot",
+            "Comparez ici vos statistiques actuelles et celles du palier suivant selon la rareté, les affinités de slot (boosts/freins) et l'éventuelle hausse de contrepartie.",
+            "analytics",
+            "#awakeningPreviewPanel",
+            "left",
+            "manual",
+            ""
+    ),
+    AWAKENING_EXECUTE(
+            "AWAKENING",
+            4,
+            "4. Lancer l'Éveil",
+            "Cliquez sur « Éveiller l'équipement » pour forger le palier suivant ! Astuce : démanteler un objet éveillé dans les Coffres restitue une partie des ingrédients de ses catalyseurs.",
+            "auto_awesome",
+            "#btnExecuteAwakening",
+            "top",
+            "click",
+            "#btnExecuteAwakening"
     );
 
     private final String phase;

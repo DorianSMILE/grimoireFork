@@ -1,6 +1,6 @@
 .alchemy-main {
-    padding: 2rem 5%;
-    max-width: 1600px;
+    padding: 1.5rem clamp(1rem, 2vw, 2rem);
+    max-width: min(1760px, 96vw);
     margin: 0 auto;
     width: 100%;
     display: flex;
@@ -121,7 +121,7 @@
     align-items: center;
     gap: 1rem;
     width: 100%;
-    max-width: 800px;
+    max-width: none;
     text-align: center;
     position: relative;
     height: 100%;
@@ -170,4 +170,668 @@
         transform: translate(var(--tx), var(--ty)) scale(0);
         opacity: 0;
     }
+}
+
+/* ===== Onglets Alchimie Classique / Atelier d'Éveil ===== */
+.alchemy-tabs-bar {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: min(1760px, 96vw);
+    margin: 1.5rem auto 0 auto;
+    padding: 0 clamp(1rem, 2vw, 2rem);
+    box-sizing: border-box;
+}
+
+.alchemy-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-muted, #94a3b8);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.alchemy-tab-btn:hover {
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.alchemy-tab-btn.is-active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.22));
+    border-color: rgba(16, 185, 129, 0.75);
+    color: #ffffff;
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+}
+
+.alchemy-tab-btn[data-tab="awakening"].is-active {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(168, 85, 247, 0.22));
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.28);
+}
+
+.alchemy-tab-btn.is-locked {
+    opacity: 0.75;
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+.alchemy-tab-lock-badge {
+    font-size: 0.72rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+/* ===== Atelier d'Éveil (Onglet 2) ===== */
+.awakening-workspace {
+    display: flex;
+    gap: 1.75rem;
+    width: 100%;
+    max-width: min(1760px, 96vw);
+    margin: 1.25rem auto 2.5rem auto;
+    padding: 0.75rem clamp(1rem, 2vw, 2rem) 2rem clamp(1rem, 2vw, 2rem);
+    box-sizing: border-box;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+    .awakening-workspace {
+        flex-direction: column;
+        padding: 0.75rem 1.25rem 2rem 1.25rem;
+    }
+
+    .awakening-left-panel {
+        max-width: none;
+        width: 100%;
+        height: auto;
+        max-height: 620px;
+    }
+}
+
+.awakening-locked-card {
+    width: 100%;
+    max-width: 640px;
+    margin: 2rem auto;
+    padding: 2.5rem 2.75rem;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+}
+
+.awakening-locked-icon {
+    font-size: 3.2rem;
+    color: #f87171;
+}
+
+.awakening-locked-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.awakening-locked-link:hover {
+    transform: translateY(-2px);
+}
+
+/* Alignement vertical exact avec l'onglet Éveil & Catalyseurs */
+#alchemyClassicWorkspace.alchemy-main {
+    max-width: min(1760px, 96vw);
+    margin: 1.25rem auto 2.5rem auto;
+    padding: 0.75rem clamp(1rem, 2vw, 2rem) 2rem clamp(1rem, 2vw, 2rem);
+    box-sizing: border-box;
+}
+
+.awakening-left-panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    height: 700px;
+    max-height: 700px;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.awakening-left-subtabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding: 0.3rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.awakening-subtab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.awakening-subtab-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.awakening-subtab-btn.is-active {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(168, 85, 247, 0.2));
+    border-color: rgba(245, 158, 11, 0.65);
+    color: #fde68a;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);
+}
+
+.awakening-subtab-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.awakening-scroll-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.awakening-right-panel {
+    flex: 1.6;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.85rem 2.25rem;
+    align-items: stretch;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.awakening-right-panel::before {
+    background: linear-gradient(to right, #f59e0b, #a855f7);
+}
+
+.awakening-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fbbf24;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.4rem;
+    margin: 0.25rem 0;
+}
+
+.awakening-filter-pills {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.awakening-filter-pill {
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.awakening-filter-pill.is-active {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.75);
+    color: #fde68a;
+}
+
+.awakening-equip-item,
+.awakening-craft-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.85rem 1.05rem;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.awakening-equip-item:hover,
+.awakening-craft-item:hover {
+    border-color: rgba(245, 158, 11, 0.55);
+    transform: translateY(-1px);
+}
+
+.awakening-equip-item.is-selected,
+.awakening-craft-item.is-selected {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.14);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+}
+
+.awakening-equip-item.is-ready {
+    border-color: rgba(16, 185, 129, 0.55);
+}
+
+.awakening-level-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.55);
+    color: #fcd34d;
+}
+
+.awakening-level-badge.is-max {
+    background: rgba(168, 85, 247, 0.25);
+    border-color: rgba(168, 85, 247, 0.7);
+    color: #e9d5ff;
+}
+
+.awakening-status-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.awakening-status-pill.is-ready {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+}
+
+.awakening-status-pill.is-missing {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    color: #94a3b8;
+}
+
+.awakening-type-catalyst {
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.awakening-type-eveil {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.14);
+}
+
+.awakening-tier-track {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.awakening-tier-step {
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #64748b;
+}
+
+.awakening-tier-step.is-done {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #fde68a;
+}
+
+.awakening-tier-step.is-next {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #6ee7b7;
+}
+
+.awakening-cost-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
+}
+
+.awakening-cost-row.is-ok {
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #a7f3d0;
+}
+
+.awakening-cost-row.is-missing {
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+}
+
+.awakening-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.7rem;
+}
+
+.awakening-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.82rem;
+}
+
+.awakening-delta-pos {
+    color: #34d399;
+    font-weight: 700;
+}
+
+.awakening-delta-neg {
+    color: #f87171;
+    font-weight: 700;
+}
+
+.awakening-delta-flat {
+    color: #94a3b8;
+}
+
+.awakening-btn-execute {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.75rem 2.1rem;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(245, 158, 11, 0.35);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.awakening-btn-execute:hover:not(.is-disabled) {
+    transform: translateY(-2px);
+}
+
+.awakening-btn-execute.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.awakening-rarity-legendaire { color: #eab308; }
+.awakening-rarity-epique { color: #ef4444; }
+.awakening-rarity-relique { color: #a855f7; }
+.awakening-rarity-maudit { color: #fda4af; text-shadow: 0 0 8px rgba(127, 29, 29, 0.95); }
+
+.awakening-equip-rarity-legendaire {
+    border-left: 3px solid #eab308;
+    background: linear-gradient(90deg, rgba(234, 179, 8, 0.14) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-epique {
+    border-left: 3px solid #ef4444;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.14) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-relique {
+    border-left: 3px solid #a855f7;
+    background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+.awakening-equip-rarity-maudit {
+    border-color: rgba(153, 27, 27, 0.65);
+    border-left: 3px solid #7f1d1d;
+    background: linear-gradient(90deg, rgba(127, 29, 29, 0.42) 0%, rgba(20, 8, 12, 0.72) 72%);
+    box-shadow: inset 0 0 12px rgba(127, 29, 29, 0.25);
+}
+.awakening-equip-rarity-maudit:hover {
+    border-color: rgba(190, 18, 60, 0.85);
+}
+
+.awakening-equip-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.awakening-equip-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.awakening-craft-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.awakening-craft-spirit-wrap {
+    flex: 1 1 145px;
+    min-width: 135px;
+    z-index: 38;
+}
+
+@media (max-width: 520px) {
+    .awakening-equip-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+.awakening-craft-search {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Couleurs Voies & Spiritualités + tons des combobox */
+.awakening-spirit-raison        { --spirit-color: #3b82f6; --spirit-rgb: 59, 130, 246; }
+.awakening-spirit-surete        { --spirit-color: #00e5cc; --spirit-rgb: 0, 229, 204; }
+.awakening-spirit-trahison      { --spirit-color: #ed5677; --spirit-rgb: 237, 86, 119; }
+.awakening-spirit-consolidation { --spirit-color: #99674c; --spirit-rgb: 153, 103, 76; }
+.awakening-spirit-conviction    { --spirit-color: #b74c0b; --spirit-rgb: 183, 76, 11; }
+.awakening-spirit-creation      { --spirit-color: #10b981; --spirit-rgb: 16, 185, 129; }
+.awakening-spirit-destruction   { --spirit-color: #ff4444; --spirit-rgb: 255, 68, 68; }
+.awakening-spirit-violence      { --spirit-color: #a70740; --spirit-rgb: 167, 7, 64; }
+.awakening-spirit-esprit        { --spirit-color: #38bdf8; --spirit-rgb: 56, 189, 248; }
+.awakening-spirit-tenebres      { --spirit-color: #c084fc; --spirit-rgb: 192, 132, 252; }
+.awakening-spirit-karma         { --spirit-color: #e7d198; --spirit-rgb: 231, 209, 152; }
+.awakening-spirit-universel     { --spirit-color: #cbd5e1; --spirit-rgb: 203, 213, 225; }
+
+.awakening-tone-level      { --combo-color: #f59e0b; --combo-rgb: 245, 158, 11; }
+.awakening-tone-lvl-0      { --combo-color: #94a3b8; --combo-rgb: 148, 163, 184; }
+.awakening-tone-lvl-1      { --combo-color: #10b981; --combo-rgb: 16, 185, 129; }
+.awakening-tone-lvl-2      { --combo-color: #38bdf8; --combo-rgb: 56, 189, 248; }
+.awakening-tone-lvl-3      { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+.awakening-tone-lvl-4      { --combo-color: #f59e0b; --combo-rgb: 245, 158, 11; }
+.awakening-tone-lvl-5      { --combo-color: #ef4444; --combo-rgb: 239, 68, 68; }
+.awakening-tone-rarity     { --combo-color: #c084fc; --combo-rgb: 192, 132, 252; }
+.awakening-tone-legendaire { --combo-color: #eab308; --combo-rgb: 234, 179, 8; }
+.awakening-tone-epique     { --combo-color: #ef4444; --combo-rgb: 239, 68, 68; }
+.awakening-tone-relique    { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+.awakening-tone-maudit     { --combo-color: #9f1239; --combo-rgb: 159, 18, 57; }
+.awakening-tone-slot       { --combo-color: #38bdf8; --combo-rgb: 56, 189, 248; }
+.awakening-tone-spirit     { --combo-color: #a855f7; --combo-rgb: 168, 85, 247; }
+
+.awakening-custom-select[class*="awakening-spirit-"] {
+    --combo-color: var(--spirit-color);
+    --combo-rgb: var(--spirit-rgb);
+}
+
+.awakening-spirit-icon {
+    color: var(--spirit-color, #94a3b8);
+}
+
+.awakening-craft-item[class*="awakening-spirit-"] {
+    border-left: 3px solid var(--spirit-color);
+    background: linear-gradient(90deg, rgba(var(--spirit-rgb), 0.15) 0%, rgba(0, 0, 0, 0.36) 65%);
+}
+
+.awakening-craft-item[class*="awakening-spirit-"]:hover {
+    border-color: rgba(var(--spirit-rgb), 0.72);
+}
+
+.awakening-craft-item.is-selected[class*="awakening-spirit-"] {
+    border-color: var(--spirit-color);
+    box-shadow: 0 0 14px rgba(var(--spirit-rgb), 0.25);
+}
+
+.awakening-craft-title {
+    color: var(--spirit-color, #ffffff);
+}
+
+.awakening-spirit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--spirit-color, #cbd5e1);
+    border: 1px solid rgba(var(--spirit-rgb, 148, 163, 184), 0.45);
+    background: rgba(var(--spirit-rgb, 148, 163, 184), 0.14);
+}
+
+.awakening-equip-search {
+    flex: 1 1 160px;
+    min-width: 0;
+    margin: 0;
+}
+
+.awakening-sort-select-wrap {
+    flex: 1 1 165px;
+    min-width: 0;
+    z-index: 40;
+}
+
+.awakening-custom-select {
+    min-width: 0;
+    z-index: 35;
+}
+
+.awakening-custom-select .custom-select-trigger {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+    min-height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(var(--combo-rgb, 148, 163, 184), 0.14), rgba(15, 23, 42, 0.92));
+    border: 1px solid rgba(var(--combo-rgb, 148, 163, 184), 0.42);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.awakening-custom-select .custom-select-trigger:hover,
+.awakening-custom-select.open .custom-select-trigger {
+    border-color: var(--combo-color, #f59e0b);
+    box-shadow: 0 0 12px rgba(var(--combo-rgb, 245, 158, 11), 0.28);
+}
+
+.awakening-custom-select .cs-label {
+    min-width: 0;
+    overflow: hidden;
+    gap: 0.35rem;
+}
+
+.awakening-cs-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.awakening-custom-select .custom-option {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+    border-left: 2px solid transparent;
+}
+
+.awakening-custom-select .custom-option[class*="awakening-spirit-"] {
+    --combo-color: var(--spirit-color);
+    --combo-rgb: var(--spirit-rgb);
+}
+
+.awakening-custom-select .custom-option[class*="awakening-tone-"],
+.awakening-custom-select .custom-option[class*="awakening-spirit-"] {
+    border-left-color: rgba(var(--combo-rgb, 148, 163, 184), 0.45);
+}
+
+.awakening-custom-select .custom-option:hover,
+.awakening-custom-select .custom-option.selected {
+    background: rgba(var(--combo-rgb, 245, 158, 11), 0.18);
+    border-left-color: var(--combo-color, #f59e0b);
 }

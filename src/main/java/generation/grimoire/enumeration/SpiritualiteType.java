@@ -11,6 +11,7 @@ public enum SpiritualiteType {
     DESTRUCTION,
     CREATION,
     CONVICTION,
-    CONSOLIDATION
+    CONSOLIDATION,
+    UNIVERSEL
 }
 

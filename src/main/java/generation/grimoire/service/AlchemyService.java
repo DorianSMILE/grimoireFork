@@ -5,6 +5,7 @@ import generation.grimoire.entity.Anomalie;
 import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.auth.AppUser;
 import generation.grimoire.entity.personnage.Personnage;
+import generation.grimoire.enumeration.AnomalieType;
 import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.enumeration.RecipeRewardType;
 import generation.grimoire.repository.AlchemyRecipeRepository;
@@ -12,7 +13,9 @@ import generation.grimoire.repository.AnomalieRepository;
 import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.auth.UserRepository;
 import generation.grimoire.repository.PersonnageRepository;
+import generation.grimoire.repository.pve.DonjonRepository;
 import generation.grimoire.repository.pve.LootEntryRepository;
+import generation.grimoire.service.pve.DungeonTutorialService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,6 +35,8 @@ public class AlchemyService {
     private final EquipmentRepository equipmentRepository;
     private final LootEntryRepository lootEntryRepository;
     private final generation.grimoire.service.AchievementService achievementService;
+    private final DonjonRepository donjonRepository;
+    private final DungeonTutorialService dungeonTutorialService;
 
     public AlchemyService(AlchemyRecipeRepository recipeRepository,
                           UserRepository userRepository,
@@ -39,7 +44,9 @@ public class AlchemyService {
                           AnomalieRepository anomalieRepository,
                           EquipmentRepository equipmentRepository,
                           LootEntryRepository lootEntryRepository,
-                          generation.grimoire.service.AchievementService achievementService) {
+                          generation.grimoire.service.AchievementService achievementService,
+                          DonjonRepository donjonRepository,
+                          DungeonTutorialService dungeonTutorialService) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.personnageRepository = personnageRepository;
@@ -47,6 +54,15 @@ public class AlchemyService {
         this.equipmentRepository = equipmentRepository;
         this.lootEntryRepository = lootEntryRepository;
         this.achievementService = achievementService;
+        this.donjonRepository = donjonRepository;
+        this.dungeonTutorialService = dungeonTutorialService;
+    }
+
+    private boolean isAwakeningUnlocked(AppUser user) {
+        if (user == null) return false;
+        if ("ADMIN".equalsIgnoreCase(user.getRole()) || "ROLE_ADMIN".equalsIgnoreCase(user.getRole())) return true;
+        if (dungeonTutorialService == null || donjonRepository == null) return false;
+        return dungeonTutorialService.hasCompletedLevel3Dungeon(user, donjonRepository.findAllLightProjections());
     }
 
     @Cacheable(value = "alchemyRecipes")
@@ -101,7 +117,12 @@ public class AlchemyService {
             userRepository.save(user);
         }
 
+        boolean awakeningUnlocked = isAwakeningUnlocked(user);
+
         return filteredBySecret.stream().filter(recipe -> {
+            if (isAwakeningCraftRecipe(recipe)) {
+                return awakeningUnlocked;
+            }
 
             // Vérifier que tous les ingrédients ont été découverts
             if (recipe.getRequiredAnomalies() != null) {
@@ -116,6 +137,23 @@ public class AlchemyService {
             }
             return true;
         }).collect(java.util.stream.Collectors.toList());
+    }
+
+    public boolean isAwakeningCraftRecipe(AlchemyRecipe recipe) {
+        return recipe != null && (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
+                || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING);
+    }
+
+    /**
+     * Compte les nouvelles recettes d'alchimie classique non encore vues par le joueur
+     * (exclut les recettes de catalyseurs et d'éveil affichées dans l'onglet dédié).
+     */
+    public long countUnseenClassicRecipes(AppUser user) {
+        if (user == null) return 0L;
+        return getDiscoveredRecipes(user).stream()
+                .filter(recipe -> !isAwakeningCraftRecipe(recipe))
+                .filter(recipe -> !user.getSeenAlchemyRecipes().contains(recipe.getId()))
+                .count();
     }
 
     public AppUser findUserByUsername(String username) {
@@ -148,6 +186,14 @@ public class AlchemyService {
 
         AlchemyRecipe recipe = recipeRepository.findById(java.util.Objects.requireNonNull(recipeId))
                 .orElseThrow(() -> new RuntimeException("Recette introuvable"));
+
+        // Vérification du déblocage Atelier d'Éveil (donjon niv >= 3) pour Catalyseurs & Éveils
+        if (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
+                || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
+            if (!isAwakeningUnlocked(user)) {
+                throw new RuntimeException("Terminez un donjon de niveau 3 pour débloquer l'Atelier d'Éveil.");
+            }
+        }
 
         // Vérification de la progression des secrets si la recette débloque un secret
         if (recipe.getRewardType() == generation.grimoire.enumeration.RecipeRewardType.UNLOCK_FEATURE) {
@@ -296,28 +342,45 @@ public class AlchemyService {
             crafter = personnageRepository.findById(crafterPersonnageId).orElse(null);
         }
 
-        if (recipe.getRewardType() == RecipeRewardType.GIVE_ANOMALY) {
+        if (recipe.getRewardType() == RecipeRewardType.GIVE_ANOMALY
+                || recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
+                || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
+            int level = Math.max(1, recipe.getRewardLevel());
+            AnomalieType fallbackType = AnomalieType.MAGIQUE;
+            if (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST) {
+                fallbackType = AnomalieType.CATALYSEUR;
+            } else if (recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
+                fallbackType = AnomalieType.EVEIL;
+            }
             for (int i = 0; i < recipe.getRewardQuantity(); i++) {
                 Anomalie anomaly = new Anomalie();
                 anomaly.setName(recipe.getRewardName());
                 anomaly.setOwnerUsername(username);
                 anomaly.setUser(user);
-                anomaly.setLevel(recipe.getRewardLevel());
-                
-                // Cherche un template existant pour copier la spiritualité et la catégorie
+                anomaly.setLevel(level);
+                anomaly.setAnomalieType(fallbackType);
+
+                // Cherche un template existant pour copier spiritualité, catégorie, niveau et type
                 Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
                 if (template != null) {
                     anomaly.setSpiritualite(template.getSpiritualite());
                     anomaly.setCategory(template.getCategory());
+                    anomaly.setDescription(template.getDescription());
+                    if (template.getLevel() != null) {
+                        anomaly.setLevel(template.getLevel());
+                    }
+                    anomaly.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : fallbackType);
                 } else {
-                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA); 
+                    anomaly.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
                     anomaly.setCategory(generation.grimoire.enumeration.AnomalieCategory.AUTRE);
                 }
-                
+
                 anomalieRepository.save(anomaly);
             }
             if (user != null) user.getDiscoveredItems().add(recipe.getRewardName());
-            return "Vous avez obtenu " + recipe.getRewardQuantity() + "x Anomalie : " + recipe.getRewardName();
+            String typeLabel = recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST ? "Catalyseur"
+                    : (recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING ? "Anomalie d'Éveil" : "Anomalie");
+            return "Vous avez obtenu " + recipe.getRewardQuantity() + "x " + typeLabel + " : " + recipe.getRewardName();
         } else if (recipe.getRewardType() == RecipeRewardType.GIVE_CONSUMABLE) {
             Equipment template = equipmentRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(recipe.getRewardName());
             for (int i = 0; i < recipe.getRewardQuantity(); i++) {
@@ -364,7 +427,7 @@ public class AlchemyService {
                 upgraded.setSpiritualite(template.getSpiritualite());
                 upgraded.setCategory(template.getCategory());
             } else {
-                upgraded.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.KARMA);
+                upgraded.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
                 upgraded.setCategory(generation.grimoire.enumeration.AnomalieCategory.AUTRE);
             }
             

@@ -18,7 +18,7 @@ export function VaultPage() {
     async function bootVault() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const vaultUrl = '/js/pages/vault.js?v=110';
+      const vaultUrl = '/js/pages/vault.js?v=113';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -343,6 +343,14 @@ export function VaultPage() {
                 <div className="custom-option" data-value="not_craftable_first">
                   <span className="material-symbols-outlined cs-icon text-muted">science_off</span>{' '}
                   Non craftables d&apos;abord
+                </div>
+                <div className="custom-option" data-value="level_desc">
+                  <span className="material-symbols-outlined cs-icon text-warning">upgrade</span>{' '}
+                  Niveau d&apos;éveil (Élevé)
+                </div>
+                <div className="custom-option" data-value="level_asc">
+                  <span className="material-symbols-outlined cs-icon text-muted">upgrade</span>{' '}
+                  Niveau d&apos;éveil (Faible)
                 </div>
               </div>
               <input type="hidden" id="sortVault" defaultValue="rarity_desc" />
@@ -1161,6 +1169,12 @@ export function VaultPage() {
                       </span>
                       Consolidation
                     </div>
+                    <div className="custom-option" data-value="UNIVERSEL">
+                      <span className="material-symbols-outlined cs-icon text-slate-300">
+                        public
+                      </span>
+                      Universel
+                    </div>
                   </div>
                   <input type="hidden" id="anomalieSpiritualite" defaultValue="TENEBRES" />
                 </div>
@@ -1181,34 +1195,36 @@ export function VaultPage() {
                 </div>
               </div>
 
-              <div className="mb-6 flex-between bg-black/20 p-4 rounded-lg border border-purple-500/20">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm text-slate-50 font-medium flex-center-gap">
-                    <span
-                      className="material-symbols-outlined text-fuchsia-500 text-lg"
-                      id="anomalieMagicToggleIcon"
-                    >
-                      star
+              <div className="eq-create-field mb-4">
+                <label>Type d&apos;Anomalie</label>
+                <div className="custom-select-wrapper z-10" id="anomalieTypeWrapper" tabIndex={0}>
+                  <div className="custom-select-trigger" id="anomalieTypeTrigger">
+                    <span className="cs-label" id="anomalieTypeLabel">
+                      <span className="material-symbols-outlined cs-icon text-fuchsia-400">star</span>{' '}
+                      Magique
                     </span>
-                    <span id="anomalieMagicToggleText">Magique</span>
-                  </span>
-                  <span className="text-muted text-xs">
-                    Désactivez pour en faire un Matériau.
-                  </span>
+                    <span className="material-symbols-outlined cs-arrow text-lg">expand_more</span>
+                  </div>
+                  <div className="custom-select-options" id="anomalieTypeOptions">
+                    <div className="custom-option" data-value="MAGIQUE">
+                      <span className="material-symbols-outlined cs-icon text-fuchsia-400">star</span>{' '}
+                      Magique
+                    </div>
+                    <div className="custom-option" data-value="MATERIAU">
+                      <span className="material-symbols-outlined cs-icon text-amber-500">category</span>{' '}
+                      Matériau
+                    </div>
+                    <div className="custom-option" data-value="CATALYSEUR">
+                      <span className="material-symbols-outlined cs-icon text-sky-400">bolt</span>{' '}
+                      Catalyseur
+                    </div>
+                    <div className="custom-option" data-value="EVEIL">
+                      <span className="material-symbols-outlined cs-icon text-amber-400">auto_awesome</span>{' '}
+                      Éveil
+                    </div>
+                  </div>
+                  <input type="hidden" id="anomalieType" defaultValue="MAGIQUE" />
                 </div>
-                <label className="magic-toggle-switch" htmlFor="anomalieMagicToggle">
-                  <input
-                    className="magic-toggle-input"
-                    type="checkbox"
-                    id="anomalieMagicToggle"
-                    aria-label="Statut magique"
-                    defaultChecked
-                    onChange={(e) => window.onAnomalieMagicToggleChange?.(e.currentTarget)}
-                  />
-                  <span className="anomalie-slider-bg">
-                    <span className="anomalie-slider-thumb"></span>
-                  </span>
-                </label>
               </div>
 
               <div className="eq-create-field mb-6">
@@ -1239,6 +1255,14 @@ export function VaultPage() {
                     <div className="custom-option" data-value="3">
                       <span className="material-symbols-outlined cs-icon text-power">looks_3</span>
                       Niveau 3
+                    </div>
+                    <div className="custom-option" data-value="4">
+                      <span className="material-symbols-outlined cs-icon text-mana">looks_4</span>{' '}
+                      Niveau 4
+                    </div>
+                    <div className="custom-option" data-value="5">
+                      <span className="material-symbols-outlined cs-icon text-warning">looks_5</span>{' '}
+                      Niveau 5
                     </div>
                   </div>
                   <input type="hidden" id="anomalieLevel" defaultValue="1" />

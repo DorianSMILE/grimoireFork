@@ -18,7 +18,7 @@ export function AlchemyPage() {
     async function bootAlchemy() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const alchemyUrl = '/js/pages/alchemy.js?v=1786180000004';
+      const alchemyUrl = '/js/pages/alchemy.js?v=1786180000013';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);
@@ -78,11 +78,11 @@ export function AlchemyPage() {
         </div>
 
         <div
-          className="alchemy-main max-w-[1400px] my-8 mx-auto flex-row gap-8 items-stretch justify-center h-[calc(100vh-160px)]"
+          className="alchemy-main mx-auto flex-row gap-8 items-stretch justify-center h-[calc(100vh-160px)]"
           id="alchemyMain"
         >
           {/* Left Panel: Recipes List */}
-          <div className="panel flex-1 max-w-[450px] flex flex-col">
+          <div className="panel flex-1 max-w-[540px] flex flex-col">
             <div className="panel-title">
               <div className="flex items-center gap-[10px]">
                 <span className="material-symbols-outlined text-emerald-500">menu_book</span>

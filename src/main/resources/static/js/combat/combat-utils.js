@@ -20,7 +20,7 @@ export function createAnomalyBadgeHtml(anomalyName, showName = false) {
         if (an) {
             if (an.description) tooltipDesc = an.description;
             if (an.level) anomLevel = an.level;
-            if (an.magicObject) isMagic = true;
+            if (typeof getAnomalieTypeName === 'function' ? getAnomalieTypeName(an) === 'MAGIQUE' : an.magicObject) isMagic = true;
             if (an.category) catIcon = getCategoryIcon(an.category);
             if (an.spiritualite) {
                 anomSpiri = an.spiritualite;

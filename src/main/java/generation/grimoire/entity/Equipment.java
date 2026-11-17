@@ -47,6 +47,9 @@ public class Equipment {
 
     private int specialEffectValue = 0;
 
+    @Column(name = "upgrade_level", nullable = false, columnDefinition = "integer default 0")
+    private int upgradeLevel = 0;
+
     // Bonus de stats accordés par cet équipement
     private int bonusHealthMax = 0;
     private int bonusManaMax = 0;
@@ -142,13 +145,48 @@ public class Equipment {
     }
 
     public double calculateWeight() {
-        double w = this.baseWeight;
+        return calculateWeightForStats(
+                this.slot,
+                this.rarity,
+                this.baseWeight,
+                this.bonusHealthMax,
+                this.bonusManaMax,
+                this.bonusPower,
+                this.bonusStrength,
+                this.bonusArmor,
+                this.bonusResistance,
+                this.bonusSpeed,
+                this.bonusCrit,
+                this.regenHealthPerTurn,
+                this.regenManaPerTurn,
+                this.specialEffect,
+                this.specialEffectValue
+        );
+    }
+
+    public static double calculateWeightForStats(
+            EquipmentSlot slot,
+            EquipmentRarity rarity,
+            double baseWeight,
+            int bonusHealthMax,
+            int bonusManaMax,
+            int bonusPower,
+            int bonusStrength,
+            int bonusArmor,
+            int bonusResistance,
+            int bonusSpeed,
+            int bonusCrit,
+            int regenHealthPerTurn,
+            int regenManaPerTurn,
+            EquipmentEffectType specialEffect,
+            int specialEffectValue) {
+        double w = baseWeight;
 
         double mHp = 0.2, mMana = 0.2, mPow = 2.0, mStr = 2.0, mArm = 1.0, mRes = 1.0;
         double mSpd = 3.0, mCrit = 1.5, mRegHp = 2.5, mRegMana = 1.5;
 
-        if (this.slot != null) {
-            switch (this.slot) {
+        if (slot != null) {
+            switch (slot) {
                 case ARME_GAUCHE:
                 case ARME_DROITE:
                 case ARME_DEUX_MAINS:
@@ -199,27 +237,28 @@ public class Equipment {
             }
         }
 
-        w += this.bonusHealthMax * mHp;
-        w += this.bonusManaMax * mMana;
-        w += this.bonusPower * mPow;
-        w += this.bonusStrength * mStr;
-        w += this.bonusArmor * mArm;
-        w += this.bonusResistance * mRes;
-        w += this.bonusSpeed * mSpd;
-        w += this.bonusCrit * mCrit;
-        w += this.regenHealthPerTurn * mRegHp;
-        w += this.regenManaPerTurn * mRegMana;
+        w += bonusHealthMax * mHp;
+        w += bonusManaMax * mMana;
+        w += bonusPower * mPow;
+        w += bonusStrength * mStr;
+        w += bonusArmor * mArm;
+        w += bonusResistance * mRes;
+        w += bonusSpeed * mSpd;
+        w += bonusCrit * mCrit;
+        w += regenHealthPerTurn * mRegHp;
+        w += regenManaPerTurn * mRegMana;
 
-        if ((this.rarity == EquipmentRarity.EPIQUE ||
-                this.rarity == EquipmentRarity.RELIQUE ||
-                this.rarity == EquipmentRarity.MAUDIT) &&
-                this.specialEffect != EquipmentEffectType.NONE &&
-                this.specialEffectValue != 0) {
+        if ((rarity == EquipmentRarity.EPIQUE ||
+                rarity == EquipmentRarity.RELIQUE ||
+                rarity == EquipmentRarity.MAUDIT) &&
+                specialEffect != null &&
+                specialEffect != EquipmentEffectType.NONE &&
+                specialEffectValue != 0) {
 
-            if (this.rarity == EquipmentRarity.MAUDIT) {
-                w += this.specialEffectValue * 0.2;
+            if (rarity == EquipmentRarity.MAUDIT) {
+                w += specialEffectValue * 0.2;
             } else {
-                w += this.specialEffectValue * 1.5;
+                w += specialEffectValue * 1.5;
             }
         }
         return w;

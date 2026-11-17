@@ -305,3 +305,167 @@
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
+
+/* ===== Séparation Anomalies / Catalyseurs / Éveils + Modal Démantèlement ===== */
+.vault-anomaly-subfilters {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+}
+
+.vault-anomaly-pill {
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.7);
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vault-anomaly-pill.is-active {
+    background: rgba(168, 85, 247, 0.22);
+    border-color: rgba(168, 85, 247, 0.75);
+    color: #e9d5ff;
+}
+
+.vault-anomaly-type-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.06rem 0.4rem;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.vault-anomaly-type-tag.type-magique {
+    background: rgba(236, 72, 153, 0.15);
+    border: 1px solid rgba(236, 72, 153, 0.45);
+    color: #f472b6;
+}
+
+.vault-anomaly-type-tag.type-materiau {
+    background: rgba(180, 83, 9, 0.18);
+    border: 1px solid rgba(217, 119, 6, 0.45);
+    color: #fbbf24;
+}
+
+.vault-anomaly-type-tag.type-catalyst {
+    background: rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    color: #7dd3fc;
+}
+
+.vault-anomaly-type-tag.type-eveil {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.65);
+    color: #fcd34d;
+}
+
+.vault-anomaly-type-icon.type-magique { color: #f472b6; }
+.vault-anomaly-type-icon.type-materiau { color: #d97706; }
+.vault-anomaly-type-icon.type-catalyst { color: #38bdf8; }
+.vault-anomaly-type-icon.type-eveil { color: #f59e0b; }
+
+.dismantle-preview-box {
+    margin-top: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    text-align: left;
+}
+
+.dismantle-gold-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fbbf24;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dismantle-gold-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.dismantle-anomalies-list {
+    margin-top: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.dismantle-anomaly-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: #e2e8f0;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--spirit-color, #a855f7);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dismantle-anomaly-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--spirit-color, #a855f7);
+}
+
+.dismantle-anomaly-left {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.dismantle-anomaly-icon {
+    font-size: 1.05rem;
+    color: var(--spirit-color, #a855f7);
+    flex-shrink: 0;
+}
+
+.dismantle-anomaly-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dismantle-spirit-raison        { --spirit-color: #3b82f6; }
+.dismantle-spirit-surete        { --spirit-color: #00e5cc; }
+.dismantle-spirit-trahison      { --spirit-color: #ed5677; }
+.dismantle-spirit-consolidation { --spirit-color: #99674c; }
+.dismantle-spirit-conviction    { --spirit-color: #b74c0b; }
+.dismantle-spirit-creation      { --spirit-color: #10b981; }
+.dismantle-spirit-destruction   { --spirit-color: #ff4444; }
+.dismantle-spirit-violence      { --spirit-color: #a70740; }
+.dismantle-spirit-esprit        { --spirit-color: #38bdf8; }
+.dismantle-spirit-tenebres      { --spirit-color: #c084fc; }
+.dismantle-spirit-karma         { --spirit-color: #e7d198; }
+.dismantle-spirit-universel     { --spirit-color: #cbd5e1; }
+
+.dismantle-qty-input {
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 0.3rem 0.55rem;
+    width: 72px;
+    text-align: center;
+}
+
+.dismantle-modal-label {
+    color: var(--text-muted, #94a3b8);
+}

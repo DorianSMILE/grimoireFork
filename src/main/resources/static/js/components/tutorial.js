@@ -603,6 +603,8 @@
                 window.currentUser.combatTutorialActive = false;
             } else if (currentPhase === 'EQUIP_ARMORY' || currentPhase === 'EQUIP_NAV') {
                 window.currentUser.equipTutorialActive = false;
+            } else if (currentPhase === 'AWAKENING') {
+                window.currentUser.awakeningTutorialActive = false;
             } else {
                 window.currentUser.tutorialCompleted = true;
                 window.currentUser.tutorialPhase = 'NONE';

@@ -38,8 +38,8 @@ public class PersonnageCombatHelper {
             int totalManaRegen = p.getRegenMana();
             if (p.getEquipments() != null) {
                 for (generation.grimoire.entity.Equipment eq : p.getEquipments()) {
-                    totalHpRegen += eq.getRegenHealthPerTurn();
-                    totalManaRegen += eq.getRegenManaPerTurn();
+                    totalHpRegen += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveRegenHealthPerTurn(eq);
+                    totalManaRegen += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveRegenManaPerTurn(eq);
                 }
             }
             if (totalHpRegen > 0) {
@@ -672,14 +672,14 @@ public class PersonnageCombatHelper {
         if (p.getEquipments() != null) {
             for (generation.grimoire.entity.Equipment eq : p.getEquipments()) {
                 switch (statType) {
-                    case HEALTH -> equipmentBonus += eq.getBonusHealthMax();
-                    case MANA -> equipmentBonus += eq.getBonusManaMax();
-                    case POWER -> equipmentBonus += eq.getBonusPower();
-                    case STRENGTH -> equipmentBonus += eq.getBonusStrength();
-                    case ARMURE -> equipmentBonus += eq.getBonusArmor();
-                    case RESISTANCE -> equipmentBonus += eq.getBonusResistance();
-                    case SPEED -> equipmentBonus += eq.getBonusSpeed();
-                    case CRIT -> equipmentBonus += eq.getBonusCrit();
+                    case HEALTH -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveHealthMax(eq);
+                    case MANA -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveManaMax(eq);
+                    case POWER -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectivePower(eq);
+                    case STRENGTH -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveStrength(eq);
+                    case ARMURE -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveArmor(eq);
+                    case RESISTANCE -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveResistance(eq);
+                    case SPEED -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveSpeed(eq);
+                    case CRIT -> equipmentBonus += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveCrit(eq);
                     default -> {}
                 }
             }

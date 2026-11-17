@@ -1,6 +1,7 @@
 package generation.grimoire.entity;
 
 import generation.grimoire.enumeration.AnomalieCategory;
+import generation.grimoire.enumeration.AnomalieType;
 import generation.grimoire.enumeration.SpiritualiteType;
 import generation.grimoire.entity.auth.AppUser;
 import jakarta.persistence.*;
@@ -41,9 +42,21 @@ public class Anomalie {
     @Column(nullable = false)
     private Integer level = 1;
 
-    @Column(nullable = false, columnDefinition = "boolean default true")
-    @com.fasterxml.jackson.annotation.JsonProperty("magicObject")
-    private boolean isMagicObject = true;
+    @Convert(converter = generation.grimoire.entity.converter.AnomalieTypeConverter.class)
+    @Column(nullable = false, columnDefinition = "varchar(32) default 'MAGIQUE'")
+    private AnomalieType anomalieType = AnomalieType.MAGIQUE;
+
+    @com.fasterxml.jackson.annotation.JsonProperty(value = "magicObject", access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    public boolean isMagicObject() {
+        return this.anomalieType == AnomalieType.MAGIQUE;
+    }
+
+    @JsonIgnore
+    public void setMagicObject(boolean magicObject) {
+        if (this.anomalieType == null || this.anomalieType == AnomalieType.MAGIQUE || this.anomalieType == AnomalieType.MATERIAU) {
+            this.anomalieType = magicObject ? AnomalieType.MAGIQUE : AnomalieType.MATERIAU;
+        }
+    }
 
     @Column(name = "is_template", nullable = false)
     private boolean isTemplate = false;

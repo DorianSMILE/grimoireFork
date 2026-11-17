@@ -468,7 +468,7 @@ public class HuntingQuestService {
             reward.setCategory(template.getCategory());
             reward.setDescription(template.getDescription());
             reward.setLevel(template.getLevel());
-            reward.setMagicObject(template.isMagicObject());
+            reward.setAnomalieType(template.getAnomalieType() != null ? template.getAnomalieType() : generation.grimoire.enumeration.AnomalieType.MAGIQUE);
             reward.setTemplate(false);
             reward.setOwnerUsername(username);
             reward.setUser(user);
@@ -697,6 +697,7 @@ public class HuntingQuestService {
         map.put("category", anomalie.getCategory() != null ? anomalie.getCategory().name() : null);
         map.put("description", anomalie.getDescription());
         map.put("level", anomalie.getLevel());
+        map.put("anomalieType", anomalie.getAnomalieType());
         map.put("magicObject", anomalie.isMagicObject());
         return map;
     }

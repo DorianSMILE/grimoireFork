@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import generation.grimoire.enumeration.DamageType;
 import generation.grimoire.enumeration.StatType;
 import generation.grimoire.enumeration.TrapEffectType;
@@ -389,17 +390,8 @@ public class CombatRoomService {
                         } else if (entry.getSpecialItemName() != null && !entry.getSpecialItemName().trim().isEmpty()) {
                             Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(entry.getSpecialItemName());
                             if (template != null) {
-                                Anomalie clone = new Anomalie();
-                                clone.setName(template.getName());
-                                clone.setDescription(template.getDescription());
-                                clone.setSpiritualite(template.getSpiritualite());
-                                clone.setCategory(template.getCategory());
-                                clone.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                                clone.setMagicObject(template.isMagicObject());
-                                clone.setTemplate(false);
-                                clone.setOwnerUsername(username);
-                                clone.setUser(u);
-                                anomalieRepository.save(clone);
+                                Anomalie clone = cloneAnomalieForUser(template, u);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 u.getDiscoveredItems().add(clone.getName());
                                 session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (ajouté à l'inventaire).");
                             }
@@ -500,18 +492,8 @@ public class CombatRoomService {
                         if (itemReward != null && !itemReward.isEmpty()) {
                             java.util.List<Anomalie> templates = anomalieRepository.findByName(itemReward);
                             if (!templates.isEmpty()) {
-                                Anomalie template = templates.get(0);
-                                Anomalie clone = new Anomalie();
-                                clone.setName(template.getName());
-                                clone.setDescription(template.getDescription());
-                                clone.setSpiritualite(template.getSpiritualite());
-                                clone.setCategory(template.getCategory());
-                                clone.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                                clone.setMagicObject(template.isMagicObject());
-                                clone.setTemplate(false);
-                                clone.setOwnerUsername(username);
-                                clone.setUser(u);
-                                anomalieRepository.save(clone);
+                                Anomalie clone = cloneAnomalieForUser(templates.get(0), u);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (Item Spécial) !");
                             }
                         }
@@ -557,18 +539,8 @@ public class CombatRoomService {
                     if (itemReward != null && !itemReward.isEmpty()) {
                         java.util.List<Anomalie> templates = anomalieRepository.findByName(itemReward);
                         if (!templates.isEmpty()) {
-                            Anomalie template = templates.get(0);
-                            Anomalie clone = new Anomalie();
-                            clone.setName(template.getName());
-                            clone.setDescription(template.getDescription());
-                            clone.setSpiritualite(template.getSpiritualite());
-                            clone.setCategory(template.getCategory());
-                            clone.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                            clone.setMagicObject(template.isMagicObject());
-                            clone.setTemplate(false);
-                            clone.setOwnerUsername(username);
-                            clone.setUser(u);
-                            anomalieRepository.save(clone);
+                            Anomalie clone = cloneAnomalieForUser(templates.get(0), u);
+                            anomalieRepository.save(Objects.requireNonNull(clone));
                             session.logInteractionResult(username, "Objet trouvé : " + clone.getName() + " (Item Spécial) !");
                         }
                     }
@@ -1281,16 +1253,8 @@ target.getActiveBuffs().add(effect);
             if (user != null) {
                 Anomalie template = anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc(itemName);
                 if (template != null) {
-                    Anomalie newAnomaly = new Anomalie();
-                    newAnomaly.setName(template.getName());
-                    newAnomaly.setDescription(template.getDescription());
-                    newAnomaly.setSpiritualite(template.getSpiritualite());
-                    newAnomaly.setCategory(template.getCategory());
-                    newAnomaly.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                    newAnomaly.setMagicObject(template.isMagicObject());
-                    newAnomaly.setOwnerUsername(user.getUsername());
-                    newAnomaly.setUser(user);
-                    anomalieRepository.save(newAnomaly);
+                    Anomalie newAnomaly = cloneAnomalieForUser(template, user);
+                    anomalieRepository.save(Objects.requireNonNull(newAnomaly));
                     user.getDiscoveredItems().add(newAnomaly.getName());
                 }
             }
@@ -1620,17 +1584,8 @@ target.getActiveBuffs().add(effect);
                             AppUser user = p.getUser();
                             if (user != null && !rewardedUsernames.contains(user.getUsername())) {
                                 rewardedUsernames.add(user.getUsername());
-                                Anomalie clone = new Anomalie();
-                                clone.setName(template.getName());
-                                clone.setDescription(template.getDescription());
-                                clone.setSpiritualite(template.getSpiritualite());
-                                clone.setCategory(template.getCategory());
-                                clone.setLevel(template.getLevel() != null ? template.getLevel() : 1);
-                                clone.setMagicObject(template.isMagicObject());
-                                clone.setTemplate(false);
-                                clone.setOwnerUsername(user.getUsername());
-                                clone.setUser(user);
-                                anomalieRepository.save(clone);
+                                Anomalie clone = cloneAnomalieForUser(template, user);
+                                anomalieRepository.save(Objects.requireNonNull(clone));
                                 user.getDiscoveredItems().add(clone.getName());
                                 session.logInteractionResult(user.getUsername(), "Objet trouvé : " + anomalyName + " (ajouté à l'inventaire).");
                             }
@@ -1747,5 +1702,21 @@ target.getActiveBuffs().add(effect);
             }
         }
         anomalieRepository.delete(toDestroy);
+    }
+
+    private Anomalie cloneAnomalieForUser(Anomalie template, AppUser user) {
+        Anomalie clone = new Anomalie();
+        clone.setName(template.getName());
+        clone.setDescription(template.getDescription());
+        clone.setSpiritualite(template.getSpiritualite());
+        clone.setCategory(template.getCategory());
+        clone.setLevel(template.getLevel() != null ? template.getLevel() : 1);
+        clone.setAnomalieType(template.getAnomalieType() != null
+                ? template.getAnomalieType()
+                : generation.grimoire.enumeration.AnomalieType.MAGIQUE);
+        clone.setTemplate(false);
+        clone.setOwnerUsername(user.getUsername());
+        clone.setUser(user);
+        return clone;
     }
 }

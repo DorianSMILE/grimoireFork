@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,17 +40,55 @@ public class DataInitializerService {
         private final generation.grimoire.repository.AlchemyRecipeRepository alchemyRecipeRepository;
         private final generation.grimoire.repository.PersonnageRepository personnageRepository;
         private final jakarta.persistence.EntityManager entityManager;
+        private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
+        @jakarta.annotation.PostConstruct
+        public void migrateLegacyAnomalieTypes() {
+                try {
+                        List<String> tables = jdbcTemplate.queryForList(
+                                        "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'anomalie' LIMIT 1",
+                                        String.class);
+                        if (tables.isEmpty()) {
+                                return;
+                        }
+                        String tableName = tables.get(0);
+                        Integer colCount = jdbcTemplate.queryForObject(
+                                        "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'is_magic_object'",
+                                        Integer.class,
+                                        tableName);
+                        if (colCount != null && colCount > 0) {
+                                int updated = jdbcTemplate.update(
+                                                "UPDATE `" + tableName + "` SET anomalie_type = CASE " +
+                                                "WHEN anomalie_type IN ('CATALYSEUR', 'EVEIL') THEN anomalie_type " +
+                                                "WHEN is_magic_object = 0 THEN 'MATERIAU' " +
+                                                "ELSE 'MAGIQUE' END " +
+                                                "WHERE anomalie_type = 'STANDARD' OR anomalie_type IS NULL OR anomalie_type = ''");
+                                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` DROP COLUMN is_magic_object");
+                                log.info("Migration anomalie_type effectuée ({} lignes mises à jour, colonne is_magic_object supprimée).", updated);
+                        } else {
+                                int updated = jdbcTemplate.update(
+                                                "UPDATE `" + tableName + "` SET anomalie_type = 'MAGIQUE' " +
+                                                "WHERE anomalie_type = 'STANDARD' OR anomalie_type IS NULL OR anomalie_type = ''");
+                                if (updated > 0) {
+                                        log.info("Migration anomalie_type STANDARD -> MAGIQUE ({} lignes).", updated);
+                                }
+                        }
+                } catch (Exception e) {
+                        log.warn("Migration anomalie_type ignorée ou échouée : {}", e.getMessage());
+                }
+        }
+
+        @org.springframework.core.annotation.Order(1)
         @EventListener(ApplicationReadyEvent.class)
         @Transactional
         public void initStandardEntities() {
                 try {
-                    entityManager.createNativeQuery("UPDATE user_achievement SET achievement_code = 'MALEDICTION' WHERE achievement_code = 'CURIEUX'").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE app_user SET active_title = 'L''imprononçable' WHERE active_title = 'Le Curieux'").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE user_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
-                    entityManager.createNativeQuery("UPDATE user_custom_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_achievement SET achievement_code = 'MALEDICTION' WHERE achievement_code = 'CURIEUX'").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE app_user SET active_title = 'L''imprononçable' WHERE active_title = 'Le Curieux'").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
+                        entityManager.createNativeQuery("UPDATE user_custom_achievement SET notified = true WHERE notified IS NULL").executeUpdate();
                 } catch (Exception e) {
-                    log.debug("Migration achievement updates skipped: {}", e.getMessage());
+                        log.debug("Migration achievement updates skipped: {}", e.getMessage());
                 }
 
                 log.info("Initialisation des entités de référence (Voies, Spiritualités)...");
@@ -100,7 +139,7 @@ public class DataInitializerService {
                 passifsVoies.put("Voie de Trahison",
                                 "Une fois par tour, vos [c=physic]attaques physiques[/c] infligent des [c=brut]dégâts bruts[/c] bonus [c=heal]qui vous soignent[/c] :\n[ul][li][c=brut]+10%[/c] de base[/li][li][c=brut]+20%[/c] si la cible a moins de 50% [c=pv]PV[/c][/li][li][c=brut]+15%[/c] si elle a un malus[/li][/ul]\n \nÀ chaque niveau, vous gagnez : [c=physic]+1 Force[/c], [c=speed]+1 Vitesse[/c] et [c=crit]+2 Critique[/c].");
                 passifsVoies.put("Voie de la Consolidation",
-                                "Au début de chaque tour :\nSi vous avez plus de 20% de vos [c=pv]PV max[/c], vous perdez 5% de vos [c=pv]PV max[/c] et gagnez un [c=shield]Bouclier[/c] équivalent à 10% de vos [c=pv]PV actuel[/c] (dure 2 tours).\nSi vous avez 20% de vos [c=pv]PV max[/c] ou moins, vous gagnez [c=armor]+20% d'Armure[/c] et de [c=resist]Résistance[/c] pendant 1 tour.\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c], [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
+                                "Au début de chaque tour :\nSi vous avez plus de 20% de vos [c=pv]PV max[/c], vous perdez 5% de vos [c=pv]PV max[/c] et gagnez un [c=shield]Bouclier[/c] équivalent à 10% de vos [c=pv]PV actuel[/c] (dure 2 tours).\nSi vous avez 20% de vos [c=pv]PV max[/c] ou moins, vous gagnez [c=armor]+25% d'Armure[/c] et de [c=resist]Résistance[/c] pendant 2 tours.\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c], [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
                 passifsVoies.put("Voie de la Conviction",
                                 "La Conviction est une force brute inarrêtable dénuée de mécanique complexe, se reposant entièrement sur des statistiques écrasantes.\nDès le niveau 1, elle offre une [c=mana]Régénération de Mana[/c] colossale (25/tour), en contrepartie, ces sorts coûtent plus cher.\n \nÀ chaque niveau, vous gagnez : [c=power]+1 Puissance[/c], [c=resist]+2 Résistance[/c], [c=pv]+7 PV[/c], [c=mana]+20 Mana[/c] et [c=mana]+4 Régen Mana[/c].");
                 passifsVoies.put("Voie de la Création",
@@ -108,7 +147,7 @@ public class DataInitializerService {
                 passifsVoies.put("Voie de la Destruction",
                                 "Accumule de la [c=crit]Chaleur[/c] en lançant des sorts.\nLorsque la chaleur atteint [c=warning]100[/c], le prochain sort lancé est entièrement [c=mana]gratuit[/c].\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+2 Puissance[/c] et [c=mana]+2 Régen Mana[/c].");
                 passifsVoies.put("Voie de la Violence",
-                                "Gère des cumuls d'[c=crimson]Inspiration[/c] ou d'[c=power]Expiration[/c] (max 7) en lançant les sorts correspondants.\nLancer un sort de l'autre type (Swap) consomme les cumuls actuels et octroie un bonus pendant 3 tours si vous avez 4 cumuls ou plus :\n[ul][li]Swap entre 4-6 cumuls d'[c=power]Expiration[/c] : [c=physic]+30% Force[/c] | à 7 cumuls : [c=physic]+60% Force[/c][/li][li]Swap entre 4-6 cumuls d'[c=crimson]Inspiration[/c] : [c=crit]+100% Critique[/c] | à 7 cumuls : [c=crit]+200% Critique[/c][/li][/ul]Attention : Si vous avez 6 cumuls ou plus, chaque nouveau sort du [b]même type[/b] que vous lancez vous infligera une [c=crit]Brûlure[/c] (15% [c=power]Puissance[/c] + 15% [c=physic]Force[/c] par tour, pendant 3 tours).\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+1 Puissance[/c] et [c=physic]+1 Force[/c].");
+                                "Gère des cumuls d'[c=crimson]Inspiration[/c] ou d'[c=power]Expiration[/c] (max 7) en lançant les sorts correspondants.\nLancer un sort de l'autre type (Swap) consomme les cumuls actuels et octroie un bonus pendant 3 tours si vous avez 4 cumuls ou plus :\n[ul][li]Swap entre 4-6 cumuls d'[c=power]Expiration[/c] : [c=physic]+30% Force[/c] | à 7 cumuls : [c=physic]+60% Force[/c][/li][li]Swap entre 4-6 cumuls d'[c=crimson]Inspiration[/c] : [c=crit]+100% Critique[/c] | à 7 cumuls : [c=crit]+200% Critique[/c][/li][/ul]Attention : À 6 cumuls ou plus, chaque sort du [b]même type[/b] que vous lancez vous infligera une [c=crit]Brûlure[/c] (15% [c=power]Puissance[/c] + 15% [c=physic]Force[/c] par tour, pendant 3 tours).\n \nÀ chaque niveau, vous gagnez : [c=mana]+8 Mana[/c], [c=power]+1 Puissance[/c] et [c=physic]+1 Force[/c].");
 
                 String[] voies = {
                                 "Voie de la Raison", "Voie de la Sûreté", "Voie de Trahison",
@@ -183,7 +222,7 @@ public class DataInitializerService {
                 for (Spiritualite sp : spiritualiteRepository.findAll()) {
                         if ("Esprit".equals(sp.getNom())) {
                                 sp.setPassiveDescription(
-                                                "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins [c=pv]20% de vos PV max[/c] ET [c=mana]20% de votre Mana max[/c].\nDe plus, au début de votre tour, vous régénérez [c=mana]10% de votre Mana actuel[/c]. Si vos PV sont sous les 20%, vous obtenez un [c=shield]Bouclier (5% PV max)[/c] (dure 1 tour).\n \nÀ chaque niveau, vous gagnez : [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
+                                                "Les sorts de cette spiritualité ne peuvent être lancés que si vous possédez au moins [c=pv]20% de vos PV max[/c] ET [c=mana]20% de votre Mana max[/c].\nDe plus, au début de votre tour, vous régénérez [c=mana]10% de votre Mana actuel[/c].\nSi vos PV sont sous les 20%, vous obtenez un [c=shield]Bouclier (5% PV max)[/c] (dure 2 tour).\n \nÀ chaque niveau, vous gagnez : [c=armor]+2 Armure[/c] et [c=resist]+2 Résistance[/c].");
                         } else if ("Ténèbres".equals(sp.getNom())) {
                                 sp.setPassiveDescription(
                                                 "Sauf pour les sorts de base, le lancement nécessite d'avoir [c=pv]80% ou moins de vos PV max[/c] OU [c=mana]80% ou moins de votre Mana max[/c].\nDe plus, à chaque début de tour, vous gagnez un bonus aux [c=physic]dégâts physiques[/c] équivalent à 10% de vos [c=pv]PV manquants[/c] et aux [c=purple]dégâts magiques[/c] équivalent à 10% de votre [c=mana]Mana manquant[/c] (dure 1 tour).\n \nÀ chaque niveau, vous gagnez : [c=pv]+5 PV[/c] et [c=mana]+5 Mana[/c].");
@@ -205,6 +244,10 @@ public class DataInitializerService {
                 // Migration: débloquer l'accès aux sorts du grimoire selon la progression des
                 // persos
                 migrateUnlockedSpellLevels();
+
+                // Initialisation idempotente des anomalies de base manquantes,
+                // des 12 catalyseurs, des 12 anomalies d'éveil et de leurs 24 recettes.
+                initAwakeningAnomaliesAndRecipes();
         }
 
         private void migrateDiscoveredItems() {
@@ -324,4 +367,294 @@ public class DataInitializerService {
                         log.info("Migration niveaux débloqués : {} mises à jour de profil.", updatedUsers);
                 }
         }
+
+        private void migrateUniversalAnomaliesSpiritualite(List<String> universalNames) {
+                for (String name : universalNames) {
+                        List<generation.grimoire.entity.Anomalie> matches = anomalieRepository.findByName(name);
+                        List<generation.grimoire.entity.Anomalie> toUpdate = new ArrayList<>();
+                        for (generation.grimoire.entity.Anomalie a : matches) {
+                                if (a.getSpiritualite() != generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL) {
+                                        a.setSpiritualite(generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL);
+                                        toUpdate.add(a);
+                                }
+                        }
+                        if (!toUpdate.isEmpty()) {
+                                anomalieRepository.saveAll(toUpdate);
+                        }
+                }
+        }
+
+        private void initAwakeningAnomaliesAndRecipes() {
+                migrateUniversalAnomaliesSpiritualite(List.of("Poussière d'Éveil", "Pierre d'Ascension"));
+                List<generation.grimoire.entity.Anomalie> templates = anomalieRepository.findByIsTemplateTrue();
+                java.util.Set<String> existingTemplateNames = new java.util.HashSet<>();
+                for (generation.grimoire.entity.Anomalie a : templates) {
+                        if (a.getName() != null) {
+                                existingTemplateNames.add(a.getName().toLowerCase());
+                        }
+                        if (a.getAnomalieType() == null) {
+                                a.setAnomalieType(generation.grimoire.enumeration.AnomalieType.MAGIQUE);
+                                anomalieRepository.save(a);
+                        }
+                }
+
+                // 1. Anomalies de base (Niv. 1-3) pour les 6 Voies initialement vides
+                List<SeedAnomalieSpec> baseMissing = List.of(
+                        // CONVICTION (Lave, Cristaux, Verre, Fibre, Tension)
+                        new SeedAnomalieSpec("Éclat de Verre Volcanique", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 1, "Un fragment vitrifié par une chaleur volcanique soutenue sous forte tension."),
+                        new SeedAnomalieSpec("Scorie de Lave", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 1, "Roche poreuse encore brûlante issue d'une coulée de magma figée."),
+                        new SeedAnomalieSpec("Fibre Incandescente", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 2, "Filaments de verre tendus et chauffés à blanc qui vibrent sous la contrainte."),
+                        new SeedAnomalieSpec("Orbe Magmatique", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.ORBE, 2, "Sphère de lave en fusion maintenue par une coque cristalline sous tension."),
+                        new SeedAnomalieSpec("Cœur de Basalte", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 3, "Noyau minéral palpitant d'une lave ancienne prête à jaillir."),
+
+                        // SURETE (Eau, Glace, Sang, Vapeur, Pression)
+                        new SeedAnomalieSpec("Goutte Abyssale", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 1, "Goutte d'eau d'une densité surnaturelle prélevée dans les abysses."),
+                        new SeedAnomalieSpec("Éclat de Givre", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 1, "Cristal de glace éternelle figé par une pression glaciale."),
+                        new SeedAnomalieSpec("Sablier de Vapeur", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.SABLIER_VIDE, 2, "Ampoule scellée où la vapeur tourbillonne et se condense en sang glacial."),
+                        new SeedAnomalieSpec("Métal Trempé", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.METAL, 2, "Alliage trempé à plusieurs reprises dans les eaux glacées sous haute pression."),
+                        new SeedAnomalieSpec("Orbe Sous-Pression", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.ORBE, 3, "Sphère liquide comprimée dont la surface tremble au bord de la rupture."),
+
+                        // RAISON (Air, Vibration, Vide, Déviation, Gravité)
+                        new SeedAnomalieSpec("Plume d'Éther Pur", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.PLUME, 1, "Plume translucide qui dévie imperceptiblement les courants d'air."),
+                        new SeedAnomalieSpec("Sablier du Vide", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.SABLIER_VIDE, 1, "Réceptacle silencieux contenant une poche d'absence gravitationnelle."),
+                        new SeedAnomalieSpec("Cristal Résonnant", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 2, "Prisme vibrant à une fréquence harmonique capable de courber les trajectoires."),
+                        new SeedAnomalieSpec("Cube Gravitationnel", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.CUBE, 2, "Polyèdre géométrique suspendu à quelques millimètres de toute surface."),
+                        new SeedAnomalieSpec("Orbe de Distorsion", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.ORBE, 3, "Noyau d'espace replié dont le champ vibratoire dévie matière et lumière."),
+
+                        // VIOLENCE (Combustion, Gaz, Oxygène, Fragmentation)
+                        new SeedAnomalieSpec("Poudre de Combustion", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 1, "Poussière réactive saturée d'oxygène qui s'embrase au moindre choc."),
+                        new SeedAnomalieSpec("Cristal Instable", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 1, "Éclat fissuré renfermant une poche de gaz comprimé prête à éclater."),
+                        new SeedAnomalieSpec("Métal Fragmenté", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.METAL, 2, "Éclats métalliques aimantés entre eux par l'onde de choc d'une explosion."),
+                        new SeedAnomalieSpec("Orbe Détonante", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.ORBE, 2, "Sphère de gaz surpressurisé où crépitent des étincelles continues."),
+                        new SeedAnomalieSpec("Cœur Furieux", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.COEUR, 3, "Réacteur organo-minéral brûlant d'une combustion effrénée."),
+
+                        // TRAHISON (Neige, Acide, Poison, Corrosion, Friction)
+                        new SeedAnomalieSpec("Goutte d'Acide", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 1, "Liquide corrosif silencieux capable de ronger l'acier le plus pur."),
+                        new SeedAnomalieSpec("Écaille Venimeuse", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.ECAILLE, 1, "Écaille suintante d'un poison froid qui engourdit au contact."),
+                        new SeedAnomalieSpec("Métal Corrodé", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.METAL, 2, "Plaque rongée par des neiges acides et striée par une friction incessante."),
+                        new SeedAnomalieSpec("Dard de Friction", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.AUTRE, 2, "Pointe effilée enduite de toxine qui s'échauffe en déchirant sa cible."),
+                        new SeedAnomalieSpec("Crâne Empoisonné", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.CRANE, 3, "Relique calcinée dont chaque fissure suinte une corrosion mortelle."),
+
+                        // CONSOLIDATION (Terre, Métal, Sable, Poussière, Atome)
+                        new SeedAnomalieSpec("Pierre Tellurique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 1, "Bloc de roche dense traversé par des veines ferreuses magnétiques."),
+                        new SeedAnomalieSpec("Sable Compact", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 1, "Grains de silice et de poussière minérale soudés sous une pression colossale."),
+                        new SeedAnomalieSpec("Lingot d'Alliage Lourd", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.METAL, 2, "Métal densifié atome par atome jusqu'à devenir quasi indestructible."),
+                        new SeedAnomalieSpec("Cube Atomique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.CUBE, 2, "Structure métallique parfaite dont la cohésion atomique est inaltérable."),
+                        new SeedAnomalieSpec("Cœur Lithique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 3, "Noyau tellurique massif qui ancre la matière environnante dans la roche.")
+                );
+
+                // 2. 12 Catalyseurs + 12 Anomalies d'Éveil
+                List<SeedAnomalieSpec> catalystSpecs = List.of(
+                        new SeedAnomalieSpec("Éclat de Chaos", generation.grimoire.enumeration.SpiritualiteType.DESTRUCTION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 4, "Catalyseur incandescent stabilisant les flammes du Secret du Chaos."),
+                        new SeedAnomalieSpec("Fragment du Destin", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.JETON, 4, "Catalyseur équilibrant la balance karmique d'une relique du Destin."),
+                        new SeedAnomalieSpec("Souffle d'Éther", generation.grimoire.enumeration.SpiritualiteType.ESPRIT, generation.grimoire.enumeration.AnomalieCategory.ORBE, 4, "Catalyseur lumineux purifiant l'aura des artefacts de l'Éther."),
+                        new SeedAnomalieSpec("Résidu Abyssal", generation.grimoire.enumeration.SpiritualiteType.TENEBRES, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur obscur distillant la substance froide des Abysses."),
+                        new SeedAnomalieSpec("Sève Mutagène", generation.grimoire.enumeration.SpiritualiteType.CREATION, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur organique accélérant la croissance des artefacts d'Abondance."),
+                        new SeedAnomalieSpec("Braises de Conviction", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 4, "Catalyseur de lave cristallisée fortifiant les équipements de Conviction."),
+                        new SeedAnomalieSpec("Larme de Pression", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur aqueux condensé stabilisant les reliques de Sûreté."),
+                        new SeedAnomalieSpec("Ondes de Gravité", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.CUBE, 4, "Catalyseur vibratoire accordant les artefacts liés à la Raison."),
+                        new SeedAnomalieSpec("Éclat Déflagrant", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.METAL, 4, "Catalyseur explosif amplifiant la brutalité des artefacts de Violence."),
+                        new SeedAnomalieSpec("Fiole Corrosive", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.GOUTTE, 4, "Catalyseur venimeux imprégnant l'acier des armes de Trahison."),
+                        new SeedAnomalieSpec("Noyau Tellurique", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 4, "Catalyseur minéral renforçant la structure des équipements de Consolidation."),
+                        new SeedAnomalieSpec("Poussière d'Éveil", generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL, generation.grimoire.enumeration.AnomalieCategory.MATIERE, 4, "Catalyseur universel raffiné permettant d'éveiller tout équipement sans Secret.")
+                );
+
+                List<SeedAnomalieSpec> eveilSpecs = List.of(
+                        new SeedAnomalieSpec("Cœur de Cendre", generation.grimoire.enumeration.SpiritualiteType.DESTRUCTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil ultime concentrant la braise primordiale du Chaos."),
+                        new SeedAnomalieSpec("Prisme Karmique", generation.grimoire.enumeration.SpiritualiteType.KARMA, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil révélant les fils invisibles du Secret du Destin."),
+                        new SeedAnomalieSpec("Cœur Empyréen", generation.grimoire.enumeration.SpiritualiteType.ESPRIT, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil rayonnante scellant la transcendance de l'Éther."),
+                        new SeedAnomalieSpec("Noyau Néant", generation.grimoire.enumeration.SpiritualiteType.TENEBRES, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil engloutissant la lumière pour éveiller les reliques abyssales."),
+                        new SeedAnomalieSpec("Ambre Parasitaire", generation.grimoire.enumeration.SpiritualiteType.CREATION, generation.grimoire.enumeration.AnomalieCategory.CRISTAL, 5, "Anomalie d'éveil symbiotique décuplant la vitalité d'une relique."),
+                        new SeedAnomalieSpec("Cœur de Lave Pure", generation.grimoire.enumeration.SpiritualiteType.CONVICTION, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil en fusion absolue forgée au cœur de la Conviction."),
+                        new SeedAnomalieSpec("Perle des Profondeurs", generation.grimoire.enumeration.SpiritualiteType.SURETE, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil abyssale impénétrable forgée sous la pression."),
+                        new SeedAnomalieSpec("Singularité Lucide", generation.grimoire.enumeration.SpiritualiteType.RAISON, generation.grimoire.enumeration.AnomalieCategory.ORBE, 5, "Anomalie d'éveil gravitationnelle concentrant la rigueur de la Raison."),
+                        new SeedAnomalieSpec("Noyau de Fureur", generation.grimoire.enumeration.SpiritualiteType.VIOLENCE, generation.grimoire.enumeration.AnomalieCategory.COEUR, 5, "Anomalie d'éveil détonante libérant l'énergie pure de la Violence."),
+                        new SeedAnomalieSpec("Venin Souverain", generation.grimoire.enumeration.SpiritualiteType.TRAHISON, generation.grimoire.enumeration.AnomalieCategory.CRANE, 5, "Anomalie d'éveil acide parachevant les reliques les plus perfides."),
+                        new SeedAnomalieSpec("Monolithe Éternel", generation.grimoire.enumeration.SpiritualiteType.CONSOLIDATION, generation.grimoire.enumeration.AnomalieCategory.CUBE, 5, "Anomalie d'éveil tellurique inébranlable scellant la Consolidation."),
+                        new SeedAnomalieSpec("Pierre d'Ascension", generation.grimoire.enumeration.SpiritualiteType.UNIVERSEL, generation.grimoire.enumeration.AnomalieCategory.PIERRE, 5, "Anomalie d'éveil universelle gravée de runes transversales d'ascension.")
+                );
+
+                int createdAnomalies = 0;
+                createdAnomalies += seedMissingAnomalies(baseMissing, generation.grimoire.enumeration.AnomalieType.MATERIAU, existingTemplateNames);
+                createdAnomalies += seedMissingAnomalies(catalystSpecs, generation.grimoire.enumeration.AnomalieType.CATALYSEUR, existingTemplateNames);
+                createdAnomalies += seedMissingAnomalies(eveilSpecs, generation.grimoire.enumeration.AnomalieType.EVEIL, existingTemplateNames);
+
+                // 3. 24 recettes alchimiques (12 Catalyseurs + 12 Éveils)
+                List<generation.grimoire.entity.AlchemyRecipe> existingRecipes = alchemyRecipeRepository.findAll();
+                java.util.Set<String> existingRecipeKeys = new java.util.HashSet<>();
+                for (generation.grimoire.entity.AlchemyRecipe r : existingRecipes) {
+                        if (r.getRewardType() != null && r.getRewardName() != null) {
+                                existingRecipeKeys.add(r.getRewardType().name() + "::" + r.getRewardName().toLowerCase());
+                        }
+                }
+
+                List<SeedRecipeSpec> recipes = List.of(
+                        // DESTRUCTION - Secret du Chaos
+                        new SeedRecipeSpec("Catalyseur du Chaos", "Distille la chaleur instable pour forger un Éclat de Chaos.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Éclat de Chaos", 4,
+                                Map.of("Cristal Incandescent", 2, "Cœur de Démon", 1, "Braise Ardente", 1)),
+                        new SeedRecipeSpec("Éveil du Chaos", "Condense un Cœur de Cendre à partir de braises abyssales.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Cœur de Cendre", 5,
+                                Map.of("Métal en fusion", 2, "Crâne sanglant", 1, "Orbe incandescent", 1)),
+
+                        // KARMA - Secret du Destin
+                        new SeedRecipeSpec("Catalyseur du Destin", "Aligne la chance et l'équilibre pour façonner un Fragment du Destin.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Fragment du Destin", 4,
+                                Map.of("Pierre d'Équilibre", 2, "Écaille lustrée", 1, "Orbe Catalytique Stabilisé", 1)),
+                        new SeedRecipeSpec("Éveil du Destin", "Scelle le Prisme Karmique au croisement des fils du destin.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Prisme Karmique", 5,
+                                Map.of("Orbe Catalytique Stabilisé", 2, "Cristal de vision", 1, "Écaille de lézard", 1)),
+
+                        // ESPRIT - Secret de l'Éther
+                        new SeedRecipeSpec("Catalyseur de l'Éther", "Purifie la lumière spirituelle en un Souffle d'Éther.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Souffle d'Éther", 4,
+                                Map.of("Cristal de Purification", 2, "Plume d'Ange", 1, "Orbe d'espoir", 1)),
+                        new SeedRecipeSpec("Éveil de l'Éther", "Transmute l'essence angélique en un Cœur Empyréen.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Cœur Empyréen", 5,
+                                Map.of("Métal purifié", 2, "Cœur séraphin", 1, "Cristal de Purification", 1)),
+
+                        // TENEBRES - Secret des Abysses
+                        new SeedRecipeSpec("Catalyseur des Abysses", "Concentrer la matière sombre pour obtenir un Résidu Abyssal.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Résidu Abyssal", 4,
+                                Map.of("Matière noire", 2, "Métal hurlant", 1, "Cristal corrompu", 1)),
+                        new SeedRecipeSpec("Éveil des Abysses", "Fusionne la corruption démoniaque en un Noyau Néant.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Noyau Néant", 5,
+                                Map.of("Orbe démoniaque", 2, "Cristal corrompu", 1, "Métal palpitant", 1)),
+
+                        // CREATION - Secret de l'Abondance
+                        new SeedRecipeSpec("Catalyseur de l'Abondance", "Extrait la sève vitale pour préparer une Sève Mutagène.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Sève Mutagène", 4,
+                                Map.of("Cristal purulent", 2, "Racine toxique", 1, "Métal purulent", 1)),
+                        new SeedRecipeSpec("Éveil de l'Abondance", "Cristallise la croissance parasite en Ambre Parasitaire.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Ambre Parasitaire", 5,
+                                Map.of("Métal purulent", 2, "Orbe parasitée", 1, "Racine toxique", 1)),
+
+                        // CONVICTION
+                        new SeedRecipeSpec("Catalyseur de Conviction", "Vitrifie la lave brute en Braises de Conviction.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Braises de Conviction", 4,
+                                Map.of("Éclat de Verre Volcanique", 2, "Scorie de Lave", 1, "Fibre Incandescente", 1)),
+                        new SeedRecipeSpec("Éveil de Conviction", "Enferme une éruption pure dans un Cœur de Lave Pure.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Cœur de Lave Pure", 5,
+                                Map.of("Orbe Magmatique", 2, "Cœur de Basalte", 1, "Scorie de Lave", 1)),
+
+                        // SURETE
+                        new SeedRecipeSpec("Catalyseur de Sûreté", "Comprime l'eau abyssale en une Larme de Pression.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Larme de Pression", 4,
+                                Map.of("Goutte Abyssale", 2, "Éclat de Givre", 1, "Sablier de Vapeur", 1)),
+                        new SeedRecipeSpec("Éveil de Sûreté", "Durcit les flots sous pression pour former une Perle des Profondeurs.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Perle des Profondeurs", 5,
+                                Map.of("Métal Trempé", 2, "Orbe Sous-Pression", 1, "Goutte Abyssale", 1)),
+
+                        // RAISON
+                        new SeedRecipeSpec("Catalyseur de Raison", "Harmonise le vide vibratoire en Ondes de Gravité.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Ondes de Gravité", 4,
+                                Map.of("Plume d'Éther Pur", 2, "Sablier du Vide", 1, "Cristal Résonnant", 1)),
+                        new SeedRecipeSpec("Éveil de Raison", "Plie les forces de déviation en une Singularité Lucide.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Singularité Lucide", 5,
+                                Map.of("Cube Gravitationnel", 2, "Orbe de Distorsion", 1, "Sablier du Vide", 1)),
+
+                        // VIOLENCE
+                        new SeedRecipeSpec("Catalyseur de Violence", "Surcharge les gaz instables en un Éclat Déflagrant.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Éclat Déflagrant", 4,
+                                Map.of("Poudre de Combustion", 2, "Cristal Instable", 1, "Métal Fragmenté", 1)),
+                        new SeedRecipeSpec("Éveil de Violence", "Allume la combustion suprême au sein d'un Noyau de Fureur.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Noyau de Fureur", 5,
+                                Map.of("Orbe Détonante", 2, "Cœur Furieux", 1, "Cristal Instable", 1)),
+
+                        // TRAHISON
+                        new SeedRecipeSpec("Catalyseur de Trahison", "Distille poisons et acides dans une Fiole Corrosive.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Fiole Corrosive", 4,
+                                Map.of("Goutte d'Acide", 2, "Écaille Venimeuse", 1, "Métal Corrodé", 1)),
+                        new SeedRecipeSpec("Éveil de Trahison", "Concentrer l'ultime corrosion pour obtenir un Venin Souverain.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Venin Souverain", 5,
+                                Map.of("Dard de Friction", 2, "Crâne Empoisonné", 1, "Goutte d'Acide", 1)),
+
+                        // CONSOLIDATION
+                        new SeedRecipeSpec("Catalyseur de Consolidation", "Comprime roche et métal en un Noyau Tellurique.",
+                                150, 30, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Noyau Tellurique", 4,
+                                Map.of("Pierre Tellurique", 2, "Sable Compact", 1, "Lingot d'Alliage Lourd", 1)),
+                        new SeedRecipeSpec("Éveil de Consolidation", "Soude la matière atomique en un Monolithe Éternel.",
+                                350, 75, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Monolithe Éternel", 5,
+                                Map.of("Cube Atomique", 2, "Cœur Lithique", 1, "Sable Compact", 1)),
+
+                        // GÉNÉRIQUE (équipement sans Secret requis)
+                        new SeedRecipeSpec("Catalyseur Universel", "Mélange transversal d'anomalies raffiné en Poussière d'Éveil.",
+                                120, 25, generation.grimoire.enumeration.RecipeRewardType.GIVE_CATALYST, "Poussière d'Éveil", 4,
+                                Map.of("Cristal Incandescent", 1, "Cristal de Purification", 1, "Pierre d'Équilibre", 1, "Matière noire", 1)),
+                        new SeedRecipeSpec("Éveil Universel", "Conception transversale façonnant une Pierre d'Ascension.",
+                                300, 60, generation.grimoire.enumeration.RecipeRewardType.GIVE_AWAKENING, "Pierre d'Ascension", 5,
+                                Map.of("Orbe d'espoir", 1, "Orbe Catalytique Stabilisé", 1, "Métal en fusion", 1, "Orbe démoniaque", 1))
+                );
+
+                int createdRecipes = 0;
+                for (SeedRecipeSpec spec : recipes) {
+                        String key = spec.rewardType().name() + "::" + spec.rewardName().toLowerCase();
+                        if (existingRecipeKeys.contains(key)) {
+                                continue;
+                        }
+                        generation.grimoire.entity.AlchemyRecipe r = new generation.grimoire.entity.AlchemyRecipe();
+                        r.setName(spec.name());
+                        r.setDescription(spec.description());
+                        r.setCostGold(spec.costGold());
+                        r.setCostSpiritXp(spec.costSpiritXp());
+                        r.setRewardType(spec.rewardType());
+                        r.setRewardName(spec.rewardName());
+                        r.setRewardQuantity(1);
+                        r.setRewardLevel(spec.rewardLevel());
+                        r.setRequiredAnomalies(new HashMap<>(spec.requiredAnomalies()));
+                        r.setRequiredConsumables(new HashMap<>());
+                        alchemyRecipeRepository.save(r);
+                        existingRecipeKeys.add(key);
+                        createdRecipes++;
+                }
+
+                if (createdAnomalies > 0 || createdRecipes > 0) {
+                        log.info("Éveil initialisé : {} anomalies et {} recettes créées.", createdAnomalies, createdRecipes);
+                }
+        }
+
+        private int seedMissingAnomalies(
+                        List<SeedAnomalieSpec> specs,
+                        generation.grimoire.enumeration.AnomalieType type,
+                        java.util.Set<String> existingTemplateNames) {
+                int created = 0;
+                for (SeedAnomalieSpec spec : specs) {
+                        if (existingTemplateNames.contains(spec.name().toLowerCase())) {
+                                continue;
+                        }
+                        generation.grimoire.entity.Anomalie a = new generation.grimoire.entity.Anomalie();
+                        a.setName(spec.name());
+                        a.setSpiritualite(spec.spiritualite());
+                        a.setCategory(spec.category());
+                        a.setLevel(spec.level());
+                        a.setAnomalieType(type);
+                        a.setDescription(spec.description());
+                        a.setTemplate(true);
+                        a.setOwnerUsername("MODELE");
+                        a.setUser(null);
+                        anomalieRepository.save(a);
+                        existingTemplateNames.add(spec.name().toLowerCase());
+                        created++;
+                }
+                return created;
+        }
+
+        private record SeedAnomalieSpec(
+                String name,
+                generation.grimoire.enumeration.SpiritualiteType spiritualite,
+                generation.grimoire.enumeration.AnomalieCategory category,
+                int level,
+                String description
+        ) {}
+
+        private record SeedRecipeSpec(
+                String name,
+                String description,
+                double costGold,
+                double costSpiritXp,
+                generation.grimoire.enumeration.RecipeRewardType rewardType,
+                String rewardName,
+                int rewardLevel,
+                Map<String, Integer> requiredAnomalies
+        ) {}
 }

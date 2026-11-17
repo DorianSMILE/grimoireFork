@@ -1,14 +1,18 @@
 package generation.grimoire.controller;
 
+import generation.grimoire.dto.equipment.EquipmentDismantleBatchRequestDTO;
 import generation.grimoire.dto.equipment.EquipmentRequestDTO;
 import generation.grimoire.dto.equipment.EquipmentResponseDTO;
 import generation.grimoire.entity.Equipment;
 import generation.grimoire.entity.personnage.Personnage;
 import generation.grimoire.enumeration.EquipmentSlot;
 import generation.grimoire.mapper.EquipmentMapper;
+import generation.grimoire.repository.AnomalieRepository;
 import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.pve.LootEntryRepository;
 import generation.grimoire.service.PersonnageService;
+import generation.grimoire.service.equipment.EquipmentAwakeningService;
+import generation.grimoire.service.equipment.EquipmentDismantleService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +32,9 @@ public class EquipmentController {
     private final generation.grimoire.service.RenameCascadeService renameCascadeService;
     private final EquipmentMapper equipmentMapper;
     private final generation.grimoire.service.pve.DungeonLootTrackerService dungeonLootTrackerService;
-    private final generation.grimoire.service.AchievementService achievementService;
+    private final EquipmentAwakeningService equipmentAwakeningService;
+    private final EquipmentDismantleService equipmentDismantleService;
+    private final AnomalieRepository anomalieRepository;
 
     public EquipmentController(EquipmentRepository equipmentRepository,
             PersonnageService personnageService,
@@ -37,7 +43,9 @@ public class EquipmentController {
             generation.grimoire.service.RenameCascadeService renameCascadeService,
             EquipmentMapper equipmentMapper,
             generation.grimoire.service.pve.DungeonLootTrackerService dungeonLootTrackerService,
-            generation.grimoire.service.AchievementService achievementService) {
+            EquipmentAwakeningService equipmentAwakeningService,
+            EquipmentDismantleService equipmentDismantleService,
+            AnomalieRepository anomalieRepository) {
         this.equipmentRepository = equipmentRepository;
         this.personnageService = personnageService;
         this.userRepository = userRepository;
@@ -45,7 +53,9 @@ public class EquipmentController {
         this.renameCascadeService = renameCascadeService;
         this.equipmentMapper = equipmentMapper;
         this.dungeonLootTrackerService = dungeonLootTrackerService;
-        this.achievementService = achievementService;
+        this.equipmentAwakeningService = equipmentAwakeningService;
+        this.equipmentDismantleService = equipmentDismantleService;
+        this.anomalieRepository = anomalieRepository;
     }
 
     /** Liste tous les équipements du joueur */
@@ -54,10 +64,14 @@ public class EquipmentController {
     public ResponseEntity<List<EquipmentResponseDTO>> getAll(java.security.Principal principal) {
         if (principal == null)
             return ResponseEntity.status(401).build();
-        List<Equipment> equipmentList = equipmentRepository.findByUser_Username(principal.getName());
+        List<Equipment> playerItems = equipmentRepository.findByUser_Username(principal.getName())
+                .stream().filter(e -> !e.isTemplate()).toList();
         var sourcesMap = dungeonLootTrackerService.buildEquipmentDungeonSourcesMap();
         var alchemyMap = dungeonLootTrackerService.buildEquipmentAlchemyRecipesMap();
-        return ResponseEntity.ok(equipmentList.stream().filter(e -> !e.isTemplate()).map(e -> toResponseDto(e, sourcesMap, alchemyMap)).toList());
+        var upgradeStatuses = computeStatusesForPrincipal(principal, playerItems);
+        return ResponseEntity.ok(playerItems.stream()
+                .map(e -> toResponseDto(e, sourcesMap, alchemyMap, upgradeStatuses.get(e.getId())))
+                .toList());
     }
 
     /** Liste TOUS les équipements (réservé aux admins) */
@@ -103,14 +117,15 @@ public class EquipmentController {
             java.security.Principal principal) {
         if (principal == null)
             return ResponseEntity.status(401).build();
-        boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
-        // Optionnel : on pourrait vérifier si le personnage appartient à l'utilisateur
-        return ResponseEntity.ok(
-                equipmentRepository.findByPersonnageId(personnageId).stream()
-                        .filter(e -> isAdmin
-                                || (e.getUser() != null && e.getUser().getUsername().equals(principal.getName())))
-                        .map(this::toResponseDto).toList());
+        boolean isAdmin = isAdminPrincipal(principal);
+        List<Equipment> items = equipmentRepository.findByPersonnageId(personnageId).stream()
+                .filter(e -> isAdmin
+                        || (e.getUser() != null && e.getUser().getUsername().equals(principal.getName())))
+                .toList();
+        var upgradeStatuses = computeStatusesForPrincipal(principal, items);
+        return ResponseEntity.ok(items.stream()
+                .map(e -> toResponseDto(e, null, null, upgradeStatuses.get(e.getId())))
+                .toList());
     }
 
     /** Liste les équipements non-assignés (inventaire libre) */
@@ -119,10 +134,13 @@ public class EquipmentController {
     public ResponseEntity<List<EquipmentResponseDTO>> getUnassigned(java.security.Principal principal) {
         if (principal == null)
             return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(
-                equipmentRepository.findByPersonnageIsNullAndUser_Username(principal.getName()).stream()
-                        .filter(e -> !e.isTemplate())
-                        .map(this::toResponseDto).toList());
+        List<Equipment> items = equipmentRepository.findByPersonnageIsNullAndUser_Username(principal.getName()).stream()
+                .filter(e -> !e.isTemplate())
+                .toList();
+        var upgradeStatuses = computeStatusesForPrincipal(principal, items);
+        return ResponseEntity.ok(items.stream()
+                .map(e -> toResponseDto(e, null, null, upgradeStatuses.get(e.getId())))
+                .toList());
     }
 
     /**
@@ -134,7 +152,7 @@ public class EquipmentController {
         equipmentMapper.updateEntity(dto, temp);
 
         double weight = temp.calculateWeight();
-        double maxWeight = getMaxWeight(dto.getSlot(), dto.getRarity());
+        double maxWeight = generation.grimoire.service.equipment.EquipmentScalingHelper.getBaseMaxWeight(dto.getSlot(), dto.getRarity());
         double shopPrice = temp.calculateShopPrice();
 
         Map<String, Double> response = new HashMap<>();
@@ -142,141 +160,6 @@ public class EquipmentController {
         response.put("maxWeight", maxWeight);
         response.put("shopPrice", shopPrice);
         return ResponseEntity.ok(response);
-    }
-
-    @SuppressWarnings("deprecation")
-    private double getMaxWeight(EquipmentSlot slot, generation.grimoire.enumeration.EquipmentRarity rarity) {
-        if (slot == null || rarity == null)
-            return 5.0;
-        switch (slot) {
-            case CASQUE:
-            case CAPE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 9;
-                    case RARE:
-                        return 14;
-                    case MYTHIQUE:
-                        return 18;
-                    case LEGENDAIRE:
-                        return 22;
-                    case EPIQUE:
-                        return 35;
-                    case RELIQUE:
-                        return 40;
-                    case MAUDIT:
-                        return 27;
-                }
-                break;
-            case PLASTRON:
-            case ARME_DEUX_MAINS:
-                switch (rarity) {
-                    case COMMUN:
-                        return 9;
-                    case INHABITUEL:
-                        return 14;
-                    case RARE:
-                        return 19;
-                    case MYTHIQUE:
-                        return 24;
-                    case LEGENDAIRE:
-                        return 29;
-                    case EPIQUE:
-                        return 40;
-                    case RELIQUE:
-                        return 46;
-                    case MAUDIT:
-                        return 35;
-                }
-                break;
-            case ANNEAU:
-            case ANNEAU_GAUCHE:
-            case ANNEAU_DROIT:
-                switch (rarity) {
-                    case COMMUN:
-                        return 3;
-                    case INHABITUEL:
-                        return 4;
-                    case RARE:
-                        return 6;
-                    case MYTHIQUE:
-                        return 8;
-                    case LEGENDAIRE:
-                        return 10;
-                    case EPIQUE:
-                        return 15;
-                    case RELIQUE:
-                        return 17;
-                    case MAUDIT:
-                        return 12;
-                }
-                break;
-            case BOTTES:
-                switch (rarity) {
-                    case COMMUN:
-                        return 4;
-                    case INHABITUEL:
-                        return 8;
-                    case RARE:
-                        return 12;
-                    case MYTHIQUE:
-                        return 15;
-                    case LEGENDAIRE:
-                        return 19;
-                    case EPIQUE:
-                        return 30;
-                    case RELIQUE:
-                        return 34;
-                    case MAUDIT:
-                        return 25;
-                }
-                break;
-            case ARME:
-            case ARME_GAUCHE:
-            case ARME_DROITE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 7;
-                    case RARE:
-                        return 10;
-                    case MYTHIQUE:
-                        return 12;
-                    case LEGENDAIRE:
-                        return 15;
-                    case EPIQUE:
-                        return 20;
-                    case RELIQUE:
-                        return 23;
-                    case MAUDIT:
-                        return 18;
-                }
-                break;
-            case CONSOMMABLE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 7;
-                    case RARE:
-                        return 9;
-                    case MYTHIQUE:
-                        return 11;
-                    case LEGENDAIRE:
-                        return 14;
-                    case EPIQUE:
-                        return 20;
-                    case RELIQUE:
-                        return 24;
-                    case MAUDIT:
-                        return 17;
-                }
-                break;
-        }
-        return 5.0;
     }
 
 
@@ -569,16 +452,119 @@ public class EquipmentController {
         return ResponseEntity.ok(response);
     }
 
+    /** Prévisualisation de l'éveil d'un équipement */
+    @PostMapping("/{id}/upgrade/simulate")
+    public ResponseEntity<?> simulateUpgrade(
+            @PathVariable @org.springframework.lang.NonNull Long id,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentAwakeningService.simulateUpgrade(
+                    principal.getName(), isAdminPrincipal(principal), id));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Exécution de l'éveil d'un équipement */
+    @PostMapping("/{id}/upgrade")
+    public ResponseEntity<?> executeUpgrade(
+            @PathVariable @org.springframework.lang.NonNull Long id,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentAwakeningService.executeUpgrade(
+                    principal.getName(), isAdminPrincipal(principal), id));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Prévisualisation du démantèlement d'un équipement */
+    @PostMapping("/{id}/dismantle/simulate")
+    public ResponseEntity<?> simulateSingleDismantle(
+            @PathVariable @org.springframework.lang.NonNull Long id,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentDismantleService.simulateDismantle(
+                    principal.getName(), isAdminPrincipal(principal), List.of(id)));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Exécution du démantèlement d'un équipement */
+    @PostMapping("/{id}/dismantle")
+    public ResponseEntity<?> executeSingleDismantle(
+            @PathVariable @org.springframework.lang.NonNull Long id,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentDismantleService.executeDismantle(
+                    principal.getName(), isAdminPrincipal(principal), List.of(id)));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Prévisualisation du démantèlement par lot (quantité sur un stack de même palier) */
+    @PostMapping("/dismantle/batch/simulate")
+    public ResponseEntity<?> simulateBatchDismantle(
+            @RequestBody EquipmentDismantleBatchRequestDTO request,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentDismantleService.simulateDismantle(
+                    principal.getName(), isAdminPrincipal(principal),
+                    request != null ? request.equipmentIds() : null));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Exécution du démantèlement par lot */
+    @PostMapping("/dismantle/batch")
+    public ResponseEntity<?> executeBatchDismantle(
+            @RequestBody EquipmentDismantleBatchRequestDTO request,
+            java.security.Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié."));
+        try {
+            return ResponseEntity.ok(equipmentDismantleService.executeDismantle(
+                    principal.getName(), isAdminPrincipal(principal),
+                    request != null ? request.equipmentIds() : null));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     /** Supprimer un équipement */
     @Transactional
     @DeleteMapping("/{id}")
     @org.springframework.cache.annotation.CacheEvict(value = {"equipmentTemplates", "equipmentShopTemplates", "equipmentTemplateByName", "publicEquipmentTemplates", "equipmentDistinctNames", "alchemyRecipes", "alchemyRecipesList", "alchemyRecipeById", "lootEntriesByEquipment", "salles", "monstres"}, allEntries = true)
-    public ResponseEntity<String> delete(@PathVariable @org.springframework.lang.NonNull Long id,
+    public ResponseEntity<?> delete(@PathVariable @org.springframework.lang.NonNull Long id,
             java.security.Principal principal) {
         if (principal == null)
             return ResponseEntity.status(401).build();
-        boolean isAdmin = ((org.springframework.security.core.Authentication) principal).getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+        boolean isAdmin = isAdminPrincipal(principal);
         Equipment equipment = equipmentRepository.findById(id).orElse(null);
         if (equipment != null) {
             if (!isAdmin && equipment.getUser() != null
@@ -586,15 +572,17 @@ public class EquipmentController {
                 return ResponseEntity.status(403).build();
             }
 
-            if (!isAdmin && equipment.getUser() != null) {
-                generation.grimoire.entity.auth.AppUser owner = equipment.getUser();
-                owner.setMonnaie(owner.getMonnaie() + equipment.calculateWeight());
-                userRepository.save(owner);
-                achievementService.onEquipmentRecycled(owner, 1);
-                achievementService.onGoldChanged(owner);
+            // Pour un joueur (ou un objet de coffre non-template), passer par le démantèlement SSOT
+            if (!isAdmin && !equipment.isTemplate()) {
+                try {
+                    equipmentDismantleService.executeDismantle(principal.getName(), false, List.of(id));
+                    return ResponseEntity.ok("Équipement démantelé et ressources ajoutées.");
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+                }
             }
 
-            // Supprimer les références dans les tables de loot avant suppression
+            // Supprimer les références dans les tables de loot avant suppression (Admin)
             lootEntryRepository.deleteByEquipmentId(id);
 
             if (equipment.getPersonnage() != null) {
@@ -603,7 +591,7 @@ public class EquipmentController {
             } else {
                 equipmentRepository.deleteById(id);
             }
-            return ResponseEntity.ok("Équipement supprimé et monnaie ajoutée.");
+            return ResponseEntity.ok("Équipement supprimé.");
         }
         return ResponseEntity.notFound().build();
     }
@@ -629,15 +617,51 @@ public class EquipmentController {
         }
     }
 
+    private boolean isAdminPrincipal(java.security.Principal principal) {
+        if (principal instanceof org.springframework.security.core.Authentication auth) {
+            return auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+        }
+        return false;
+    }
+
+    private Map<Long, EquipmentAwakeningService.UpgradeStatus> computeStatusesForPrincipal(
+            java.security.Principal principal, List<Equipment> items) {
+        if (principal == null || items == null || items.isEmpty()) {
+            return Map.of();
+        }
+        var userOpt = userRepository.findByUsername(principal.getName());
+        if (userOpt.isEmpty()) {
+            return Map.of();
+        }
+        var user = userOpt.get();
+        boolean isAdmin = isAdminPrincipal(principal);
+        boolean unlocked = equipmentAwakeningService.isAwakeningUnlocked(user, isAdmin);
+        var userAnomalies = anomalieRepository.findByOwnerUsername(user.getUsername());
+        return equipmentAwakeningService.computeUpgradeStatuses(user, isAdmin, unlocked, items, userAnomalies);
+    }
+
     private EquipmentResponseDTO toResponseDto(Equipment e) {
-        return toResponseDto(e, null, null);
+        return toResponseDto(e, null, null, null);
     }
 
     private EquipmentResponseDTO toResponseDto(Equipment e,
             java.util.Map<String, java.util.List<generation.grimoire.dto.equipment.DungeonDropSourceDTO>> sourcesMap,
             java.util.Map<String, java.util.List<String>> alchemyMap) {
+        return toResponseDto(e, sourcesMap, alchemyMap, null);
+    }
+
+    private EquipmentResponseDTO toResponseDto(Equipment e,
+            java.util.Map<String, java.util.List<generation.grimoire.dto.equipment.DungeonDropSourceDTO>> sourcesMap,
+            java.util.Map<String, java.util.List<String>> alchemyMap,
+            EquipmentAwakeningService.UpgradeStatus upgradeStatus) {
         EquipmentResponseDTO dto = equipmentMapper.toResponse(e);
-        dto.setMaxWeight(getMaxWeight(e.getSlot(), e.getRarity()));
+        dto.setMaxWeight(generation.grimoire.service.equipment.EquipmentScalingHelper.calculateMaxWeight(e));
+        if (upgradeStatus != null) {
+            dto.setUpgradeEligible(upgradeStatus.eligible());
+            dto.setUpgradeReady(upgradeStatus.ready());
+            dto.setUpgradeMissingReason(upgradeStatus.missingReason());
+        }
         
         if (e.getPersonnage() != null) {
             EquipmentResponseDTO.PersonnageRef ref = new EquipmentResponseDTO.PersonnageRef();

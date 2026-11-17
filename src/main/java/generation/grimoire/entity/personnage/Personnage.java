@@ -471,7 +471,7 @@ public class Personnage {
         int total = 0;
         for (generation.grimoire.entity.Equipment eq : this.equipments) {
             if (eq.getSpecialEffect() == type) {
-                total += eq.getSpecialEffectValue();
+                total += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveSpecialEffectValue(eq);
             }
         }
         return total;
@@ -712,7 +712,7 @@ public class Personnage {
         int totalHpRegen = this.regenHp;
         if (this.equipments != null) {
             for (generation.grimoire.entity.Equipment eq : this.equipments) {
-                totalHpRegen += eq.getRegenHealthPerTurn();
+                totalHpRegen += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveRegenHealthPerTurn(eq);
             }
         }
         return totalHpRegen;
@@ -723,7 +723,7 @@ public class Personnage {
         int totalManaRegen = this.regenMana;
         if (this.equipments != null) {
             for (generation.grimoire.entity.Equipment eq : this.equipments) {
-                totalManaRegen += eq.getRegenManaPerTurn();
+                totalManaRegen += generation.grimoire.service.equipment.EquipmentScalingHelper.getEffectiveRegenManaPerTurn(eq);
             }
         }
         int cursedManaDrain = getSpecialEffectValue(

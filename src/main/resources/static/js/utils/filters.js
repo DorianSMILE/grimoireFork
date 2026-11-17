@@ -1,6 +1,6 @@
 import { state } from './state.js';
 
-import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000243';
+import { renderFilteredSpells } from '../pages/grimoire.js?v=1786180000244';
 
 export function getVoieButtonColor(v) {
     const vNom = (v ? (typeof v === 'string' ? v : (v.nom || v.name || '')) : '').toLowerCase();
@@ -81,25 +81,25 @@ export function renderOriginButtons() {
     const voiesContainer = document.getElementById('filterVoiesButtonsContainer');
     const spiritsContainer = document.getElementById('filterSpiritsButtonsContainer');
 
-    // Voies – utilise la classe d'affinité dédiée à chaque voie
+    // Voies – utilise la classe d'affinité dédiée à chaque voie (groupe radio partagé avec les spiritualités)
     if (voiesContainer && state.metaData.voies) {
         voiesContainer.innerHTML = state.metaData.voies.map(v => {
             const isSel = state.selectedFilterVoieId === v.id;
             const hex = getVoieButtonColor(v);
             const affinityClass = getVoieAffinityClass(v);
             const icon = getVoieIcon(v.nom);
-            return `<button type="button" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterVoie(event, ${v.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${v.nom}</button>`;
+            return `<button type="button" role="radio" aria-checked="${isSel}" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterVoie(event, ${v.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${v.nom}</button>`;
         }).join('');
     }
 
-    // Spiritualités – applique la classe d'affinité dédiée à chaque spiritualité
+    // Spiritualités – applique la classe d'affinité dédiée à chaque spiritualité (groupe radio partagé avec les voies)
     if (spiritsContainer && state.metaData.spiritualites) {
         spiritsContainer.innerHTML = state.metaData.spiritualites.map(s => {
             const isSel = state.selectedFilterSpiritId === s.id;
             const hex = getSpiritButtonColor(s);
             const affinityClass = getSpiritAffinityClass(s);
             const icon = getSpiritIcon(s.nom);
-            return `<button type="button" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterSpirit(event, ${s.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${s.nom}</button>`;
+            return `<button type="button" role="radio" aria-checked="${isSel}" class="origin-filter-btn ${affinityClass} ${isSel ? 'is-selected' : ''}" onclick="toggleFilterSpirit(event, ${s.id}, '${hex}')"><span class="material-symbols-outlined origin-filter-btn-icon">${icon}</span>${s.nom}</button>`;
         }).join('');
     }
 }
@@ -113,6 +113,7 @@ export function toggleFilterVoie(event, id, hexColor) {
         state.selectedFilterVoieId = null;
     } else {
         state.selectedFilterVoieId = id;
+        state.selectedFilterSpiritId = null;
     }
     renderOriginButtons();
     renderFilteredSpells();
@@ -132,6 +133,7 @@ export function toggleFilterSpirit(event, id, hexColor) {
         state.selectedFilterSpiritId = null;
     } else {
         state.selectedFilterSpiritId = id;
+        state.selectedFilterVoieId = null;
     }
     renderOriginButtons();
     renderFilteredSpells();

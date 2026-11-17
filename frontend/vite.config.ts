@@ -1,8 +1,31 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+function syncTargetStaticPlugin() {
+  return {
+    name: 'sync-target-static',
+    closeBundle() {
+      const staticRoot = path.resolve(__dirname, '../src/main/resources/static');
+      const targetStaticRoot = path.resolve(__dirname, '../target/classes/static');
+      if (!fs.existsSync(targetStaticRoot)) return;
+
+      for (const dir of ['app', 'js', 'styles']) {
+        const srcDir = path.join(staticRoot, dir);
+        const destDir = path.join(targetStaticRoot, dir);
+        if (!fs.existsSync(srcDir)) continue;
+        if (dir === 'app' && fs.existsSync(destDir)) {
+          fs.rmSync(destDir, { recursive: true, force: true });
+        }
+        fs.cpSync(srcDir, destDir, { recursive: true, force: true });
+      }
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
-  plugins: [react()],
+  plugins: [react(), syncTargetStaticPlugin()],
   base: command === 'build' ? '/app/' : '/',
   build: {
     outDir: '../src/main/resources/static/app',

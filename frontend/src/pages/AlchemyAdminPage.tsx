@@ -152,6 +152,14 @@ export function AlchemyAdminPage() {
                         <span className="material-symbols-outlined cs-icon text-purple">star</span>{' '}
                         Donner Anomalie
                       </div>
+                      <div className="custom-option" data-value="GIVE_CATALYST">
+                        <span className="material-symbols-outlined cs-icon text-sky">bolt</span>{' '}
+                        Catalyseur
+                      </div>
+                      <div className="custom-option" data-value="GIVE_AWAKENING">
+                        <span className="material-symbols-outlined cs-icon text-amber-400">upgrade</span>{' '}
+                        Anomalie d&apos;Éveil
+                      </div>
                       <div className="custom-option" data-value="GIVE_CONSUMABLE">
                         <span className="material-symbols-outlined cs-icon text-success">
                           inventory_2
@@ -250,6 +258,14 @@ export function AlchemyAdminPage() {
                     <div className="custom-option" data-value="GIVE_ANOMALY">
                       <span className="material-symbols-outlined cs-icon text-purple">star</span>{' '}
                       Anomalie
+                    </div>
+                    <div className="custom-option" data-value="GIVE_CATALYST">
+                      <span className="material-symbols-outlined cs-icon text-sky">bolt</span>{' '}
+                      Catalyseur
+                    </div>
+                    <div className="custom-option" data-value="GIVE_AWAKENING">
+                      <span className="material-symbols-outlined cs-icon text-amber-400">upgrade</span>{' '}
+                      Anomalie d&apos;Éveil
                     </div>
                     <div className="custom-option" data-value="GIVE_CONSUMABLE">
                       <span className="material-symbols-outlined cs-icon text-success">

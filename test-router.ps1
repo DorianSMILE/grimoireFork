@@ -47,7 +47,7 @@ $heldout = @(
     @{ Prompt = "comment faire pour que deux joueurs ne ramassent pas le même butin au même instant ?"; Expected = 3 },
     @{ Prompt = "les points de vie de certains joueurs reviennent à leur ancienne valeur de temps en temps"; Expected = 3 },
     @{ Prompt = "on devrait pouvoir reprendre une partie là où on l'a laissée, avec la carte et les monstres"; Expected = 3 },
-    # Frontière 3/4 : doivent rester en 3, sinon on gaspille le quota Argon
+    # Frontière 3/4 : doivent rester en 3 (Hydrogen High), sinon on gaspille le quota Carbon
     @{ Prompt = "refais le système de combat pour gérer les effets de statut"; Expected = 3 },
     @{ Prompt = "ajoute un chat en temps réel entre les joueurs"; Expected = 3 },
     @{ Prompt = "ajoute une file d'attente de matchmaking pour les combats entre joueurs"; Expected = 3 },
@@ -108,7 +108,8 @@ function Show-Summary {
 
 Write-Host "Routeur : $RouterModel, $($Shots.Count) exemples dans le prompt" -ForegroundColor Cyan
 Write-Host "Préchauffage du modèle..." -NoNewline
-try { [void](Get-RouteLevel -Prompt "ping"); Write-Host " ok" }
+$warmupTimeout = if (Test-RouterLoaded) { $RouterTimeoutSec } else { $RouterColdTimeoutSec }
+try { [void](Get-RouteLevel -Prompt "ping" -TimeoutSec $warmupTimeout); Write-Host " ok" }
 catch {
     Write-Host ""
     Write-Warning "Ollama injoignable ou modèle absent : $($_.Exception.Message)"

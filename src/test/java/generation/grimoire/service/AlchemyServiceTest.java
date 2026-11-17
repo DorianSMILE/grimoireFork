@@ -4,13 +4,16 @@ import generation.grimoire.entity.AlchemyRecipe;
 import generation.grimoire.entity.Anomalie;
 import generation.grimoire.entity.auth.AppUser;
 import generation.grimoire.entity.personnage.Personnage;
+import generation.grimoire.enumeration.AnomalieType;
 import generation.grimoire.enumeration.RecipeRewardType;
 import generation.grimoire.repository.AlchemyRecipeRepository;
 import generation.grimoire.repository.AnomalieRepository;
 import generation.grimoire.repository.EquipmentRepository;
 import generation.grimoire.repository.PersonnageRepository;
 import generation.grimoire.repository.auth.UserRepository;
+import generation.grimoire.repository.pve.DonjonRepository;
 import generation.grimoire.repository.pve.LootEntryRepository;
+import generation.grimoire.service.pve.DungeonTutorialService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +44,10 @@ class AlchemyServiceTest {
     private LootEntryRepository lootEntryRepository;
     @Mock
     private AchievementService achievementService;
+    @Mock
+    private DonjonRepository donjonRepository;
+    @Mock
+    private DungeonTutorialService dungeonTutorialService;
 
     @InjectMocks
     private AlchemyService alchemyService;
@@ -378,8 +385,6 @@ class AlchemyServiceTest {
         r.setRequiredAnomalies(Map.of("AnoRequired", 1));
 
         when(recipeRepository.findAll()).thenReturn(List.of(r));
-        when(anomalieRepository.findByOwnerUsername("testuser")).thenReturn(new ArrayList<>());
-        when(equipmentRepository.findByUser_Username("testuser")).thenReturn(new ArrayList<>());
 
         List<AlchemyRecipe> result = alchemyService.getDiscoveredRecipes(testUser);
 
@@ -401,11 +406,110 @@ class AlchemyServiceTest {
         r.setRequiredAnomalies(Map.of("AnoRequired", 1));
 
         when(recipeRepository.findAll()).thenReturn(List.of(r));
-        when(anomalieRepository.findByOwnerUsername("testuser")).thenReturn(new ArrayList<>());
-        when(equipmentRepository.findByUser_Username("testuser")).thenReturn(new ArrayList<>());
 
         List<AlchemyRecipe> result = alchemyService.getDiscoveredRecipes(testUser);
 
         assertEquals(0, result.size(), "Recipe should be hidden because ingredients are not discovered");
+    }
+
+    @Test
+    void craftRecipe_catalystBlockedBeforeLevel3Dungeon() {
+        AlchemyRecipe catRecipe = new AlchemyRecipe();
+        catRecipe.setId(2L);
+        catRecipe.setName("Catalyseur du Chaos");
+        catRecipe.setCostGold(0);
+        catRecipe.setCostSpiritXp(0);
+        catRecipe.setRewardType(RecipeRewardType.GIVE_CATALYST);
+        catRecipe.setRewardName("Éclat de Chaos");
+        catRecipe.setRewardQuantity(1);
+        catRecipe.setRewardLevel(4);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(recipeRepository.findById(2L)).thenReturn(Optional.of(catRecipe));
+        when(donjonRepository.findAllLightProjections()).thenReturn(List.of());
+        when(dungeonTutorialService.hasCompletedLevel3Dungeon(eq(user), anyList())).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> alchemyService.craftRecipe("testuser", 2L, null, new ArrayList<>(), new ArrayList<>()));
+        assertTrue(ex.getMessage().contains("donjon de niveau 3"));
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    void craftRecipe_awakeningUnlocked_createsLevel5EveilAnomaly() {
+        AlchemyRecipe awkRecipe = new AlchemyRecipe();
+        awkRecipe.setId(3L);
+        awkRecipe.setName("Éveil du Chaos");
+        awkRecipe.setCostGold(10);
+        awkRecipe.setCostSpiritXp(0);
+        awkRecipe.setRewardType(RecipeRewardType.GIVE_AWAKENING);
+        awkRecipe.setRewardName("Cœur de Cendre");
+        awkRecipe.setRewardQuantity(1);
+        awkRecipe.setRewardLevel(5);
+
+        Anomalie template = new Anomalie();
+        template.setName("Cœur de Cendre");
+        template.setLevel(5);
+        template.setTemplate(true);
+        template.setAnomalieType(AnomalieType.EVEIL);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(recipeRepository.findById(3L)).thenReturn(Optional.of(awkRecipe));
+        when(donjonRepository.findAllLightProjections()).thenReturn(List.of());
+        when(dungeonTutorialService.hasCompletedLevel3Dungeon(eq(user), anyList())).thenReturn(true);
+        when(anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc("Cœur de Cendre")).thenReturn(template);
+
+        List<Anomalie> savedAnoms = new ArrayList<>();
+        when(anomalieRepository.save(any(Anomalie.class))).thenAnswer(inv -> {
+            Anomalie a = inv.getArgument(0);
+            savedAnoms.add(a);
+            return a;
+        });
+
+        String result = alchemyService.craftRecipe("testuser", 3L, null, new ArrayList<>(), new ArrayList<>());
+
+        assertTrue(result.contains("Cœur de Cendre"));
+        assertEquals(1, savedAnoms.size());
+        assertEquals(5, savedAnoms.get(0).getLevel());
+        assertEquals(AnomalieType.EVEIL, savedAnoms.get(0).getAnomalieType());
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    void craftRecipe_catalystLevelIndependentFromType() {
+        AlchemyRecipe catRecipe = new AlchemyRecipe();
+        catRecipe.setId(4L);
+        catRecipe.setName("Catalyseur Libre");
+        catRecipe.setCostGold(0);
+        catRecipe.setCostSpiritXp(0);
+        catRecipe.setRewardType(RecipeRewardType.GIVE_CATALYST);
+        catRecipe.setRewardName("Catalyseur Bas Niveau");
+        catRecipe.setRewardQuantity(1);
+        catRecipe.setRewardLevel(1);
+
+        Anomalie template = new Anomalie();
+        template.setName("Catalyseur Bas Niveau");
+        template.setLevel(2);
+        template.setTemplate(true);
+        template.setAnomalieType(AnomalieType.CATALYSEUR);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(recipeRepository.findById(4L)).thenReturn(Optional.of(catRecipe));
+        when(donjonRepository.findAllLightProjections()).thenReturn(List.of());
+        when(dungeonTutorialService.hasCompletedLevel3Dungeon(eq(user), anyList())).thenReturn(true);
+        when(anomalieRepository.findFirstByNameAndIsTemplateTrueOrderByIdAsc("Catalyseur Bas Niveau")).thenReturn(template);
+
+        List<Anomalie> savedAnoms = new ArrayList<>();
+        when(anomalieRepository.save(any(Anomalie.class))).thenAnswer(inv -> {
+            Anomalie a = inv.getArgument(0);
+            savedAnoms.add(a);
+            return a;
+        });
+
+        alchemyService.craftRecipe("testuser", 4L, null, new ArrayList<>(), new ArrayList<>());
+
+        assertEquals(1, savedAnoms.size());
+        assertEquals(2, savedAnoms.get(0).getLevel());
+        assertEquals(AnomalieType.CATALYSEUR, savedAnoms.get(0).getAnomalieType());
     }
 }

@@ -1,8 +1,8 @@
-import { pageState } from './combat-state.js?v=1786180000239';
-import { initMultiSSE } from './combat-socket.js?v=1786180000239';
-import { updateUI } from './combat-ui.js?v=1786180000239';
+import { pageState } from './combat-state.js?v=1786180000240';
+import { initMultiSSE } from './combat-socket.js?v=1786180000240';
+import { updateUI } from './combat-ui.js?v=1786180000240';
 import * as ui from '../ui.js?v=1786180000231';
-import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000235';
+import { getSpellEffectsSummaryHtml } from '../pages/grimoire.js?v=1786180000240';
 import { getVoieButtonColor, getSpiritButtonColor } from '../utils/filters.js?v=2';
 
 
@@ -59,14 +59,29 @@ export async function loadAnomaliesCombat() {
     await Promise.all(tasks);
 }
 
+function showCombatLoadError(subText) {
+    const loadingTitle = document.querySelector('.combat-loading-title');
+    if (loadingTitle) loadingTitle.textContent = "Erreur lors du chargement";
+    const loadingSub = document.querySelector('.combat-loading-sub');
+    if (loadingSub && subText) loadingSub.textContent = subText;
+    const headerCombatIcon = document.getElementById('headerCombatIcon');
+    if (headerCombatIcon) {
+        headerCombatIcon.classList.remove('animate-spin');
+        headerCombatIcon.textContent = 'error';
+    }
+}
+
 export async function resumeCombat(savedSessionId) {
     try {
         const res = await globalFetch(`/api/pve/combat/${savedSessionId}/resume`, { method: 'POST' });
         if (!res.ok) {
+            showCombatLoadError("Combat introuvable ou expiré.");
             localStorage.removeItem('activeCombatId');
             if (typeof showNotif !== 'undefined') window.showNotif("Combat introuvable ou expiré.", true);
             else ui.showNotif("Combat introuvable ou expiré.", true);
-            window.location.href = '/dungeons';
+            setTimeout(() => {
+                window.location.href = '/dungeons';
+            }, 800);
             return;
         }
         const data = await res.json();
@@ -87,8 +102,11 @@ export async function resumeCombat(savedSessionId) {
         updateUI(data);
     } catch (e) {
         console.error(e);
+        showCombatLoadError("Redirection vers les donjons...");
         localStorage.removeItem('activeCombatId');
-        window.location.href = '/dungeons';
+        setTimeout(() => {
+            window.location.href = '/dungeons';
+        }, 800);
     }
 }
 
@@ -113,9 +131,12 @@ export async function startCombat(characterIds, dungeonId, consumableIds) {
                 const text = await res.text();
                 if (text) errText = text;
             } catch(e) {}
+            showCombatLoadError(errText);
             if (typeof showNotif !== 'undefined') window.showNotif(errText, true);
             else ui.showNotif(errText, true);
-            window.location.href = '/dungeons';
+            setTimeout(() => {
+                window.location.href = '/dungeons';
+            }, 1000);
             return;
         }
 
@@ -138,6 +159,7 @@ export async function startCombat(characterIds, dungeonId, consumableIds) {
     } catch (e) {
         console.error(e);
         const msg = e.message || "Erreur de connexion.";
+        showCombatLoadError(msg);
         if (typeof showNotif !== 'undefined') window.showNotif(msg, true);
         else if (window.ui) ui.showNotif(msg, true);
 

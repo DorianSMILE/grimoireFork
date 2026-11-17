@@ -31,6 +31,7 @@ function getSpiritualiteColor(sp) {
     if (normalized.includes('CREATION')) return '#10b981';
     if (normalized.includes('CONVICTION')) return '#b74c0b';
     if (normalized.includes('CONSOLIDATION')) return '#99674c';
+    if (normalized.includes('UNIVERSEL')) return '#cbd5e1';
 
     return '#cbd5e1';
 }
@@ -54,6 +55,7 @@ function getSpiritualiteIcon(sp) {
     if (normalized.includes('CREATION')) return 'eco';
     if (normalized.includes('CONVICTION')) return 'volcano';
     if (normalized.includes('CONSOLIDATION')) return 'foundation';
+    if (normalized.includes('UNIVERSEL')) return 'public';
 
     return 'radio_button_unchecked';
 }
@@ -68,8 +70,45 @@ function getLevelColor(lvl) {
     return '#10b981';
 }
 
-function getTypeColor(isMagic) {
-    return isMagic ? '#ec4899' : '#b45309';
+const ANOMALIE_TYPE_FALLBACKS = {
+    MAGIQUE: { name: 'MAGIQUE', label: 'Magique', icon: 'star', color: '#ec4899', badgeClass: 'type-magique' },
+    MATERIAU: { name: 'MATERIAU', label: 'Matériau', icon: 'category', color: '#b45309', badgeClass: 'type-materiau' },
+    CATALYSEUR: { name: 'CATALYSEUR', label: 'Catalyseur', icon: 'bolt', color: '#38bdf8', badgeClass: 'type-catalyst' },
+    EVEIL: { name: 'EVEIL', label: 'Éveil', icon: 'auto_awesome', color: '#f59e0b', badgeClass: 'type-eveil' }
+};
+
+function getAnomalieTypeName(anomaly) {
+    if (!anomaly) return 'MAGIQUE';
+    const raw = typeof anomaly.anomalieType === 'object' ? anomaly.anomalieType?.name : anomaly.anomalieType;
+    if (raw && ANOMALIE_TYPE_FALLBACKS[raw]) return raw;
+    if (raw === 'STANDARD') return anomaly.magicObject === false ? 'MATERIAU' : 'MAGIQUE';
+    return anomaly.magicObject === false ? 'MATERIAU' : 'MAGIQUE';
+}
+
+function getAnomalieTypeInfo(anomaly) {
+    const key = getAnomalieTypeName(anomaly);
+    const base = ANOMALIE_TYPE_FALLBACKS[key] || ANOMALIE_TYPE_FALLBACKS.MAGIQUE;
+    const meta = window.ANOMALIE_TYPES && window.ANOMALIE_TYPES[key];
+    return {
+        name: key,
+        label: meta?.label || base.label,
+        icon: meta?.icon || base.icon,
+        color: base.color,
+        badgeClass: base.badgeClass
+    };
+}
+
+function getTypeColor(typeOrMagic) {
+    if (typeof typeOrMagic === 'boolean') {
+        return typeOrMagic ? '#ec4899' : '#b45309';
+    }
+    if (typeof typeOrMagic === 'string' && ANOMALIE_TYPE_FALLBACKS[typeOrMagic]) {
+        return ANOMALIE_TYPE_FALLBACKS[typeOrMagic].color;
+    }
+    if (typeOrMagic && typeof typeOrMagic === 'object') {
+        return getAnomalieTypeInfo(typeOrMagic).color;
+    }
+    return '#b45309';
 }
 
 // ---- Equipment slot info ----
@@ -251,6 +290,7 @@ function getAnomalyTooltipHTML(aTemp, fallbackName) {
         }
     }
 
+    const typeInfo = getAnomalieTypeInfo(aTemp);
     let html = `
         <div class="anomaly-tooltip-title" style="color: ${spiriColor}; border-bottom: 1px solid ${spiriColor}40; padding-bottom: 4px; display: flex; align-items: center;">
             <span class="material-symbols-outlined" style="font-size: 1rem; margin-right: 4px;">${catIcon}</span>
@@ -261,9 +301,9 @@ function getAnomalyTooltipHTML(aTemp, fallbackName) {
             <span class="font-bold" style="border: 1px solid ${getLevelColor(aTemp ? aTemp.level : 1)}; color: ${getLevelColor(aTemp ? aTemp.level : 1)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
                 Lvl ${aTemp ? aTemp.level || 1 : 1}
             </span>
-            <span class="flex-center font-bold" style="border: 1px solid ${getTypeColor(aTemp && aTemp.magicObject)}; color: ${getTypeColor(aTemp && aTemp.magicObject)}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
-                <span class="material-symbols-outlined text-sm">${aTemp && aTemp.magicObject ? 'star' : 'category'}</span>
-                ${aTemp && aTemp.magicObject ? 'Magique' : 'Matériau'}
+            <span class="flex-center font-bold" style="border: 1px solid ${typeInfo.color}; color: ${typeInfo.color}; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; gap: 4px;">
+                <span class="material-symbols-outlined text-sm">${typeInfo.icon}</span>
+                ${typeInfo.label}
             </span>`;
 
     if (aTemp && aTemp.spiritualite) {

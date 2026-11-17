@@ -30,8 +30,10 @@ window.switchDungeonTab = function (tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-    document.getElementById(`tab-btn-${tabName}`).classList.add('active');
-    document.getElementById(`${tabName}DungeonsSection`).classList.add('active');
+    const tabBtn = document.getElementById(`tab-btn-${tabName}`);
+    const section = document.getElementById(`${tabName}DungeonsSection`);
+    if (tabBtn) tabBtn.classList.add('active');
+    if (section) section.classList.add('active');
 };
 
 const pageState = {
@@ -489,6 +491,10 @@ window.initDungeonsPage = async function () {
     pageState.selectedConsumableIds = [];
     pageState.inspectedCharacterId = null;
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     localStorage.removeItem('activeCombatId');
 
     bindJoinLobbyCodeInput();
@@ -520,6 +526,11 @@ window.initDungeonsPage = async function () {
 };
 
 window.cleanupDungeonsPage = function () {
+    window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     if (coopLobbySSE) {
         coopLobbySSE.close();
         coopLobbySSE = null;
@@ -546,6 +557,7 @@ async function loadDungeons() {
             const dungeons = await res.json();
             const tabsHeader = document.getElementById('dungeonsTabs');
             const contentContainer = document.getElementById('dungeonsSectionsContainer');
+            if (!tabsHeader || !contentContainer) return;
 
             // Find current active tab
             let activeTabId = null;
@@ -557,17 +569,19 @@ async function loadDungeons() {
             tabsHeader.innerHTML = '';
             contentContainer.innerHTML = '';
 
+            const noDungeonsMsg = document.getElementById('noDungeonsMsg');
+            const loadingDungeonsMsg = document.getElementById('loadingDungeonsMsg');
             if (dungeons.length === 0) {
-                document.getElementById('noDungeonsMsg').style.display = 'block';
+                if (noDungeonsMsg) noDungeonsMsg.style.display = 'block';
                 tabsHeader.classList.add('init-hidden');
                 tabsHeader.style.display = 'none';
-                document.getElementById('loadingDungeonsMsg').style.display = 'none';
+                if (loadingDungeonsMsg) loadingDungeonsMsg.style.display = 'none';
                 return;
             } else {
-                document.getElementById('noDungeonsMsg').style.display = 'none';
+                if (noDungeonsMsg) noDungeonsMsg.style.display = 'none';
                 tabsHeader.classList.remove('init-hidden');
                 tabsHeader.style.display = 'flex';
-                document.getElementById('loadingDungeonsMsg').style.display = 'none';
+                if (loadingDungeonsMsg) loadingDungeonsMsg.style.display = 'none';
             }
 
             const categories = new Map();
@@ -1037,6 +1051,7 @@ async function loadCharacters() {
             chars.sort((a, b) => (b.voieLevel || 1) - (a.voieLevel || 1));
             pageState.userCharacters = chars;
             const list = document.getElementById('prepCharList');
+            if (!list) return;
             list.innerHTML = '';
 
             if (pageState.userCharacters.length === 0) {
@@ -1143,6 +1158,7 @@ window.toggleConsumableFilter = function (btn, type) {
 
 function renderConsumablesList() {
     const list = document.getElementById('prepConsumableList');
+    if (!list) return;
     list.innerHTML = '';
 
     const curWeight = getCurrentWeight();
@@ -1464,8 +1480,12 @@ window.inspectCharacter = async function(id) {
         totalStats.regenManaPerTurn += (eq.regenManaPerTurn || 0);
     });
 
-    document.getElementById('prepStatEmpty').classList.add('hidden');
+    const statEmpty = document.getElementById('prepStatEmpty');
     const grid = document.getElementById('prepStatGrid');
+    const equipList = document.getElementById('prepEquipList');
+    if (!statEmpty || !grid || !equipList) return;
+
+    statEmpty.classList.add('hidden');
     grid.classList.remove('hidden');
     grid.style.display = '';
     grid.innerHTML = `
@@ -1481,7 +1501,6 @@ window.inspectCharacter = async function(id) {
         <div class="stat-item text-error"><span class="material-symbols-outlined">gps_fixed</span> ${totalStats.crit}% Crit</div>
     `;
 
-    const equipList = document.getElementById('prepEquipList');
     equipList.innerHTML = '';
     if (equipments.length === 0) {
         equipList.innerHTML = `<div class="text-sm text-muted">Aucun \u00e9quipement port\u00e9.</div>`;
@@ -1690,11 +1709,16 @@ window.openPrepInterface = function (id, name, sallesData, maxHeroes, entryCost,
     window.clearInspectedCharacter();
 
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
         btn.disabled = false;
-        btn.classList.remove('pointer-events-none');
+        btn.classList.remove('pointer-events-none', 'opacity-80');
         btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.innerHTML = '<span class="material-symbols-outlined">swords</span> ENTRER DANS LE DONJON';
     }
 
     renderConsumablesList();
@@ -1718,6 +1742,10 @@ window.closePrepInterface = function () {
         return;
     }
     window._isStartingCombat = false;
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.add('is-hidden');
+    }
     const prepInterface = document.getElementById('prepInterface');
     if (prepInterface) {
         prepInterface.classList.add('init-hidden');
@@ -1737,7 +1765,7 @@ window.closePrepInterface = function () {
 window.startCombat = async function () {
     if (window._isStartingCombat) return;
     if (pageState.selectedCharIds.length === 0) {
-        window.showNotif("Veuillez s\u00e9lectionner au moins un personnage.", true);
+        window.showNotif("Veuillez sélectionner au moins un personnage.", true);
         return;
     }
 
@@ -1754,7 +1782,14 @@ window.startCombat = async function () {
     const btn = document.getElementById('btnEnterDungeon');
     if (btn) {
         btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.classList.remove('opacity-50');
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">autorenew</span> Lancement du donjon...';
+    }
+
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.remove('is-hidden');
     }
 
     const charIdsStr = pageState.selectedCharIds.join(',');
@@ -1879,14 +1914,14 @@ window.closeEntryModal = function () {
     document.getElementById('entryModal').classList.remove('active');
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════
 // CO-OP LOBBY
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════
 
 let coopLobbyId = null;       // multiSessionId du lobby actif (hôte)
 let coopLobbySSE = null;      // SSE EventSource pour les events du lobby
 
-// â”€â”€â”€ Toggle co-op / solo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Toggle co-op / solo ────────────────────────────────────────────────────
 
 window.onCoopToggleChange = function () {
     const isCoopMode = document.getElementById('coopModeToggle').checked;
@@ -1907,7 +1942,7 @@ window.onCoopToggleChange = function () {
     }
 };
 
-// â”€â”€â”€ Synchroniser l'état du bouton co-op avec la sélection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Synchroniser l'état du bouton co-op avec la sélection ─────────────────
 // (appelé par updateHeroCountDisplay ou directement)
 const _origUpdateHeroCount = window.updateHeroCountDisplay;
 window.updateHeroCountDisplay = function () {
@@ -1928,7 +1963,7 @@ window.updateHeroCountDisplay = function () {
     }
 };
 
-// â”€â”€â”€ Création du lobby (hôte) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Création du lobby (hôte) ───────────────────────────────────────────────
 
 window.createCoopLobby = async function () {
     if (pageState.selectedCharIds.length === 0) {
@@ -1981,7 +2016,7 @@ window.createCoopLobby = async function () {
         }
 
         document.getElementById('lobbyWaitingStatus').innerHTML =
-            '<span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle; animation: spin 1s linear infinite;">autorenew</span> En attente du joueur 2...';
+            '<span class="material-symbols-outlined">autorenew</span> En attente du joueur 2...';
         const overlay = document.getElementById('lobbyWaitingOverlay');
         overlay.style.display = 'flex';
         
@@ -2019,17 +2054,24 @@ window.createCoopLobby = async function () {
 
 function onLobbyReady(lobby) {
     if (coopLobbySSE) { coopLobbySSE.close(); coopLobbySSE = null; }
-    document.getElementById('lobbyWaitingStatus').innerHTML =
-        '<span style="color:#4ade80; font-size:1rem;">âœ” Joueur 2 connecté ! Lancement...</span>';
+    const statusEl = document.getElementById('lobbyWaitingStatus');
+    if (statusEl) {
+        statusEl.innerHTML =
+            '<span class="lobby-status-ready flex items-center justify-center gap-2"><span class="material-symbols-outlined animate-spin mr-1">autorenew</span> Joueur 2 connecté ! Lancement du donjon...</span>';
+    }
+    const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+    if (launchOverlay) {
+        launchOverlay.classList.remove('is-hidden');
+    }
 
-    // Courte pause puis redirect vers combat.html en tant qu'hôte
+    // Courte pause puis redirect vers /combat en tant qu'hôte
     setTimeout(() => {
         closeLobbyOverlay();
         window.location.href = `/combat?sessionId=${lobby.combatSessionId}&multiId=${lobby.multiSessionId}&role=host`;
     }, 1200);
 }
 
-// â”€â”€â”€ Annulation du lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Annulation du lobby ─────────────────────────────────────────────────────
 
 window.cancelCoopLobby = async function () {
     if (!coopLobbyId) { closeLobbyOverlay(); return; }
@@ -2042,7 +2084,8 @@ window.cancelCoopLobby = async function () {
 };
 
 function closeLobbyOverlay() {
-    document.getElementById('lobbyWaitingOverlay').style.display = 'none';
+    const waitingOverlay = document.getElementById('lobbyWaitingOverlay');
+    if (waitingOverlay) waitingOverlay.style.display = 'none';
     const preview = document.getElementById('lobbyGuestPreview');
     if (preview) {
         preview.innerHTML = '';
@@ -2167,7 +2210,7 @@ function onGuestUpdate(data) {
 }
 
 
-// â”€â”€â”€ Modal Rejoindre un lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Modal Rejoindre un lobby ─────────────────────────────────────────────────
 
 let joinSelectedCharIds = [];
 let joinSelectedConsumableIds = [];
@@ -2215,7 +2258,10 @@ window.openJoinLobbyModal = function () {
 
     // Reset input and info
     const input = document.getElementById('joinLobbyCodeInput');
-    if (input) input.value = '';
+    if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 60);
+    }
     const infoContainer = document.getElementById('joinLobbyInfoContainer');
     if (infoContainer) infoContainer.style.display = 'none';
     const consSection = document.getElementById('joinLobbyConsomablesSection');
@@ -2486,7 +2532,8 @@ window.closeJoinLobbyModal = function () {
         _joinLobbySSE = null;
     }
     _joinLobbyMultiId = null;
-    document.getElementById('joinLobbyModal').style.display = 'none';
+    const modal = document.getElementById('joinLobbyModal');
+    if (modal) modal.style.display = 'none';
 };
 
 window.copyLobbyCode = function () {
@@ -2504,13 +2551,34 @@ window.copyLobbyCode = function () {
 };
 
 window.pasteLobbyCode = function () {
+    const input = document.getElementById('joinLobbyCodeInput');
+    if (input) input.focus();
+
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+        if (typeof showNotif !== 'undefined') window.showNotif("Presse-papiers non supporté.", true);
+        return;
+    }
+
     navigator.clipboard.readText().then(text => {
-        const input = document.getElementById('joinLobbyCodeInput');
         if (input && text) {
             input.value = text.trim().substring(0, 6).toUpperCase();
             input.dispatchEvent(new Event('input'));
+
+            const btn = document.querySelector('.btn-paste-lobby-code');
+            if (btn) {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined text-emerald">check</span>';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 1500);
+            }
         }
-    }).catch(err => console.error('Erreur de collage:', err));
+    }).catch(err => {
+        console.warn('Erreur lecture presse-papiers:', err);
+        if (err && err.name === 'NotAllowedError') {
+            if (typeof showNotif !== 'undefined') {
+                window.showNotif("Activez l'autorisation presse-papiers dans les réglages du site (barre d'adresse).", true);
+            }
+        }
+    });
 };
 
 window.updateJoinCharAvailability = function (info) {
@@ -2826,6 +2894,11 @@ window.submitJoinLobby = async function () {
             return;
         }
         const result = await joinRes.json();
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">autorenew</span> Lancement du donjon...';
+        const launchOverlay = document.getElementById('dungeonLaunchOverlay');
+        if (launchOverlay) {
+            launchOverlay.classList.remove('is-hidden');
+        }
 
         // 3. Redirect vers combat.html en tant que guest
         window.location.href = `/combat?sessionId=${result.sessionId}&multiId=${result.multiSessionId}&role=guest`;

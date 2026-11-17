@@ -35,9 +35,100 @@ const pageState = {
     personnages: [],
     editingId: null,
     equipModalPersoId: null,
-    allEquipments: []
+    allEquipments: [],
+    taverneCollapsed: false,
+    armoryCollapsed: false,
+    initialLayoutApplied: false
 };
 window.pageState = pageState;
+
+function applyArmoryLayoutState() {
+    const mainEl = document.getElementById('armoryMain');
+    const formPanel = document.getElementById('charFormPanel');
+    const rosterCol = document.getElementById('armoryRosterCol');
+    const taverneDock = document.getElementById('taverneCollapsedDock');
+    const armoryDock = document.getElementById('armoryCollapsedDock');
+
+    const expandTaverneIcon = document.getElementById('btnExpandTaverneIcon');
+    const expandTaverneLabel = document.getElementById('btnExpandTaverneLabel');
+    const expandArmoryIcon = document.getElementById('btnExpandArmoryIcon');
+    const expandArmoryLabel = document.getElementById('btnExpandArmoryLabel');
+
+    if (!mainEl) return;
+
+    if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
+        mainEl.classList.add('is-taverne-expanded');
+        mainEl.classList.remove('is-armory-expanded');
+        if (formPanel) formPanel.classList.remove('is-hidden');
+        if (rosterCol) rosterCol.classList.add('is-hidden');
+        if (taverneDock) taverneDock.classList.add('is-hidden');
+        if (armoryDock) armoryDock.classList.remove('is-hidden');
+
+        if (expandTaverneIcon) expandTaverneIcon.textContent = 'close_fullscreen';
+        if (expandTaverneLabel) expandTaverneLabel.textContent = 'Vue partagée';
+    } else if (pageState.taverneCollapsed && !pageState.armoryCollapsed) {
+        mainEl.classList.add('is-armory-expanded');
+        mainEl.classList.remove('is-taverne-expanded');
+        if (formPanel) formPanel.classList.add('is-hidden');
+        if (rosterCol) rosterCol.classList.remove('is-hidden');
+        if (taverneDock) taverneDock.classList.remove('is-hidden');
+        if (armoryDock) armoryDock.classList.add('is-hidden');
+
+        if (expandArmoryIcon) expandArmoryIcon.textContent = 'close_fullscreen';
+        if (expandArmoryLabel) expandArmoryLabel.textContent = 'Vue partagée';
+    } else {
+        mainEl.classList.remove('is-taverne-expanded', 'is-armory-expanded');
+        if (formPanel) formPanel.classList.remove('is-hidden');
+        if (rosterCol) rosterCol.classList.remove('is-hidden');
+        if (taverneDock) taverneDock.classList.add('is-hidden');
+        if (armoryDock) armoryDock.classList.add('is-hidden');
+
+        if (expandTaverneIcon) expandTaverneIcon.textContent = 'open_in_full';
+        if (expandTaverneLabel) expandTaverneLabel.textContent = 'Grand format';
+        if (expandArmoryIcon) expandArmoryIcon.textContent = 'open_in_full';
+        if (expandArmoryLabel) expandArmoryLabel.textContent = 'Grand format';
+    }
+}
+
+window.toggleArmoryPanel = function (panel) {
+    if (panel === 'taverne') {
+        if (pageState.taverneCollapsed) {
+            pageState.taverneCollapsed = false;
+        } else {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        }
+    } else if (panel === 'armory') {
+        if (pageState.armoryCollapsed) {
+            pageState.armoryCollapsed = false;
+        } else {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    }
+    applyArmoryLayoutState();
+};
+
+window.expandArmoryPanel = function (panel) {
+    if (panel === 'taverne') {
+        if (pageState.armoryCollapsed && !pageState.taverneCollapsed) {
+            pageState.armoryCollapsed = false;
+            pageState.taverneCollapsed = false;
+        } else {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    } else if (panel === 'armory') {
+        if (pageState.taverneCollapsed && !pageState.armoryCollapsed) {
+            pageState.taverneCollapsed = false;
+            pageState.armoryCollapsed = false;
+        } else {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        }
+    }
+    applyArmoryLayoutState();
+};
 
 // Replaced by window.SLOT_LABELS and window.CONSUMABLE_CATEGORIES
 
@@ -82,32 +173,64 @@ async function updateCharLimitUI() {
             const limitContainer = document.getElementById('charLimitContainer');
             if (!limitContainer) return;
 
+            const absoluteMax = data.absoluteMaxCharacters || 8;
             const isMaxedOut = data.currentCharacters >= data.maxCharacters;
+            const isAtAbsoluteMax = data.currentCharacters >= absoluteMax;
             const color = (isMaxedOut && !window.isAdmin) ? '#ef4444' : '#94a3b8';
 
             let html = `<span class="text-sm font-medium" style="color: ${color};">${data.currentCharacters}/${data.maxCharacters}</span>`;
 
-            if (isMaxedOut && data.maxCharacters < 8 && !window.isAdmin) {
+            if (isMaxedOut && data.maxCharacters < absoluteMax && !window.isAdmin) {
                 const costs = { 2: 20, 3: 50, 4: 75, 5: 150, 6: 200, 7: 300 };
-                const cost = costs[data.maxCharacters];
+                const cost = data.nextSlotCost || costs[data.maxCharacters];
                 html += `<button class="text-success ml-2 bg-success/20 border-success/40 rounded cursor-pointer px-1 py-0 flex-center" onclick="buyRosterSlot(${cost})" title="Acheter un emplacement pour ${cost} or"><span class="material-symbols-outlined text-sm">add</span></button>`;
             }
 
             limitContainer.innerHTML = html;
+            const dockLimitBadge = document.getElementById('taverneDockLimitBadge');
+            if (dockLimitBadge) {
+                dockLimitBadge.textContent = `${data.currentCharacters}/${data.maxCharacters}`;
+            }
             window.charLimitData = data;
 
+            const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
             if (window.currentUser) {
-                window.currentUser.availableCharacterSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
+                window.currentUser.availableCharacterSlots = availableSlots;
+                window.currentUser.currentCharacters = data.currentCharacters;
+                window.currentUser.maxCharacters = data.maxCharacters;
+                window.currentUser.absoluteMaxCharacters = absoluteMax;
             }
             const armoryBadge = document.getElementById('navArmoryBadge');
             if (armoryBadge) {
-                const availableSlots = Math.max(0, data.maxCharacters - data.currentCharacters);
                 if (availableSlots > 0) {
                     armoryBadge.textContent = availableSlots;
                     armoryBadge.style.display = 'inline-block';
                 } else {
                     armoryBadge.style.display = 'none';
                 }
+            }
+
+            if (!pageState.initialLayoutApplied) {
+                pageState.initialLayoutApplied = true;
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasOpenEquip = !isNaN(parseInt(urlParams.get('openEquip'), 10));
+                const isEquipTuto = Boolean(window.currentUser && window.currentUser.equipTutorialActive && pageState.personnages.length > 0);
+                if (!hasOpenEquip && !isEquipTuto) {
+                    if (isAtAbsoluteMax) {
+                        pageState.taverneCollapsed = true;
+                        pageState.armoryCollapsed = false;
+                    } else if (availableSlots > 0) {
+                        pageState.armoryCollapsed = true;
+                        pageState.taverneCollapsed = false;
+                    } else {
+                        pageState.armoryCollapsed = false;
+                        pageState.taverneCollapsed = false;
+                    }
+                } else {
+                    pageState.armoryCollapsed = false;
+                    pageState.taverneCollapsed = false;
+                }
+                applyArmoryLayoutState();
             }
 
             updateSubmitButtonState();
@@ -121,17 +244,15 @@ function updateSubmitButtonState() {
     const submitBtn = document.getElementById('submitBtn');
     if (!submitBtn) return;
 
+    submitBtn.disabled = false;
     if (pageState.editingId || window.isAdmin) {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'is-limit-reached');
     } else if (window.charLimitData) {
         const isMaxedOut = window.charLimitData.currentCharacters >= window.charLimitData.maxCharacters;
         if (isMaxedOut) {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            submitBtn.classList.add('opacity-50', 'is-limit-reached');
         } else {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'is-limit-reached');
         }
     }
 }
@@ -187,16 +308,41 @@ async function loadAllEquipments() {
 }
 
 async function submitPersonnage() {
-    const name = document.getElementById('charName').value.trim();
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+
+    if (!pageState.editingId && !window.isAdmin && window.charLimitData) {
+        if (window.charLimitData.currentCharacters >= window.charLimitData.maxCharacters) {
+            showNotif(`Limite de personnages atteinte (${window.charLimitData.currentCharacters}/${window.charLimitData.maxCharacters}). Débloquez un emplacement (+) en haut du formulaire.`, true);
+            return;
+        }
+    }
+
+    const nameInput = document.getElementById('charName');
+    const name = nameInput ? nameInput.value.trim() : '';
     if (!name) {
         showNotif('Le nom est obligatoire.', true);
+        if (nameInput) nameInput.focus();
         return;
     }
 
-    const voieIdVal = document.getElementById('charVoie').value;
-    const spiritIdVal = document.getElementById('charSpirit').value;
+    const activeWheelNode = document.querySelector('#charVoieOptions .voie-star-node.is-active');
+    const activeSpiritNode = document.querySelector('#charSpiritOptions .spirit-tri-node.is-active');
+    const checkedSpiritRadio = document.querySelector('#charSpiritOptions input[name="charSpiritRadio"]:checked');
+    const selectedSpiritCard = document.querySelector('#charSpiritOptions .spirit-radio-card.is-selected input[name="charSpiritRadio"]');
+
+    const voieIdVal = document.getElementById('charVoie')?.value || (activeWheelNode ? activeWheelNode.getAttribute('data-value') : '') || '';
+    const spiritIdVal = document.getElementById('charSpirit')?.value || (activeSpiritNode ? activeSpiritNode.getAttribute('data-value') : '') || (checkedSpiritRadio ? checkedSpiritRadio.value : '') || (selectedSpiritCard ? selectedSpiritCard.value : '') || '';
+
     if (!pageState.editingId && (!voieIdVal || !spiritIdVal)) {
-        showNotif('Une Voie et une Spiritualité sont obligatoires à la création.', true);
+        if (!voieIdVal && !spiritIdVal) {
+            showNotif('Une Voie et une Spiritualité sont obligatoires à la création.', true);
+        } else if (!voieIdVal) {
+            showNotif('Veuillez choisir une Voie sur la roue en étoile.', true);
+        } else {
+            showNotif('Veuillez choisir une Spiritualité (Esprit, Karma ou Ténèbres).', true);
+        }
         return;
     }
 
@@ -213,9 +359,9 @@ async function submitPersonnage() {
         crit: parseInt(document.getElementById('charCrit').value) || 0,
         regenHp: parseInt(document.getElementById('charRegenHp').value) || 0,
         regenMana: parseInt(document.getElementById('charRegenMana').value) || 0,
-        voieId: document.getElementById('charVoie').value || null,
+        voieId: voieIdVal || null,
         experience: parseInt(document.getElementById('charExperience').value) || 0,
-        spiritualiteId: document.getElementById('charSpirit').value || null,
+        spiritualiteId: spiritIdVal || null,
         spiritualiteExperience: parseInt(document.getElementById('charSpiritExperience').value) || 0,
     };
 
@@ -346,41 +492,433 @@ async function deleteEquipment(id) {
 
 // Helpers for icons and colors
 function getVoieInfo(nom) {
-    if (!nom) return { icon: 'trip_origin', color: '#94a3b8' };
+    if (!nom) return { icon: 'trip_origin', color: '#94a3b8', nodeClass: 'voie-node-default', shortLabel: 'Aucune' };
     const n = nom.toLowerCase();
-    if (n.includes('raison')) return { icon: 'psychology', color: '#3b82f6' };
-    if (n.includes('sûreté') || n.includes('surete')) return { icon: 'water_drop', color: '#00e5cc' };
-    if (n.includes('trahison')) return { icon: 'visibility_off', color: '#ed5677' };
-    if (n.includes('consolidation')) return { icon: 'foundation', color: '#99674c' };
-    if (n.includes('conviction')) return { icon: 'volcano', color: '#b74c0b' };
-    if (n.includes('création') || n.includes('creation')) return { icon: 'eco', color: '#10b981' };
-    if (n.includes('destruction')) return { icon: 'local_fire_department', color: '#ff0000' };
-    if (n.includes('violence')) return { icon: 'explosion', color: '#a70740' };
-    return { icon: 'route', color: '#94a3b8' };
+    const shortName = nom.replace(/^Voie de la\s+/i, '').replace(/^Voie de\s+/i, '').trim();
+    if (n.includes('raison')) return { icon: 'psychology', color: '#3b82f6', nodeClass: 'voie-node-raison', shortLabel: shortName };
+    if (n.includes('sûreté') || n.includes('surete')) return { icon: 'water_drop', color: '#00e5cc', nodeClass: 'voie-node-surete', shortLabel: shortName };
+    if (n.includes('trahison')) return { icon: 'visibility_off', color: '#ed5677', nodeClass: 'voie-node-trahison', shortLabel: shortName };
+    if (n.includes('consolidation')) return { icon: 'foundation', color: '#99674c', nodeClass: 'voie-node-consolidation', shortLabel: shortName };
+    if (n.includes('conviction')) return { icon: 'volcano', color: '#b74c0b', nodeClass: 'voie-node-conviction', shortLabel: shortName };
+    if (n.includes('création') || n.includes('creation')) return { icon: 'eco', color: '#10b981', nodeClass: 'voie-node-creation', shortLabel: shortName };
+    if (n.includes('destruction')) return { icon: 'local_fire_department', color: '#ff0000', nodeClass: 'voie-node-destruction', shortLabel: shortName };
+    if (n.includes('violence')) return { icon: 'explosion', color: '#a70740', nodeClass: 'voie-node-violence', shortLabel: shortName };
+    return { icon: 'route', color: '#94a3b8', nodeClass: 'voie-node-default', shortLabel: shortName };
 }
 
 function getSpiritInfo(nom) {
-    if (!nom) return { icon: 'trip_origin', color: '#94a3b8' };
+    if (!nom) return { key: 'none', icon: 'trip_origin', color: '#94a3b8', cardClass: 'spirit-card-none', nodeClass: 'spirit-node-none', textClass: 'text-muted' };
     const n = nom.toLowerCase();
-    if (n.includes('esprit')) return { icon: 'blur_on', color: '#38bdf8' };
-    if (n.includes('ténèbres') || n.includes('tenebres')) return { icon: 'dark_mode', color: '#c084fc' };
-    if (n.includes('karma')) return { icon: 'all_inclusive', color: '#e7d198' };
-    return { icon: 'psychology', color: '#a78bfa' };
+    if (n.includes('esprit')) return { key: 'esprit', icon: 'blur_on', color: '#38bdf8', cardClass: 'spirit-card-esprit', nodeClass: 'spirit-node-esprit', textClass: 'text-info' };
+    if (n.includes('ténèbres') || n.includes('tenebres')) return { key: 'tenebres', icon: 'dark_mode', color: '#c084fc', cardClass: 'spirit-card-tenebres', nodeClass: 'spirit-node-tenebres', textClass: 'text-purple' };
+    if (n.includes('karma')) return { key: 'karma', icon: 'all_inclusive', color: '#e7d198', cardClass: 'spirit-card-karma', nodeClass: 'spirit-node-karma', textClass: 'text-gold' };
+    return { key: 'default', icon: 'psychology', color: '#a78bfa', cardClass: 'spirit-card-default', nodeClass: 'spirit-node-default', textClass: 'text-purple' };
+}
+
+function syncVoieWheelSelection(val, dispatchEvent = false) {
+    const strVal = val !== undefined && val !== null ? String(val) : '';
+    const hiddenInput = document.getElementById('charVoie');
+    if (hiddenInput) {
+        hiddenInput.value = strVal;
+    }
+
+    const ring = document.getElementById('charVoieOptions');
+    const centerEl = document.getElementById('charVoieLabel');
+    const total = pageState.voies.length || 8;
+    let currentAngle = typeof pageState.voieWheelAngle === 'number' ? pageState.voieWheelAngle : 0;
+
+    if (ring) {
+        const nodes = ring.querySelectorAll('.voie-star-node');
+        let activeIdx = -1;
+        nodes.forEach((node, idx) => {
+            const isMatch = String(node.getAttribute('data-value')) === strVal && strVal !== '';
+            node.classList.toggle('is-active', isMatch);
+            node.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+            if (isMatch) activeIdx = idx;
+        });
+
+        if (activeIdx >= 0 && total > 0) {
+            const targetMod = -activeIdx * (360 / total);
+            const delta = ((targetMod - currentAngle) % 360 + 540) % 360 - 180;
+            currentAngle = currentAngle + delta;
+            pageState.voieWheelAngle = currentAngle;
+        }
+
+        const svg = ring.querySelector('.voie-star-svg');
+        if (svg) {
+            svg.style.transform = `rotate(${currentAngle}deg)`;
+        }
+
+        const radiusPct = 38.5;
+        nodes.forEach((node, idx) => {
+            const angleDeg = idx * (360 / total) + currentAngle;
+            const rad = (angleDeg - 90) * (Math.PI / 180);
+            node.style.left = `${(50 + Math.cos(rad) * radiusPct).toFixed(2)}%`;
+            node.style.top = `${(50 + Math.sin(rad) * radiusPct).toFixed(2)}%`;
+        });
+    }
+
+    if (centerEl) {
+        const selectedVoie = strVal ? pageState.voies.find(v => String(v.id) === strVal) : null;
+        if (selectedVoie) {
+            const info = getVoieInfo(selectedVoie.nom);
+            centerEl.className = `voie-star-center is-selected ${info.nodeClass}`;
+            centerEl.innerHTML = `
+                <span class="material-symbols-outlined voie-star-center-icon">${info.icon}</span>
+                <span class="voie-star-center-title">${info.shortLabel}</span>
+                <span class="voie-star-center-sub">Voie active</span>
+            `;
+        } else {
+            centerEl.className = 'voie-star-center';
+            centerEl.innerHTML = `
+                <span class="material-symbols-outlined voie-star-center-icon text-muted">explore</span>
+                <span class="voie-star-center-title">Choisir une Voie</span>
+            `;
+        }
+    }
+
+    if (dispatchEvent) {
+        if (typeof handleVoieSelectionChange === 'function') {
+            handleVoieSelectionChange(strVal);
+        }
+        if (hiddenInput) {
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+}
+
+window.selectVoieWheel = function (val) {
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+    syncVoieWheelSelection(val, true);
+};
+
+function getVoieWheelOrderIndex(nom) {
+    if (!nom) return 99;
+    const clean = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (clean.includes('raison')) return 0;
+    if (clean.includes('trahison')) return 1;
+    if (clean.includes('surete')) return 2;
+    if (clean.includes('creation')) return 3;
+    if (clean.includes('consolidation')) return 4;
+    if (clean.includes('conviction')) return 5;
+    if (clean.includes('destruction')) return 6;
+    if (clean.includes('violence')) return 7;
+    return 99;
+}
+
+function renderVoieStarWheel() {
+    const ring = document.getElementById('charVoieOptions');
+    if (!ring) return;
+
+    const currentVal = String(document.getElementById('charVoie')?.value || '');
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    const orderedVoies = [...pageState.voies].sort((a, b) => getVoieWheelOrderIndex(a.nom) - getVoieWheelOrderIndex(b.nom));
+    const total = orderedVoies.length || 1;
+
+    // 8-pointed astral star SVG background inside the rotating wheel
+    let html = `
+        <svg class="voie-star-svg" viewBox="0 0 240 240" aria-hidden="true">
+            <circle cx="120" cy="120" r="92" class="voie-star-orbit" />
+            <circle cx="120" cy="120" r="62" class="voie-star-inner-orbit" />
+            <polygon points="120,18 144,96 222,120 144,144 120,222 96,144 18,120 96,96" class="voie-star-poly-main" />
+            <polygon points="48,48 136,88 192,48 152,136 192,192 104,152 48,192 88,104" class="voie-star-poly-alt" />
+            <line x1="120" y1="26" x2="120" y2="214" class="voie-star-spoke" />
+            <line x1="26" y1="120" x2="214" y2="120" class="voie-star-spoke" />
+            <line x1="54" y1="54" x2="186" y2="186" class="voie-star-spoke" />
+            <line x1="186" y1="54" x2="54" y2="186" class="voie-star-spoke" />
+        </svg>
+    `;
+
+    orderedVoies.forEach((v, idx) => {
+        const info = getVoieInfo(v.nom);
+        const angleDeg = idx * (360 / total);
+        const rad = (angleDeg - 90) * (Math.PI / 180);
+        const radiusPct = 38.5;
+        const leftPct = (50 + Math.cos(rad) * radiusPct).toFixed(2);
+        const topPct = (50 + Math.sin(rad) * radiusPct).toFixed(2);
+        const isSelected = currentVal === String(v.id);
+        const passiveHtml = richFormatter(v.passiveDescription) || 'Passif spécifique.';
+        const descHtml = v.description || 'Description générique.';
+
+        html += `
+            <button
+                type="button"
+                role="radio"
+                aria-checked="${isSelected ? 'true' : 'false'}"
+                class="voie-star-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
+                data-value="${v.id}"
+                data-child-tooltip="true"
+                data-prefer-top
+                style="left: ${leftPct}%; top: ${topPct}%;"
+                onclick="window.selectVoieWheel('${v.id}')"
+                onmouseenter="showGlobalTooltip(this)"
+                onmouseleave="hideGlobalTooltip()"
+            >
+                <span class="voie-star-node-inner">
+                    <span class="voie-star-node-medallion">
+                        <span class="material-symbols-outlined">${info.icon}</span>
+                    </span>
+                    <span class="voie-star-node-name">${info.shortLabel}</span>
+                </span>
+                <template class="tooltip-data">
+                    <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
+                        <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                        ${v.nom}
+                    </div>
+                    <div class="text-xs text-slate-300 mb-2">${descHtml}</div>
+                    <div class="flex-start-gap text-xs text-slate-200">
+                        <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
+                        <span class="font-italic whitespace-pre-wrap">${passiveHtml}</span>
+                    </div>
+                </template>
+            </button>
+        `;
+    });
+
+    ring.innerHTML = html;
+    syncVoieWheelSelection(currentVal, false);
+}
+
+const SPIRIT_ANIM_CLASSES = [
+    'anim-init-esprit',
+    'anim-init-karma',
+    'anim-init-tenebres',
+    'anim-duel-esprit-tenebres',
+    'anim-duel-tenebres-karma',
+    'anim-duel-karma-esprit',
+    'anim-duel-tenebres-esprit',
+    'anim-duel-esprit-karma',
+    'anim-duel-karma-tenebres'
+];
+
+function getSpiritTriangleOrderIndex(nom) {
+    if (!nom) return 99;
+    const clean = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (clean.includes('esprit')) return 0;   // Sommet haut
+    if (clean.includes('karma')) return 1;    // Sommet bas-gauche
+    if (clean.includes('tenebres')) return 2; // Sommet bas-droite
+    return 99;
+}
+
+function syncSpiritRadioSelection(val, dispatchEvent = false) {
+    const strVal = val !== undefined && val !== null ? String(val) : '';
+    const hiddenInput = document.getElementById('charSpirit');
+    if (hiddenInput) {
+        hiddenInput.value = strVal;
+    }
+
+    const selectedSpirit = strVal ? pageState.spiritualites.find(x => String(x.id) === strVal) : null;
+    const nextInfo = selectedSpirit ? getSpiritInfo(selectedSpirit.nom) : getSpiritInfo('');
+    const nextKey = selectedSpirit ? nextInfo.key : 'none';
+    const prevKey = pageState.lastSpiritKey || 'none';
+    pageState.lastSpiritKey = nextKey;
+
+    const container = document.getElementById('charSpiritOptions');
+    const stage = document.getElementById('charSpiritStage') || (container ? container.closest('.spirit-triangle-stage') : null);
+
+    if (container) {
+        const nodes = container.querySelectorAll('.spirit-tri-node');
+        nodes.forEach(node => {
+            const radio = node.querySelector('input[type="radio"]');
+            const isMatch = String(node.getAttribute('data-value')) === strVal && strVal !== '';
+            if (radio) radio.checked = Boolean(isMatch);
+            node.classList.toggle('is-active', Boolean(isMatch));
+            node.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+        });
+    }
+
+    if (stage && container) {
+        if (pageState.spiritAnimTimer) {
+            clearTimeout(pageState.spiritAnimTimer);
+            pageState.spiritAnimTimer = null;
+        }
+        stage.classList.remove(...SPIRIT_ANIM_CLASSES);
+        container.querySelectorAll('.spirit-tri-node').forEach(n => {
+            n.classList.remove('is-duel-victim', 'is-duel-attacker');
+        });
+
+        if (dispatchEvent && nextKey !== 'none' && nextKey !== prevKey) {
+            void stage.offsetWidth;
+            const attackerNode = container.querySelector(`.spirit-tri-node[data-spirit-key="${nextKey}"]`);
+            if (prevKey === 'none') {
+                const animClass = `anim-init-${nextKey}`;
+                if (attackerNode) attackerNode.classList.add('is-duel-attacker');
+                stage.classList.add(animClass);
+                pageState.spiritAnimTimer = setTimeout(() => {
+                    stage.classList.remove(animClass);
+                    if (attackerNode) attackerNode.classList.remove('is-duel-attacker');
+                }, 820);
+            } else {
+                const animClass = `anim-duel-${prevKey}-${nextKey}`;
+                const victimNode = container.querySelector(`.spirit-tri-node[data-spirit-key="${prevKey}"]`);
+                if (victimNode) victimNode.classList.add('is-duel-victim');
+                if (attackerNode) attackerNode.classList.add('is-duel-attacker');
+                stage.classList.add(animClass);
+                pageState.spiritAnimTimer = setTimeout(() => {
+                    stage.classList.remove(animClass);
+                    if (victimNode) victimNode.classList.remove('is-duel-victim');
+                    if (attackerNode) attackerNode.classList.remove('is-duel-attacker');
+                }, 1240);
+            }
+        }
+    }
+
+    const labelEl = document.getElementById('charSpiritLabel');
+    if (labelEl) {
+        if (selectedSpirit) {
+            labelEl.className = `spirit-triangle-center is-selected ${nextInfo.nodeClass}`;
+            labelEl.innerHTML = `<span class="spirit-triangle-center-sub">Spiritualité active</span>`;
+        } else {
+            labelEl.className = 'spirit-triangle-center';
+            labelEl.innerHTML = `
+                <span class="material-symbols-outlined spirit-triangle-center-icon text-muted">change_history</span>
+                <span class="spirit-triangle-center-title">Choisir</span>
+            `;
+        }
+    }
+
+    if (dispatchEvent) {
+        if (typeof handleSpiritSelectionChange === 'function') {
+            handleSpiritSelectionChange(strVal);
+        }
+        if (hiddenInput) {
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+}
+
+window.selectSpiritRadio = function (val) {
+    if (typeof window.hideGlobalTooltip === 'function') {
+        window.hideGlobalTooltip(true);
+    }
+    syncSpiritRadioSelection(val, true);
+};
+
+function renderSpiritRadios() {
+    const charSpiritOptions = document.getElementById('charSpiritOptions');
+    if (!charSpiritOptions) return;
+
+    const currentVal = String(document.getElementById('charSpirit')?.value || '');
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    const orderedSpirits = [...pageState.spiritualites].sort(
+        (a, b) => getSpiritTriangleOrderIndex(a.nom) - getSpiritTriangleOrderIndex(b.nom)
+    );
+
+    let html = `
+        <svg class="spirit-triangle-svg" viewBox="0 0 240 240" aria-hidden="true">
+            <circle cx="120" cy="126" r="94" class="spirit-tri-orbit" />
+            <polygon points="120,34 200,174 40,174" class="spirit-tri-poly-main" />
+            <polygon points="120,188 68,96 172,96" class="spirit-tri-poly-alt" />
+            <line x1="120" y1="36" x2="120" y2="128" class="spirit-tri-axis spirit-axis-esprit" />
+            <line x1="42" y1="173" x2="120" y2="128" class="spirit-tri-axis spirit-axis-karma" />
+            <line x1="198" y1="173" x2="120" y2="128" class="spirit-tri-axis spirit-axis-tenebres" />
+            <circle cx="120" cy="128" r="35" class="spirit-tri-sanctum-ring" />
+        </svg>
+
+        <div class="spirit-duel-fx" aria-hidden="true">
+            <span class="fx-init-pulse fx-pulse-1"></span>
+            <span class="fx-init-pulse fx-pulse-2"></span>
+
+            <!-- Duel Esprit -> Ténèbres : Assombrissement, Fissures, Éclats & Jaillissement -->
+            <svg class="fx-shatter-cracks" viewBox="0 0 100 100">
+                <path d="M50,50 L20,16 M50,50 L84,22 M50,50 L14,62 M50,50 L88,70 M50,50 L48,90 M35,34 L62,28 M34,64 L68,62" />
+            </svg>
+            <span class="fx-shard shard-1"></span>
+            <span class="fx-shard shard-2"></span>
+            <span class="fx-shard shard-3"></span>
+            <span class="fx-shard shard-4"></span>
+            <span class="fx-shard shard-5"></span>
+            <span class="fx-shard shard-6"></span>
+            <span class="fx-abyss-burst"></span>
+
+            <!-- Duel Ténèbres -> Karma : 3 Projectiles Karmiques & Transposition -->
+            <span class="fx-karma-proj proj-1"></span>
+            <span class="fx-karma-proj proj-2"></span>
+            <span class="fx-karma-proj proj-3"></span>
+            <span class="fx-transpose-beam"></span>
+            <span class="fx-transpose-ring ring-center"></span>
+            <span class="fx-transpose-ring ring-corner"></span>
+
+            <!-- Duel Karma -> Esprit : Rayon Céleste & Halo -->
+            <span class="fx-celestial-beam"></span>
+            <span class="fx-celestial-halo"></span>
+
+            <!-- Duel Ténèbres -> Esprit : Supernova Purificatrice -->
+            <span class="fx-supernova-core"></span>
+            <span class="fx-supernova-wave"></span>
+
+            <!-- Duel Esprit -> Karma : Sceau des Balances -->
+            <span class="fx-karma-seal seal-outer"></span>
+            <span class="fx-karma-seal seal-inner"></span>
+
+            <!-- Duel Karma -> Ténèbres : Éclipse Vorace & Pics Abyssaux -->
+            <span class="fx-eclipse-disc"></span>
+            <span class="fx-eclipse-corona"></span>
+            <span class="fx-dark-spike spike-1"></span>
+            <span class="fx-dark-spike spike-2"></span>
+            <span class="fx-dark-spike spike-3"></span>
+            <span class="fx-dark-spike spike-4"></span>
+            <span class="fx-dark-spike spike-5"></span>
+            <span class="fx-dark-spike spike-6"></span>
+            <span class="fx-dark-spike spike-7"></span>
+            <span class="fx-dark-spike spike-8"></span>
+        </div>
+    `;
+
+    orderedSpirits.forEach(s => {
+        const info = getSpiritInfo(s.nom);
+        const sIdStr = String(s.id);
+        const isSelected = currentVal === sIdStr;
+        const passiveHtml = richFormatter(s.passiveDescription) || 'Passif spécifique.';
+        const descHtml = s.description || 'Description générique.';
+
+        html += `
+            <button
+                type="button"
+                role="radio"
+                aria-checked="${isSelected ? 'true' : 'false'}"
+                class="spirit-tri-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
+                data-value="${s.id}"
+                data-spirit-key="${info.key}"
+                data-child-tooltip="true"
+                data-prefer-top
+                onclick="window.selectSpiritRadio('${s.id}')"
+                onmouseenter="showGlobalTooltip(this)"
+                onmouseleave="hideGlobalTooltip()"
+            >
+                <input type="radio" name="charSpiritRadio" class="spirit-radio-input" value="${s.id}" ${isSelected ? 'checked' : ''} />
+                <span class="spirit-tri-node-inner">
+                    <span class="spirit-tri-node-medallion">
+                        <span class="material-symbols-outlined">${info.icon}</span>
+                    </span>
+                    <span class="spirit-tri-node-name">${s.nom}</span>
+                </span>
+                <template class="tooltip-data">
+                    <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
+                        <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                        ${s.nom}
+                    </div>
+                    <div class="text-xs text-slate-300 mb-2">${descHtml}</div>
+                    <div class="flex-start-gap text-xs text-slate-200">
+                        <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
+                        <span class="font-italic whitespace-pre-wrap">${passiveHtml}</span>
+                    </div>
+                </template>
+            </button>
+        `;
+    });
+
+    charSpiritOptions.innerHTML = html;
+    syncSpiritRadioSelection(currentVal, false);
 }
 
 function populateSelects() {
-    const charVoieOptions = document.getElementById('charVoieOptions');
-    const charSpiritOptions = document.getElementById('charSpiritOptions');
     const searchVoieOptions = document.getElementById('searchVoieOptions');
     const searchSpiritOptions = document.getElementById('searchSpiritOptions');
 
-    if (charVoieOptions) {
-        charVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
-        pageState.voies.forEach(v => {
-            const info = getVoieInfo(v.nom);
-            charVoieOptions.innerHTML += `<div class="custom-option" data-value="${v.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${v.nom}</div>`;
-        });
-    }
+    renderVoieStarWheel();
 
     if (searchVoieOptions) {
         searchVoieOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
@@ -390,13 +928,7 @@ function populateSelects() {
         });
     }
 
-    if (charSpiritOptions) {
-        charSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —</div>`;
-        pageState.spiritualites.forEach(s => {
-            const info = getSpiritInfo(s.nom);
-            charSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
-        });
-    }
+    renderSpiritRadios();
 
     if (searchSpiritOptions) {
         searchSpiritOptions.innerHTML = `<div class="custom-option" data-value=""><span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> Toutes</div>`;
@@ -405,10 +937,6 @@ function populateSelects() {
             searchSpiritOptions.innerHTML += `<div class="custom-option" data-value="${s.id}"><span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${s.nom}</div>`;
         });
     }
-
-
-
-
 }
 function getVoieColor(nom) {
     if (!nom) return '#94a3b8';
@@ -490,6 +1018,12 @@ function filterPersonnages() {
 function renderPersonnages() {
     const container = document.getElementById('personnagesList');
     if (!container) return;
+
+    const totalCount = pageState.personnages.length;
+    const rosterCountEl = document.getElementById('armoryRosterCount');
+    if (rosterCountEl) rosterCountEl.textContent = String(totalCount);
+    const dockCountEl = document.getElementById('armoryDockCountBadge');
+    if (dockCountEl) dockCountEl.textContent = String(totalCount);
 
     // Filter logic
     const searchName = document.getElementById('searchName') ? document.getElementById('searchName').value.toLowerCase() : '';
@@ -589,11 +1123,15 @@ function renderPersonnages() {
                     if (eq.specialEffect && eq.specialEffect !== 'NONE') {
                         effectStar = `<span class="material-symbols-outlined text-xs text-purple ml-1">auto_awesome</span>`;
                     }
-                    return `<span class="char-equip-chip ${rarityClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()" style="cursor: pointer;">
+                    const upLvl = Number(eq.upgradeLevel || 0);
+                    const upChipBadge = upLvl > 0
+                        ? `<span class="equip-upgrade-badge ${upLvl >= 5 ? 'is-max' : ''}">+${upLvl}</span>`
+                        : '';
+                    return `<span class="char-equip-chip ${rarityClass}" onmouseenter="showGlobalTooltip(this)" onmouseleave="hideGlobalTooltip()">
                         <span class="material-symbols-outlined ${slotInfo.extraClass || ''} text-sm" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
-                        ${eq.name}${effectStar}
+                        ${eq.name}${upChipBadge}${effectStar}
                         <template class="tooltip-data">
-                            <div class="${rarityClass} font-bold mb-1 text-base">${eq.name}</div>
+                            <div class="${rarityClass} font-bold mb-1 text-base">${eq.name}${upChipBadge}</div>
                             <div class="eq-stats-container mt-2">
                                 ${eqStatsHtml || '<div class="text-muted text-sm font-italic">Aucun bonus</div>'}
                                 ${eqSpecialEffectHtml}
@@ -784,6 +1322,21 @@ function renderEquipModal() {
                 </div>`;
             }
 
+            const upLvl = Number(equipped.upgradeLevel || 0);
+            const upBadge = upLvl > 0
+                ? `<span class="equip-upgrade-badge ${upLvl >= 5 ? 'is-max' : ''}">+${upLvl}</span>`
+                : '';
+            let awakenLinkHtml = '';
+            if (equipped.upgradeEligible && upLvl < 5) {
+                const safeReason = String(equipped.upgradeMissingReason || 'Éveil indisponible')
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;');
+                awakenLinkHtml = equipped.upgradeReady
+                    ? `<a href="/alchemy?tab=awakening&equipId=${equipped.id}" class="equip-awaken-btn is-ready" title="Éveiller l'équipement"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></a>`
+                    : `<span class="equip-awaken-btn is-disabled" title="${safeReason}"><span class="material-symbols-outlined text-sm">upgrade</span><span>Éveiller</span></span>`;
+            }
+
             return `
                 <div class="equip-slot-card equipped" data-slot="${slotKey}">
                     <div class="equip-slot-header">
@@ -791,11 +1344,14 @@ function renderEquipModal() {
                             <span class="material-symbols-outlined text-lg ${slotInfo.extraClass || ''}" style="color: ${slotInfo.color};">${slotInfo.icon}</span>
                             ${slotInfo.label}
                         </span>
-                        <button class="eq-unequip-btn" onclick="unequipItem(${equipped.id})" title="Retirer">
-                            <span class="material-symbols-outlined text-sm">close</span>
-                        </button>
+                        <div class="flex items-center gap-1">
+                            ${awakenLinkHtml}
+                            <button class="eq-unequip-btn" onclick="unequipItem(${equipped.id})" title="Retirer">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="equip-slot-item-name ${rarityClass}">${equipped.name}</div>
+                    <div class="equip-slot-item-name ${rarityClass}">${equipped.name}${upBadge}</div>
                     <div class="equip-slot-stats">
                         ${statsChips || '<span class="opacity-40">Aucun bonus</span>'}
                         ${specialEffectHtml}
@@ -927,12 +1483,73 @@ function renderEquipModal() {
                 </div>`;
         }
     }).join('');
+
+    if (window.currentUser?.awakeningTutorialActive && window.GrimoireTutorial && !window.GrimoireTutorial.isActive()) {
+        if (container.querySelector('.equip-awaken-btn.is-ready')) {
+            window.GrimoireTutorial.startPhase('AWAKENING');
+        }
+    }
+}
+
+function updateTavernePassivesPreview() {
+    const previewEl = document.getElementById('tavernePassivesPreview');
+    if (!previewEl) return;
+
+    const vId = document.getElementById('charVoie')?.value;
+    const sId = document.getElementById('charSpirit')?.value;
+    const v = vId ? pageState.voies.find(x => String(x.id) === String(vId)) : null;
+    const s = sId ? pageState.spiritualites.find(x => String(x.id) === String(sId)) : null;
+
+    if (!v && !s) {
+        previewEl.innerHTML = `
+            <div class="taverne-passive-empty">
+                <span class="material-symbols-outlined">auto_stories</span>
+                <span>Les passifs de votre Voie et de votre Spiritualité s'afficheront ici.</span>
+            </div>
+        `;
+        return;
+    }
+
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+    let html = '';
+    if (v) {
+        const vInfo = getVoieInfo(v.nom);
+        const passiveText = richFormatter(v.passiveDescription || v.description || 'Passif de voie.');
+        html += `
+            <div class="taverne-passive-card ${vInfo.nodeClass}">
+                <div class="taverne-passive-header">
+                    <span class="material-symbols-outlined">${vInfo.icon}</span>
+                    <span>${v.nom}</span>
+                </div>
+                <div class="taverne-passive-body">${passiveText}</div>
+            </div>
+        `;
+    }
+    if (s) {
+        const sInfo = getSpiritInfo(s.nom);
+        const passiveText = richFormatter(s.passiveDescription || s.description || 'Passif spirituel.');
+        html += `
+            <div class="taverne-passive-card ${sInfo.cardClass}">
+                <div class="taverne-passive-header ${sInfo.textClass}">
+                    <span class="material-symbols-outlined">${sInfo.icon}</span>
+                    <span>${s.nom}</span>
+                </div>
+                <div class="taverne-passive-body">${passiveText}</div>
+            </div>
+        `;
+    }
+    previewEl.innerHTML = html;
 }
 
 function editPersonnage(id) {
     pageState.editingId = id;
     const p = pageState.personnages.find(x => x.id === id);
     if (!p) return;
+
+    if (pageState.taverneCollapsed) {
+        pageState.taverneCollapsed = false;
+        applyArmoryLayoutState();
+    }
 
     document.getElementById('charFormPanel').classList.add('editing-mode');
 
@@ -947,23 +1564,11 @@ function editPersonnage(id) {
     document.getElementById('charCrit').value = p.crit || 0;
     document.getElementById('charRegenHp').value = p.regenHp || 0;
     document.getElementById('charRegenMana').value = p.regenMana || 0;
-    document.getElementById('charVoie').value = p.voie ? p.voie.id : '';
-    if (p.voie) {
-        const info = getVoieInfo(p.voie.nom);
-        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.voie.nom}`;
-    } else {
-        document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
-    }
+    syncVoieWheelSelection(p.voie ? p.voie.id : '', true);
 
     document.getElementById('charExperience').value = p.experience || 0;
 
-    document.getElementById('charSpirit').value = p.spiritualite ? p.spiritualite.id : '';
-    if (p.spiritualite) {
-        const info = getSpiritInfo(p.spiritualite.nom);
-        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon" style="color: ${info.color};">${info.icon}</span> ${p.spiritualite.nom}`;
-    } else {
-        document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
-    }
+    syncSpiritRadioSelection(p.spiritualite ? p.spiritualite.id : '', true);
 
     document.getElementById('charSpiritExperience').value = p.spiritualiteExperience || 0;
 
@@ -978,6 +1583,7 @@ function editPersonnage(id) {
 
     updateSubmitButtonState();
     applyVoieBaseStats(p.voie ? p.voie.nom : null);
+    updateTavernePassivesPreview();
     if (window.updateArmoryVoieSpider) {
         window.updateArmoryVoieSpider(p.voie ? p.voie.id : null, p.spiritualite ? p.spiritualite.id : null);
     }
@@ -998,19 +1604,17 @@ function resetForm() {
     document.getElementById('charCrit').value = 5;
     document.getElementById('charRegenHp').value = 2;
     document.getElementById('charRegenMana').value = 4;
-    document.getElementById('charVoie').value = '';
-    document.getElementById('charVoieLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+    syncVoieWheelSelection('', false);
 
     document.getElementById('charExperience').value = 0;
 
-    document.getElementById('charSpirit').value = '';
-    document.getElementById('charSpiritLabel').innerHTML = `<span class="material-symbols-outlined cs-icon text-muted">trip_origin</span> — Aucune —`;
+    syncSpiritRadioSelection('', false);
 
     document.getElementById('charSpiritExperience').value = 0;
 
     document.getElementById('formTitleText').innerHTML = `
-        <span class="material-symbols-outlined">person_add</span>
-        Recruter à la taverne`;
+        <span class="material-symbols-outlined">sports_bar</span>
+        Taverne — Recrutement`;
     document.getElementById('submitBtn').innerHTML = `
         <span class="material-symbols-outlined text-lg">person_add</span>
         Forger le Personnage`;
@@ -1020,9 +1624,14 @@ function resetForm() {
     if (cvIcon) cvIcon.classList.add('hidden');
     const csIcon = document.getElementById('charSpiritInfoIcon');
     if (csIcon) csIcon.classList.add('hidden');
+    const svIcon = document.getElementById('spiderVoieInfoIcon');
+    if (svIcon) svIcon.classList.add('hidden');
+    const ssIcon = document.getElementById('spiderSpiritInfoIcon');
+    if (ssIcon) ssIcon.classList.add('hidden');
     applyVoieBaseStats(null);
+    updateTavernePassivesPreview();
     if (window.updateArmoryVoieSpider) {
-        window.updateArmoryVoieSpider(null);
+        window.updateArmoryVoieSpider(null, null, false);
     }
     if (window.updateArmorySpiritSpider) {
         window.updateArmorySpiritSpider(null);
@@ -1049,22 +1658,27 @@ document.addEventListener('change', (e) => {
 // ===== Init =====
 
 function applyVoieBaseStats(voieNom) {
-    function buildStatHtml(label, valStr, icon, baseColor) {
+    function buildStatHtml(label, valStr, icon, iconColorClass) {
         const val = parseInt(valStr.replace('+', ''));
         const isPos = val > 0;
-        const valColor = isPos ? '#10b981' : '#ef4444';
+        const stateClass = isPos ? 'is-bonus' : 'is-malus';
         return `
-            <div class="flex-center justify-between px-3 py-2 bg-slate-900 rounded-md">
-                <div class="flex-center gap-2 text-slate-300">
-                    <span class="material-symbols-outlined text-lg" style="color: ${baseColor};">${icon}</span>
-                    ${label}
+            <div class="voie-mod-pill ${stateClass}">
+                <div class="voie-mod-pill-label">
+                    <span class="material-symbols-outlined ${iconColorClass}">${icon}</span>
+                    <span>${label}</span>
                 </div>
-                <div class="font-semibold" style="color: ${valColor};">${valStr}</div>
+                <span class="voie-mod-pill-val">${valStr}</span>
             </div>
         `;
     }
 
-    let diffHtml = '<span class="font-italic text-muted text-sm">Sélectionnez une voie pour voir les effets.</span>';
+    let diffHtml = `
+        <div class="armory-mods-empty">
+            <span class="material-symbols-outlined">tune</span>
+            <span>Sélectionnez une voie pour voir ses bonus et malus de départ.</span>
+        </div>
+    `;
     // Statistiques par défaut
     let stats = {
         charHp: 100, charMana: 100, charPower: 10, charStrength: 10,
@@ -1073,50 +1687,53 @@ function applyVoieBaseStats(voieNom) {
     };
 
     if (voieNom) {
-        diffHtml = "";
+        let pillsHtml = "";
         if (voieNom.includes('Raison')) {
             stats.charCrit = 0; stats.charMana = 120; stats.charHp = 120;
-            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Mana', '+20', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Critique', '-5', 'gps_fixed', '#ef4444');
+            pillsHtml += buildStatHtml('PV', '+20', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Mana', '+20', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Critique', '-5', 'gps_fixed', 'text-danger');
         } else if (voieNom.includes('Sûreté') || voieNom.includes('Surete')) {
             stats.charMana = 130; stats.charResistance = 8; stats.charRegenMana = 6;
-            diffHtml += buildStatHtml('Mana', '+30', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-            diffHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('Mana', '+30', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Résistance', '+3', 'shield', 'text-success');
+            pillsHtml += buildStatHtml('Régen Mana', '+2', 'cyclone', 'text-info');
         } else if (voieNom.includes('Trahison')) {
             stats.charHp = 90; stats.charStrength = 12; stats.charSpeed = 2;
-            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Force', '+2', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
+            pillsHtml += buildStatHtml('PV', '-10', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Force', '+2', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Vitesse', '+1', 'bolt', 'text-warning');
         } else if (voieNom.includes('Consolidation')) {
             stats.charArmor = 8; stats.charResistance = 8; stats.charRegenHp = 3;
-            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
-            diffHtml += buildStatHtml('Résistance', '+3', 'shield', '#10b981');
-            diffHtml += buildStatHtml('Régen PV', '+1', 'healing', '#10b981');
+            pillsHtml += buildStatHtml('Armure', '+3', 'shield', 'text-blue');
+            pillsHtml += buildStatHtml('Résistance', '+3', 'shield', 'text-success');
+            pillsHtml += buildStatHtml('Régen PV', '+1', 'healing', 'text-success');
         } else if (voieNom.includes('Conviction')) {
             stats.charRegenMana = 25; stats.charHp = 90; stats.charPower = 11;
-            diffHtml += buildStatHtml('PV', '-10', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('PV', '-10', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Régen Mana', '+21', 'cyclone', 'text-info');
         } else if (voieNom.includes('Création') || voieNom.includes('Creation')) {
             stats.charHp = 120; stats.charArmor = 8;
-            diffHtml += buildStatHtml('PV', '+20', 'favorite', '#ec4899');
-            diffHtml += buildStatHtml('Armure', '+3', 'shield', '#3b82f6');
+            pillsHtml += buildStatHtml('PV', '+20', 'favorite', 'text-pink');
+            pillsHtml += buildStatHtml('Armure', '+3', 'shield', 'text-blue');
         } else if (voieNom.includes('Destruction')) {
             stats.charPower = 12; stats.charArmor = 0; stats.charStrength = 8; stats.charRegenMana = 5; stats.charMana = 110;
-            diffHtml += buildStatHtml('Mana', '+10', 'water_drop', '#38bdf8');
-            diffHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Force', '-2', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Armure', '-5', 'shield', '#3b82f6');
-            diffHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', '#38bdf8');
+            pillsHtml += buildStatHtml('Mana', '+10', 'water_drop', 'text-info');
+            pillsHtml += buildStatHtml('Puissance', '+2', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Force', '-2', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Armure', '-5', 'shield', 'text-blue');
+            pillsHtml += buildStatHtml('Régen Mana', '+1', 'cyclone', 'text-info');
         } else if (voieNom.includes('Violence')) {
             stats.charSpeed = 2; stats.charCrit = 7; stats.charRegenHp = 0; stats.charPower = 11; stats.charStrength = 11;
-            diffHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', '#a855f7');
-            diffHtml += buildStatHtml('Force', '+1', 'fitness_center', '#f43f5e');
-            diffHtml += buildStatHtml('Vitesse', '+1', 'bolt', '#f59e0b');
-            diffHtml += buildStatHtml('Critique', '+2', 'gps_fixed', '#ef4444');
-            diffHtml += buildStatHtml('Régen PV', '-2', 'healing', '#10b981');
+            pillsHtml += buildStatHtml('Puissance', '+1', 'auto_awesome', 'text-purple');
+            pillsHtml += buildStatHtml('Force', '+1', 'fitness_center', 'text-rose-500');
+            pillsHtml += buildStatHtml('Vitesse', '+1', 'bolt', 'text-warning');
+            pillsHtml += buildStatHtml('Critique', '+2', 'gps_fixed', 'text-danger');
+            pillsHtml += buildStatHtml('Régen PV', '-2', 'healing', 'text-success');
+        }
+        if (pillsHtml) {
+            diffHtml = `<div class="voie-mods-grid">${pillsHtml}</div>`;
         }
     }
 
@@ -1132,96 +1749,116 @@ function applyVoieBaseStats(voieNom) {
     }
 }
 
-function bindArmorySelectListeners() {
-    const cvInput = document.getElementById('charVoie');
-    if (cvInput && !cvInput.dataset.boundArmoryChange) {
-        cvInput.dataset.boundArmoryChange = 'true';
-        cvInput.addEventListener('change', (e) => {
-            const vId = e.target.value;
-            const iconEl = document.getElementById('charVoieInfoIcon');
-            const currentSpirit = document.getElementById('charSpirit')?.value;
+function handleVoieSelectionChange(vId) {
+    const iconEl = document.getElementById('charVoieInfoIcon');
+    const spiderIconEl = document.getElementById('spiderVoieInfoIcon');
+    const currentSpirit = document.getElementById('charSpirit')?.value;
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
 
-            if (!vId) {
-                if (iconEl) iconEl.classList.add('hidden');
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-                return;
-            }
-            const v = pageState.voies.find(x => x.id == vId);
-            if (v && iconEl) {
-                const info = getVoieInfo(v.nom);
-                const template = iconEl.querySelector('.tooltip-data');
-                if (template) {
-                    template.innerHTML = `
-                        <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
-                            <span class="material-symbols-outlined text-lg">${info.icon}</span>
-                            ${v.nom}
-                        </div>
-                        <div class="text-xs text-slate-300 mb-2">${v.description || 'Description générique.'}</div>
-                        <div class="flex-start-gap text-xs text-slate-200">
-                            <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
-                            <span class="font-italic whitespace-pre-wrap">${formatRichText(v.passiveDescription) || 'Passif spécifique.'}</span>
-                        </div>
-                    `;
-                }
-                iconEl.classList.remove('hidden');
-                applyVoieBaseStats(v.nom);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(vId, currentSpirit, true);
-            } else if (iconEl) {
-                iconEl.classList.add('hidden');
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-            } else {
-                applyVoieBaseStats(null);
-                if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit, false);
-            }
-        });
+    if (!vId) {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderIconEl) spiderIconEl.classList.add('hidden');
+        applyVoieBaseStats(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit || null, true);
+        return;
+    }
+    const v = pageState.voies.find(x => String(x.id) === String(vId));
+    if (v) {
+        const info = getVoieInfo(v.nom);
+        const tooltipHtml = `
+            <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
+                <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                ${v.nom}
+            </div>
+            <div class="text-xs text-slate-300 mb-2">${v.description || 'Description générique.'}</div>
+            <div class="flex-start-gap text-xs text-slate-200">
+                <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
+                <span class="font-italic whitespace-pre-wrap">${richFormatter(v.passiveDescription) || 'Passif spécifique.'}</span>
+            </div>
+        `;
+        if (iconEl) {
+            const template = iconEl.querySelector('.tooltip-data');
+            if (template) template.innerHTML = tooltipHtml;
+            iconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (spiderIconEl) {
+            const spiderTpl = spiderIconEl.querySelector('.tooltip-data');
+            if (spiderTpl) spiderTpl.innerHTML = tooltipHtml;
+            spiderIconEl.classList.remove('hidden', 'is-hidden');
+        }
+        applyVoieBaseStats(v.nom);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(vId, currentSpirit || null, true);
+    } else {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderIconEl) spiderIconEl.classList.add('hidden');
+        applyVoieBaseStats(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) window.updateArmoryVoieSpider(null, currentSpirit || null, false);
+    }
+}
+
+function handleSpiritSelectionChange(sId) {
+    const iconEl = document.getElementById('charSpiritInfoIcon');
+    const spiderSpiritIconEl = document.getElementById('spiderSpiritInfoIcon');
+    const currentVoie = document.getElementById('charVoie')?.value;
+    const richFormatter = typeof formatRichText === 'function' ? formatRichText : (t => t || '');
+
+    if (!sId) {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderSpiritIconEl) spiderSpiritIconEl.classList.add('hidden');
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
+        updateTavernePassivesPreview();
+        if (window.updateArmoryVoieSpider) {
+            window.updateArmoryVoieSpider(currentVoie || null, null, true);
+        }
+        return;
+    }
+    const s = pageState.spiritualites.find(x => String(x.id) === String(sId));
+    if (s) {
+        const info = getSpiritInfo(s.nom);
+        const tooltipHtml = `
+            <div class="text-sm font-medium mb-2 flex-center gap-1 ${info.textClass}">
+                <span class="material-symbols-outlined text-lg">${info.icon}</span>
+                ${s.nom}
+            </div>
+            <div class="text-xs text-slate-300 mb-2">${s.description || 'Description générique.'}</div>
+            <div class="flex-start-gap text-xs text-slate-200">
+                <span class="material-symbols-outlined text-md ${info.textClass}">bolt</span>
+                <span class="font-italic whitespace-pre-wrap">${richFormatter(s.passiveDescription) || 'Passif spécifique.'}</span>
+            </div>
+        `;
+        if (iconEl) {
+            const template = iconEl.querySelector('.tooltip-data');
+            if (template) template.innerHTML = tooltipHtml;
+            iconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (spiderSpiritIconEl) {
+            const spiderTpl = spiderSpiritIconEl.querySelector('.tooltip-data');
+            if (spiderTpl) spiderTpl.innerHTML = tooltipHtml;
+            spiderSpiritIconEl.classList.remove('hidden', 'is-hidden');
+        }
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(s);
+    } else {
+        if (iconEl) iconEl.classList.add('hidden');
+        if (spiderSpiritIconEl) spiderSpiritIconEl.classList.add('hidden');
+        if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
     }
 
-    const csInput = document.getElementById('charSpirit');
-    if (csInput && !csInput.dataset.boundArmoryChange) {
-        csInput.dataset.boundArmoryChange = 'true';
-        csInput.addEventListener('change', (e) => {
-            const sId = e.target.value;
-            const iconEl = document.getElementById('charSpiritInfoIcon');
-            const currentVoie = document.getElementById('charVoie')?.value;
+    updateTavernePassivesPreview();
+    if (window.updateArmoryVoieSpider) {
+        window.updateArmoryVoieSpider(currentVoie || null, s || sId, true);
+    }
+}
 
-            if (!sId) {
-                if (iconEl) iconEl.classList.add('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-                if (currentVoie && window.updateArmoryVoieSpider) {
-                    window.updateArmoryVoieSpider(currentVoie, null, true);
-                }
-                return;
-            }
-            const s = pageState.spiritualites.find(x => x.id == sId);
-            if (s && iconEl) {
-                const info = getSpiritInfo(s.nom);
-                const template = iconEl.querySelector('.tooltip-data');
-                if (template) {
-                    template.innerHTML = `
-                        <div class="text-sm font-medium mb-2 flex-center gap-1" style="color: ${info.color};">
-                            <span class="material-symbols-outlined text-lg">${info.icon}</span>
-                            ${s.nom}
-                        </div>
-                        <div class="text-xs text-slate-300 mb-2">${s.description || 'Description générique.'}</div>
-                        <div class="flex-start-gap text-xs text-slate-200">
-                            <span class="material-symbols-outlined text-md" style="color: ${info.color};">bolt</span>
-                            <span class="font-italic whitespace-pre-wrap">${formatRichText(s.passiveDescription) || 'Passif spécifique.'}</span>
-                        </div>
-                    `;
-                }
-                iconEl.classList.remove('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(s);
-            } else if (iconEl) {
-                iconEl.classList.add('hidden');
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-            } else {
-                if (window.updateArmorySpiritSpider) window.updateArmorySpiritSpider(null);
-            }
-
-            if (currentVoie && window.updateArmoryVoieSpider) {
-                window.updateArmoryVoieSpider(currentVoie, s || sId, true);
+function bindArmorySelectListeners() {
+    const spiritWrapper = document.getElementById('charSpiritWrapper');
+    if (spiritWrapper && !spiritWrapper.dataset.boundSpiritRadios) {
+        spiritWrapper.dataset.boundSpiritRadios = 'true';
+        spiritWrapper.addEventListener('change', (e) => {
+            if (e.target && e.target.name === 'charSpiritRadio') {
+                syncSpiritRadioSelection(e.target.value, true);
             }
         });
     }
@@ -1230,6 +1867,29 @@ function bindArmorySelectListeners() {
 async function initArmoryPage() {
     pageState.editingId = null;
     pageState.equipModalPersoId = null;
+    pageState.initialLayoutApplied = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
+    const hasOpenEquip = !isNaN(openEquipCharId);
+
+    const applyPreloadedLayout = () => {
+        if (!window.currentUser || typeof window.currentUser.availableCharacterSlots !== 'number' || hasOpenEquip || window.currentUser.equipTutorialActive) {
+            return;
+        }
+        const absMax = window.currentUser.absoluteMaxCharacters || 8;
+        const currChars = typeof window.currentUser.currentCharacters === 'number' ? window.currentUser.currentCharacters : -1;
+        if (currChars >= absMax) {
+            pageState.taverneCollapsed = true;
+            pageState.armoryCollapsed = false;
+        } else if (window.currentUser.availableCharacterSlots > 0) {
+            pageState.armoryCollapsed = true;
+            pageState.taverneCollapsed = false;
+        }
+    };
+
+    applyPreloadedLayout();
+    applyArmoryLayoutState();
 
     if (window.initGlobalCustomSelect) {
         window.initGlobalCustomSelect();
@@ -1244,14 +1904,22 @@ async function initArmoryPage() {
         await window.checkAuthStatus();
     }
 
+    if (!pageState.initialLayoutApplied) {
+        applyPreloadedLayout();
+        applyArmoryLayoutState();
+    }
+
     applyRbac();
 
     await Promise.all([fetchMeta(), loadAllEquipments()]);
     await loadPersonnages();
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const openEquipCharId = parseInt(urlParams.get('openEquip'), 10);
-    if (!isNaN(openEquipCharId)) {
+    updateTavernePassivesPreview();
+    if (window.updateArmoryVoieSpider) {
+        window.updateArmoryVoieSpider(null, null, false);
+    }
+
+    if (hasOpenEquip) {
         setTimeout(() => {
             openEquipModal(openEquipCharId);
         }, 100);

@@ -537,6 +537,7 @@
 
             const card = createEl('div', classes);
             card.addEventListener('click', () => {
+                window.hideGlobalTooltip?.(true);
                 awakeningState.selectedEquipmentId = null;
                 onSelectRecipe(r, card);
             });
@@ -550,7 +551,7 @@
             titleWrap.appendChild(createEl('span', `material-symbols-outlined text-base shrink-0 awakening-spirit-icon ${spClass}`, catIcon));
             const title = createEl('span', 'font-bold text-sm awakening-craft-title truncate', r.name);
             titleWrap.appendChild(title);
-            attachAnomalyTooltip(titleWrap, rewardTmpl, r.rewardName || r.name);
+            attachAnomalyTooltip(titleWrap, rewardTmpl, r.rewardName || r.name, { keepPointerCursor: true, positionSide: true });
 
             const badgesWrap = createEl('div', 'flex items-center gap-1.5 shrink-0');
             if (spDef) {
@@ -578,14 +579,19 @@
         });
     }
 
-    function attachAnomalyTooltip(el, tmpl, fallbackName) {
+    function attachAnomalyTooltip(el, tmpl, fallbackName, options = {}) {
         if (!el || !tmpl || typeof getAnomalyTooltipHTML !== 'function') return;
         const html = getAnomalyTooltipHTML(tmpl, fallbackName || tmpl.name);
         if (!html) return;
         const color = tmpl.spiritualite && typeof getSpiritualiteColor === 'function'
             ? getSpiritualiteColor(tmpl.spiritualite)
             : '#a855f7';
-        el.classList.add('cursor-help');
+        if (!options.keepPointerCursor) {
+            el.classList.add('cursor-help');
+        }
+        if (options.positionSide) {
+            el.setAttribute('data-tooltip-position', 'side');
+        }
         el.setAttribute('data-tooltip-html', html);
         el.setAttribute('data-color', color);
         el.addEventListener('mouseenter', () => window.showGlobalTooltip?.(el));

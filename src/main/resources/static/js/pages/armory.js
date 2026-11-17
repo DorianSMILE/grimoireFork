@@ -649,7 +649,7 @@ function renderVoieStarWheel() {
                 aria-checked="${isSelected ? 'true' : 'false'}"
                 class="voie-star-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
                 data-value="${v.id}"
-                data-child-tooltip="true"
+                data-tooltip-passive="true"
                 data-prefer-top
                 style="left: ${leftPct}%; top: ${topPct}%;"
                 onclick="window.selectVoieWheel('${v.id}')"
@@ -882,7 +882,7 @@ function renderSpiritRadios() {
                 class="spirit-tri-node ${info.nodeClass} ${isSelected ? 'is-active' : ''}"
                 data-value="${s.id}"
                 data-spirit-key="${info.key}"
-                data-child-tooltip="true"
+                data-tooltip-passive="true"
                 data-prefer-top
                 onclick="window.selectSpiritRadio('${s.id}')"
                 onmouseenter="showGlobalTooltip(this)"

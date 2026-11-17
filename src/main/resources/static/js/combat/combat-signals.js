@@ -1,5 +1,5 @@
-import { pageState } from './combat-state.js?v=1786180000240';
-import { appendCustomCombatLogElement } from './combat-ui.js?v=1786180000240';
+import { pageState } from './combat-state.js?v=1786180000242';
+import { appendCustomCombatLogElement } from './combat-ui.js?v=1786180000242';
 import { fetchCombatSignalsConfig, postCombatSignal } from '../services/api.js';
 
 let signalsConfig = null;

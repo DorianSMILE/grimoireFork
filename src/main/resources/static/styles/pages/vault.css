@@ -391,20 +391,69 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.dismantle-gold-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 .dismantle-anomalies-list {
-    margin-top: 0.55rem;
+    margin-top: 0.65rem;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.35rem;
 }
 
 .dismantle-anomaly-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.5rem;
     font-size: 0.82rem;
     color: #e2e8f0;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--spirit-color, #a855f7);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
+
+.dismantle-anomaly-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--spirit-color, #a855f7);
+}
+
+.dismantle-anomaly-left {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.dismantle-anomaly-icon {
+    font-size: 1.05rem;
+    color: var(--spirit-color, #a855f7);
+    flex-shrink: 0;
+}
+
+.dismantle-anomaly-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dismantle-spirit-raison        { --spirit-color: #3b82f6; }
+.dismantle-spirit-surete        { --spirit-color: #00e5cc; }
+.dismantle-spirit-trahison      { --spirit-color: #ed5677; }
+.dismantle-spirit-consolidation { --spirit-color: #99674c; }
+.dismantle-spirit-conviction    { --spirit-color: #b74c0b; }
+.dismantle-spirit-creation      { --spirit-color: #10b981; }
+.dismantle-spirit-destruction   { --spirit-color: #ff4444; }
+.dismantle-spirit-violence      { --spirit-color: #a70740; }
+.dismantle-spirit-esprit        { --spirit-color: #38bdf8; }
+.dismantle-spirit-tenebres      { --spirit-color: #c084fc; }
+.dismantle-spirit-karma         { --spirit-color: #e7d198; }
 
 .dismantle-qty-input {
     background: rgba(15, 23, 42, 0.85);

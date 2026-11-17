@@ -169,10 +169,7 @@ public class AuthController {
             res.put("seenAlchemyRecipes", u.getSeenAlchemyRecipes());
             res.put("seenDungeons", u.getSeenDungeons());
             if (u.isUnlockedAlchemy()) {
-                long unseenCount = alchemyService.getDiscoveredRecipes(u).stream()
-                    .filter(r -> !u.getSeenAlchemyRecipes().contains(r.getId()))
-                    .count();
-                res.put("unseenAlchemyCount", unseenCount);
+                res.put("unseenAlchemyCount", alchemyService.countUnseenClassicRecipes(u));
             } else {
                 res.put("unseenAlchemyCount", 0);
             }

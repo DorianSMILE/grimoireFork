@@ -197,4 +197,130 @@ public final class EquipmentScalingHelper {
     public static int getEffectiveSpecialEffectValue(Equipment eq) {
         return scaleSpecialEffect(eq.getSpecialEffectValue(), clampLevel(eq), eq.getRarity(), eq.getSpecialEffect());
     }
+
+    @SuppressWarnings("deprecation")
+    public static double getBaseMaxWeight(EquipmentSlot slot, EquipmentRarity rarity) {
+        if (slot == null || rarity == null) return 5.0;
+        switch (slot) {
+            case CASQUE:
+            case CAPE:
+                switch (rarity) {
+                    case COMMUN:     return 5;
+                    case INHABITUEL: return 9;
+                    case RARE:       return 14;
+                    case MYTHIQUE:   return 18;
+                    case LEGENDAIRE: return 22;
+                    case EPIQUE:     return 35;
+                    case RELIQUE:    return 40;
+                    case MAUDIT:     return 27;
+                }
+                break;
+            case PLASTRON:
+            case ARME_DEUX_MAINS:
+                switch (rarity) {
+                    case COMMUN:     return 9;
+                    case INHABITUEL: return 14;
+                    case RARE:       return 19;
+                    case MYTHIQUE:   return 24;
+                    case LEGENDAIRE: return 29;
+                    case EPIQUE:     return 40;
+                    case RELIQUE:    return 46;
+                    case MAUDIT:     return 35;
+                }
+                break;
+            case ANNEAU:
+            case ANNEAU_GAUCHE:
+            case ANNEAU_DROIT:
+                switch (rarity) {
+                    case COMMUN:     return 3;
+                    case INHABITUEL: return 4;
+                    case RARE:       return 6;
+                    case MYTHIQUE:   return 8;
+                    case LEGENDAIRE: return 10;
+                    case EPIQUE:     return 15;
+                    case RELIQUE:    return 17;
+                    case MAUDIT:     return 12;
+                }
+                break;
+            case BOTTES:
+                switch (rarity) {
+                    case COMMUN:     return 4;
+                    case INHABITUEL: return 8;
+                    case RARE:       return 12;
+                    case MYTHIQUE:   return 15;
+                    case LEGENDAIRE: return 19;
+                    case EPIQUE:     return 30;
+                    case RELIQUE:    return 34;
+                    case MAUDIT:     return 25;
+                }
+                break;
+            case ARME:
+            case ARME_GAUCHE:
+            case ARME_DROITE:
+                switch (rarity) {
+                    case COMMUN:     return 5;
+                    case INHABITUEL: return 7;
+                    case RARE:       return 10;
+                    case MYTHIQUE:   return 12;
+                    case LEGENDAIRE: return 15;
+                    case EPIQUE:     return 20;
+                    case RELIQUE:    return 23;
+                    case MAUDIT:     return 18;
+                }
+                break;
+            case CONSOMMABLE:
+                switch (rarity) {
+                    case COMMUN:     return 5;
+                    case INHABITUEL: return 7;
+                    case RARE:       return 9;
+                    case MYTHIQUE:   return 11;
+                    case LEGENDAIRE: return 14;
+                    case EPIQUE:     return 20;
+                    case RELIQUE:    return 24;
+                    case MAUDIT:     return 17;
+                }
+                break;
+        }
+        return 5.0;
+    }
+
+    public static double calculateEffectiveWeight(Equipment eq) {
+        if (eq == null) return 0.0;
+        EquipmentStatsSnapshotDTO snap = computeSnapshot(eq);
+        return Equipment.calculateWeightForStats(
+                eq.getSlot(),
+                eq.getRarity(),
+                eq.getBaseWeight(),
+                snap.bonusHealthMax(),
+                snap.bonusManaMax(),
+                snap.bonusPower(),
+                snap.bonusStrength(),
+                snap.bonusArmor(),
+                snap.bonusResistance(),
+                snap.bonusSpeed(),
+                snap.bonusCrit(),
+                snap.regenHealthPerTurn(),
+                snap.regenManaPerTurn(),
+                eq.getSpecialEffect(),
+                snap.specialEffectValue()
+        );
+    }
+
+    /**
+     * Poids max cohérent avec le palier d'éveil (+0 à +5) :
+     * suit la progression de rareté du palier tout en garantissant que le poids effectif
+     * d'un équipement éveillé ne dépasse jamais son plafond.
+     */
+    public static double calculateMaxWeight(Equipment eq) {
+        if (eq == null) return 5.0;
+        double baseMax = getBaseMaxWeight(eq.getSlot(), eq.getRarity());
+        int up = clampLevel(eq);
+        if (up <= 0) {
+            return baseMax;
+        }
+        RarityRates rates = RARITY_RATES.get(eq.getRarity());
+        double coherentMax = Math.ceil(baseMax * (1.0 + up * rates.rPos()));
+        double effectiveRounded = Math.round(calculateEffectiveWeight(eq) * 10.0) / 10.0;
+        return Math.max(coherentMax, Math.ceil(effectiveRounded));
+    }
 }

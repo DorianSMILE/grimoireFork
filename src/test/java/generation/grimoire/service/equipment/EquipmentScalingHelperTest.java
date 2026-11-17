@@ -96,4 +96,43 @@ class EquipmentScalingHelperTest {
         EquipmentStatsSnapshotDTO snap = EquipmentScalingHelper.computeSnapshot(oldWeapon, 5);
         assertEquals(16, snap.bonusStrength());
     }
+
+    @Test
+    void maxWeightScalesCoherentlyWithUpgradeLevelAndNeverExceedsCap() {
+        // Anneau Maudit : baseMax = 12, poids +0 = 12.0 (stats lourdes + malus HP pour tester l'explosion de poids)
+        Equipment ring = new Equipment();
+        ring.setRarity(EquipmentRarity.MAUDIT);
+        ring.setSlot(EquipmentSlot.ANNEAU);
+        ring.setBonusPower(10);      // +20.0 poids
+        ring.setBonusHealthMax(-40); // -8.0 poids -> total +0 = 12.0
+        ring.setUpgradeLevel(0);
+
+        assertEquals(12.0, EquipmentScalingHelper.calculateEffectiveWeight(ring), 0.001);
+        assertEquals(12.0, EquipmentScalingHelper.calculateMaxWeight(ring), 0.001);
+
+        double prevMax = 12.0;
+        for (int lvl = 1; lvl <= 5; lvl++) {
+            ring.setUpgradeLevel(lvl);
+            double effWeight = EquipmentScalingHelper.calculateEffectiveWeight(ring);
+            double maxWeight = EquipmentScalingHelper.calculateMaxWeight(ring);
+            assertTrue(maxWeight >= prevMax, "maxWeight must be non-decreasing at level " + lvl);
+            assertTrue(effWeight <= maxWeight,
+                    "Effective weight " + effWeight + " must never exceed maxWeight " + maxWeight + " at level " + lvl);
+            prevMax = maxWeight;
+        }
+    }
+
+    @Test
+    void heavyDefenseWeaponNeverExceedsMaxWeightAtMaxLevel() {
+        Equipment weapon = new Equipment();
+        weapon.setRarity(EquipmentRarity.MAUDIT);
+        weapon.setSlot(EquipmentSlot.ARME_DROITE); // DEFENSE affinity = 1.40
+        weapon.setBonusArmor(12); // +18.0 poids = 18/18 à +0
+        weapon.setUpgradeLevel(5);
+
+        double effWeight = EquipmentScalingHelper.calculateEffectiveWeight(weapon);
+        double maxWeight = EquipmentScalingHelper.calculateMaxWeight(weapon);
+        assertTrue(effWeight > 18.0);
+        assertTrue(effWeight <= maxWeight, "Effective weight " + effWeight + " exceeded maxWeight " + maxWeight);
+    }
 }

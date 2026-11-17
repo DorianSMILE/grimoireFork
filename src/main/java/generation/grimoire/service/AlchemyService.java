@@ -120,8 +120,7 @@ public class AlchemyService {
         boolean awakeningUnlocked = isAwakeningUnlocked(user);
 
         return filteredBySecret.stream().filter(recipe -> {
-            if (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
-                    || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING) {
+            if (isAwakeningCraftRecipe(recipe)) {
                 return awakeningUnlocked;
             }
 
@@ -138,6 +137,23 @@ public class AlchemyService {
             }
             return true;
         }).collect(java.util.stream.Collectors.toList());
+    }
+
+    public boolean isAwakeningCraftRecipe(AlchemyRecipe recipe) {
+        return recipe != null && (recipe.getRewardType() == RecipeRewardType.GIVE_CATALYST
+                || recipe.getRewardType() == RecipeRewardType.GIVE_AWAKENING);
+    }
+
+    /**
+     * Compte les nouvelles recettes d'alchimie classique non encore vues par le joueur
+     * (exclut les recettes de catalyseurs et d'éveil affichées dans l'onglet dédié).
+     */
+    public long countUnseenClassicRecipes(AppUser user) {
+        if (user == null) return 0L;
+        return getDiscoveredRecipes(user).stream()
+                .filter(recipe -> !isAwakeningCraftRecipe(recipe))
+                .filter(recipe -> !user.getSeenAlchemyRecipes().contains(recipe.getId()))
+                .count();
     }
 
     public AppUser findUserByUsername(String username) {

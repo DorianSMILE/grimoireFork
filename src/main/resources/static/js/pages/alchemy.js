@@ -78,6 +78,20 @@ window.cleanupAlchemyPage = function () {
     document.querySelectorAll('.magic-particle').forEach(p => p.remove());
 };
 
+function hasUnseenClassicRecipes(classicRecipes) {
+    if (!window.currentUser || !window.currentUser.seenAlchemyRecipes) return false;
+    const unlockedSecrets = window.currentUser.unlockedSecrets || {};
+    for (const r of classicRecipes) {
+        if (window.currentUser.seenAlchemyRecipes.includes(r.id)) continue;
+        if (r.rewardType === 'UNLOCK_FEATURE') {
+            const currentLevel = unlockedSecrets[r.rewardName] || 0;
+            if (currentLevel !== (r.rewardLevel - 1)) continue;
+        }
+        return true;
+    }
+    return false;
+}
+
 function setDefaultFilter() {
     if (!window.currentUser || !window.currentUser.seenAlchemyRecipes) return;
     if (alchemyInitialFilterSet) return;
@@ -85,19 +99,8 @@ function setDefaultFilter() {
 
     window.initialSeenRecipes = [...(window.currentUser.seenAlchemyRecipes || [])];
 
-    const unlockedSecrets = window.currentUser.unlockedSecrets || {};
-    let hasUnseen = false;
-    for (const r of pageState.allRecipes) {
-        if (window.currentUser.seenAlchemyRecipes.includes(r.id)) continue;
-
-        if (r.rewardType === 'UNLOCK_FEATURE') {
-            const currentLevel = unlockedSecrets[r.rewardName] || 0;
-            if (currentLevel !== (r.rewardLevel - 1)) continue;
-        }
-
-        hasUnseen = true;
-        break;
-    }
+    const classicRecipes = (pageState.allRecipes || []).filter(r => !isAwakeningCraftType(r.rewardType));
+    const hasUnseen = hasUnseenClassicRecipes(classicRecipes);
 
     let bestType = 'GIVE_CONSUMABLE';
     if (hasUnseen) {
@@ -186,18 +189,7 @@ function renderRecipesList() {
     const unlockedSecrets = window.currentUser?.unlockedSecrets || {};
     const classicRecipes = (pageState.allRecipes || []).filter(r => !isAwakeningCraftType(r.rewardType));
 
-    let hasUnseen = false;
-    if (window.currentUser) {
-        for (const r of classicRecipes) {
-            if (window.currentUser.seenAlchemyRecipes?.includes(r.id)) continue;
-            if (r.rewardType === 'UNLOCK_FEATURE') {
-                const currentLevel = unlockedSecrets[r.rewardName] || 0;
-                if (currentLevel !== (r.rewardLevel - 1)) continue;
-            }
-            hasUnseen = true;
-            break;
-        }
-    }
+    const hasUnseen = hasUnseenClassicRecipes(classicRecipes);
     const nouvOption = document.querySelector('.custom-option[data-value="NOUVEAUTE"]');
     if (nouvOption) {
         nouvOption.style.display = hasUnseen ? '' : 'none';

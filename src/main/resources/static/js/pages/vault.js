@@ -82,9 +82,9 @@ async function loadEquipments() {
         const url = window.isAdmin ? '/api/equipments/all' : '/api/equipments';
         pageState.allEquipments = await window.api.loadEquipments({ sources: [url], includeAnomalies: true, isAdmin: window.isAdmin });
 
-        // Pré-calculer le poids pour le tri
+        // Utiliser le poids calculé côté serveur (déjà scalé sur les paliers d'éveil)
         pageState.allEquipments.forEach(eq => {
-            eq._weight = calculateWeight(eq);
+            eq._weight = eq.isAnomalie ? 0 : (typeof eq.weight === 'number' ? eq.weight : calculateWeight(eq));
         });
 
         pageState.allEquipments = groupEquipments(pageState.allEquipments);
@@ -175,6 +175,58 @@ function escapeAttr(val) {
     return String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+const DISMANTLE_SPIRIT_KEYS = [
+    'tenebres', 'esprit', 'karma', 'violence', 'trahison',
+    'surete', 'raison', 'destruction', 'creation', 'conviction', 'consolidation'
+];
+
+function getDismantleSpiritClass(sp) {
+    if (!sp) return '';
+    const norm = String(sp).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const matched = DISMANTLE_SPIRIT_KEYS.find(k => norm.includes(k));
+    return matched ? `dismantle-spirit-${matched}` : '';
+}
+
+async function ensureVaultAnomalyTemplates() {
+    if (pageState.anomalyTemplatesByName) return pageState.anomalyTemplatesByName;
+    const map = new Map();
+    (pageState.allEquipments || []).forEach(eq => {
+        if (eq.isAnomalie && eq.name && !map.has(eq.name.trim().toLowerCase())) {
+            map.set(eq.name.trim().toLowerCase(), eq);
+        }
+    });
+    try {
+        const res = await globalFetch('/api/anomalies/all-templates', { silent: true });
+        if (res && res.ok) {
+            const list = await res.json();
+            (list || []).forEach(tmpl => {
+                if (tmpl && tmpl.name) {
+                    map.set(tmpl.name.trim().toLowerCase(), tmpl);
+                }
+            });
+        }
+    } catch (e) {
+        // Fallback relies on owned anomalies already present in pageState.allEquipments
+    }
+    pageState.anomalyTemplatesByName = map;
+    return map;
+}
+
+function attachDismantleAnomalyTooltip(el, tmpl, fallbackName) {
+    if (!el || typeof getAnomalyTooltipHTML !== 'function') return;
+    const source = tmpl || { name: fallbackName, level: 1, spiritualite: 'Inconnu', description: 'Ingrédient alchimique.' };
+    const html = getAnomalyTooltipHTML(source, fallbackName || source.name);
+    if (!html) return;
+    const color = source.spiritualite && typeof getSpiritualiteColor === 'function'
+        ? getSpiritualiteColor(source.spiritualite)
+        : '#a855f7';
+    el.classList.add('cursor-help');
+    el.setAttribute('data-tooltip-html', html);
+    el.setAttribute('data-color', color);
+    el.addEventListener('mouseenter', () => window.showGlobalTooltip?.(el));
+    el.addEventListener('mouseleave', () => window.hideGlobalTooltip?.());
+}
+
 function renderDismantlePreviewContent(previewBox, sim) {
     previewBox.textContent = '';
     if (!sim) {
@@ -194,11 +246,18 @@ function renderDismantlePreviewContent(previewBox, sim) {
 
     const goldRow = document.createElement('div');
     goldRow.className = 'dismantle-gold-row';
+    const goldLeft = document.createElement('span');
+    goldLeft.className = 'dismantle-gold-left';
+    const goldIcon = document.createElement('span');
+    goldIcon.className = 'material-symbols-outlined text-base';
+    goldIcon.textContent = 'monetization_on';
     const goldLabel = document.createElement('span');
     goldLabel.textContent = 'Or récupéré';
+    goldLeft.appendChild(goldIcon);
+    goldLeft.appendChild(goldLabel);
     const goldVal = document.createElement('span');
     goldVal.textContent = `+${Math.round(sim.goldReward || 0)} Or`;
-    goldRow.appendChild(goldLabel);
+    goldRow.appendChild(goldLeft);
     goldRow.appendChild(goldVal);
     previewBox.appendChild(goldRow);
 
@@ -213,15 +272,33 @@ function renderDismantlePreviewContent(previewBox, sim) {
         list.appendChild(header);
 
         entries.forEach(([name, count]) => {
+            const tmpl = pageState.anomalyTemplatesByName?.get(String(name || '').trim().toLowerCase());
+            const catIcon = tmpl?.category && typeof getCategoryIcon === 'function'
+                ? getCategoryIcon(tmpl.category)
+                : (window.CATEGORY_ICONS?.[tmpl?.category] || 'star');
+            const spCls = getDismantleSpiritClass(tmpl?.spiritualite);
+
             const row = document.createElement('div');
-            row.className = 'dismantle-anomaly-row';
+            row.className = `dismantle-anomaly-row ${spCls}`.trim();
+
+            const left = document.createElement('div');
+            left.className = 'dismantle-anomaly-left';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined dismantle-anomaly-icon';
+            icon.textContent = catIcon;
             const nSpan = document.createElement('span');
+            nSpan.className = 'dismantle-anomaly-name';
             nSpan.textContent = name;
+            left.appendChild(icon);
+            left.appendChild(nSpan);
+
             const cSpan = document.createElement('span');
-            cSpan.className = 'font-bold text-success';
+            cSpan.className = 'font-bold text-success shrink-0';
             cSpan.textContent = `+${count}`;
-            row.appendChild(nSpan);
+
+            row.appendChild(left);
             row.appendChild(cSpan);
+            attachDismantleAnomalyTooltip(row, tmpl, name);
             list.appendChild(row);
         });
         previewBox.appendChild(list);
@@ -244,11 +321,14 @@ async function refreshDismantlePreview() {
 
     const selectedIds = ctx.ids.slice(0, qty).map(Number);
     try {
-        const res = await globalFetch('/api/equipments/dismantle/batch/simulate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ equipmentIds: selectedIds })
-        });
+        const [, res] = await Promise.all([
+            ensureVaultAnomalyTemplates(),
+            globalFetch('/api/equipments/dismantle/batch/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ equipmentIds: selectedIds })
+            })
+        ]);
         if (res && res.ok) {
             const sim = await res.json();
             ctx.lastSim = sim;

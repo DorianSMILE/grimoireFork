@@ -155,7 +155,7 @@ public class EquipmentController {
         equipmentMapper.updateEntity(dto, temp);
 
         double weight = temp.calculateWeight();
-        double maxWeight = getMaxWeight(dto.getSlot(), dto.getRarity());
+        double maxWeight = generation.grimoire.service.equipment.EquipmentScalingHelper.getBaseMaxWeight(dto.getSlot(), dto.getRarity());
         double shopPrice = temp.calculateShopPrice();
 
         Map<String, Double> response = new HashMap<>();
@@ -163,141 +163,6 @@ public class EquipmentController {
         response.put("maxWeight", maxWeight);
         response.put("shopPrice", shopPrice);
         return ResponseEntity.ok(response);
-    }
-
-    @SuppressWarnings("deprecation")
-    private double getMaxWeight(EquipmentSlot slot, generation.grimoire.enumeration.EquipmentRarity rarity) {
-        if (slot == null || rarity == null)
-            return 5.0;
-        switch (slot) {
-            case CASQUE:
-            case CAPE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 9;
-                    case RARE:
-                        return 14;
-                    case MYTHIQUE:
-                        return 18;
-                    case LEGENDAIRE:
-                        return 22;
-                    case EPIQUE:
-                        return 35;
-                    case RELIQUE:
-                        return 40;
-                    case MAUDIT:
-                        return 27;
-                }
-                break;
-            case PLASTRON:
-            case ARME_DEUX_MAINS:
-                switch (rarity) {
-                    case COMMUN:
-                        return 9;
-                    case INHABITUEL:
-                        return 14;
-                    case RARE:
-                        return 19;
-                    case MYTHIQUE:
-                        return 24;
-                    case LEGENDAIRE:
-                        return 29;
-                    case EPIQUE:
-                        return 40;
-                    case RELIQUE:
-                        return 46;
-                    case MAUDIT:
-                        return 35;
-                }
-                break;
-            case ANNEAU:
-            case ANNEAU_GAUCHE:
-            case ANNEAU_DROIT:
-                switch (rarity) {
-                    case COMMUN:
-                        return 3;
-                    case INHABITUEL:
-                        return 4;
-                    case RARE:
-                        return 6;
-                    case MYTHIQUE:
-                        return 8;
-                    case LEGENDAIRE:
-                        return 10;
-                    case EPIQUE:
-                        return 15;
-                    case RELIQUE:
-                        return 17;
-                    case MAUDIT:
-                        return 12;
-                }
-                break;
-            case BOTTES:
-                switch (rarity) {
-                    case COMMUN:
-                        return 4;
-                    case INHABITUEL:
-                        return 8;
-                    case RARE:
-                        return 12;
-                    case MYTHIQUE:
-                        return 15;
-                    case LEGENDAIRE:
-                        return 19;
-                    case EPIQUE:
-                        return 30;
-                    case RELIQUE:
-                        return 34;
-                    case MAUDIT:
-                        return 25;
-                }
-                break;
-            case ARME:
-            case ARME_GAUCHE:
-            case ARME_DROITE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 7;
-                    case RARE:
-                        return 10;
-                    case MYTHIQUE:
-                        return 12;
-                    case LEGENDAIRE:
-                        return 15;
-                    case EPIQUE:
-                        return 20;
-                    case RELIQUE:
-                        return 23;
-                    case MAUDIT:
-                        return 18;
-                }
-                break;
-            case CONSOMMABLE:
-                switch (rarity) {
-                    case COMMUN:
-                        return 5;
-                    case INHABITUEL:
-                        return 7;
-                    case RARE:
-                        return 9;
-                    case MYTHIQUE:
-                        return 11;
-                    case LEGENDAIRE:
-                        return 14;
-                    case EPIQUE:
-                        return 20;
-                    case RELIQUE:
-                        return 24;
-                    case MAUDIT:
-                        return 17;
-                }
-                break;
-        }
-        return 5.0;
     }
 
 
@@ -794,7 +659,7 @@ public class EquipmentController {
             java.util.Map<String, java.util.List<String>> alchemyMap,
             EquipmentAwakeningService.UpgradeStatus upgradeStatus) {
         EquipmentResponseDTO dto = equipmentMapper.toResponse(e);
-        dto.setMaxWeight(getMaxWeight(e.getSlot(), e.getRarity()));
+        dto.setMaxWeight(generation.grimoire.service.equipment.EquipmentScalingHelper.calculateMaxWeight(e));
         if (upgradeStatus != null) {
             dto.setUpgradeEligible(upgradeStatus.eligible());
             dto.setUpgradeReady(upgradeStatus.ready());

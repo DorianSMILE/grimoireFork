@@ -18,7 +18,7 @@ export function VaultPage() {
     async function bootVault() {
       const uiUrl = '/js/ui.js?v=2';
       const authUrl = '/js/services/auth.js?v=32';
-      const vaultUrl = '/js/pages/vault.js?v=110';
+      const vaultUrl = '/js/pages/vault.js?v=112';
 
       await import(/* @vite-ignore */ uiUrl);
       await import(/* @vite-ignore */ authUrl);

@@ -1120,6 +1120,23 @@ body.is-combat-page,
     pointer-events: none;
 }
 
+@keyframes enemyAttackLungeLeft {
+    0% {
+        translate: 0 0;
+    }
+    35% {
+        translate: -38px 0;
+    }
+    100% {
+        translate: 0 0;
+    }
+}
+
+.fighter-enemy.enemy-attacking-left {
+    animation: enemyAttackLungeLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 20;
+}
+
 /* ===== Disabled Spell Cards ===== */
 .combat-spell-card.spell-disabled {
     cursor: not-allowed;

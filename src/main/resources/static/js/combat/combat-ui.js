@@ -2896,15 +2896,15 @@ export function updateUI(data) {
         // Trigger animation and auto-turn
         setTimeout(() => {
             const activeEnemyCard = document.querySelector(`.fighter-enemy[data-index="${activeEnemyIndex}"]`);
-            if (activeEnemyCard) {
-                activeEnemyCard.style.transform = 'translateX(-24px)';
+            if (activeEnemyCard && activeEnemyCard.isConnected) {
+                activeEnemyCard.classList.remove('enemy-attacking-left');
+                void activeEnemyCard.offsetWidth;
+                activeEnemyCard.classList.add('enemy-attacking-left');
                 setTimeout(() => {
-                    if (activeEnemyCard.classList.contains('active')) {
-                        activeEnemyCard.style.transform = 'scale(1.05)';
-                    } else {
-                        activeEnemyCard.style.transform = 'none';
+                    if (activeEnemyCard.isConnected) {
+                        activeEnemyCard.classList.remove('enemy-attacking-left');
                     }
-                }, 200);
+                }, 460);
             }
 
             setTimeout(async () => {
@@ -2926,8 +2926,8 @@ export function updateUI(data) {
                         window.showNotif("Erreur lors du tour adverse : " + (e.message || "Erreur serveur"), true);
                     }
                 }
-            }, 600); // Fetch next turn
-        }, 500); // Pause before attack animation
+            }, 550); // Fetch next turn
+        }, 450); // Pause before attack animation
     } else {
         window.isAutoTurnInProgress = false;
         // Player turn: enable buttons

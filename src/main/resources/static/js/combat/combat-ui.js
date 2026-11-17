@@ -3363,26 +3363,29 @@ export function generateFighterHtml(c, isHero, skipBadges = false, forcedHp = nu
         let karmaHarmony = c.karmaHarmony || (c.passiveStates && c.passiveStates['karma_harmony'] === 1);
         let karmaGauge = c.karmaGauge !== undefined ? c.karmaGauge : (c.passiveStates && c.passiveStates['karma_gauge'] !== undefined ? c.passiveStates['karma_gauge'] : 0);
         let karmaLockedDuration = c.passiveStates && c.passiveStates['karma_locked_duration'] !== undefined ? c.passiveStates['karma_locked_duration'] : 0;
+        const karmaBonusLine = c.karmaBonusSummary
+            ? `<div class="text-xs mt-1 text-slate-300">${c.karmaBonusSummary}</div>`
+            : '';
 
         let kColor, kIcon, kText, kTooltip, kDanger = '';
         if (karmaLocked) {
             kColor = '#f87171'; kIcon = 'block'; kText = `${karmaLockedDuration}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#f87171;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">block</span><span>Karma Brisé</span></div><div class="text-xs" style="color:#ef4444; font-weight:bold;">Voie désactivée pendant ${karmaLockedDuration} tour(s) !</div>${karmaBonusLine}`;
             kDanger = ' passive-orb-pulse';
         } else if (karmaHarmony) {
             kColor = '#cbd5e1'; kIcon = 'all_inclusive'; kText = '∞';
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#cbd5e1;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">all_inclusive</span><span>Karma en Harmonie</span></div><div class="text-xs" style="color:#cbd5e1;">Équilibre parfait.</div>${karmaBonusLine}`;
         } else if (karmaGauge < 0) {
             kColor = '#c084fc'; kIcon = 'dark_mode'; kText = `${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#c084fc;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">dark_mode</span><span>Karma Ténèbres</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : ${karmaGauge}/3</div>${c.karmaBonusSummary ? `<div class="text-xs mt-1 text-purple-300">${c.karmaBonusSummary}</div>` : ''}`;
             if (karmaGauge <= -3) kDanger = ' passive-orb-pulse';
         } else if (karmaGauge > 0) {
             kColor = '#fde047'; kIcon = 'light_mode'; kText = `+${karmaGauge}`;
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#fde047;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">light_mode</span><span>Karma Lumière</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : +${karmaGauge}/3</div>${c.karmaBonusSummary ? `<div class="text-xs mt-1 text-yellow-200">${c.karmaBonusSummary}</div>` : ''}`;
             if (karmaGauge >= 3) kDanger = ' passive-orb-pulse';
         } else {
             kColor = '#9ca3af'; kIcon = 'balance'; kText = '0';
-            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>`;
+            kTooltip = `<div class="text-sm font-medium flex-center-gap" style="margin-bottom:0.3rem; color:#9ca3af;"><span class="material-symbols-outlined text-sm leading-none flex-shrink-0">balance</span><span>Karma Neutre</span></div><div class="text-xs" style="color:#cbd5e1;">Jauge : 0/3</div>${karmaBonusLine}`;
         }
         passiveOrbs.push({ icon: kIcon, color: kColor, value: kText, title: 'Karma', dangerClass: kDanger, tooltip: kTooltip });
     }

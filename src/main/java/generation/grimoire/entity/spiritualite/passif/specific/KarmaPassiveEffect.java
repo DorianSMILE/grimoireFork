@@ -228,4 +228,38 @@ public class KarmaPassiveEffect extends SpiritualitePassiveEffect {
         }
         return true;
     }
+
+    /**
+     * Construit le libellé SSOT du bonus passif Karma actif pour l'affichage en combat.
+     */
+    public static String buildActiveBonusSummary(Personnage personnage) {
+        if (personnage == null || personnage.getSpiritualite() == null
+                || personnage.getSpiritualite().getNom() == null
+                || !personnage.getSpiritualite().getNom().toLowerCase().contains("karma")) {
+            return null;
+        }
+        if (personnage.getPassiveState("karma_locked", 0) == 1) {
+            return "Sort d'Harmonie requis pour réduire la durée (-1 tour/sort).";
+        }
+        int gauge = personnage.getPassiveState("karma_gauge", 0);
+        if (gauge == 0) {
+            int healBonus = (int) (personnage.getHealthMax() * 0.03);
+            int manaBonus = (int) (personnage.getManaMax() * 0.03);
+            return String.format("Bonus actuel : +%d PV et +%d Mana par sort lancé (+3%% max)", healBonus, manaBonus);
+        }
+        if (gauge < 0) {
+            int dmgPct = Math.abs(gauge) * 10;
+            if (gauge <= -3) {
+                return "Bonus actuel : +" + dmgPct
+                        + "% dégâts (Phy/Mag) · Prochain sort Ténèbres : +50% dégâts puis verrouillage (6 tours)";
+            }
+            return "Bonus actuel : +" + dmgPct + "% dégâts (Phy/Mag) sur tous vos sorts";
+        }
+        int costReductionPct = gauge * 10;
+        if (gauge >= 3) {
+            return "Bonus actuel : -" + costReductionPct
+                    + "% coût des sorts · Prochain sort Lumière : gratuit + +25% Armure & Résistance (3 tours) puis verrouillage";
+        }
+        return "Bonus actuel : -" + costReductionPct + "% sur le coût de tous vos sorts";
+    }
 }

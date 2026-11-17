@@ -249,4 +249,54 @@ class KarmaPassiveEffectTest {
         assertThat(hero.getPassiveState("karma_locked", 0)).isEqualTo(0);
         assertThat(hero.getPassiveState("karma_gauge", 0)).isEqualTo(0);
     }
+
+    @Test
+    void buildActiveBonusSummary_shouldReturnNullForNonKarmaPersonnage() {
+        assertThat(KarmaPassiveEffect.buildActiveBonusSummary(null)).isNull();
+        assertThat(KarmaPassiveEffect.buildActiveBonusSummary(hero)).isNull();
+
+        Spiritualite other = new Spiritualite();
+        other.setNom("Foudre");
+        hero.setSpiritualite(other);
+        assertThat(hero.getKarmaBonusSummary()).isNull();
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldDescribeNeutralAndHarmonyBonus() {
+        hero.setSpiritualite(karmaSpiritualite);
+        hero.setPassiveState("karma_gauge", 0);
+        assertThat(hero.getKarmaBonusSummary())
+                .isEqualTo("Bonus actuel : +3 PV et +3 Mana par sort lancé (+3% max)");
+
+        hero.setPassiveState("karma_harmony", 1);
+        assertThat(hero.getKarmaBonusSummary())
+                .isEqualTo("Bonus actuel : +3 PV et +3 Mana par sort lancé (+3% max)");
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldDescribeTenebresLumiereAndLockedStates() {
+        hero.setSpiritualite(karmaSpiritualite);
+
+        hero.setPassiveState("karma_gauge", -2);
+        assertThat(hero.getKarmaBonusSummary())
+                .isEqualTo("Bonus actuel : +20% dégâts (Phy/Mag) sur tous vos sorts");
+
+        hero.setPassiveState("karma_gauge", -3);
+        assertThat(hero.getKarmaBonusSummary())
+                .contains("+30% dégâts (Phy/Mag)")
+                .contains("verrouillage (6 tours)");
+
+        hero.setPassiveState("karma_gauge", 2);
+        assertThat(hero.getKarmaBonusSummary())
+                .isEqualTo("Bonus actuel : -20% sur le coût de tous vos sorts");
+
+        hero.setPassiveState("karma_gauge", 3);
+        assertThat(hero.getKarmaBonusSummary())
+                .contains("-30% coût des sorts")
+                .contains("verrouillage");
+
+        hero.setPassiveState("karma_locked", 1);
+        assertThat(hero.getKarmaBonusSummary())
+                .isEqualTo("Sort d'Harmonie requis pour réduire la durée (-1 tour/sort).");
+    }
 }

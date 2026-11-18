@@ -90,4 +90,33 @@ class ViolencePassiveEffectTest {
         assertThat(hero.getPassiveState("violence_inspiration", 0)).isEqualTo(0);
         assertThat(hero.getPassiveState("violence_expiration", 0)).isEqualTo(0);
     }
+
+    @Test
+    void buildSummaries_shouldReturnNullForNonViolence() {
+        assertThat(ViolencePassiveEffect.buildInspirationSummary(null)).isNull();
+        assertThat(ViolencePassiveEffect.buildExpirationSummary(hero)).isNull();
+    }
+
+    @Test
+    void buildSummaries_shouldShowRealTimeCritStrengthAndOverloadBurn() {
+        hero.setVoie(voieViolence);
+        hero.setStrength(50);
+        hero.setCrit(20);
+        hero.setPower(30);
+
+        hero.setPassiveState("violence_inspiration", 2);
+        hero.setPassiveState("violence_expiration", 4);
+        assertThat(hero.getViolenceInspirationSummary())
+                .isEqualTo("Prochain swap (Expiration) : aucun bonus (requis ≥ 4 cumuls)");
+        assertThat(hero.getViolenceExpirationSummary())
+                .isEqualTo("Prochain swap (Inspiration) : +15 Force (+30%, 3 tours)");
+
+        hero.setPassiveState("violence_inspiration", 6);
+        hero.setPassiveState("violence_expiration", 7);
+        // burn = round(30*0.15 + 50*0.15) = round(4.5 + 7.5) = 12
+        assertThat(hero.getViolenceInspirationSummary())
+                .isEqualTo("Prochain swap (Expiration) : +20 Crit (+100%, 3 tours) · Surcharge (si Inspiration) : 12 Brûlure/tour (3 tours)");
+        assertThat(hero.getViolenceExpirationSummary())
+                .isEqualTo("Prochain swap (Inspiration) : +30 Force (+60%, 3 tours) · Surcharge (si Expiration) : 12 Brûlure/tour (3 tours)");
+    }
 }

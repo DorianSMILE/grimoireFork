@@ -85,4 +85,31 @@ class EspritPassiveEffectTest {
     void onTurnStart_shouldBeNoOp() {
         assertThatCode(() -> passive.onTurnStart(hero)).doesNotThrowAnyException();
     }
+
+    @Test
+    void buildActiveBonusSummary_shouldReturnNullForNonEspritPersonnage() {
+        assertThat(EspritPassiveEffect.buildActiveBonusSummary(null)).isNull();
+        assertThat(EspritPassiveEffect.buildActiveBonusSummary(hero)).isNull();
+
+        Spiritualite other = new Spiritualite();
+        other.setNom("Karma");
+        hero.setSpiritualite(other);
+        assertThat(hero.getEspritBonusSummary()).isNull();
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldComputeRealTimeManaRegenAndLowHpShield() {
+        hero.setSpiritualite(espritSpiritualite);
+        hero.setManaCurrent(85);
+        assertThat(hero.getEspritBonusSummary())
+                .isEqualTo("Bonus actuel : +8 Mana régénéré / tour (10% actuel)");
+
+        hero.setManaCurrent(40);
+        assertThat(hero.getEspritBonusSummary())
+                .isEqualTo("Bonus actuel : +4 Mana régénéré / tour (10% actuel)");
+
+        hero.setHealthCurrent(10);
+        assertThat(hero.getEspritBonusSummary())
+                .isEqualTo("Bonus actuel : +4 Mana régénéré / tour (10% actuel) · +5 Bouclier (2 tours)");
+    }
 }

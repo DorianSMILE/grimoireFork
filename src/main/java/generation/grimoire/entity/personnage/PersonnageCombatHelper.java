@@ -623,30 +623,36 @@ public class PersonnageCombatHelper {
         }
     }
 
-    public static double getStatBuffMultiplier(Personnage p, StatType statType) {
-        if (p.getActiveBuffs() == null) return 1.0;
-        
+    private static double[] computeBuffMultiplierComponents(Personnage p, StatType statType) {
         double positiveModifier = 0.0;
         double negativeMultiplier = 1.0;
 
-        for (BuffDebuffEffect buff : p.getActiveBuffs()) {
-            if (buff.affectsStatType(statType) && buff.getFlatValue() == 0) {
-                double mod = buff.getModifier();
-                if (mod > 0) {
-                    positiveModifier += mod;
-                } else if (mod < 0) {
-                    negativeMultiplier *= (1.0 + mod);
+        if (p.getActiveBuffs() != null) {
+            for (BuffDebuffEffect buff : p.getActiveBuffs()) {
+                if (buff.affectsStatType(statType) && buff.getFlatValue() == 0) {
+                    double mod = buff.getModifier();
+                    if (mod > 0) {
+                        positiveModifier += mod;
+                    } else if (mod < 0) {
+                        negativeMultiplier *= (1.0 + mod);
+                    }
+                }
+            }
+
+            if (statType == StatType.DAMAGE_GIVEN_PHYSIC) {
+                boolean hasAmeDetachee = p.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.AME_DETACHEE);
+                if (hasAmeDetachee) {
+                    positiveModifier += 0.30;
                 }
             }
         }
+        return new double[] { positiveModifier, negativeMultiplier };
+    }
 
-        if (statType == StatType.DAMAGE_GIVEN_PHYSIC) {
-            boolean hasAmeDetachee = p.getActiveBuffs().stream().anyMatch(b -> b.getStatAffected() == StatType.AME_DETACHEE);
-            if (hasAmeDetachee) {
-                positiveModifier += 0.30;
-            }
-        }
-        return (1.0 + positiveModifier) * negativeMultiplier;
+    public static double getStatBuffMultiplier(Personnage p, StatType statType) {
+        if (p.getActiveBuffs() == null) return 1.0;
+        double[] components = computeBuffMultiplierComponents(p, statType);
+        return (1.0 + components[0]) * components[1];
     }
 
     public static int getStatFlatBonus(Personnage p, StatType statType) {
@@ -701,19 +707,36 @@ public class PersonnageCombatHelper {
         return totalBonus;
     }
 
+    private static int getBaseStat(Personnage p, StatType statType) {
+        return switch (statType) {
+            case POWER -> p.getPower();
+            case STRENGTH -> p.getStrength();
+            case ARMURE -> p.getArmor();
+            case RESISTANCE -> p.getResistance();
+            case SPEED -> p.getSpeed();
+            case CRIT -> p.getCrit();
+            default -> 0;
+        };
+    }
+
     public static int getEffectiveStat(Personnage p, StatType statType) {
-        int base = 0;
-        switch (statType) {
-            case POWER -> base = p.getPower();
-            case STRENGTH -> base = p.getStrength();
-            case ARMURE -> base = p.getArmor();
-            case RESISTANCE -> base = p.getResistance();
-            case SPEED -> base = p.getSpeed();
-            case CRIT -> base = p.getCrit();
-            default -> base = 0;
-        }
-        double effective = base + getStatFlatBonus(p, statType);
+        double effective = getBaseStat(p, statType) + getStatFlatBonus(p, statType);
         effective *= Math.max(0, getStatBuffMultiplier(p, statType));
         return (int) Math.round(effective);
+    }
+
+    /**
+     * Simule le gain exact d'une statistique après ajout d'un modificateur positif supplémentaire.
+     */
+    public static int simulateAddedPositiveBuffDelta(Personnage p, StatType statType, double addedPositiveModifier) {
+        if (p == null) {
+            return 0;
+        }
+        int currentEffective = getEffectiveStat(p, statType);
+        double[] components = computeBuffMultiplierComponents(p, statType);
+        double nextMultiplier = Math.max(0, (1.0 + components[0] + addedPositiveModifier) * components[1]);
+        double basePlusFlat = getBaseStat(p, statType) + getStatFlatBonus(p, statType);
+        int nextEffective = (int) Math.round(basePlusFlat * nextMultiplier);
+        return Math.max(0, nextEffective - currentEffective);
     }
 }

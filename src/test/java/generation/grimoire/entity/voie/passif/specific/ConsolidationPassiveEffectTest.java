@@ -81,4 +81,41 @@ class ConsolidationPassiveEffectTest {
         hero.updateBuffs();
         assertThat(hero.getActiveBuffs()).isEmpty();
     }
+
+    @Test
+    void buildActiveBonusSummary_shouldReturnNullForNonConsolidation() {
+        assertThat(ConsolidationPassiveEffect.buildActiveBonusSummary(null)).isNull();
+        assertThat(ConsolidationPassiveEffect.buildActiveBonusSummary(hero)).isNull();
+
+        generation.grimoire.entity.Voie otherVoie = new generation.grimoire.entity.Voie();
+        otherVoie.setNom("Destruction");
+        hero.setVoie(otherVoie);
+        assertThat(hero.getConsolidationBonusSummary()).isNull();
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldShowHpLossAndShieldAbove20Percent() {
+        generation.grimoire.entity.Voie consolidationVoie = new generation.grimoire.entity.Voie();
+        consolidationVoie.setNom("Voie de la Consolidation");
+        hero.setVoie(consolidationVoie);
+        hero.setHealthMax(200);
+        hero.setHealthCurrent(150);
+
+        assertThat(hero.getConsolidationBonusSummary())
+                .isEqualTo("Prochain tour : -10 PV prélevés · +15 Bouclier (2 tours)");
+    }
+
+    @Test
+    void buildActiveBonusSummary_shouldShowArmorAndResistanceGainsAtOrBelow20Percent() {
+        generation.grimoire.entity.Voie consolidationVoie = new generation.grimoire.entity.Voie();
+        consolidationVoie.setNom("Voie de la Consolidation");
+        hero.setVoie(consolidationVoie);
+        hero.setHealthMax(100);
+        hero.setHealthCurrent(20);
+        hero.setArmor(40);
+        hero.setResistance(20);
+
+        assertThat(hero.getConsolidationBonusSummary())
+                .isEqualTo("Prochain tour (≤ 20% PV) : +10 Armure · +5 Résistance (+25%, 2 tours)");
+    }
 }

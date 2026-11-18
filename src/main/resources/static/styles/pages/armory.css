@@ -2563,3 +2563,220 @@
     font-size: 0.75rem;
     padding: 0.15rem 0.5rem;
 }
+
+/* ===== Verrouillage du panneau Personnages (0 personnage) ===== */
+.armory-collapsed-dock.is-locked {
+    opacity: 0.58;
+    cursor: not-allowed;
+    border-top-color: rgba(148, 163, 184, 0.45);
+    background: rgba(15, 23, 42, 0.65);
+}
+
+.armory-collapsed-dock.is-locked:hover {
+    transform: none;
+    background: rgba(15, 23, 42, 0.65);
+    border-color: rgba(255, 255, 255, 0.12);
+    border-top-color: rgba(148, 163, 184, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.armory-collapsed-dock.is-locked .armory-dock-expand-icon {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.1);
+    transform: none;
+}
+
+.armory-panel-toggle-btn.is-locked {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.armory-panel-toggle-btn.is-locked:hover {
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.armory-collapsed-dock:focus-visible,
+.armory-panel-toggle-btn:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+/* ===== États sémantiques & Animations d'accueil (Compteur -> Nom) ===== */
+.armory-limit-pill {
+    position: relative;
+    transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.armory-limit-pill .armory-limit-count {
+    color: #94a3b8;
+    transition: color 0.25s ease;
+}
+
+.armory-limit-pill.has-available-slot {
+    border-color: rgba(16, 185, 129, 0.38);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.armory-limit-pill.has-available-slot .armory-limit-count {
+    color: #6ee7b7;
+    font-weight: 700;
+}
+
+.armory-limit-pill.is-slot-full .armory-limit-count {
+    color: #ef4444;
+}
+
+.armory-limit-pill.is-slot-cue-animating {
+    z-index: 5;
+}
+
+.armory-limit-pill.is-slot-cue-animating .armory-limit-count {
+    color: #fde68a;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .armory-limit-pill.is-slot-cue-animating {
+        animation: armoryLimitSlotCue 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .armory-limit-pill.is-slot-cue-animating::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 999px;
+        border: 2px solid rgba(251, 191, 36, 0.85);
+        pointer-events: none;
+        animation: armoryLimitSlotHalo 0.95s ease-out forwards;
+    }
+
+    .armory-form-card.is-create-card-cue {
+        animation: armoryNameCreateCueCard 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .armory-form-card.is-create-card-cue .armory-step-badge {
+        animation: armoryStepBadgePop 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .armory-name-input.is-create-cue-animating:not(.tutorial-target-highlight) {
+        animation: armoryNameCreateCue 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .armory-limit-pill.is-slot-cue-animating {
+        animation: armoryLimitSlotCueReduced 0.7s ease-in-out forwards;
+    }
+
+    .armory-form-card.is-create-card-cue,
+    .armory-name-input.is-create-cue-animating:not(.tutorial-target-highlight) {
+        animation: armoryNameCreateCueReduced 0.75s ease-in-out forwards;
+    }
+}
+
+@keyframes armoryLimitSlotCue {
+    0% {
+        transform: scale(1) translateY(0);
+        border-color: rgba(16, 185, 129, 0.38);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+    28% {
+        transform: scale(1.22) translateY(-2px);
+        border-color: rgba(251, 191, 36, 0.95);
+        background: rgba(245, 158, 11, 0.22);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.28), 0 0 22px rgba(245, 158, 11, 0.5);
+    }
+    55% {
+        transform: scale(1.06) translateY(0);
+        border-color: rgba(52, 211, 153, 0.85);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22), 0 0 14px rgba(16, 185, 129, 0.35);
+    }
+    78% {
+        transform: scale(1.15) translateY(-1px);
+        border-color: rgba(251, 191, 36, 0.9);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.24), 0 0 18px rgba(245, 158, 11, 0.42);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes armoryLimitSlotHalo {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.9;
+    }
+    100% {
+        transform: scale(1.48);
+        opacity: 0;
+    }
+}
+
+@keyframes armoryLimitSlotCueReduced {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+    50% {
+        border-color: rgba(251, 191, 36, 0.95);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+    }
+}
+
+@keyframes armoryNameCreateCueCard {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+    30% {
+        transform: translateY(-2px) scale(1.012);
+        border-color: rgba(251, 191, 36, 0.65);
+        background: rgba(30, 41, 59, 0.72);
+        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes armoryStepBadgePop {
+    0%, 100% {
+        transform: scale(1);
+    }
+    35% {
+        transform: scale(1.24);
+        background: rgba(245, 158, 11, 0.32);
+        border-color: rgba(251, 191, 36, 0.9);
+    }
+}
+
+@keyframes armoryNameCreateCue {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+    32% {
+        transform: scale(1.015);
+        border-color: rgba(251, 191, 36, 0.95) !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.34), 0 0 22px rgba(245, 158, 11, 0.42);
+    }
+    68% {
+        transform: scale(1.006);
+        border-color: rgba(52, 211, 153, 0.8) !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.24), 0 0 14px rgba(16, 185, 129, 0.28);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+@keyframes armoryNameCreateCueReduced {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+    50% {
+        border-color: rgba(251, 191, 36, 0.9) !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.28);
+    }
+}

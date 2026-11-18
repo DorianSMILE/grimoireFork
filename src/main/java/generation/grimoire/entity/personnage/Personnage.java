@@ -734,6 +734,36 @@ public class Personnage {
         return totalManaRegen;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("karmaBonusSummary")
+    public String getKarmaBonusSummary() {
+        return generation.grimoire.entity.spiritualite.passif.specific.KarmaPassiveEffect.buildActiveBonusSummary(this);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("espritBonusSummary")
+    public String getEspritBonusSummary() {
+        return generation.grimoire.entity.spiritualite.passif.specific.EspritPassiveEffect.buildActiveBonusSummary(this);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("consolidationBonusSummary")
+    public String getConsolidationBonusSummary() {
+        return generation.grimoire.entity.voie.passif.specific.ConsolidationPassiveEffect.buildActiveBonusSummary(this);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("violenceInspirationSummary")
+    public String getViolenceInspirationSummary() {
+        return generation.grimoire.entity.voie.passif.specific.ViolencePassiveEffect.buildInspirationSummary(this);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("violenceExpirationSummary")
+    public String getViolenceExpirationSummary() {
+        return generation.grimoire.entity.voie.passif.specific.ViolencePassiveEffect.buildExpirationSummary(this);
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("tenebreBonusSummary")
+    public String getTenebreBonusSummary() {
+        return generation.grimoire.entity.spiritualite.passif.specific.TenebrePassiveEffect.buildActiveBonusSummary(this);
+    }
+
     public boolean isAlly(Personnage other) {
         if (other == null)
             return false;

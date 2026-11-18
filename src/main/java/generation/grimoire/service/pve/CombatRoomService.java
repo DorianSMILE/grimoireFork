@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +40,8 @@ import generation.grimoire.entity.spell.type.effect.DamageOverTimeEffect;
 @RequiredArgsConstructor
 @Slf4j
 public class CombatRoomService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final PersonnageService personnageService;
 
@@ -128,7 +131,7 @@ public class CombatRoomService {
                     java.util.List<LootEntry> lootTable = session.getCurrentRoom().getLootTable();
                     for (int i = 0; i < lootTable.size(); i++) {
                         LootEntry entry = lootTable.get(i);
-                        if (Math.random() * 100 < entry.getProbability() + session.getChallengeExtraLootPercent()) {
+                        if (SECURE_RANDOM.nextDouble() * 100 < entry.getProbability() + session.getChallengeExtraLootPercent()) {
                             session.getAvailableMerchantItems().add(i);
                         }
                     }
@@ -351,7 +354,7 @@ public class CombatRoomService {
             session.logInteractionResult(username, "Vous trouvez " + baseGold + " Or et gagnez " + totalActualExp + " XP.");
 
             // Loot
-            java.util.Random rnd = new java.util.Random();
+            java.util.Random rnd = SECURE_RANDOM;
             if (session.getCurrentRoom().getLootTable() != null) {
                 for (LootEntry entry : session.getCurrentRoom().getLootTable()) {
                     double roll = rnd.nextDouble() * 100.0;
@@ -607,7 +610,7 @@ public class CombatRoomService {
                     if (chance > 100) chance = 100;
                     if (chance < 1) chance = 1;
 
-                    boolean success = new java.util.Random().nextInt(100) < chance;
+                    boolean success = SECURE_RANDOM.nextInt(100) < chance;
 
                     if (success) {
                         if (template != null) {
@@ -1430,7 +1433,7 @@ target.getActiveBuffs().add(effect);
                 return session;
             }
 
-            java.util.Random rnd = new java.util.Random();
+            java.util.Random rnd = SECURE_RANDOM;
             int roll = rnd.nextInt(totalProb);
             int currentSum = 0;
             JsonNode selectedOutcome = null;

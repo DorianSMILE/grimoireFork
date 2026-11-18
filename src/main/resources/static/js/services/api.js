@@ -117,6 +117,18 @@ export async function loadEquipments(options = {}) {
 
 // Au chargement, récupérer les métadonnées
 
+function createSelectOption(value, label, datasetAttrs) {
+    const option = document.createElement('option');
+    option.value = String(value);
+    option.textContent = label ?? '';
+    if (datasetAttrs) {
+        Object.entries(datasetAttrs).forEach(([key, val]) => {
+            option.dataset[key] = val;
+        });
+    }
+    return option;
+}
+
 export async function fetchMeta() {
     try {
         state.metaData = await getMeta();
@@ -124,26 +136,26 @@ export async function fetchMeta() {
         // Remplir les Voies
         const voieSel = document.getElementById('voieSelect');
         const optgroupVoies = document.getElementById('optgroupVoiesFilter');
-        let voiesOptionsHtml = '';
-        let optgroupVoiesHtml = '';
+        const voiesFrag = document.createDocumentFragment();
+        const optgroupVoiesFrag = document.createDocumentFragment();
         state.metaData.voies.forEach(v => {
-            voiesOptionsHtml += `<option value="${v.id}">${v.nom}</option>`;
-            optgroupVoiesHtml += `<option value="V_${v.id}">${v.nom}</option>`;
+            voiesFrag.appendChild(createSelectOption(v.id, v.nom));
+            optgroupVoiesFrag.appendChild(createSelectOption(`V_${v.id}`, v.nom));
         });
-        if (voieSel) voieSel.insertAdjacentHTML('beforeend', voiesOptionsHtml);
-        if (optgroupVoies) optgroupVoies.insertAdjacentHTML('beforeend', optgroupVoiesHtml);
+        if (voieSel) voieSel.appendChild(voiesFrag);
+        if (optgroupVoies) optgroupVoies.appendChild(optgroupVoiesFrag);
 
         // Remplir les Spiritualités
         const spiritSel = document.getElementById('spiritSelect');
         const optgroupSpirits = document.getElementById('optgroupSpiritsFilter');
-        let spiritsOptionsHtml = '';
-        let optgroupSpiritsHtml = '';
+        const spiritsFrag = document.createDocumentFragment();
+        const optgroupSpiritsFrag = document.createDocumentFragment();
         state.metaData.spiritualites.forEach(s => {
-            spiritsOptionsHtml += `<option value="${s.id}">${s.nom}</option>`;
-            optgroupSpiritsHtml += `<option value="S_${s.id}">${s.nom}</option>`;
+            spiritsFrag.appendChild(createSelectOption(s.id, s.nom));
+            optgroupSpiritsFrag.appendChild(createSelectOption(`S_${s.id}`, s.nom));
         });
-        if (spiritSel) spiritSel.insertAdjacentHTML('beforeend', spiritsOptionsHtml);
-        if (optgroupSpirits) optgroupSpirits.insertAdjacentHTML('beforeend', optgroupSpiritsHtml);
+        if (spiritSel) spiritSel.appendChild(spiritsFrag);
+        if (optgroupSpirits) optgroupSpirits.appendChild(optgroupSpiritsFrag);
 
         if (state.metaData.mutations) {
             state.metaData.mutations.sort((a, b) => {
@@ -157,23 +169,34 @@ export async function fetchMeta() {
 
         const mutationSel = document.getElementById('mutationSelect');
         if (mutationSel && state.metaData.mutations) {
-            const mutationOptionsHtml = state.metaData.mutations
-                .map(m => `<option value="${m.id}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom} (Niv. ${m.level || 1})</option>`)
-                .join('');
-            mutationSel.insertAdjacentHTML('beforeend', mutationOptionsHtml);
+            const mutationFrag = document.createDocumentFragment();
+            state.metaData.mutations.forEach(m => {
+                mutationFrag.appendChild(
+                    createSelectOption(m.id, `${m.nom} (Niv. ${m.level || 1})`, {
+                        icon: m.icon || 'pets',
+                        color: m.color || '#e879f9'
+                    })
+                );
+            });
+            mutationSel.appendChild(mutationFrag);
         }
         
         const filterMutationSel = document.getElementById('filterMutation');
         if (filterMutationSel && state.metaData.mutations) {
             const seenNames = new Set();
-            let filterMutationHtml = '';
+            const filterMutationFrag = document.createDocumentFragment();
             state.metaData.mutations.forEach(m => {
                 if (!seenNames.has(m.nom)) {
                     seenNames.add(m.nom);
-                    filterMutationHtml += `<option value="${m.nom.replace(/"/g, '&quot;')}" data-icon="${m.icon || 'pets'}" data-color="${m.color || '#e879f9'}">${m.nom}</option>`;
+                    filterMutationFrag.appendChild(
+                        createSelectOption(m.nom, m.nom, {
+                            icon: m.icon || 'pets',
+                            color: m.color || '#e879f9'
+                        })
+                    );
                 }
             });
-            filterMutationSel.insertAdjacentHTML('beforeend', filterMutationHtml);
+            filterMutationSel.appendChild(filterMutationFrag);
         }
 
         makeCustomSelect('voieSelect');

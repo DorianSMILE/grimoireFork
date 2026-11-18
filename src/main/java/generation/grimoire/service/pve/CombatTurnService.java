@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.security.SecureRandom;
 import java.util.List;
 
 /**
@@ -32,6 +33,8 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 class CombatTurnService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final PersonnageRepository personnageRepository;
     private final PersonnageService personnageService;
@@ -295,7 +298,7 @@ class CombatTurnService {
                                             .toList();
                                     if (!validAllies.isEmpty()) {
                                         mutAlly = validAllies
-                                                .get(new java.util.Random().nextInt(validAllies.size()));
+                                                .get(SECURE_RANDOM.nextInt(validAllies.size()));
                                     }
 
                                     boolean hasValidTarget = false;
@@ -903,7 +906,7 @@ class CombatTurnService {
         }
         session.getTurnOrder().clear();
         session.setCurrentTurnIndex(0);
-        java.util.Random rnd = new java.util.Random();
+        java.util.Random rnd = SECURE_RANDOM;
 
         for (int i = 0; i < session.getPlayers().size(); i++) {
             Personnage p = session.getPlayers().get(i);
@@ -1007,7 +1010,7 @@ class CombatTurnService {
 
     Personnage resolveMonsterTarget(ActiveMonster m, MonsterBehavior behavior,
             List<Personnage> alivePlayers, CombatSession session) {
-        java.util.Random rnd = new java.util.Random();
+        java.util.Random rnd = SECURE_RANDOM;
 
         // If a leader has forced a target on us, use that
         if (m.getLeaderForcedTargetId() != null) {

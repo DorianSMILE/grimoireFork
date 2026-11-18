@@ -11,4 +11,5 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 COPY --from=build --chown=appuser:appgroup /app/target/*.jar app.jar
 USER appuser
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD ["bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /favicon.svg HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q '200'"]
 ENTRYPOINT ["java", "-jar", "app.jar"]

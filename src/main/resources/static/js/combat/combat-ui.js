@@ -4882,18 +4882,36 @@ export function showResult(data) {
 
     const retryBtn = document.getElementById('retryDungeonBtn');
     if (retryBtn) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const dId = (data && data.dungeonId) || (pageState.currentSessionData && pageState.currentSessionData.dungeonId) || urlParams.get('dungeonId');
-        if (dId) {
-            let targetUrl = `/dungeons?dungeonId=${dId}`;
+        const rawDungeonId = (data && data.dungeonId) || (pageState.currentSessionData && pageState.currentSessionData.dungeonId);
+        const parsedDungeonId = Number.parseInt(String(rawDungeonId ?? ''), 10);
+        if (Number.isInteger(parsedDungeonId) && parsedDungeonId > 0) {
+            const retryUrl = new URL('/dungeons', window.location.origin);
+            retryUrl.searchParams.set('dungeonId', String(parsedDungeonId));
             const heroes = (data && data.players && data.players.length > 0)
                 ? data.players
                 : (pageState.currentSessionData && pageState.currentSessionData.players);
             if (heroes && heroes.length > 0) {
-                const charIds = heroes.map(p => p.id).join(',');
-                targetUrl += `&charIds=${charIds}`;
+                const validCharIds = heroes
+                    .map(p => Number.parseInt(String(p && p.id), 10))
+                    .filter(id => Number.isInteger(id) && id > 0);
+                if (validCharIds.length > 0) {
+                    retryUrl.searchParams.set('charIds', validCharIds.join(','));
+                }
             }
-            retryBtn.href = targetUrl;
+            const isSameOriginTarget = (() => {
+                try {
+                    if ('Origin' in globalThis) {
+                        return globalThis.Origin.from(retryUrl).isSameOrigin(globalThis.Origin.from(globalThis));
+                    }
+                    return retryUrl.origin !== 'null' && retryUrl.origin === window.location.origin;
+                } catch (_) {
+                    return false;
+                }
+            })();
+            const safeRelativeUrl = isSameOriginTarget
+                ? `${retryUrl.pathname}${retryUrl.search}`
+                : '/dungeons';
+            retryBtn.href = safeRelativeUrl;
             retryBtn.onclick = async (e) => {
                 e.preventDefault();
                 localStorage.removeItem('activeCombatId');
@@ -4903,13 +4921,11 @@ export function showResult(data) {
                         await (window.globalFetch || fetch)(`/api/pve/combat/${sId}/finish`, { method: 'POST' });
                     } catch (_) {}
                 }
-                window.location.href = targetUrl;
+                window.location.href = safeRelativeUrl;
             };
             retryBtn.classList.remove('is-hidden');
-            retryBtn.style.display = 'inline-flex';
         } else {
             retryBtn.classList.add('is-hidden');
-            retryBtn.style.display = 'none';
         }
     }
 

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ public class HuntingQuestService {
     private final AnomalieRepository anomalieRepository;
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Paris");
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     // ═══════════════════════════════════════════════════════════════════════
     // Rotation
@@ -62,7 +64,7 @@ public class HuntingQuestService {
 
         // --- Tirage du défi ---
         java.util.List<String> possibleChallenges = java.util.List.of("HEADHUNTER", "SURGEON", "LONER", "IMPATIENT");
-        quest.setDailyChallengeDuo(possibleChallenges.get(new java.util.Random().nextInt(possibleChallenges.size())));
+        quest.setDailyChallengeDuo(possibleChallenges.get(SECURE_RANDOM.nextInt(possibleChallenges.size())));
 
         questRepository.save(quest);
 
@@ -86,7 +88,7 @@ public class HuntingQuestService {
         if (eligible.isEmpty())
             return;
 
-        Donjon selected = eligible.get(new Random().nextInt(eligible.size()));
+        Donjon selected = eligible.get(SECURE_RANDOM.nextInt(eligible.size()));
 
         HuntingQuest quest = new HuntingQuest();
         quest.setType("WEEKLY");
@@ -126,7 +128,7 @@ public class HuntingQuestService {
                     .collect(Collectors.toList());
         }
         if (!templates.isEmpty()) {
-            Anomalie template = templates.get(new Random().nextInt(templates.size()));
+            Anomalie template = templates.get(SECURE_RANDOM.nextInt(templates.size()));
             quest.setRewardAnomalieId(template.getId());
         }
         // ---------------------------------------
@@ -202,7 +204,7 @@ public class HuntingQuestService {
         questRepository.findByTypeAndActiveTrue("DAILY").stream().findFirst().ifPresent(quest -> {
             if (quest.getDailyChallengeDuo() == null) {
                 java.util.List<String> possibleChallenges = java.util.List.of("HEADHUNTER", "SURGEON", "LONER", "IMPATIENT");
-                quest.setDailyChallengeDuo(possibleChallenges.get(new java.util.Random().nextInt(possibleChallenges.size())));
+                quest.setDailyChallengeDuo(possibleChallenges.get(SECURE_RANDOM.nextInt(possibleChallenges.size())));
                 questRepository.save(quest);
                 System.out.println("[Fix] Updated active daily quest challenge to: " + quest.getDailyChallengeDuo());
             }
@@ -230,7 +232,7 @@ public class HuntingQuestService {
         }
 
         // Tirage pondéré
-        double roll = new Random().nextDouble() * totalWeight;
+        double roll = SECURE_RANDOM.nextDouble() * totalWeight;
         double cumulative = 0;
         for (int i = 0; i < dungeons.size(); i++) {
             cumulative += weights.get(i);
@@ -456,7 +458,7 @@ public class HuntingQuestService {
                     throw new IllegalStateException("Aucune anomalie disponible comme récompense.");
                 }
 
-                template = templates.get(new Random().nextInt(templates.size()));
+                template = templates.get(SECURE_RANDOM.nextInt(templates.size()));
             }
             AppUser user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));

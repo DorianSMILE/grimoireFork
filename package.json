@@ -2,5 +2,8 @@
   "dependencies": {
     "acorn": "^8.18.0",
     "cheerio": "^1.2.0"
+  },
+  "overrides": {
+    "undici": "^7.30.1"
   }
 }

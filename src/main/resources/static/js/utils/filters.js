@@ -59,6 +59,8 @@ export function resetFilters() {
 
     const search = document.getElementById('filterSearch');
     if (search) search.value = '';
+    const unlockedOnly = document.getElementById('filterUnlockedOnly');
+    if (unlockedOnly) unlockedOnly.checked = false;
     const effect = document.getElementById('filterEffect');
     if (effect) {
         effect.value = 'ALL';

@@ -152,6 +152,9 @@ export function renderFilteredSpells() {
             if (sp.spiritualite && (sp.niveau || 1) > maxSpiritLevel) sp.isLocked = true;
         }
 
+        // Optionnel : masquer les sorts dont le compte n'a pas encore débloqué le niveau.
+        if (document.getElementById('filterUnlockedOnly')?.checked && sp.isLocked) return false;
+
         // Niveau
         if (levelVal !== 'ALL') {
             if (sp.niveau != levelVal) return false;

@@ -172,6 +172,20 @@ export function SpellFilterBar() {
               <option value="LEVEL_DESC">Niveau décroissant</option>
               <option value="MANA_ASC">Coût Mana</option>
             </select>
+            <label className="spell-unlocked-filter" title="Afficher uniquement les sorts débloqués" aria-label="Afficher uniquement les sorts débloqués">
+              <input
+                id="filterUnlockedOnly"
+                type="checkbox"
+                className="spell-unlocked-filter-input"
+                onChange={(event) => {
+                  const active = event.currentTarget.checked;
+                  event.currentTarget.closest(".spell-unlocked-filter")?.classList.toggle("is-active", active);
+                  window.renderFilteredSpells?.();
+                }}
+              />
+              <span className="material-symbols-outlined spell-unlocked-filter-icon spell-unlocked-filter-icon-locked" aria-hidden="true">lock</span>
+              <span className="material-symbols-outlined spell-unlocked-filter-icon spell-unlocked-filter-icon-open" aria-hidden="true">lock_open</span>
+            </label>
             <button
               id="spellTypeFilterBtn"
               type="button"

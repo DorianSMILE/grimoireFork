@@ -2049,7 +2049,7 @@
 }
 
 /* Calculated values & spell effect preview colors */
-.calc-val-highlight {
+:where(.calc-val-highlight) {
     font-weight: 700;
     color: #f8fafc;
 }

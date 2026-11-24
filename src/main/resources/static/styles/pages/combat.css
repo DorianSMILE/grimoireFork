@@ -795,7 +795,7 @@ body.is-combat-page,
     line-height: 1;
 }
 
-.calc-val-highlight {
+:where(.calc-val-highlight) {
     font-weight: 700;
     color: #f8fafc;
 }

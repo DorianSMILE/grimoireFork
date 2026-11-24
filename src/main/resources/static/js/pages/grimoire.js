@@ -238,13 +238,96 @@ function formatCompactSrcLabel(src) {
     if (!full) return '';
     return String(full)
         .replace(/\bdu Lanceur\b/gi, 'Lanc.')
-        .replace(/\bde la Cible\b/gi, 'Cible')
+        .replace(/\bde la Cible\b/gi, 'Cib.')
         .replace(/\bLanceur\b/gi, 'Lanc.')
+        .replace(/\bCible\b/gi, 'Cib.')
         .replace(/\bActuel(le)?\b/gi, 'Act.')
         .replace(/\bManquant(e)?\b/gi, 'Manq.')
         .replace(/\bMaximum\b/gi, 'Max')
+        .replace(/\bForce Phy\./gi, 'Force')
         .replace(/\bForce Physique\b/gi, 'Force')
         .replace(/\bPuissance\b/gi, 'Puiss.');
+}
+
+function getSourceColorClass(src) {
+    const text = (ui.formatSrc(src) || '').toString().toLowerCase();
+    if (text.includes('pv') || text.includes('health') || text.includes('vie')) return 'eff-color-pink';
+    if (text.includes('mana')) return 'eff-color-sky';
+    if (text.includes('force') || text.includes('physical')) return 'eff-color-rose';
+    if (text.includes('puiss') || text.includes('power')) return 'eff-color-purple';
+    if (text.includes('vit') || text.includes('speed')) return 'eff-color-amber';
+    if (text.includes('crit')) return 'eff-color-red';
+    return 'eff-color-slate';
+}
+
+function formatColoredCompactSrc(src) {
+    const full = ui.formatSrc(src);
+    if (!full) return '';
+    const short = formatCompactSrcLabel(src);
+    const colorClass = getSourceColorClass(src);
+    const titleAttr = short !== full ? ` title="${full}"` : '';
+    return `<span class="${colorClass} font-medium"${titleAttr}>${short}</span>`;
+}
+
+function formatCompactStatHtml(statRaw, colorClass) {
+    const full = ui.formatStat(statRaw);
+    if (!full) return '';
+    const short = String(full)
+        .replace(/\bPoints de Vie\b/gi, 'PV')
+        .replace(/\bArmure\b/gi, 'Arm.')
+        .replace(/\bRésistance\b/gi, 'Rés.')
+        .replace(/\bPuissance\b/gi, 'Puiss.')
+        .replace(/\bVitesse\b/gi, 'Vit.')
+        .replace(/\bCritique\b/gi, 'Crit.')
+        .replace(/\bPénétration de bouclier\b/gi, 'Pén. boucl.')
+        .replace(/\bBouclier percé\b/gi, 'Boucl. percé')
+        .replace(/\bBouclier reçu\b/gi, 'Boucl. reçu')
+        .replace(/\bBouclier prodigué\b/gi, 'Boucl. prod.')
+        .replace(/\bSoins prodigués\b/gi, 'Soins prod.')
+        .replace(/\bDégâts subis\b/gi, 'Dég. subis')
+        .replace(/\bDégâts infligés\b/gi, 'Dég.')
+        .replace(/\bDégâts sur bouclier\b/gi, 'Dég. boucl.')
+        .replace(/\(Magique\)/gi, '(<span class="dt-text-magic font-bold">Mag.</span>)')
+        .replace(/\(Physique\)/gi, '(<span class="dt-text-physic font-bold">Phys.</span>)')
+        .replace(/\(Brut\)/gi, '(<span class="dt-text-brut font-bold">Brut</span>)');
+    const plainShort = short.replace(/<[^>]+>/g, '');
+    const titleAttr = plainShort !== full ? ` title="${full}"` : '';
+    return `<span class="${colorClass} font-medium"${titleAttr}>${short}</span>`;
+}
+
+function resolveBuffStatVisual(t, e) {
+    if (t === 'POISON') return { icon: 'science', colorClass: 'text-effect-poison' };
+    if (t === 'BURN') return { icon: 'local_fire_department', colorClass: 'text-effect-burn' };
+    const sa = ((e && e.statAffected) ? String(e.statAffected) : '').toUpperCase();
+    if (!sa || sa === 'POISON' || sa === 'BURN' || sa === 'AME_DETACHEE') {
+        return { icon: 'star', colorClass: 'eff-color-slate' };
+    }
+    if (sa.includes('SPEED')) return { icon: 'bolt', colorClass: 'eff-color-amber' };
+    if (sa.includes('MANA')) return { icon: 'water_drop', colorClass: 'eff-color-sky' };
+    if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) return { icon: 'favorite', colorClass: 'eff-color-pink' };
+    if (sa.includes('CRIT')) return { icon: 'gps_fixed', colorClass: 'eff-color-red' };
+    if (sa.includes('ARMOR') || sa.includes('ARMURE')) return { icon: 'shield', colorClass: 'eff-color-blue' };
+    if (sa.includes('RESISTANCE')) return { icon: 'shield', colorClass: 'eff-color-emerald' };
+    if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) return { icon: 'fitness_center', colorClass: 'eff-color-rose' };
+    if (sa.includes('POWER')) return { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+    if (sa.includes('HEAL_RECEIVED')) return { icon: 'health_and_safety', colorClass: 'eff-color-emerald' };
+    if (sa.includes('SHIELD_RECEIVED')) return { icon: 'security', colorClass: 'eff-color-cyan' };
+    if (sa.includes('HEAL_GIVEN')) return { icon: 'healing', colorClass: 'eff-color-emerald-light' };
+    if (sa.includes('SHIELD_GIVEN')) return { icon: 'add_moderator', colorClass: 'eff-color-cyan-light' };
+    if (sa === 'SHIELD_PIERCED') return { icon: 'heart_broken', colorClass: 'eff-color-red' };
+    if (sa === 'SHIELD_PENETRATION') return { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+    if (sa === 'DAMAGE_TAKEN_MAGIC') return { icon: 'explosion', colorClass: 'eff-color-purple' };
+    if (sa === 'DAMAGE_TAKEN_PHYSIC') return { icon: 'explosion', colorClass: 'eff-color-red' };
+    if (sa === 'DAMAGE_TAKEN_BRUT') return { icon: 'explosion', colorClass: 'eff-color-red-dark' };
+    if (sa === 'DAMAGE_GIVEN_MAGIC') return { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
+    if (sa === 'DAMAGE_GIVEN_PHYSIC') return { icon: 'swords', colorClass: 'eff-color-rose' };
+    if (sa === 'DAMAGE_GIVEN_BRUT') return { icon: 'bloodtype', colorClass: 'eff-color-red-dark' };
+    if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') return { icon: 'gavel', colorClass: 'eff-color-fuchsia' };
+    if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') return { icon: 'gavel', colorClass: 'eff-color-rose' };
+    if (sa.includes('DAMAGE_TAKEN')) return { icon: 'explosion', colorClass: 'eff-color-red' };
+    if (sa.includes('DAMAGE_GIVEN')) return { icon: 'swords', colorClass: 'eff-color-rose' };
+    if (sa.includes('PIERCED') || sa.includes('PIERCING')) return { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+    return { icon: 'star', colorClass: 'eff-color-slate' };
 }
 
 function getCompactDamageTypeShort(dt) {
@@ -265,11 +348,13 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
         if (sp.heatGenerated && sp.heatGenerated > 0 && !hasHeatEffectInList) {
             effectsSummaryHtml += compact
                 ? `
-                        <div class="effect-line flex flex-wrap items-baseline gap-1">
+                        <div class="effect-line is-compact-line">
                             <div class="indicator shrink-0 bg-amber-500"></div>
-                            <span class="font-semibold text-target-caster">[Lanceur]</span>
-                            <span class="text-error font-medium">🔥</span>
-                            <span class="text-slate-200">+${sp.heatGenerated} Chaleur</span>
+                            <div class="eff-line-body min-w-0 flex-1">
+                                <span class="font-semibold text-target-caster">[Lanceur]</span>
+                                <span class="text-error font-medium">🔥</span>
+                                <span class="calc-val-highlight eff-color-orange">+${sp.heatGenerated}</span> <span class="eff-color-orange">Chaleur</span>
+                            </div>
                         </div>
                     `
                 : `
@@ -397,67 +482,101 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                 const dtShort = getCompactDamageTypeShort(dt);
                 const dtHtml = `<span class="font-bold ${dtColorClass}">${dtStr}</span>`;
                 const dtShortHtml = `<span class="font-bold ${dtColorClass}">${dtShort}</span>`;
-                const srcLabel = (src) => compact ? formatCompactSrcLabel(src) : ui.formatSrc(src);
+                const srcLabel = (src) => compact ? formatColoredCompactSrc(src) : ui.formatSrc(src);
+                const buffStatVisual = ['BuffDebuff', 'BUFF_DEBUFF', 'POISON', 'BURN'].includes(t)
+                    ? resolveBuffStatVisual(t, e)
+                    : null;
+                const buffColorClass = buffStatVisual ? buffStatVisual.colorClass : 'text-slate-200';
 
                 let detailsStr = '';
                 if (t === 'DamageFixed' || t === 'FIXED_DAMAGE') {
                     detailsStr = compact
-                        ? `${e.damage || 0} Dég. ${dtShortHtml}`
+                        ? `<span class="calc-val-highlight ${dtColorClass}">${e.damage || 0}</span> Dég. ${dtShortHtml}`
                         : `➔ inflige ${e.damage || 0} Dégâts ${dtHtml}`;
                 } else if (t === 'DamagePercentage' || t === 'PERCENTAGE_DAMAGE') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     detailsStr = compact
-                        ? `${pct}% ${srcLabel(e.damageSource || e.source)} · Dég. ${dtShortHtml}`
+                        ? `<span class="calc-val-highlight ${dtColorClass}">${pct}%</span> ${srcLabel(e.damageSource || e.source)} · Dég. ${dtShortHtml}`
                         : `➔ inflige ${pct}% de ${ui.formatSrc(e.damageSource || e.source)} en Dégâts ${dtHtml}`;
                 } else if (t === 'HealFixed' || t === 'FIXED_HEAL') {
                     const amt = e.healAmount || 0;
                     if (amt < 0) {
                         detailsStr = compact
-                            ? (target === 'CASTER' ? `coûte ${Math.abs(amt)} PV` : `-${Math.abs(amt)} PV`)
+                            ? (target === 'CASTER'
+                                ? `coûte <span class="calc-val-highlight eff-color-pink">${Math.abs(amt)}</span> <span class="eff-color-pink">PV</span>`
+                                : `<span class="calc-val-highlight eff-color-pink">-${Math.abs(amt)}</span> <span class="eff-color-pink">PV</span>`)
                             : (target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} PV` : `➔ retire ${Math.abs(amt)} PV`);
                     } else {
-                        detailsStr = compact ? `+${amt} PV` : `➔ rend ${amt} PV`;
+                        detailsStr = compact
+                            ? `<span class="calc-val-highlight eff-color-emerald">+${amt}</span> <span class="eff-color-emerald">Soin</span>`
+                            : `➔ rend ${amt} PV`;
                     }
                 } else if (t === 'HealPercentage' || t === 'PERCENTAGE_HEAL') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
                         detailsStr = compact
-                            ? (target === 'CASTER' ? `coûte ${Math.abs(pct)}% ${srcLabel(e.healSource || e.source)} PV` : `-${Math.abs(pct)}% ${srcLabel(e.healSource || e.source)} PV`)
+                            ? (target === 'CASTER'
+                                ? `coûte <span class="calc-val-highlight eff-color-pink">${Math.abs(pct)}%</span> ${srcLabel(e.healSource || e.source)} <span class="eff-color-pink">PV</span>`
+                                : `<span class="calc-val-highlight eff-color-pink">-${Math.abs(pct)}%</span> ${srcLabel(e.healSource || e.source)} <span class="eff-color-pink">PV</span>`)
                             : (target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV`);
                     } else {
                         detailsStr = compact
-                            ? `+${pct}% ${srcLabel(e.healSource || e.source)} PV`
+                            ? `<span class="calc-val-highlight eff-color-emerald">+${pct}%</span> ${srcLabel(e.healSource || e.source)} → <span class="eff-color-emerald">Soin</span>`
                             : `➔ rend ${pct}% de ${ui.formatSrc(e.healSource || e.source)} en PV`;
                     }
                 } else if (t === 'AME_DETACHEE') {
                     detailsStr = compact
-                        ? `+5 & +30% Dég. Phys. (3t)`
+                        ? `<span class="calc-val-highlight eff-color-rose">+5</span> & <span class="calc-val-highlight eff-color-rose">+30%</span> <span class="dt-text-physic font-semibold">Dég. Phys.</span> (3t)`
                         : `➔ +5 Dégâts Phys. et +30% Dégâts Phys. (3 tours)`;
                 } else if (t === 'BuffDebuff' || t === 'BUFF_DEBUFF' || t === 'POISON' || t === 'BURN') {
-                    let parts = [];
-                    if (e.flatValue) {
-                        parts.push(`${e.flatValue > 0 ? '+' : ''}${e.flatValue} ${ui.formatStat(e.statAffected || e.effectType)}`);
-                    }
-                    if (e.modifier) {
-                        const sign = e.modifier > 0 ? '+' : '';
-                        let sourceStr = '';
-                        const src = e.source || e.modifierSource;
-                        if (src) {
-                            sourceStr = compact ? ` ${srcLabel(src)}` : ` de ${ui.formatSrc(src)}`;
+                    const statRaw = e.statAffected || e.effectType;
+                    if (compact) {
+                        const isAilmentRepeat = t === 'POISON' || t === 'BURN';
+                        const statHtml = isAilmentRepeat ? '' : formatCompactStatHtml(statRaw, buffColorClass);
+                        const valParts = [];
+                        if (e.flatValue) {
+                            valParts.push(`<span class="calc-val-highlight ${buffColorClass}">${e.flatValue > 0 ? '+' : ''}${e.flatValue}</span>`);
                         }
-                        parts.push(compact
-                            ? `${sign}${Math.round(e.modifier * 100)}%${sourceStr} ${ui.formatStat(e.statAffected || e.effectType)}`
-                            : `${sign}${Math.round(e.modifier * 100)}%${sourceStr} en ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        if (e.modifier) {
+                            const sign = e.modifier > 0 ? '+' : '';
+                            const src = e.source || e.modifierSource;
+                            const srcPart = src ? ` ${srcLabel(src)}` : '';
+                            valParts.push(`<span class="calc-val-highlight ${buffColorClass}">${sign}${Math.round(e.modifier * 100)}%</span>${srcPart}`);
+                        }
+                        const durStr = e.duration > 0 ? ` (${e.duration}t)` : '';
+                        if (valParts.length === 0) {
+                            detailsStr = `${statHtml || ui.formatStat(statRaw)}${durStr}`;
+                        } else if (isAilmentRepeat) {
+                            detailsStr = `${valParts.join(' & ')}${durStr}`;
+                        } else {
+                            const hasSrcInMod = Boolean(e.modifier && (e.source || e.modifierSource));
+                            const sep = hasSrcInMod ? ' → ' : ' ';
+                            detailsStr = `${valParts.join(' & ')}${sep}${statHtml}${durStr}`;
+                        }
+                    } else {
+                        let parts = [];
+                        if (e.flatValue) {
+                            parts.push(`${e.flatValue > 0 ? '+' : ''}${e.flatValue} ${ui.formatStat(statRaw)}`);
+                        }
+                        if (e.modifier) {
+                            const sign = e.modifier > 0 ? '+' : '';
+                            let sourceStr = '';
+                            const src = e.source || e.modifierSource;
+                            if (src) {
+                                sourceStr = ` de ${ui.formatSrc(src)}`;
+                            }
+                            parts.push(`${sign}${Math.round(e.modifier * 100)}%${sourceStr} en ${ui.formatStat(statRaw)}`);
+                        }
+                        if (parts.length === 0) parts.push(`modifie ${ui.formatStat(statRaw)}`);
+                        const durStr = e.duration > 0 ? ` (${e.duration} tours)` : '';
+                        detailsStr = `➔ ${parts.join(' et ')}${durStr}`;
                     }
-                    if (parts.length === 0) parts.push(`${ui.formatStat(e.statAffected || e.effectType)}`);
-                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` (${e.duration} tours)`) : '';
-                    detailsStr = compact ? `${parts.join(' & ')}${durStr}` : `➔ ${parts.join(' et ')}${durStr}`;
                 } else if (t === 'DamageOverTime' || t === 'DOT') {
                     let parts = [];
                     const fd = e.fixedDamagePerTick || e.damage || 0;
                     const pd = e.percentageDamagePerTick || e.percentage || 0;
-                    if (fd) parts.push(`${fd}`);
-                    if (pd) parts.push(`${Math.round(pd * 100)}% ${srcLabel(e.damageSource || e.source)}`);
+                    if (fd) parts.push(`<span class="calc-val-highlight ${dtColorClass}">${fd}</span>`);
+                    if (pd) parts.push(`<span class="calc-val-highlight ${dtColorClass}">${Math.round(pd * 100)}%</span> ${srcLabel(e.damageSource || e.source)}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     detailsStr = compact
@@ -467,43 +586,49 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                     let parts = [];
                     const fh = e.fixedHealPerTick || e.healAmount || 0;
                     const ph = e.percentageHealPerTick || e.percentage || 0;
-                    if (fh) parts.push(`${fh}`);
-                    if (ph) parts.push(`${Math.round(ph * 100)}% ${srcLabel(e.healSource || e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (fh) parts.push(`<span class="calc-val-highlight eff-color-emerald">${fh}</span>`);
+                    if (ph) parts.push(`<span class="calc-val-highlight eff-color-emerald">${Math.round(ph * 100)}%</span> ${srcLabel(e.healSource || e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     detailsStr = compact
-                        ? `${parts.join(' + ')} PV/t${durStr}`
+                        ? `${parts.join(' + ')}${ph ? ' → ' : ' '}<span class="eff-color-emerald">Soin</span>/t${durStr}`
                         : `➔ HoT de ${parts.join(' + ')} PV/tour${durStr}`;
                 } else if (t === 'ManaFixed' || t === 'FIXED_MANA') {
                     const amt = e.manaAmount || 0;
                     if (amt < 0) {
                         detailsStr = compact
-                            ? (target === 'CASTER' ? `coûte ${Math.abs(amt)} Mana` : `-${Math.abs(amt)} Mana`)
+                            ? (target === 'CASTER'
+                                ? `coûte <span class="calc-val-highlight eff-color-sky">${Math.abs(amt)}</span> <span class="eff-color-sky">Mana</span>`
+                                : `<span class="calc-val-highlight eff-color-sky">-${Math.abs(amt)}</span> <span class="eff-color-sky">Mana</span>`)
                             : (target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} Mana` : `➔ retire ${Math.abs(amt)} Mana`);
                     } else {
-                        detailsStr = compact ? `+${amt} Mana` : `➔ rend ${amt} Mana`;
+                        detailsStr = compact
+                            ? `<span class="calc-val-highlight eff-color-sky">+${amt}</span> <span class="eff-color-sky">Mana</span>`
+                            : `➔ rend ${amt} Mana`;
                     }
                 } else if (t === 'ManaPercentage' || t === 'PERCENTAGE_MANA') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
                         detailsStr = compact
-                            ? (target === 'CASTER' ? `coûte ${Math.abs(pct)}% ${srcLabel(e.manaSource || e.source)} Mana` : `-${Math.abs(pct)}% ${srcLabel(e.manaSource || e.source)} Mana`)
+                            ? (target === 'CASTER'
+                                ? `coûte <span class="calc-val-highlight eff-color-sky">${Math.abs(pct)}%</span> ${srcLabel(e.manaSource || e.source)} <span class="eff-color-sky">Mana</span>`
+                                : `<span class="calc-val-highlight eff-color-sky">-${Math.abs(pct)}%</span> ${srcLabel(e.manaSource || e.source)} <span class="eff-color-sky">Mana</span>`)
                             : (target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`);
                     } else {
                         detailsStr = compact
-                            ? `+${pct}% ${srcLabel(e.manaSource || e.source)} Mana`
+                            ? `<span class="calc-val-highlight eff-color-sky">+${pct}%</span> ${srcLabel(e.manaSource || e.source)} <span class="eff-color-sky">Mana</span>`
                             : `➔ rend ${pct}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`;
                     }
                 } else if (t === 'ManaOverTime' || t === 'MOT' || t === 'MANA_OVER_TIME') {
                     let parts = [];
                     const fm = e.fixedManaPerTick || e.manaAmount || 0;
                     const pm = e.percentageManaPerTick || e.percentage || 0;
-                    if (fm) parts.push(`${fm}`);
-                    if (pm) parts.push(`${Math.round(pm * 100)}% ${srcLabel(e.manaSource || e.source || 'TARGET_MANA_MAX')}`);
+                    if (fm) parts.push(`<span class="calc-val-highlight eff-color-sky">${fm}</span>`);
+                    if (pm) parts.push(`<span class="calc-val-highlight eff-color-sky">${Math.round(pm * 100)}%</span> ${srcLabel(e.manaSource || e.source || 'TARGET_MANA_MAX')}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     detailsStr = compact
-                        ? `${parts.join(' + ')} Mana/t${durStr}`
+                        ? `${parts.join(' + ')} <span class="eff-color-sky">Mana</span>/t${durStr}`
                         : `➔ MoT de ${parts.join(' + ')} Mana/tour${durStr}`;
                 } else if (t === 'Purge' || t === 'PURGE' || t === 'DISPEL') {
                     detailsStr = compact ? `Dissipe altérations` : `➔ dissipe les altérations`;
@@ -511,8 +636,8 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                     let parts = [];
                     const fv = e.fixedValue || e.flatValue || 0;
                     const pv = e.percentage || 0;
-                    if (fv) parts.push(`${fv}`);
-                    if (pv) parts.push(`${Math.round(pv * 100)}% ${srcLabel(e.shieldSource || e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (fv) parts.push(`<span class="calc-val-highlight eff-color-blue">${fv}</span>`);
+                    if (pv) parts.push(`<span class="calc-val-highlight eff-color-blue">${Math.round(pv * 100)}%</span> ${srcLabel(e.shieldSource || e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     detailsStr = compact
@@ -521,30 +646,32 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                 } else if (t === 'Heat' || t === 'HEAT' || t === 'HeatFixed' || t === 'HEAT_FIXED') {
                     const amt = e.amount || e.flatValue || 0;
                     if (amt < 0) {
-                        detailsStr = compact ? `-${Math.abs(amt)} Chaleur` : `➔ consomme ${Math.abs(amt)} Chaleur`;
+                        detailsStr = compact ? `<span class="calc-val-highlight eff-color-orange">-${Math.abs(amt)}</span> <span class="eff-color-orange">Chaleur</span>` : `➔ consomme ${Math.abs(amt)} Chaleur`;
                     } else {
-                        detailsStr = compact ? `+${amt} Chaleur` : `➔ génère ${amt} Chaleur`;
+                        detailsStr = compact ? `<span class="calc-val-highlight eff-color-orange">+${amt}</span> <span class="eff-color-orange">Chaleur</span>` : `➔ génère ${amt} Chaleur`;
                     }
                 } else if (t === 'BUD') {
                     const amt = e.amount || e.flatValue || 1;
-                    detailsStr = compact ? `+${amt} Bourgeon${amt > 1 ? 's' : ''}` : `➔ génère ${amt} Bourgeon(s)`;
+                    detailsStr = compact
+                        ? `<span class="calc-val-highlight eff-color-emerald">+${amt}</span> <span class="eff-color-emerald">Bourgeon${amt > 1 ? 's' : ''}</span>`
+                        : `➔ génère ${amt} Bourgeon(s)`;
                 } else if (t === 'HeatPercentage' || t === 'HEAT_PERCENTAGE') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
                         detailsStr = compact
-                            ? `-${Math.abs(pct)}% ${srcLabel(e.source)} Chaleur`
+                            ? `<span class="calc-val-highlight eff-color-orange">-${Math.abs(pct)}%</span> ${srcLabel(e.source)} <span class="eff-color-orange">Chaleur</span>`
                             : `➔ consomme ${Math.abs(pct)}% de ${ui.formatSrc(e.source)} en Chaleur`;
                     } else {
                         detailsStr = compact
-                            ? `+${pct}% ${srcLabel(e.source)} Chaleur`
+                            ? `<span class="calc-val-highlight eff-color-orange">+${pct}%</span> ${srcLabel(e.source)} <span class="eff-color-orange">Chaleur</span>`
                             : `➔ génère ${pct}% de ${ui.formatSrc(e.source)} en Chaleur`;
                     }
                 } else if (t === 'HeatOverTime' || t === 'HEAT_OVER_TIME') {
                     let parts = [];
                     const fv = e.flatValue || e.fixedValue || 0;
                     const pv = e.percentage || 0;
-                    if (fv) parts.push(`${Math.abs(fv)}`);
-                    if (pv) parts.push(`${Math.abs(Math.round(pv * 100))}% ${srcLabel(e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (fv) parts.push(`<span class="calc-val-highlight eff-color-orange">${Math.abs(fv)}</span>`);
+                    if (pv) parts.push(`<span class="calc-val-highlight eff-color-orange">${Math.abs(Math.round(pv * 100))}%</span> ${srcLabel(e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
                     const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     const isConsuming = (fv < 0) || (pv < 0);
@@ -579,32 +706,7 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                 if (['BuffDebuff', 'BUFF_DEBUFF'].includes(t) && e.statAffected) {
                     const sa = (e.statAffected + '').toUpperCase();
                     if (sa !== 'POISON' && sa !== 'BURN' && sa !== 'AME_DETACHEE') {
-                        let statIcon = { icon: 'star', colorClass: 'eff-color-slate' };
-                        if (sa.includes('SPEED')) statIcon = { icon: 'bolt', colorClass: 'eff-color-amber' };
-                        else if (sa.includes('MANA')) statIcon = { icon: 'water_drop', colorClass: 'eff-color-sky' };
-                        else if (sa.includes('HEALTH') || sa.includes('HP') || sa.includes('LIFE')) statIcon = { icon: 'favorite', colorClass: 'eff-color-pink' };
-                        else if (sa.includes('CRIT')) statIcon = { icon: 'gps_fixed', colorClass: 'eff-color-red' };
-                        else if (sa.includes('ARMOR') || sa.includes('ARMURE')) statIcon = { icon: 'shield', colorClass: 'eff-color-blue' };
-                        else if (sa.includes('RESISTANCE')) statIcon = { icon: 'shield', colorClass: 'eff-color-emerald' };
-                        else if (sa.includes('PHYSICAL_POWER') || sa.includes('STRENGTH')) statIcon = { icon: 'fitness_center', colorClass: 'eff-color-rose' };
-                        else if (sa.includes('POWER')) statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
-                        else if (sa.includes('HEAL_RECEIVED')) statIcon = { icon: 'health_and_safety', colorClass: 'eff-color-emerald' };
-                        else if (sa.includes('SHIELD_RECEIVED')) statIcon = { icon: 'security', colorClass: 'eff-color-cyan' };
-                        else if (sa.includes('HEAL_GIVEN')) statIcon = { icon: 'healing', colorClass: 'eff-color-emerald-light' };
-                        else if (sa.includes('SHIELD_GIVEN')) statIcon = { icon: 'add_moderator', colorClass: 'eff-color-cyan-light' };
-                        else if (sa === 'SHIELD_PIERCED') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-red' };
-                        else if (sa === 'SHIELD_PENETRATION') statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
-                        else if (sa === 'DAMAGE_TAKEN_MAGIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-purple' };
-                        else if (sa === 'DAMAGE_TAKEN_PHYSIC') statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
-                        else if (sa === 'DAMAGE_TAKEN_BRUT') statIcon = { icon: 'explosion', colorClass: 'eff-color-red-dark' };
-                        else if (sa === 'DAMAGE_GIVEN_MAGIC') statIcon = { icon: 'auto_awesome', colorClass: 'eff-color-purple' };
-                        else if (sa === 'DAMAGE_GIVEN_PHYSIC') statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
-                        else if (sa === 'DAMAGE_GIVEN_BRUT') statIcon = { icon: 'bloodtype', colorClass: 'eff-color-red-dark' };
-                        else if (sa === 'DAMAGE_GIVEN_MAGIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-fuchsia' };
-                        else if (sa === 'DAMAGE_GIVEN_PHYSIC_TO_SHIELD') statIcon = { icon: 'gavel', colorClass: 'eff-color-rose' };
-                        else if (sa.includes('DAMAGE_TAKEN')) statIcon = { icon: 'explosion', colorClass: 'eff-color-red' };
-                        else if (sa.includes('DAMAGE_GIVEN')) statIcon = { icon: 'swords', colorClass: 'eff-color-rose' };
-                        else if (sa.includes('PIERCED') || sa.includes('PIERCING')) statIcon = { icon: 'heart_broken', colorClass: 'eff-color-orange-light' };
+                        const statIcon = buffStatVisual || resolveBuffStatVisual(t, e);
                         statIconHtml = `<span class="material-symbols-outlined eff-icon-stat ${statIcon.colorClass}">${statIcon.icon}</span>`;
                     }
                 }
@@ -619,14 +721,26 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options
                     ? ({ 'DamageOverTime': 'DoT', 'DAMAGE_OVER_TIME': 'DoT', 'DOT': 'DoT', 'HealOverTime': 'HoT', 'HEAL_OVER_TIME': 'HoT', 'HOT': 'HoT', 'ManaOverTime': 'MoT', 'MANA_OVER_TIME': 'MoT', 'MOT': 'MoT', 'HeatOverTime': 'Tick Chaleur', 'HEAT_OVER_TIME': 'Tick Chaleur' }[rawType] || eTypeStr)
                     : eTypeStr;
 
-                effectsSummaryHtml += `<div class="effect-line flex flex-wrap items-start gap-1${choiceStateClass}"${choiceKeyAttr}>
+                effectsSummaryHtml += compact
+                    ? `<div class="effect-line is-compact-line${choiceStateClass}"${choiceKeyAttr}>
+                            <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
+                            ${statIconHtml}
+                            <div class="eff-line-body min-w-0 flex-1">
+                                ${turnBadge} ${keyBadge} ${dsBadge}
+                                <span class="font-semibold ${tClass}"${fullTargetText !== targetText ? ` title="${fullTargetText}"` : ''}>[${targetText}]</span>
+                                ${compactHiddenType ? '' : `<span class="font-medium ${eTypeClass}">${compactTypeLabel}</span>`}
+                                <span class="text-slate-200">${detailsStr}</span>
+                            </div>
+                        </div>
+                    `
+                    : `<div class="effect-line flex flex-wrap items-start gap-1${choiceStateClass}"${choiceKeyAttr}>
                             <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
                             ${statIconHtml}
                             ${turnBadge}
                             ${keyBadge}
                             ${dsBadge}
-                            <span class="font-semibold ${tClass}"${compact && fullTargetText !== targetText ? ` title="${fullTargetText}"` : ''}>[${targetText}]</span>
-                            ${compactHiddenType ? '' : `<span class="font-medium ${eTypeClass}">${compactTypeLabel}</span>`}
+                            <span class="font-semibold ${tClass}">[${targetText}]</span>
+                            <span class="font-medium ${eTypeClass}">${compactTypeLabel}</span>
                             <span class="text-slate-200">${detailsStr}</span>
                         </div>
                     `;

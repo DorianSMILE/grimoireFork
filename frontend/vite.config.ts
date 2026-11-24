@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 function syncTargetStaticPlugin() {
   return {
     name: 'sync-target-static',
+    enforce: 'post' as const,
     closeBundle() {
       const staticRoot = path.resolve(__dirname, '../src/main/resources/static');
       const targetStaticRoot = path.resolve(__dirname, '../target/classes/static');
@@ -15,8 +16,11 @@ function syncTargetStaticPlugin() {
         const srcDir = path.join(staticRoot, dir);
         const destDir = path.join(targetStaticRoot, dir);
         if (!fs.existsSync(srcDir)) continue;
-        if (dir === 'app' && fs.existsSync(destDir)) {
-          fs.rmSync(destDir, { recursive: true, force: true });
+        if (dir === 'app') {
+          const destAssets = path.join(destDir, 'assets');
+          if (fs.existsSync(destAssets)) {
+            fs.rmSync(destAssets, { recursive: true, force: true });
+          }
         }
         fs.cpSync(srcDir, destDir, { recursive: true, force: true });
       }

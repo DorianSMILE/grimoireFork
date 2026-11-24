@@ -224,16 +224,55 @@ export function renderFilteredSpells() {
     }
 }
 
-export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
+const COMPACT_TARGET_LABELS = {
+    'CASTER': 'Lanceur',
+    'ALLY': 'Allié',
+    'TARGET': 'Cible',
+    'ALL_ALLIES': 'Tous Alliés',
+    'ALL_ENEMIES': 'Tous Ennemis',
+    'ALL_COMBATANTS': 'Tous'
+};
+
+function formatCompactSrcLabel(src) {
+    const full = ui.formatSrc(src);
+    if (!full) return '';
+    return String(full)
+        .replace(/\bdu Lanceur\b/gi, 'Lanc.')
+        .replace(/\bde la Cible\b/gi, 'Cible')
+        .replace(/\bLanceur\b/gi, 'Lanc.')
+        .replace(/\bActuel(le)?\b/gi, 'Act.')
+        .replace(/\bManquant(e)?\b/gi, 'Manq.')
+        .replace(/\bMaximum\b/gi, 'Max')
+        .replace(/\bForce Physique\b/gi, 'Force')
+        .replace(/\bPuissance\b/gi, 'Puiss.');
+}
+
+function getCompactDamageTypeShort(dt) {
+    if (dt === 'physic') return 'Phys.';
+    if (dt === 'brut') return 'Brut';
+    return 'Mag.';
+}
+
+export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null, options = {}) {
+    const compact = Boolean(options && options.compact);
     let effectsSummaryHtml = '';
     if ((sp.effects && sp.effects.length > 0) || (sp.heatGenerated && sp.heatGenerated > 0)) {
-        effectsSummaryHtml = `<div class="spell-effects-summary">`;
+        effectsSummaryHtml = `<div class="spell-effects-summary${compact ? ' is-compact' : ''}">`;
         const hasHeatEffectInList = sp.effects && sp.effects.some(e => {
             const t = (e.effectType || e.effect_type || '').replace('Effect', '');
             return t.startsWith('Heat') || t.startsWith('HEAT');
         });
         if (sp.heatGenerated && sp.heatGenerated > 0 && !hasHeatEffectInList) {
-            effectsSummaryHtml += `
+            effectsSummaryHtml += compact
+                ? `
+                        <div class="effect-line flex flex-wrap items-baseline gap-1">
+                            <div class="indicator shrink-0 bg-amber-500"></div>
+                            <span class="font-semibold text-target-caster">[Lanceur]</span>
+                            <span class="text-error font-medium">🔥</span>
+                            <span class="text-slate-200">+${sp.heatGenerated} Chaleur</span>
+                        </div>
+                    `
+                : `
                         <div class="effect-line flex flex-wrap items-baseline gap-1">
                             <div class="indicator shrink-0 bg-amber-500"></div>
                             <span class="font-semibold text-target-caster">[Lanceur]</span>
@@ -245,7 +284,8 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
         if (sp.effects && sp.effects.length > 0) {
             sp.effects.forEach(e => {
                 const target = e.effectTarget || e.effect_target;
-                const targetText = TARGET_LABELS[target] || 'Cible';
+                const fullTargetText = TARGET_LABELS[target] || 'Cible';
+                const targetText = compact ? (COMPACT_TARGET_LABELS[target] || fullTargetText) : fullTargetText;
                 const tClass = TARGET_CSS_CLASSES[target] || 'text-target-enemy';
 
                 let rawType = e.effectType || e.effect_type || '';
@@ -354,30 +394,45 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
                 const dt = (e.damageType || 'MAGIC').toLowerCase();
                 const dtColorClass = dt === 'physic' ? 'dt-text-physic' : (dt === 'brut' ? 'dt-text-brut' : 'dt-text-magic');
                 const dtStr = dt === 'magic' ? 'Magiques' : (dt === 'physic' ? 'Physiques' : 'Bruts');
+                const dtShort = getCompactDamageTypeShort(dt);
                 const dtHtml = `<span class="font-bold ${dtColorClass}">${dtStr}</span>`;
+                const dtShortHtml = `<span class="font-bold ${dtColorClass}">${dtShort}</span>`;
+                const srcLabel = (src) => compact ? formatCompactSrcLabel(src) : ui.formatSrc(src);
 
                 let detailsStr = '';
                 if (t === 'DamageFixed' || t === 'FIXED_DAMAGE') {
-                    detailsStr = `➔ inflige ${e.damage || 0} Dégâts ${dtHtml}`;
+                    detailsStr = compact
+                        ? `${e.damage || 0} Dég. ${dtShortHtml}`
+                        : `➔ inflige ${e.damage || 0} Dégâts ${dtHtml}`;
                 } else if (t === 'DamagePercentage' || t === 'PERCENTAGE_DAMAGE') {
                     const pct = Math.round((e.percentage || 0) * 100);
-                    detailsStr = `➔ inflige ${pct}% de ${ui.formatSrc(e.damageSource || e.source)} en Dégâts ${dtHtml}`;
+                    detailsStr = compact
+                        ? `${pct}% ${srcLabel(e.damageSource || e.source)} · Dég. ${dtShortHtml}`
+                        : `➔ inflige ${pct}% de ${ui.formatSrc(e.damageSource || e.source)} en Dégâts ${dtHtml}`;
                 } else if (t === 'HealFixed' || t === 'FIXED_HEAL') {
                     const amt = e.healAmount || 0;
                     if (amt < 0) {
-                        detailsStr = target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} PV` : `➔ retire ${Math.abs(amt)} PV`;
+                        detailsStr = compact
+                            ? (target === 'CASTER' ? `coûte ${Math.abs(amt)} PV` : `-${Math.abs(amt)} PV`)
+                            : (target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} PV` : `➔ retire ${Math.abs(amt)} PV`);
                     } else {
-                        detailsStr = `➔ rend ${amt} PV`;
+                        detailsStr = compact ? `+${amt} PV` : `➔ rend ${amt} PV`;
                     }
                 } else if (t === 'HealPercentage' || t === 'PERCENTAGE_HEAL') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
-                        detailsStr = target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV`;
+                        detailsStr = compact
+                            ? (target === 'CASTER' ? `coûte ${Math.abs(pct)}% ${srcLabel(e.healSource || e.source)} PV` : `-${Math.abs(pct)}% ${srcLabel(e.healSource || e.source)} PV`)
+                            : (target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.healSource || e.source)} en PV`);
                     } else {
-                        detailsStr = `➔ rend ${pct}% de ${ui.formatSrc(e.healSource || e.source)} en PV`;
+                        detailsStr = compact
+                            ? `+${pct}% ${srcLabel(e.healSource || e.source)} PV`
+                            : `➔ rend ${pct}% de ${ui.formatSrc(e.healSource || e.source)} en PV`;
                     }
                 } else if (t === 'AME_DETACHEE') {
-                    detailsStr = `➔ +5 Dégâts Phys. et +30% Dégâts Phys. (3 tours)`;
+                    detailsStr = compact
+                        ? `+5 & +30% Dég. Phys. (3t)`
+                        : `➔ +5 Dégâts Phys. et +30% Dégâts Phys. (3 tours)`;
                 } else if (t === 'BuffDebuff' || t === 'BUFF_DEBUFF' || t === 'POISON' || t === 'BURN') {
                     let parts = [];
                     if (e.flatValue) {
@@ -388,96 +443,118 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
                         let sourceStr = '';
                         const src = e.source || e.modifierSource;
                         if (src) {
-                            sourceStr = ` de ${ui.formatSrc(src)}`;
+                            sourceStr = compact ? ` ${srcLabel(src)}` : ` de ${ui.formatSrc(src)}`;
                         }
-                        parts.push(`${sign}${Math.round(e.modifier * 100)}%${sourceStr} en ${ui.formatStat(e.statAffected || e.effectType)}`);
+                        parts.push(compact
+                            ? `${sign}${Math.round(e.modifier * 100)}%${sourceStr} ${ui.formatStat(e.statAffected || e.effectType)}`
+                            : `${sign}${Math.round(e.modifier * 100)}%${sourceStr} en ${ui.formatStat(e.statAffected || e.effectType)}`);
                     }
-                    if (parts.length === 0) parts.push(`modifie ${ui.formatStat(e.statAffected || e.effectType)}`);
-                    const durStr = e.duration > 0 ? ` (${e.duration} tours)` : '';
-                    detailsStr = `➔ ${parts.join(' et ')}${durStr}`;
+                    if (parts.length === 0) parts.push(`${ui.formatStat(e.statAffected || e.effectType)}`);
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` (${e.duration} tours)`) : '';
+                    detailsStr = compact ? `${parts.join(' & ')}${durStr}` : `➔ ${parts.join(' et ')}${durStr}`;
                 } else if (t === 'DamageOverTime' || t === 'DOT') {
                     let parts = [];
                     const fd = e.fixedDamagePerTick || e.damage || 0;
                     const pd = e.percentageDamagePerTick || e.percentage || 0;
                     if (fd) parts.push(`${fd}`);
-                    if (pd) parts.push(`${Math.round(pd * 100)}% ${ui.formatSrc(e.damageSource || e.source)}`);
+                    if (pd) parts.push(`${Math.round(pd * 100)}% ${srcLabel(e.damageSource || e.source)}`);
                     if (parts.length === 0) parts.push('0');
-                    const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                    detailsStr = `➔ DoT de ${parts.join(' + ')} Dégâts ${dtHtml}/tour${durStr}`;
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
+                    detailsStr = compact
+                        ? `${parts.join(' + ')} ${dtShortHtml}/t${durStr}`
+                        : `➔ DoT de ${parts.join(' + ')} Dégâts ${dtHtml}/tour${durStr}`;
                 } else if (t === 'HealOverTime' || t === 'HOT' || t === 'HEAL_OVER_TIME') {
                     let parts = [];
                     const fh = e.fixedHealPerTick || e.healAmount || 0;
                     const ph = e.percentageHealPerTick || e.percentage || 0;
                     if (fh) parts.push(`${fh}`);
-                    if (ph) parts.push(`${Math.round(ph * 100)}% ${ui.formatSrc(e.healSource || e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (ph) parts.push(`${Math.round(ph * 100)}% ${srcLabel(e.healSource || e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
-                    const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                    detailsStr = `➔ HoT de ${parts.join(' + ')} PV/tour${durStr}`;
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
+                    detailsStr = compact
+                        ? `${parts.join(' + ')} PV/t${durStr}`
+                        : `➔ HoT de ${parts.join(' + ')} PV/tour${durStr}`;
                 } else if (t === 'ManaFixed' || t === 'FIXED_MANA') {
                     const amt = e.manaAmount || 0;
                     if (amt < 0) {
-                        detailsStr = target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} Mana` : `➔ retire ${Math.abs(amt)} Mana`;
+                        detailsStr = compact
+                            ? (target === 'CASTER' ? `coûte ${Math.abs(amt)} Mana` : `-${Math.abs(amt)} Mana`)
+                            : (target === 'CASTER' ? `➔ coûte ${Math.abs(amt)} Mana` : `➔ retire ${Math.abs(amt)} Mana`);
                     } else {
-                        detailsStr = `➔ rend ${amt} Mana`;
+                        detailsStr = compact ? `+${amt} Mana` : `➔ rend ${amt} Mana`;
                     }
                 } else if (t === 'ManaPercentage' || t === 'PERCENTAGE_MANA') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
-                        detailsStr = target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`;
+                        detailsStr = compact
+                            ? (target === 'CASTER' ? `coûte ${Math.abs(pct)}% ${srcLabel(e.manaSource || e.source)} Mana` : `-${Math.abs(pct)}% ${srcLabel(e.manaSource || e.source)} Mana`)
+                            : (target === 'CASTER' ? `➔ coûte ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana` : `➔ retire ${Math.abs(pct)}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`);
                     } else {
-                        detailsStr = `➔ rend ${pct}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`;
+                        detailsStr = compact
+                            ? `+${pct}% ${srcLabel(e.manaSource || e.source)} Mana`
+                            : `➔ rend ${pct}% de ${ui.formatSrc(e.manaSource || e.source)} en Mana`;
                     }
                 } else if (t === 'ManaOverTime' || t === 'MOT' || t === 'MANA_OVER_TIME') {
                     let parts = [];
                     const fm = e.fixedManaPerTick || e.manaAmount || 0;
                     const pm = e.percentageManaPerTick || e.percentage || 0;
                     if (fm) parts.push(`${fm}`);
-                    if (pm) parts.push(`${Math.round(pm * 100)}% ${ui.formatSrc(e.manaSource || e.source || 'TARGET_MANA_MAX')}`);
+                    if (pm) parts.push(`${Math.round(pm * 100)}% ${srcLabel(e.manaSource || e.source || 'TARGET_MANA_MAX')}`);
                     if (parts.length === 0) parts.push('0');
-                    const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                    detailsStr = `➔ MoT de ${parts.join(' + ')} Mana/tour${durStr}`;
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
+                    detailsStr = compact
+                        ? `${parts.join(' + ')} Mana/t${durStr}`
+                        : `➔ MoT de ${parts.join(' + ')} Mana/tour${durStr}`;
                 } else if (t === 'Purge' || t === 'PURGE' || t === 'DISPEL') {
-                    detailsStr = `➔ dissipe les altérations`;
+                    detailsStr = compact ? `Dissipe altérations` : `➔ dissipe les altérations`;
                 } else if (t === 'Shield' || t === 'SHIELD') {
                     let parts = [];
                     const fv = e.fixedValue || e.flatValue || 0;
                     const pv = e.percentage || 0;
                     if (fv) parts.push(`${fv}`);
-                    if (pv) parts.push(`${Math.round(pv * 100)}% ${ui.formatSrc(e.shieldSource || e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (pv) parts.push(`${Math.round(pv * 100)}% ${srcLabel(e.shieldSource || e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
-                    const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
-                    detailsStr = `➔ Bouclier de ${parts.join(' + ')}${durStr}`;
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
+                    detailsStr = compact
+                        ? `${parts.join(' + ')}${durStr}`
+                        : `➔ Bouclier de ${parts.join(' + ')}${durStr}`;
                 } else if (t === 'Heat' || t === 'HEAT' || t === 'HeatFixed' || t === 'HEAT_FIXED') {
                     const amt = e.amount || e.flatValue || 0;
                     if (amt < 0) {
-                        detailsStr = `➔ consomme ${Math.abs(amt)} Chaleur`;
+                        detailsStr = compact ? `-${Math.abs(amt)} Chaleur` : `➔ consomme ${Math.abs(amt)} Chaleur`;
                     } else {
-                        detailsStr = `➔ génère ${amt} Chaleur`;
+                        detailsStr = compact ? `+${amt} Chaleur` : `➔ génère ${amt} Chaleur`;
                     }
                 } else if (t === 'BUD') {
                     const amt = e.amount || e.flatValue || 1;
-                    detailsStr = `➔ génère ${amt} Bourgeon(s)`;
+                    detailsStr = compact ? `+${amt} Bourgeon${amt > 1 ? 's' : ''}` : `➔ génère ${amt} Bourgeon(s)`;
                 } else if (t === 'HeatPercentage' || t === 'HEAT_PERCENTAGE') {
                     const pct = Math.round((e.percentage || 0) * 100);
                     if (pct < 0) {
-                        detailsStr = `➔ consomme ${Math.abs(pct)}% de ${ui.formatSrc(e.source)} en Chaleur`;
+                        detailsStr = compact
+                            ? `-${Math.abs(pct)}% ${srcLabel(e.source)} Chaleur`
+                            : `➔ consomme ${Math.abs(pct)}% de ${ui.formatSrc(e.source)} en Chaleur`;
                     } else {
-                        detailsStr = `➔ génère ${pct}% de ${ui.formatSrc(e.source)} en Chaleur`;
+                        detailsStr = compact
+                            ? `+${pct}% ${srcLabel(e.source)} Chaleur`
+                            : `➔ génère ${pct}% de ${ui.formatSrc(e.source)} en Chaleur`;
                     }
                 } else if (t === 'HeatOverTime' || t === 'HEAT_OVER_TIME') {
                     let parts = [];
                     const fv = e.flatValue || e.fixedValue || 0;
                     const pv = e.percentage || 0;
                     if (fv) parts.push(`${Math.abs(fv)}`);
-                    if (pv) parts.push(`${Math.abs(Math.round(pv * 100))}% ${ui.formatSrc(e.source || 'TARGET_HEALTH_MAX')}`);
+                    if (pv) parts.push(`${Math.abs(Math.round(pv * 100))}% ${srcLabel(e.source || 'TARGET_HEALTH_MAX')}`);
                     if (parts.length === 0) parts.push('0');
-                    const durStr = e.duration > 0 ? ` sur ${e.duration} tours` : '';
+                    const durStr = e.duration > 0 ? (compact ? ` (${e.duration}t)` : ` sur ${e.duration} tours`) : '';
                     const isConsuming = (fv < 0) || (pv < 0);
-                    const verb = isConsuming ? 'Consomme' : 'Génère';
-                    detailsStr = `➔ Tick Chaleur : ${verb} ${parts.join(' + ')}/tour${durStr}`;
+                    const verb = isConsuming ? (compact ? '-' : 'Consomme') : (compact ? '+' : 'Génère');
+                    detailsStr = compact
+                        ? `${verb}${parts.join(' + ')}/t${durStr}`
+                        : `➔ Tick Chaleur : ${verb} ${parts.join(' + ')}/tour${durStr}`;
                 }
 
-                const keyBadge = e.requiredChoiceKey != null ? `<span class="badge-pill badge-amber-flat" title="S'active uniquement si l'option choisie au cast est ${e.requiredChoiceKey}">Option ${e.requiredChoiceKey}</span>` : '';
+                const keyBadge = e.requiredChoiceKey != null ? `<span class="badge-pill badge-amber-flat" title="S'active uniquement si l'option choisie au cast est ${e.requiredChoiceKey}">${compact ? 'Opt.' : 'Option'} ${e.requiredChoiceKey}</span>` : '';
 
                 let turnBadge = '';
                 const spCt = ui.getCastingTypeName ? ui.getCastingTypeName(sp.castingType) : ((typeof sp.castingType === 'object' && sp.castingType) ? sp.castingType.name : sp.castingType);
@@ -537,14 +614,19 @@ export function getSpellEffectsSummaryHtml(sp, selectedChoiceKey = null) {
                 const isChoiceInactive = hasChoiceKey && selectedChoiceKey !== null && selectedChoiceKey !== undefined && String(e.requiredChoiceKey) !== String(selectedChoiceKey);
                 const choiceStateClass = isChoiceInactive ? ' is-choice-inactive' : '';
 
+                const compactHiddenType = compact && ['DamageFixed', 'FIXED_DAMAGE', 'DamagePercentage', 'PERCENTAGE_DAMAGE', 'HealFixed', 'FIXED_HEAL', 'HealPercentage', 'PERCENTAGE_HEAL', 'ManaFixed', 'FIXED_MANA', 'ManaPercentage', 'PERCENTAGE_MANA', 'Purge', 'PURGE', 'DISPEL', 'Heat', 'HEAT', 'HeatFixed', 'HEAT_FIXED', 'HeatPercentage', 'HEAT_PERCENTAGE', 'BUD'].includes(t);
+                const compactTypeLabel = compact
+                    ? ({ 'DamageOverTime': 'DoT', 'DAMAGE_OVER_TIME': 'DoT', 'DOT': 'DoT', 'HealOverTime': 'HoT', 'HEAL_OVER_TIME': 'HoT', 'HOT': 'HoT', 'ManaOverTime': 'MoT', 'MANA_OVER_TIME': 'MoT', 'MOT': 'MoT', 'HeatOverTime': 'Tick Chaleur', 'HEAT_OVER_TIME': 'Tick Chaleur' }[rawType] || eTypeStr)
+                    : eTypeStr;
+
                 effectsSummaryHtml += `<div class="effect-line flex flex-wrap items-start gap-1${choiceStateClass}"${choiceKeyAttr}>
                             <span class="material-symbols-outlined shrink-0 eff-icon-base ${indicatorColorClass}">${iconName}</span>
                             ${statIconHtml}
                             ${turnBadge}
                             ${keyBadge}
                             ${dsBadge}
-                            <span class="font-semibold ${tClass}">[${targetText}]</span>
-                            <span class="font-medium ${eTypeClass}">${eTypeStr}</span>
+                            <span class="font-semibold ${tClass}"${compact && fullTargetText !== targetText ? ` title="${fullTargetText}"` : ''}>[${targetText}]</span>
+                            ${compactHiddenType ? '' : `<span class="font-medium ${eTypeClass}">${compactTypeLabel}</span>`}
                             <span class="text-slate-200">${detailsStr}</span>
                         </div>
                     `;
@@ -1044,7 +1126,7 @@ export function getSpellCardHtml(sp) {
         }
     }
 
-    let effectsSummaryHtml = getSpellEffectsSummaryHtml(sp);
+    let effectsSummaryHtml = getSpellEffectsSummaryHtml(sp, null, { compact: true });
 
     let rankTitleBadge = '';
     if (sp.voie && sp.voie.rankNames && sp.voie.rankNames[sp.niveau]) {
@@ -1106,8 +1188,8 @@ export function getSpellCardHtml(sp) {
                     </div>
                     ${rankTitleBadge}
                     <div class="spell-meta flex-wrap items-center gap-2">
-                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-sky">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
-                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-rose">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
+                        ${sp.manaCost > 0 || sp.percentManaCost > 0 ? `<span class="inline-flex items-center gap-1"${sp.percentManaCost > 0 ? ` title="${ui.formatSrc(sp.percentManaCostSource || 'CASTER_MANA_MAX')}"` : ''}><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-sky">water_drop</span>${sp.manaCost > 0 ? sp.manaCost : ''}${sp.manaCost > 0 && sp.percentManaCost > 0 ? ' + ' : ''}${sp.percentManaCost > 0 ? `${sp.percentManaCost}% (${formatCompactSrcLabel(sp.percentManaCostSource || 'CASTER_MANA_MAX')})` : ''} Mana</span>` : ''}
+                        ${sp.healCost > 0 || sp.percentHealCost > 0 ? `<span class="inline-flex items-center gap-1"${sp.percentHealCost > 0 ? ` title="${ui.formatSrc(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')}"` : ''}><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-rose">bloodtype</span>${sp.healCost > 0 ? sp.healCost : (sp.percentHealCost > 0 ? '' : '0')}${sp.healCost > 0 && sp.percentHealCost > 0 ? ' + ' : ''}${sp.percentHealCost > 0 ? `${sp.percentHealCost}% (${formatCompactSrcLabel(sp.percentHealCostSource || 'CASTER_HEALTH_MAX')})` : ''} PV</span>` : ''}
                         ${sp.heatCost > 0 || sp.percentHeatCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-orange">local_fire_department</span>${sp.heatCost > 0 ? sp.heatCost : (sp.percentHeatCost > 0 ? '' : '0')}${sp.heatCost > 0 && sp.percentHeatCost > 0 ? ' + ' : ''}${sp.percentHeatCost > 0 ? `${sp.percentHeatCost}% Chaleur` : ''} Chaleur</span>` : ''}
                         ${sp.seedCost > 0 ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined align-middle badge-icon-sm eff-color-emerald-light">yard</span>${sp.seedCost} Graines</span>` : ''}
                         ${(ui.getCastingTypeName ? ui.getCastingTypeName(sp.castingType) : sp.castingType) === 'CANALISE' ? `

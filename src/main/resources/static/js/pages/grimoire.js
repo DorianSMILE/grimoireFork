@@ -1125,7 +1125,7 @@ export function getSpellCardHtml(sp) {
                         ` : ''}
                     </div>
                     ${sp.description ? `<div class="spell-description-quote">"${sp.isLocked ? 'Description illisible...' : sp.description}"</div>` : ''}
-                    ${sp.isLocked ? '<div class="spell-effects-summary"><div class="effect-line text-slate-400"><i>Atteignez le niveau de maîtrise requis pour déchiffrer ce sortilège.</i></div></div>' : effectsSummaryHtml}
+                    ${sp.isLocked ? '<div class="spell-effects-summary"><div class="effect-line text-slate-400"><i>Atteignez le niveau requis pour déchiffrer ce sortilège.</i></div></div>' : effectsSummaryHtml}
                 </div>
             `;
 }

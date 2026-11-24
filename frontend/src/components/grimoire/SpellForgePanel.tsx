@@ -124,7 +124,7 @@ export function SpellForgePanel() {
           </div>
           <div className="cost-inputs-grid">
             <label htmlFor="percentManaCost">Ratio :</label>
-            <div className="flex-center gap-2">
+            <div className="flex-center flex-wrap gap-2 min-w-0">
               <input
                 type="number"
                 id="percentManaCost"
@@ -133,7 +133,7 @@ export function SpellForgePanel() {
                 className="w-[70px]"
               />
               <span className="text-muted">% de</span>
-              <select className="flex-1 text-sm" id="percentManaCostSource">
+              <select className="flex-1 min-w-[140px] text-sm" id="percentManaCostSource">
                 {/* Rempli dynamiquement */}
               </select>
             </div>
@@ -154,7 +154,7 @@ export function SpellForgePanel() {
           </div>
           <div className="cost-inputs-grid">
             <label htmlFor="percentHealCost">Ratio :</label>
-            <div className="flex-center gap-2">
+            <div className="flex-center flex-wrap gap-2 min-w-0">
               <input
                 type="number"
                 id="percentHealCost"
@@ -163,7 +163,7 @@ export function SpellForgePanel() {
                 className="w-[70px]"
               />
               <span className="text-muted">% de</span>
-              <select className="flex-1 text-sm" id="percentHealCostSource">
+              <select className="flex-1 min-w-[140px] text-sm" id="percentHealCostSource">
                 {/* Rempli dynamiquement */}
               </select>
             </div>

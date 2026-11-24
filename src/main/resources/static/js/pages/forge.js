@@ -812,7 +812,7 @@ export function renderEffects() {
                         ${targetSelectorHtml}
 
                         <!-- Option / Clé d'activation de la ligne d'effet -->
-                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 border-dashed">
+                        <div class="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-white/5 border-dashed">
                             <label class="text-xs text-amber-500 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-lg">key</span> S'active uniquement si l'Option de sort choisie est :</label>
                             <input type="number" value="${eff.requiredChoiceKey !== undefined && eff.requiredChoiceKey !== null ? eff.requiredChoiceKey : ''}" placeholder="Toutes (Par défaut)" class="w-32 text-sm px-2 py-1 bg-glass text-white border-glass rounded" onchange="updateEffectProp('${eff.id}', 'requiredChoiceKey', this.value ? parseInt(this.value) : null)">
                             <span class="text-muted text-xs">Ex: 1 pour la ligne Soin, 2 pour la ligne Mana. Laissez vide pour s'activer toujours.</span>
@@ -821,14 +821,14 @@ export function renderEffects() {
                         <!-- Condition Âme Détachée -->
                         ${(isTenebres && eff.effectType !== 'AME_DETACHEE') ? `
                         <div class="mt-3 flex-col gap-1 pt-2 border-t border-white/5 border-dashed">
-                            <div class="flex-center justify-between">
+                            <div class="flex-center flex-wrap gap-2 justify-between">
                                 <label class="flex-center text-rose-300 font-semibold text-sm gap-1">
                                     <span class="material-symbols-outlined text-lg">hand_bones</span> Condition "Âme Détachée"
                                 </label>
                                 ${(() => {
                     const r = eff.detachedSoulRequirement || 'NOT_AFFECTED';
                     return `
-                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.2rem; width: 280px;">
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.2rem; width: min(100%, 280px);">
                                         <button type="button" class="text-xs text-center" style="padding: 0.35rem 0.2rem; border-radius: 6px; border: 1px solid ${r === 'NOT_AFFECTED' ? '#94a3b8' : 'transparent'}; background: ${r === 'NOT_AFFECTED' ? 'rgba(148, 163, 184, 0.25)' : 'transparent'}; color: ${r === 'NOT_AFFECTED' ? '#f8fafc' : 'var(--text-muted)'}; cursor: pointer; transition: all 0.2s; font-weight: ${r === 'NOT_AFFECTED' ? '600' : '400'};" onclick="updateEffectProp('${eff.id}', 'detachedSoulRequirement', 'NOT_AFFECTED')">
                                             Normal
                                         </button>

@@ -52,30 +52,36 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-page auth-page-register">
-      <div className="ambient-light"></div>
-      <div className="ambient-light-2"></div>
+    <main className="auth-page auth-page-register">
+      <div className="ambient-light" aria-hidden="true"></div>
+      <div className="ambient-light-2" aria-hidden="true"></div>
 
-      <div className="auth-container">
+      <section className="auth-container" aria-labelledby="registerTitle">
         <div className="auth-header">
-          <div className="auth-logo">
-            <span className="material-symbols-outlined text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+          <h1 className="auth-logo" id="registerTitle">
+            <span
+              className="material-symbols-outlined text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+              aria-hidden="true"
+            >
               auto_stories
             </span>
             Grimoire
-          </div>
-          <div className="auth-subtitle">Créer un nouveau compte</div>
+          </h1>
+          <p className="auth-subtitle">Créer un nouveau compte</p>
         </div>
 
         <div
           className={`auth-error ${errorMessage ? 'block' : 'is-hidden'}`}
           id="authError"
+          role="alert"
         >
           {errorMessage}
         </div>
         <div
           className={`auth-success ${successMessage ? 'block' : 'is-hidden'}`}
           id="authSuccess"
+          role="status"
+          aria-live="polite"
         >
           {successMessage}
         </div>
@@ -86,8 +92,13 @@ export function RegisterPage() {
             <input
               type="text"
               id="username"
+              name="username"
               required
               autoComplete="username"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              enterKeyHint="next"
               minLength={3}
               maxLength={30}
               value={username}
@@ -100,8 +111,10 @@ export function RegisterPage() {
             <input
               type="password"
               id="password"
+              name="password"
               required
               autoComplete="new-password"
+              enterKeyHint="next"
               minLength={4}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -113,8 +126,10 @@ export function RegisterPage() {
             <input
               type="password"
               id="confirmPassword"
+              name="confirmPassword"
               required
               autoComplete="new-password"
+              enterKeyHint="done"
               minLength={4}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -133,7 +148,7 @@ export function RegisterPage() {
         <div className="auth-footer">
           Déjà inscrit ? <Link to="/login">Se connecter</Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

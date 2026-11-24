@@ -35,13 +35,14 @@ header{
         }
 
 .grimoire-main{
-            padding: 2rem 5%;
+            padding: clamp(1rem, 2.5vw, 2rem) clamp(0.75rem, 3.5vw, 5%);
             display: grid;
             grid-template-columns: 1fr 1.2fr;
-            gap: 2.5rem;
+            gap: clamp(1rem, 2vw, 2.5rem);
             max-width: 1600px;
             margin: 0 auto;
             width: 100%;
+            min-width: 0;
         }
 
 .grimoire-main.single-col {
@@ -90,20 +91,25 @@ header{
             .grimoire-main {
                 grid-template-columns: 1fr;
             }
+
+            #btnToggleDisplayMode {
+                display: none !important;
+            }
         }
 
 .panel{
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            padding: 2rem;
+            padding: clamp(1rem, 2.5vw, 2rem);
             backdrop-filter: blur(16px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: clamp(1rem, 1.5vw, 1.5rem);
             position: relative;
             overflow: visible;
+            min-width: 0;
             /* height: 100%; removed to allow dynamic expansion */
             transition: all 0.3s ease;
         }
@@ -128,12 +134,14 @@ header{
 
 .panel-title{
             font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
+            font-size: clamp(1.15rem, 1rem + 0.8vw, 1.4rem);
             font-weight: 600;
             color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
 
 @media (min-width: 1025px){
@@ -159,10 +167,23 @@ header{
         }
 
 @media (max-width: 768px){
+            .panel {
+                border-radius: 12px;
+            }
+
+            .panel::before {
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+            }
+
             .editing-preview-container {
-                left: 1rem;
-                right: 1rem;
+                left: 0.75rem;
+                right: 0.75rem;
                 width: auto;
-                bottom: 1rem;
+                min-width: 0;
+                max-width: none;
+                max-height: 45dvh;
+                overflow-y: auto;
+                bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
             }
         }

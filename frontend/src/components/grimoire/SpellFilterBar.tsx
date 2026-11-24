@@ -1,22 +1,22 @@
 export function SpellFilterBar() {
   return (
     <div
-      className="flex gap-4 grimoire-filters-panel flex-col relative z-[9999999] mb-[1.2rem]"
+      className="flex gap-4 grimoire-filters-panel flex-col relative z-20 mb-[1.2rem]"
       id="grimoireFiltersContainer"
     >
-      <div className="flex items-center justify-between border-b border-white/5 pb-[0.6rem]">
+      <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/5 pb-[0.6rem]">
         <div className="flex items-center gap-2 font-bold text-sm uppercase tracking-[1.2px] text-primary">
-          <span className="material-symbols-outlined text-xl">visibility</span>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">visibility</span>
           <span>Perception Arcanique</span>
         </div>
-        <div className="flex items-center gap-[0.6rem]">
+        <div className="flex items-center flex-wrap gap-[0.6rem]">
           <button
             className="btn-secondary px-2 py-1 items-center text-[0.7rem] leading-tight rounded border-none bg-rose-500/10 text-rose-500 inline-flex gap-1"
             type="button"
             onClick={() => window.resetFilters?.()}
             title="Réinitialiser les sélecteurs"
           >
-            <span className="material-symbols-outlined text-md">
+            <span className="material-symbols-outlined text-md" aria-hidden="true">
               restart_alt
             </span>
             Réinitialiser
@@ -31,13 +31,16 @@ export function SpellFilterBar() {
       </div>
 
       <div className="relative">
-        <span className="material-symbols-outlined text-lg absolute left-3 top-1/2 -translate-y-1/2 opacity-60 text-muted">
+        <span className="material-symbols-outlined text-lg absolute left-3 top-1/2 -translate-y-1/2 opacity-60 text-muted" aria-hidden="true">
           search
         </span>
         <input
           className="w-full text-sm bg-black/30 border border-white/10 rounded-lg outline-none transition-colors py-[0.6rem] pr-4 pl-9 filter-search-input"
           type="text"
           id="filterSearch"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           placeholder="Rechercher par lettre dans le nom ou la description..."
           onInput={() => window.renderFilteredSpells?.()}
         />
@@ -62,9 +65,9 @@ export function SpellFilterBar() {
         </div>
 
         <div className="flex gap-4 flex-wrap items-start">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-              <span className="material-symbols-outlined text-md text-orange-400">
+              <span className="material-symbols-outlined text-md text-orange-400" aria-hidden="true">
                 grade
               </span>
               FILTRER PAR SPIRITUALITÉ
@@ -75,9 +78,9 @@ export function SpellFilterBar() {
             ></div>
           </div>
 
-          <div className="flex-1 init-hidden" id="filterMutationAdminContainer">
+          <div className="flex-1 min-w-0 init-hidden" id="filterMutationAdminContainer">
             <label className="mb-2 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-              <span className="material-symbols-outlined text-purple text-md">
+              <span className="material-symbols-outlined text-purple text-md" aria-hidden="true">
                 pets
               </span>
               FILTRER PAR MUTATION
@@ -96,9 +99,9 @@ export function SpellFilterBar() {
       </div>
 
       <div className="grid-auto-fit gap-3">
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-            <span className="material-symbols-outlined text-emerald text-md">
+            <span className="material-symbols-outlined text-emerald text-md" aria-hidden="true">
               category
             </span>
             NATURE D&apos;EFFET
@@ -132,9 +135,9 @@ export function SpellFilterBar() {
           </select>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-            <span className="material-symbols-outlined text-amber text-md">
+            <span className="material-symbols-outlined text-amber text-md" aria-hidden="true">
               workspace_premium
             </span>
             PALIER (NIVEAU)
@@ -153,16 +156,16 @@ export function SpellFilterBar() {
           </select>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 flex items-center gap-1 font-bold text-xs text-muted tracking-[0.5px]">
-            <span className="material-symbols-outlined text-md text-purple-400">
+            <span className="material-symbols-outlined text-md text-purple-400" aria-hidden="true">
               sort
             </span>
             ORDONNANCEMENT
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 min-w-0">
             <select
-              className="w-full text-sm p-[0.6rem] bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none"
+              className="w-full min-w-0 flex-1 text-sm p-[0.6rem] bg-slate-900/80 border border-white/10 text-slate-200 rounded-md cursor-pointer outline-none"
               id="sortBy"
               defaultValue="DEFAULT"
             >

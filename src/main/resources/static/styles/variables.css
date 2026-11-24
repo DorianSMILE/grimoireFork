@@ -9,58 +9,17 @@
     --accent: #3b82f6;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --danger: #dc2626;
+    --danger: #f43f5e;
     --success: #10b981;
     --caster-color: #34d399;
     --target-color: #fb7185;
-    --slot-casque: var(--primary);
-    --slot-plastron: var(--accent);
-    --slot-arme: var(--danger);
-    --slot-anneau: #f59e0b;
-    --slot-bottes: var(--success);
-    --slot-cape: var(--secondary);
-    --slot-consommable: #854c4c;
+    --karma: #e7d198;
     --karma-light: #fde047;
     --karma-dark: #d8b4fe;
     --karma-base: #e7d198;
     --violence-inspiration: #c41a27;
     --violence-expiration: #8c0b56;
     --violence-base: #a70740;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', sans-serif;
-}
-
-body {
-    overflow-y: scroll;
-    background: var(--bg-gradient);
-    background-attachment: fixed;
-    color: var(--text-main);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-:root {
-    --bg-base: #0b0f19;
-    --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #171e30 100%);
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --primary: #8b5cf6;
-    --primary-glow: rgba(139, 92, 246, 0.4);
-    --secondary: #ec4899;
-    --accent: #3b82f6;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --danger: #f43f5e;
-    --success: #10b981;
-    --caster-color: #34d399;
-    --target-color: #fb7185;
-    --karma: #e7d198;
     --slot-casque: var(--primary);
     --slot-plastron: var(--accent);
     --slot-arme: var(--danger);
@@ -76,6 +35,13 @@ body {
     --pierce: #fb923c;
     --brut: #b91c1c;
     --magic-shield: #d946ef;
+    --target-size: 24px;
+}
+
+@media (pointer: coarse) {
+    :root {
+        --target-size: 44px;
+    }
 }
 
 * {
@@ -90,9 +56,21 @@ body {
     background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 1024px) {
+    body {
+        background-attachment: scroll;
+    }
+}
+
+img, video {
+    max-inline-size: 100%;
+    block-size: auto;
 }
 
 /* === Utility classes (F2-compliant state toggles) === */

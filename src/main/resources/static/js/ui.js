@@ -268,6 +268,7 @@ export function makeCustomSelect(selectIdOrElement) {
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.style.width = '100%';
+    wrapper.style.minWidth = '0';
     wrapper.style.fontFamily = "inherit";
 
     const trigger = document.createElement('div');
@@ -281,6 +282,9 @@ export function makeCustomSelect(selectIdOrElement) {
     trigger.style.gap = '0.6rem';
     trigger.style.color = '#fff';
     trigger.style.fontSize = '0.9rem';
+    trigger.style.minWidth = '0';
+    trigger.style.width = '100%';
+    trigger.style.overflow = 'hidden';
 
     const optionsContainer = document.createElement('div');
     optionsContainer.classList.add('custom-select-options');
@@ -416,7 +420,7 @@ export function makeCustomSelect(selectIdOrElement) {
         let selectedOption = options[select.selectedIndex] || options[0];
 
         const info = getIconInfo(selectId, selectedOption);
-        trigger.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.2rem; color:${info.color};">${info.icon}</span> <span>${selectedOption.text}</span>`;
+        trigger.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.2rem; color:${info.color}; flex-shrink:0;">${info.icon}</span> <span style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${selectedOption.text}</span>`;
 
         options.forEach((opt, index) => {
             if (opt.disabled) {

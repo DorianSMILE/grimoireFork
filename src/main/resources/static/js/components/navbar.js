@@ -201,7 +201,132 @@ window.syncNavbarWithUser = function syncNavbarWithUser(data, animateGold = fals
     updateNavBadgeEl('navHuntingBadge', data.huntingClaimable || 0);
     updateNavBadgeEl('navAlchemyBadge', data.unseenAlchemyCount || 0);
     updateNavBadgeEl('navArmoryBadge', data.availableCharacterSlots || 0);
+
+    if (typeof window.scheduleNavLayoutMeasure === 'function') {
+        window.scheduleNavLayoutMeasure(true);
+    }
 };
+
+function setupResponsiveHeader(header) {
+    if (!header || header.dataset.responsiveBound) return;
+    header.dataset.responsiveBound = 'true';
+
+    const drawer = header.querySelector('#headerNavDrawer');
+    const menuBtn = header.querySelector('#navMenuToggle');
+    if (!drawer || !menuBtn) return;
+
+    const supportsPopover = Object.hasOwn(HTMLElement.prototype, 'popover');
+    let lastWidth = 0;
+    let measureRaf = 0;
+
+    function syncToggleVisual(isOpen) {
+        menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        menuBtn.setAttribute('aria-label', isOpen ? 'Fermer le menu de navigation' : 'Ouvrir le menu de navigation');
+        const icon = menuBtn.querySelector('.nav-menu-toggle-icon');
+        if (icon) icon.textContent = isOpen ? 'close' : 'menu';
+    }
+
+    function closeDrawer() {
+        if (supportsPopover) {
+            try {
+                if (drawer.matches(':popover-open')) drawer.hidePopover();
+            } catch (_) {}
+        }
+        drawer.classList.remove('is-open');
+        syncToggleVisual(false);
+    }
+
+    function measureAndApply(force = false) {
+        const currentWidth = header.clientWidth;
+        if (!force && !header.classList.contains('is-wide') && currentWidth <= lastWidth && lastWidth > 0) {
+            return;
+        }
+        lastWidth = currentWidth;
+
+        const wasOpen = supportsPopover
+            ? drawer.matches(':popover-open')
+            : drawer.classList.contains('is-open');
+
+        header.classList.add('is-measuring', 'is-wide');
+        drawer.removeAttribute('popover');
+        drawer.classList.remove('is-open');
+
+        const fits = header.scrollWidth <= header.clientWidth + 1;
+
+        if (fits) {
+            header.classList.add('is-wide');
+            menuBtn.removeAttribute('popovertarget');
+            menuBtn.removeAttribute('popovertargetaction');
+            syncToggleVisual(false);
+        } else {
+            header.classList.remove('is-wide');
+            if (supportsPopover) {
+                drawer.setAttribute('popover', 'auto');
+                menuBtn.setAttribute('popovertarget', 'headerNavDrawer');
+                menuBtn.setAttribute('popovertargetaction', 'toggle');
+                if (wasOpen) {
+                    try { drawer.showPopover(); } catch (_) {}
+                    syncToggleVisual(true);
+                } else {
+                    syncToggleVisual(false);
+                }
+            } else {
+                drawer.classList.toggle('is-open', wasOpen);
+                syncToggleVisual(wasOpen);
+            }
+        }
+
+        cancelAnimationFrame(measureRaf);
+        measureRaf = requestAnimationFrame(() => {
+            header.classList.remove('is-measuring');
+        });
+    }
+
+    window.scheduleNavLayoutMeasure = (force = false) => {
+        requestAnimationFrame(() => measureAndApply(force));
+    };
+    window.closeNavbarDrawer = closeDrawer;
+
+    if (supportsPopover) {
+        drawer.addEventListener('toggle', (event) => {
+            syncToggleVisual(event.newState === 'open');
+        });
+    } else {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = drawer.classList.toggle('is-open');
+            syncToggleVisual(isOpen);
+        });
+        document.addEventListener('click', (e) => {
+            if (!header.classList.contains('is-wide') && drawer.classList.contains('is-open') && !header.contains(e.target)) {
+                closeDrawer();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && drawer.classList.contains('is-open')) {
+                closeDrawer();
+                menuBtn.focus();
+            }
+        });
+    }
+
+    drawer.addEventListener('click', (e) => {
+        if (e.target.closest('a.top-nav-link') && !header.classList.contains('is-wide')) {
+            closeDrawer();
+        }
+    });
+
+    if (typeof ResizeObserver === 'function') {
+        const ro = new ResizeObserver(() => measureAndApply(false));
+        ro.observe(header);
+    }
+    window.addEventListener('resize', () => measureAndApply(false), { passive: true });
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => measureAndApply(true)).catch(() => {});
+    }
+
+    measureAndApply(true);
+}
 
 class AppNavbar extends HTMLElement {
     static get observedAttributes() {
@@ -224,6 +349,7 @@ class AppNavbar extends HTMLElement {
         } else {
             this.updateActiveState(activePage);
         }
+        setupResponsiveHeader(this.querySelector('header.top-header'));
         window.syncNavbarWithUser(getCachedUserSnapshot(), false);
         injectSpeculationRules();
 
@@ -272,8 +398,20 @@ class AppNavbar extends HTMLElement {
             const el = this.querySelector(selector);
             if (el) {
                 el.classList.toggle('active', Boolean(isActive));
+                if (isActive) {
+                    el.setAttribute('aria-current', 'page');
+                } else {
+                    el.removeAttribute('aria-current');
+                }
             }
         });
+
+        if (typeof window.closeNavbarDrawer === 'function') {
+            window.closeNavbarDrawer();
+        }
+        if (typeof window.scheduleNavLayoutMeasure === 'function') {
+            window.scheduleNavLayoutMeasure(true);
+        }
     }
 
     render(activePage) {
@@ -284,50 +422,63 @@ class AppNavbar extends HTMLElement {
         <header class="top-header">
             <div class="page-logo-container">
                 <div class="page-logo">
-                    <span class="material-symbols-outlined logo-icon-gradient ${config.cls}">${config.icon}</span>
+                    <span class="material-symbols-outlined logo-icon-gradient ${config.cls}" aria-hidden="true">${config.icon}</span>
                     <span class="logo-text-gradient ${config.cls}">${config.title}</span>
                 </div>
                 <div class="page-subtitle">${config.subtitle}</div>
             </div>
-            <div class="header-actions">
-                
-                <a href="/grimoire" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">auto_awesome</span> Grimoire
-                </a>
-                <a href="/armory" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">shield</span> Armurerie
-                    <span id="navArmoryBadge" class="nav-badge hidden">0</span>
-                </a>
-                <a href="/dungeons" class="top-nav-link nav-dungeon ${activePage === 'dungeon' || activePage === 'dungeons' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">swords</span> Donjons
-                    <span id="navDungeonBadge" class="nav-badge hidden">0</span>
-                </a>
-                <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">money_bag</span> Coffres
-                </a>
-                <a href="/shop" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">storefront</span> Boutique
-                </a>
-                <a href="/alchemy" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">science</span> Alchimie
-                    <span id="navAlchemyBadge" class="nav-badge hidden">0</span>
-                </a>
-                <a href="/hunting" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">trophy</span> Chasse
-                    <span id="navHuntingBadge" class="nav-badge hidden">0</span>
-                </a>
-                
-                <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin init-hidden ${activePage === 'shop-admin' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">settings</span> Admin Boutique
-                </a>
-                <a href="/pve-admin" id="adminPvELink" class="top-nav-link nav-admin init-hidden ${activePage === 'pve-admin' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">admin_panel_settings</span> Admin PvE
-                </a>
-                <a href="/alchemy-admin" id="adminAlchemyLink" class="top-nav-link nav-admin init-hidden ${activePage === 'alchemy-admin' ? 'active' : ''}">
-                    <span class="material-symbols-outlined">science</span> Admin Alchimie
-                </a>
+            <nav class="header-nav" aria-label="Navigation principale">
+                <div id="headerNavDrawer" class="header-nav-links">
+                    <a href="/grimoire" class="top-nav-link nav-grimoire ${activePage === 'grimoire' ? 'active' : ''}" ${activePage === 'grimoire' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span> Grimoire
+                    </a>
+                    <a href="/armory" class="top-nav-link nav-armory ${activePage === 'armory' ? 'active' : ''}" ${activePage === 'armory' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">shield</span> Armurerie
+                        <span id="navArmoryBadge" class="nav-badge hidden">0</span>
+                    </a>
+                    <a href="/dungeons" class="top-nav-link nav-dungeon ${activePage === 'dungeon' || activePage === 'dungeons' ? 'active' : ''}" ${activePage === 'dungeon' || activePage === 'dungeons' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">swords</span> Donjons
+                        <span id="navDungeonBadge" class="nav-badge hidden">0</span>
+                    </a>
+                    <a href="/vault" class="top-nav-link nav-vault ${activePage === 'vault' ? 'active' : ''}" ${activePage === 'vault' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">money_bag</span> Coffres
+                    </a>
+                    <a href="/shop" class="top-nav-link nav-shop ${activePage === 'shop' ? 'active' : ''}" ${activePage === 'shop' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">storefront</span> Boutique
+                    </a>
+                    <a href="/alchemy" class="top-nav-link nav-alchemy ${activePage === 'alchemy' ? 'active' : ''}" ${activePage === 'alchemy' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">science</span> Alchimie
+                        <span id="navAlchemyBadge" class="nav-badge hidden">0</span>
+                    </a>
+                    <a href="/hunting" class="top-nav-link nav-hunting ${activePage === 'hunting' ? 'active' : ''}" ${activePage === 'hunting' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">trophy</span> Chasse
+                        <span id="navHuntingBadge" class="nav-badge hidden">0</span>
+                    </a>
 
+                    <a href="/shop-admin" id="adminShopLink" class="top-nav-link nav-admin init-hidden ${activePage === 'shop-admin' ? 'active' : ''}" ${activePage === 'shop-admin' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">settings</span> Admin Boutique
+                    </a>
+                    <a href="/pve-admin" id="adminPvELink" class="top-nav-link nav-admin init-hidden ${activePage === 'pve-admin' ? 'active' : ''}" ${activePage === 'pve-admin' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span> Admin PvE
+                    </a>
+                    <a href="/alchemy-admin" id="adminAlchemyLink" class="top-nav-link nav-admin init-hidden ${activePage === 'alchemy-admin' ? 'active' : ''}" ${activePage === 'alchemy-admin' ? 'aria-current="page"' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">science</span> Admin Alchimie
+                    </a>
+                </div>
+            </nav>
+            <div class="header-right-controls">
                 <div id="authNavContainer" class="nav-auth-container"></div>
+                <button
+                    type="button"
+                    id="navMenuToggle"
+                    class="nav-menu-toggle"
+                    aria-expanded="false"
+                    aria-controls="headerNavDrawer"
+                    aria-label="Ouvrir le menu de navigation"
+                >
+                    <span class="material-symbols-outlined nav-menu-toggle-icon" aria-hidden="true">menu</span>
+                    <span class="nav-menu-toggle-label">Menu</span>
+                </button>
             </div>
         </header>
         `;

@@ -43,24 +43,27 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="ambient-light"></div>
-      <div className="ambient-light-2"></div>
+    <main className="auth-page">
+      <div className="ambient-light" aria-hidden="true"></div>
+      <div className="ambient-light-2" aria-hidden="true"></div>
 
-      <div className="auth-container">
+      <section className="auth-container" aria-labelledby="loginTitle">
         <div className="auth-header">
-          <div className="auth-logo">
-            <span className="material-symbols-outlined">auto_stories</span>
+          <h1 className="auth-logo" id="loginTitle">
+            <span className="material-symbols-outlined" aria-hidden="true">
+              auto_stories
+            </span>
             Grimoire
-          </div>
-          <div className="auth-subtitle">
+          </h1>
+          <p className="auth-subtitle">
             Accéder à votre sauvegarde et vos personnages
-          </div>
+          </p>
         </div>
 
         <div
           className={`auth-error ${errorMessage ? 'block' : 'is-hidden'}`}
           id="authError"
+          role="alert"
         >
           {errorMessage}
         </div>
@@ -71,8 +74,13 @@ export function LoginPage() {
             <input
               type="text"
               id="username"
+              name="username"
               required
               autoComplete="username"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              enterKeyHint="next"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={isSubmitting}
@@ -83,8 +91,10 @@ export function LoginPage() {
             <input
               type="password"
               id="password"
+              name="password"
               required
               autoComplete="current-password"
+              enterKeyHint="done"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting}
@@ -102,7 +112,7 @@ export function LoginPage() {
         <div className="auth-footer">
           Nouveau ici ? <Link to="/register">Créer un compte</Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

@@ -387,7 +387,7 @@
 
 .grid-auto-fit {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 }
 
 .col-span-1 {
@@ -1705,7 +1705,7 @@
 }
 
 .grid-cols-auto-140 {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)) !important;
 }
 
 .my-2 {
@@ -2058,7 +2058,7 @@ button {
 /* Final audit utilities */
 .grid-auto-fill-140 {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
     border-top: 1px dashed rgba(255, 255, 255, 0.1);
     padding-top: 0.5rem;
 }

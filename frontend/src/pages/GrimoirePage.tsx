@@ -51,10 +51,10 @@ export function GrimoirePage() {
         <SpellForgePanel />
 
         {/* Colonne Droite : Liste des Sorts Existants */}
-        <div className="panel">
+        <div className="panel" id="grimoireCatalogPanel">
           <div className="panel-title">
             <span>Grimoire des Sorts</span>
-            <div className="flex-center gap-2">
+            <div className="flex-center gap-2 flex-wrap">
               <button
                 className="btn btn-secondary items-center gap-1 text-sm p-[0.8rem] inline-flex"
                 type="button"
@@ -65,6 +65,7 @@ export function GrimoirePage() {
                 <span
                   className="material-symbols-outlined text-lg leading-none"
                   id="toggleDisplayIcon"
+                  aria-hidden="true"
                 >
                   unfold_less
                 </span>
@@ -83,8 +84,10 @@ export function GrimoirePage() {
           {/* Barre de Filtres et Tris Premium */}
           <SpellFilterBar />
 
-          <div className="spells-list" id="createdSpellsContainer">
-            <app-loader message="Chargement des sorts..."></app-loader>
+          <div className="spells-catalog-scope">
+            <div className="spells-list" id="createdSpellsContainer">
+              <app-loader message="Chargement des sorts..."></app-loader>
+            </div>
           </div>
         </div>
       </main>

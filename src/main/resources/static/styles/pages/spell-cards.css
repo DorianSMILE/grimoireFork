@@ -1,7 +1,14 @@
+.spells-catalog-scope {
+    container: spells-catalog / inline-size;
+    width: 100%;
+    min-width: 0;
+}
+
 .spells-list{
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
             gap: 1rem;
+            align-content: start;
             max-height: 700px;
             overflow-y: auto;
             padding: 1rem;
@@ -11,10 +18,33 @@
             /* compense le padding visuellement pour l'alignement */
         }
 
+@container spells-catalog (inline-size >= 680px) {
+    .spells-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.15rem;
+    }
+}
+
+@container spells-catalog (inline-size >= 1060px) {
+    .spells-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+}
+
 .spells-list.full-mode {
             max-height: none;
             overflow-y: visible;
         }
+
+@media (max-width: 1024px) {
+    .spells-list {
+        max-height: none;
+        overflow-y: visible;
+        margin: 0;
+        padding: 0.25rem 0 1.5rem;
+    }
+}
 
 .spells-list::-webkit-scrollbar{
             width: 6px;
@@ -30,6 +60,7 @@
         }
 
 .spell-card{
+            grid-column: 1 / -1;
             border-radius: 12px;
             padding: 1.2rem;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
@@ -38,6 +69,8 @@
             gap: 0.8rem;
             position: relative;
             z-index: 1;
+            min-width: 0;
+            overflow-wrap: break-word;
 
             --card-glow-alpha: 0;
             --card-border-alpha: 0.08;
@@ -48,13 +81,15 @@
             box-shadow: 0 4px 20px rgba(var(--spell-rgb), var(--card-glow-alpha));
         }
 
-.spell-card:hover{
-            z-index: 10;
-            --card-glow-alpha: 0.05;
-            --card-border-alpha: 0.2;
-            --card-bg-alpha: 0.04;
-            transform: translateY(-2px);
-        }
+@media (hover: hover) {
+    .spell-card:hover{
+        z-index: 10;
+        --card-glow-alpha: 0.05;
+        --card-border-alpha: 0.2;
+        --card-bg-alpha: 0.04;
+        transform: translateY(-2px);
+    }
+}
 
 /* Lvl 2: Subtile (More border presence) */
         .spell-card-lvl-2{
@@ -62,11 +97,13 @@
             --card-bg-alpha: 0.04;
         }
 
-.spell-card-lvl-2:hover{
-            --card-glow-alpha: 0.15;
-            --card-border-alpha: 0.4;
-            transform: translateY(-3px) scale(1.005);
-        }
+@media (hover: hover) {
+    .spell-card-lvl-2:hover{
+        --card-glow-alpha: 0.15;
+        --card-border-alpha: 0.4;
+        transform: translateY(-2px);
+    }
+}
 
 /* Lvl 3: Advanced (Noticeable tint & glow) */
         .spell-card-lvl-3{
@@ -75,11 +112,13 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 20px rgba(var(--spell-rgb), var(--card-glow-alpha));
         }
 
-.spell-card-lvl-3:hover{
-            --card-glow-alpha: 0.25;
-            --card-border-alpha: 0.55;
-            transform: translateY(-4px) scale(1.01);
-        }
+@media (hover: hover) {
+    .spell-card-lvl-3:hover{
+        --card-glow-alpha: 0.25;
+        --card-border-alpha: 0.55;
+        transform: translateY(-3px);
+    }
+}
 
 /* Lvl 4: Master (Strong presence, brighter border) */
         .spell-card-lvl-4{
@@ -88,11 +127,13 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 25px rgba(var(--spell-rgb), var(--card-glow-alpha));
         }
 
-.spell-card-lvl-4:hover{
-            --card-glow-alpha: 0.4;
-            --card-border-alpha: 0.75;
-            transform: translateY(-5px) scale(1.015);
-        }
+@media (hover: hover) {
+    .spell-card-lvl-4:hover{
+        --card-glow-alpha: 0.4;
+        --card-border-alpha: 0.75;
+        transform: translateY(-3px);
+    }
+}
 
 /* Lvl 5: Legendary (Shiny, strong tint, animated reflection) */
         .spell-card-lvl-5{
@@ -115,24 +156,34 @@
             border-radius: 50%;
         }
 
-.spell-card-lvl-5:hover{
-            --card-glow-alpha: 0.6;
-            --card-border-alpha: 1;
-            transform: translateY(-6px) scale(1.02);
-            background: linear-gradient(135deg, rgba(var(--spell-rgb), 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
-        }
+@media (hover: hover) {
+    .spell-card-lvl-5:hover{
+        --card-glow-alpha: 0.6;
+        --card-border-alpha: 1;
+        transform: translateY(-3px);
+        background: linear-gradient(135deg, rgba(var(--spell-rgb), 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
+    }
+}
 
 .spell-card-header{
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+.spell-card-header > div:first-child {
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
 .spell-name{
             font-family: 'Outfit', sans-serif;
-            font-size: 1.2rem;
+            font-size: clamp(1.05rem, 0.98rem + 0.35vw, 1.2rem);
             font-weight: 600;
             color: var(--primary);
+            overflow-wrap: break-word;
         }
 
 .badge{
@@ -255,6 +306,7 @@
 }
 
 .spell-card.is-locked {
+    grid-column: span 1;
     opacity: 0.6;
     filter: grayscale(60%);
     pointer-events: none;
@@ -523,7 +575,32 @@
 
 @media (max-width: 640px) {
     .spell-unlocked-filter {
-        width: 40px;
+        width: 44px;
+        height: 44px;
         flex-shrink: 0;
+    }
+
+    .spell-type-filter-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .filter-search-input {
+        font-size: max(1rem, 0.9rem) !important;
+        min-block-size: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .spell-card {
+        padding: 0.9rem;
+        gap: 0.65rem;
+    }
+}
+
+@media (pointer: coarse) {
+    .origin-filter-btn {
+        min-block-size: 38px;
+        padding: 0.35rem 0.7rem;
     }
 }
